@@ -16,13 +16,7 @@ import {
 
 export const Route = createFileRoute("/recruiter/verification")({
   head: () => ({
-    meta: [
-      { title: "Xác thực Doanh nghiệp (KYB) — GuardianWork" },
-      {
-        name: "description",
-        content: "Nộp hồ sơ xác thực pháp nhân doanh nghiệp theo chuẩn Trust & Safety.",
-      },
-    ],
+    meta: [{ title: "Xác thực Doanh nghiệp (KYB) — GuardianWork" }],
   }),
   component: CompanyVerificationPage,
 });
@@ -30,10 +24,9 @@ export const Route = createFileRoute("/recruiter/verification")({
 function CompanyVerificationPage() {
   const [record, setRecord] = useState<CompanyVerificationRecord>(getStoredVerificationRecord());
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitSuccessMsg, setSubmitSuccessMsg] = useState<string | null>(null);
-  const [submitErrorMsg, setSubmitErrorMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Form Fields State
   const [taxCode, setTaxCode] = useState(record.taxCode || "");
   const [companyName, setCompanyName] = useState(record.name || "");
   const [englishName, setEnglishName] = useState(record.englishName || "");
@@ -42,7 +35,6 @@ function CompanyVerificationPage() {
   const [phone, setPhone] = useState(record.phone || "");
   const [registeredAddress, setRegisteredAddress] = useState(record.registeredAddress || "");
   const [city, setCity] = useState(record.city || "TP. Hồ Chí Minh");
-  const [district, setDistrict] = useState(record.district || "Quận Bình Thạnh");
   const [legalRepresentative, setLegalRepresentative] = useState(record.legalRepresentative || "");
   const [representativeTitle, setRepresentativeTitle] = useState(
     record.representativeTitle || "Tổng Giám đốc",
@@ -54,8 +46,6 @@ function CompanyVerificationPage() {
   const [contactTitle, setContactTitle] = useState(
     record.contactTitle || "Trưởng phòng Tuyển dụng",
   );
-
-  // Document Uploads State
   const [certificateUrl, setCertificateUrl] = useState(
     record.registrationCertificateUrl ||
       "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=1200",
@@ -71,17 +61,12 @@ function CompanyVerificationPage() {
     record.powerOfAttorneyUrl ||
       "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&q=80&w=1200",
   );
-
-  // Compliance Checkbox State
   const [agreeCommitment, setAgreeCommitment] = useState(true);
   const [agreeNoFees, setAgreeNoFees] = useState(true);
 
-  // National Registry Lookup Tool
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [registryResult, setRegistryResult] = useState<NationalRegistryRecord | null>(null);
-  const [registryLookupError, setRegistryLookupError] = useState<string | null>(null);
-
-  // Document Inspection Preview Modal
+  const [registryError, setRegistryError] = useState<string | null>(null);
   const [previewDocUrl, setPreviewDocUrl] = useState<string | null>(null);
   const [previewDocTitle, setPreviewDocTitle] = useState("");
 
@@ -93,10 +78,10 @@ function CompanyVerificationPage() {
 
   const handleLookupRegistry = () => {
     if (!taxCode.trim()) {
-      setRegistryLookupError("Vui lòng nhập Mã số thuế.");
+      setRegistryError("Vui lòng nhập MST.");
       return;
     }
-    setRegistryLookupError(null);
+    setRegistryError(null);
     setIsLookingUp(true);
     setTimeout(() => {
       const result = lookupNationalRegistry(taxCode);
@@ -104,7 +89,7 @@ function CompanyVerificationPage() {
       if (result) {
         setRegistryResult(result);
       } else {
-        setRegistryLookupError("Không tìm thấy MST trên Cổng Quốc gia. Vui lòng kiểm tra lại số.");
+        setRegistryError("Không tìm thấy MST trên Cổng Quốc gia.");
       }
     }, 500);
   };
@@ -117,9 +102,7 @@ function CompanyVerificationPage() {
     setLegalRepresentative(registryResult.legalRepresentative);
     setRepresentativeTitle(registryResult.representativeTitle);
     setIssuingAuthority(registryResult.licensingAuthority);
-    if (!certificateNumber) {
-      setCertificateNumber(registryResult.taxCode);
-    }
+    if (!certificateNumber) setCertificateNumber(registryResult.taxCode);
   };
 
   const handleApplySamplePreset = (presetTaxCode: string) => {
@@ -138,7 +121,7 @@ function CompanyVerificationPage() {
     setContactPerson("Phạm Hải Yến");
     setContactTitle("Head of Talent Acquisition");
     setRegistryResult(sample);
-    setRegistryLookupError(null);
+    setRegistryError(null);
   };
 
   const handleSwitchStatusDemo = (newStatus: VerificationStatus) => {
@@ -158,33 +141,16 @@ function CompanyVerificationPage() {
 
   const handleSubmitForm = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitSuccessMsg(null);
-    setSubmitErrorMsg(null);
+    setSuccessMsg(null);
+    setErrorMsg(null);
 
-    if (!taxCode.trim()) {
-      setSubmitErrorMsg("Vui lòng nhập Mã số thuế.");
-      return;
-    }
-    if (!companyName.trim()) {
-      setSubmitErrorMsg("Vui lòng nhập Tên pháp lý doanh nghiệp.");
-      return;
-    }
-    if (!email.trim() || !email.includes("@")) {
-      setSubmitErrorMsg("Email công vụ không hợp lệ.");
-      return;
-    }
-    if (!certificateUrl.trim()) {
-      setSubmitErrorMsg("Vui lòng tải lên Giấy phép ĐKKD.");
-      return;
-    }
-    if (submitterRole === "AUTHORIZED_HR" && !powerOfAttorneyUrl.trim()) {
-      setSubmitErrorMsg("Vui lòng tải lên Giấy ủy quyền tuyển dụng.");
-      return;
-    }
-    if (!agreeCommitment || !agreeNoFees) {
-      setSubmitErrorMsg("Vui lòng tích xác nhận các cam kết tuân thủ.");
-      return;
-    }
+    if (!taxCode.trim()) return setErrorMsg("Vui lòng nhập Mã số thuế.");
+    if (!companyName.trim()) return setErrorMsg("Vui lòng nhập Tên pháp lý.");
+    if (!email.trim() || !email.includes("@")) return setErrorMsg("Email không hợp lệ.");
+    if (!certificateUrl.trim()) return setErrorMsg("Vui lòng tải lên Giấy ĐKKD.");
+    if (submitterRole === "AUTHORIZED_HR" && !powerOfAttorneyUrl.trim())
+      return setErrorMsg("Vui lòng tải lên Giấy ủy quyền.");
+    if (!agreeCommitment || !agreeNoFees) return setErrorMsg("Vui lòng xác nhận cam kết.");
 
     setIsSubmitting(true);
     try {
@@ -197,7 +163,7 @@ function CompanyVerificationPage() {
           phone,
           registeredAddress,
           city,
-          district,
+          district: record.district || "",
           legalRepresentative,
           representativeTitle,
           submitterRole,
@@ -211,7 +177,7 @@ function CompanyVerificationPage() {
           expectedVersion: record.version,
         });
         setRecord(res);
-        setSubmitSuccessMsg("Đã nộp lại hồ sơ thành công! Đang chờ kiểm duyệt.");
+        setSuccessMsg("Đã nộp lại hồ sơ thành công!");
       } else {
         const res = await submitVerification({
           name: companyName,
@@ -222,7 +188,7 @@ function CompanyVerificationPage() {
           phone,
           registeredAddress,
           city,
-          district,
+          district: record.district || "",
           legalRepresentative,
           representativeTitle,
           submitterRole,
@@ -235,289 +201,242 @@ function CompanyVerificationPage() {
           powerOfAttorneyUrl,
         });
         setRecord(res);
-        setSubmitSuccessMsg(`Hồ sơ đã nộp thành công! Mã phiếu #${res.ticketId}`);
+        setSuccessMsg(`Hồ sơ đã nộp! Mã phiếu #${res.ticketId}`);
       }
     } catch (err: unknown) {
-      setSubmitErrorMsg(err instanceof Error ? err.message : "Đã có lỗi xảy ra.");
+      setErrorMsg(err instanceof Error ? err.message : "Đã có lỗi xảy ra.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const Field = ({
+    label,
+    required,
+    children,
+  }: {
+    label: string;
+    required?: boolean;
+    children: React.ReactNode;
+  }) => (
+    <div>
+      <label className="block text-xs font-semibold text-charcoal-text mb-1">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      {children}
+    </div>
+  );
+
+  const inputCls =
+    "w-full px-3 py-2 rounded-lg border border-warm-border bg-parchment-bg text-charcoal-text text-xs focus:outline-none focus:border-primary";
+
   return (
     <AdminShell title="Xác thực Doanh nghiệp" role="recruiter">
-      {/* Compact Demo & State Switcher Bar */}
-      <div className="mb-5 bg-paper-white px-4 py-2.5 rounded-xl border border-warm-border shadow-xs flex flex-wrap items-center justify-between gap-2.5 text-xs">
-        <div className="flex items-center gap-2">
-          <span className="font-semibold text-charcoal-40">Mô phỏng trạng thái:</span>
-          <div className="inline-flex rounded-lg border border-warm-border bg-surface-container-low p-0.5">
+      {/* Demo bar */}
+      <div className="mb-4 bg-paper-white px-3 py-2 rounded-xl border border-warm-border flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div className="flex items-center gap-1.5">
+          <span className="text-charcoal-40">Trạng thái:</span>
+          {(["REGISTERED", "PENDING", "REJECTED", "VERIFIED"] as VerificationStatus[]).map((s) => (
             <button
+              key={s}
               type="button"
-              onClick={() => handleSwitchStatusDemo("REGISTERED")}
-              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
-                record.verificationStatus === "REGISTERED"
-                  ? "bg-primary text-on-primary font-bold shadow-xs"
+              onClick={() => handleSwitchStatusDemo(s)}
+              className={`px-2 py-0.5 rounded-md font-medium transition-colors ${
+                record.verificationStatus === s
+                  ? s === "VERIFIED"
+                    ? "bg-emerald-600 text-white"
+                    : s === "PENDING"
+                      ? "bg-amber-500 text-white"
+                      : s === "REJECTED"
+                        ? "bg-red-600 text-white"
+                        : "bg-primary text-on-primary"
                   : "text-charcoal-83 hover:text-charcoal-text"
               }`}
             >
-              Mẫu mới
+              {s === "REGISTERED"
+                ? "Mới"
+                : s === "PENDING"
+                  ? "Chờ"
+                  : s === "REJECTED"
+                    ? "Từ chối"
+                    : "Duyệt"}
             </button>
-            <button
-              type="button"
-              onClick={() => handleSwitchStatusDemo("PENDING")}
-              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
-                record.verificationStatus === "PENDING"
-                  ? "bg-amber-600 text-white font-bold shadow-xs"
-                  : "text-charcoal-83 hover:text-charcoal-text"
-              }`}
-            >
-              Chờ duyệt
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSwitchStatusDemo("REJECTED")}
-              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
-                record.verificationStatus === "REJECTED"
-                  ? "bg-red-600 text-white font-bold shadow-xs"
-                  : "text-charcoal-83 hover:text-charcoal-text"
-              }`}
-            >
-              Bị từ chối
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSwitchStatusDemo("VERIFIED")}
-              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
-                record.verificationStatus === "VERIFIED"
-                  ? "bg-emerald-600 text-white font-bold shadow-xs"
-                  : "text-charcoal-83 hover:text-charcoal-text"
-              }`}
-            >
-              Đã duyệt
-            </button>
-          </div>
+          ))}
         </div>
-
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <span className="text-charcoal-40">Mẫu:</span>
-          <button
-            type="button"
-            onClick={() => handleApplySamplePreset("0316892341")}
-            className="px-2 py-0.5 rounded bg-surface-container hover:bg-surface-container-high text-charcoal-text text-[11px] font-medium border border-warm-border"
-          >
-            Guardian Tech
-          </button>
-          <button
-            type="button"
-            onClick={() => handleApplySamplePreset("0108934522")}
-            className="px-2 py-0.5 rounded bg-surface-container hover:bg-surface-container-high text-charcoal-text text-[11px] font-medium border border-warm-border"
-          >
-            Vellum
-          </button>
-          <button
-            type="button"
-            onClick={() => handleApplySamplePreset("0401928374")}
-            className="px-2 py-0.5 rounded bg-surface-container hover:bg-surface-container-high text-charcoal-text text-[11px] font-medium border border-warm-border"
-          >
-            TechCorp
-          </button>
+          {[
+            ["0316892341", "Guardian"],
+            ["0108934522", "Vellum"],
+            ["0401928374", "TechCorp"],
+          ].map(([code, name]) => (
+            <button
+              key={code}
+              type="button"
+              onClick={() => handleApplySamplePreset(code)}
+              className="px-1.5 py-0.5 rounded border border-warm-border bg-surface-container text-[11px] hover:bg-surface-container-high"
+            >
+              {name}
+            </button>
+          ))}
           <Link
             to="/admin/verifications"
-            className="ml-1 text-primary hover:underline text-[11px] font-semibold flex items-center gap-0.5"
+            className="ml-1 text-primary text-[11px] font-semibold hover:underline"
           >
-            Admin Console →
+            Admin →
           </Link>
         </div>
       </div>
 
-      {/* Page Header */}
-      <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h2 className="text-2xl font-bold text-charcoal-text tracking-tight font-display">
-            Xác thực Pháp nhân Doanh nghiệp
-          </h2>
-          <p className="text-xs text-charcoal-83 mt-0.5">
-            Xác thực thông tin và giấy phép ĐKKD để mở khóa đăng tin tuyển dụng và gắn huy hiệu
-            Verified.
-          </p>
-        </div>
-
-        {/* Current Status Pill */}
+      {/* Header */}
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h2 className="text-2xl font-bold text-charcoal-text tracking-tight font-display">
+          Xác thực Pháp nhân (KYB)
+        </h2>
         <div className="shrink-0">
           {record.verificationStatus === "VERIFIED" && (
-            <div className="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center gap-2 text-xs font-semibold">
-              <Icon name="verified" className="!text-base text-emerald-600" />
-              <span>Đã xác thực (v{record.version})</span>
-            </div>
+            <span className="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center gap-1.5 text-xs font-semibold">
+              <Icon name="verified" className="!text-base text-emerald-600" /> Đã xác thực v
+              {record.version}
+            </span>
           )}
           {record.verificationStatus === "PENDING" && (
-            <div className="px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 flex items-center gap-2 text-xs font-semibold">
-              <Icon name="hourglass_top" className="!text-base text-amber-600 animate-pulse" />
-              <span>Đang chờ duyệt #{record.ticketId}</span>
-            </div>
+            <span className="px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 flex items-center gap-1.5 text-xs font-semibold">
+              <Icon name="hourglass_top" className="!text-base text-amber-600 animate-pulse" /> Chờ
+              duyệt #{record.ticketId}
+            </span>
           )}
           {record.verificationStatus === "REJECTED" && (
-            <div className="px-3 py-1.5 rounded-xl bg-red-50 border border-red-200 text-red-800 flex items-center gap-2 text-xs font-semibold">
-              <Icon name="cancel" className="!text-base text-red-600" />
-              <span>Cần điều chỉnh (v{record.version})</span>
-            </div>
+            <span className="px-3 py-1.5 rounded-xl bg-red-50 border border-red-200 text-red-800 flex items-center gap-1.5 text-xs font-semibold">
+              <Icon name="cancel" className="!text-base text-red-600" /> Cần điều chỉnh
+            </span>
           )}
           {record.verificationStatus === "REGISTERED" && (
-            <div className="px-3 py-1.5 rounded-xl bg-surface-container border border-warm-border text-charcoal-text flex items-center gap-2 text-xs font-semibold">
-              <Icon name="edit_document" className="!text-base text-primary" />
-              <span>Chưa xác thực</span>
-            </div>
+            <span className="px-3 py-1.5 rounded-xl bg-surface-container border border-warm-border text-charcoal-text flex items-center gap-1.5 text-xs font-semibold">
+              <Icon name="edit_document" className="!text-base text-primary" /> Chưa xác thực
+            </span>
           )}
         </div>
       </div>
 
-      {/* Notifications */}
-      {submitSuccessMsg && (
+      {/* Alerts */}
+      {successMsg && (
         <div className="mb-4 px-4 py-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
+          <span className="flex items-center gap-2">
             <Icon name="check_circle" className="!text-base text-emerald-600" />
-            <span>{submitSuccessMsg}</span>
-          </div>
-          <button onClick={() => setSubmitSuccessMsg(null)}>
+            {successMsg}
+          </span>
+          <button onClick={() => setSuccessMsg(null)}>
             <Icon name="close" className="!text-sm" />
           </button>
         </div>
       )}
-
-      {submitErrorMsg && (
+      {errorMsg && (
         <div className="mb-4 px-4 py-2.5 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
+          <span className="flex items-center gap-2">
             <Icon name="error" className="!text-base text-red-600" />
-            <span>{submitErrorMsg}</span>
-          </div>
-          <button onClick={() => setSubmitErrorMsg(null)}>
+            {errorMsg}
+          </span>
+          <button onClick={() => setErrorMsg(null)}>
             <Icon name="close" className="!text-sm" />
           </button>
         </div>
       )}
 
-      {/* REJECTED: Concise Alert Banner */}
+      {/* Status Banners */}
       {record.verificationStatus === "REJECTED" && (
-        <div className="mb-5 p-4 rounded-xl bg-red-50 border border-red-200 text-red-900 text-xs flex items-start gap-3">
+        <div className="mb-4 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-900 text-xs flex items-start gap-3">
           <Icon name="error" className="!text-lg text-red-600 shrink-0 mt-0.5" />
-          <div className="flex-1">
-            <div className="flex items-center justify-between">
-              <strong>Lý do từ chối từ Admin:</strong>
-              <span className="font-mono text-[11px] text-red-700">v{record.version}</span>
-            </div>
-            <p className="mt-1 font-medium text-red-950 bg-white/60 p-2.5 rounded-lg border border-red-200">
-              "
-              {record.rejectionReason ||
-                "Hồ sơ chưa đạt tiêu chuẩn. Vui lòng kiểm tra lại Giấy ĐKKD và MST."}
-              "
-            </p>
-            <p className="mt-1.5 text-red-700 text-[11px]">
-              Vui lòng sửa thông tin chưa đúng bên dưới và bấm <strong>"Cập nhật & Nộp lại"</strong>
-              .
+          <div>
+            <strong>Lý do từ chối:</strong>
+            <p className="mt-1 p-2.5 bg-white/60 rounded-lg border border-red-200 font-medium text-red-950">
+              {record.rejectionReason || "Hồ sơ chưa đạt tiêu chuẩn."}
             </p>
           </div>
         </div>
       )}
-
-      {/* VERIFIED: Compact Badge Box */}
       {record.verificationStatus === "VERIFIED" && (
-        <div className="mb-5 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950 text-xs flex flex-wrap items-center justify-between gap-3">
+        <div className="mb-4 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0">
-              <Icon name="verified" className="!text-2xl" />
+            <div className="w-9 h-9 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0">
+              <Icon name="verified" className="!text-xl" />
             </div>
-            <div>
-              <h4 className="font-bold text-sm text-emerald-900">
-                Doanh nghiệp Đã Xác Thực (Verified Employer)
-              </h4>
+            <div className="text-xs">
+              <p className="font-bold text-emerald-900">Verified Employer</p>
               <p className="text-emerald-700 text-[11px]">
-                Mã xác thực: #GW-VER-{record.id} • Duyệt ngày:{" "}
+                #GW-VER-{record.id} •{" "}
                 {record.verifiedAt
                   ? new Date(record.verifiedAt).toLocaleDateString("vi-VN")
                   : "Hôm nay"}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-1 bg-white rounded-lg border border-emerald-200 text-emerald-800 font-semibold text-[11px]">
+          <div className="flex gap-1.5 text-[11px]">
+            <span className="px-2 py-1 bg-white rounded-lg border border-emerald-200 text-emerald-800 font-semibold">
               ✓ Huy hiệu tích xanh
             </span>
-            <span className="px-2.5 py-1 bg-white rounded-lg border border-emerald-200 text-emerald-800 font-semibold text-[11px]">
-              ✓ Đăng tin không giới hạn
+            <span className="px-2 py-1 bg-white rounded-lg border border-emerald-200 text-emerald-800 font-semibold">
+              ✓ Đăng tin
             </span>
           </div>
         </div>
       )}
-
-      {/* PENDING: Compact Ticket Tracker */}
       {record.verificationStatus === "PENDING" && (
-        <div className="mb-5 p-4 rounded-xl bg-paper-white border border-warm-border shadow-xs text-xs">
-          <div className="flex items-center justify-between pb-3 border-b border-warm-border">
-            <div className="flex items-center gap-2">
-              <span className="font-mono font-bold text-primary px-2 py-0.5 rounded bg-primary/10">
-                Ticket #{record.ticketId}
-              </span>
-              <span className="text-charcoal-40">
-                • Nộp lúc: {new Date(record.createdAt).toLocaleDateString("vi-VN")}
-              </span>
-            </div>
-            <span className="text-charcoal-83 font-medium">
-              SLA: <strong>24h - 48h làm việc</strong>
+        <div className="mb-4 p-3.5 rounded-xl bg-paper-white border border-warm-border text-xs">
+          <div className="flex items-center justify-between pb-2.5 border-b border-warm-border mb-2.5">
+            <span className="font-mono font-bold text-primary px-2 py-0.5 rounded bg-primary/10">
+              #{record.ticketId}
+            </span>
+            <span className="text-charcoal-83">
+              SLA: <strong>24–48h làm việc</strong>
             </span>
           </div>
-          <div className="grid grid-cols-4 gap-2 mt-3 text-center">
-            <div className="p-2 rounded-lg bg-emerald-50 text-emerald-800 font-medium text-[11px]">
+          <div className="grid grid-cols-4 gap-1.5 text-center text-[11px]">
+            <div className="p-1.5 rounded-lg bg-emerald-50 text-emerald-800 font-medium">
               ✓ Tiếp nhận
             </div>
-            <div className="p-2 rounded-lg bg-amber-50 text-amber-800 font-medium text-[11px] animate-pulse">
-              ⏳ Đối soát Cổng QG
+            <div className="p-1.5 rounded-lg bg-amber-50 text-amber-800 font-medium animate-pulse">
+              ⏳ Đối soát QG
             </div>
-            <div className="p-2 rounded-lg bg-surface-container-low text-charcoal-40 text-[11px]">
-              Giám định ĐKKD
+            <div className="p-1.5 rounded-lg bg-surface-container-low text-charcoal-40">
+              Giám định
             </div>
-            <div className="p-2 rounded-lg bg-surface-container-low text-charcoal-40 text-[11px]">
+            <div className="p-1.5 rounded-lg bg-surface-container-low text-charcoal-40">
               Cấp huy hiệu
             </div>
           </div>
         </div>
       )}
 
-      {/* Form & Sidebar Grid */}
+      {/* Form + Sidebar */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Form: Col 8 */}
-        <div className="lg:col-span-8 flex flex-col gap-5">
-          <form onSubmit={handleSubmitForm} className="flex flex-col gap-5">
-            {/* SECTION 1: DOANH NGHIỆP & THUẾ */}
+        <div className="lg:col-span-8">
+          <form onSubmit={handleSubmitForm} className="flex flex-col gap-4">
+            {/* Section 1 */}
             <div className="bg-paper-white p-5 rounded-xl border border-warm-border shadow-xs">
               <div className="flex items-center justify-between pb-3 mb-4 border-b border-warm-border">
-                <div className="flex items-center gap-2">
+                <h3 className="font-bold text-sm text-charcoal-text font-display flex items-center gap-2">
                   <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-primary text-on-primary">
                     1
                   </span>
-                  <h3 className="font-bold text-sm text-charcoal-text font-display">
-                    Thông tin Doanh nghiệp & Mã số Thuế
-                  </h3>
-                </div>
+                  Doanh nghiệp & Mã số Thuế
+                </h3>
                 <button
                   type="button"
                   onClick={handleLookupRegistry}
                   disabled={isLookingUp}
-                  className="px-2.5 py-1 rounded-lg bg-surface-container hover:bg-surface-container-high border border-warm-border text-primary text-xs font-medium flex items-center gap-1 transition-colors"
+                  className="px-2.5 py-1 rounded-lg bg-surface-container hover:bg-surface-container-high border border-warm-border text-primary text-xs font-medium flex items-center gap-1"
                 >
                   <Icon
                     name={isLookingUp ? "sync" : "travel_explore"}
                     className={`!text-sm ${isLookingUp ? "animate-spin" : ""}`}
                   />
-                  {isLookingUp ? "Đang tra..." : "Tra cứu Cổng QG"}
+                  {isLookingUp ? "Đang tra..." : "Tra Cổng QG"}
                 </button>
               </div>
 
-              {/* MST & Website */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-3.5">
-                <div>
-                  <label className="block text-xs font-semibold text-charcoal-text mb-1">
-                    Mã số thuế (MST) <span className="text-red-500">*</span>
-                  </label>
+                <Field label="MST" required>
                   <div className="relative">
                     <input
                       type="text"
@@ -525,11 +444,11 @@ function CompanyVerificationPage() {
                       onChange={(e) => {
                         setTaxCode(e.target.value);
                         setRegistryResult(null);
-                        setRegistryLookupError(null);
+                        setRegistryError(null);
                       }}
-                      placeholder="10 hoặc 13 số (VD: 0316892341)"
+                      placeholder="VD: 0316892341"
                       maxLength={14}
-                      className="w-full px-3 py-2 rounded-lg border border-warm-border bg-parchment-bg text-charcoal-text font-mono text-xs focus:outline-none focus:border-primary"
+                      className={`${inputCls} font-mono pr-16`}
                     />
                     <button
                       type="button"
@@ -539,124 +458,100 @@ function CompanyVerificationPage() {
                       Tra cứu
                     </button>
                   </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-charcoal-text mb-1">
-                    Website Doanh nghiệp <span className="text-red-500">*</span>
-                  </label>
+                </Field>
+                <Field label="Website" required>
                   <input
                     type="url"
                     value={website}
                     onChange={(e) => setWebsite(e.target.value)}
                     placeholder="https://company.com"
-                    className="w-full px-3 py-2 rounded-lg border border-warm-border bg-parchment-bg text-charcoal-text text-xs focus:outline-none focus:border-primary"
+                    className={inputCls}
                   />
-                </div>
+                </Field>
               </div>
 
-              {/* Compact Registry Lookup Result */}
               {registryResult && (
                 <div className="mb-3.5 p-3 rounded-lg bg-primary/5 border border-primary/20 text-xs">
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="font-semibold text-primary flex items-center gap-1">
-                      <Icon name="verified" className="!text-sm" /> Cổng Thông tin Quốc gia:
+                      <Icon name="verified" className="!text-sm" /> Cổng Quốc gia:
                     </span>
                     <button
                       type="button"
                       onClick={handleApplyRegistryData}
-                      className="px-2 py-0.5 rounded bg-primary text-on-primary text-[11px] font-medium hover:opacity-90"
+                      className="px-2 py-0.5 rounded bg-primary text-on-primary text-[11px] font-medium"
                     >
-                      Tự động điền thông tin
+                      Tự động điền
                     </button>
                   </div>
-                  <div className="text-[11px] text-charcoal-83 space-y-0.5">
-                    <p>
-                      <strong>{registryResult.legalName}</strong> •{" "}
-                      <span className="text-emerald-700 font-semibold">
-                        {registryResult.statusText}
-                      </span>
-                    </p>
-                    <p>
-                      Đại diện: {registryResult.legalRepresentative} (
-                      {registryResult.representativeTitle})
-                    </p>
-                    <p className="truncate">Địa chỉ: {registryResult.registeredAddress}</p>
-                  </div>
+                  <p className="text-[11px] text-charcoal-83">
+                    <strong>{registryResult.legalName}</strong> •{" "}
+                    <span className="text-emerald-700 font-semibold">
+                      {registryResult.statusText}
+                    </span>
+                  </p>
+                  <p className="text-[11px] text-charcoal-83 truncate">
+                    {registryResult.registeredAddress}
+                  </p>
                 </div>
               )}
-
-              {registryLookupError && (
+              {registryError && (
                 <div className="mb-3.5 p-2 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-800">
-                  {registryLookupError}
+                  {registryError}
                 </div>
               )}
 
-              {/* Legal Name & English Name */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-3.5">
-                <div>
-                  <label className="block text-xs font-semibold text-charcoal-text mb-1">
-                    Tên Doanh nghiệp (theo ĐKKD) <span className="text-red-500">*</span>
-                  </label>
+                <Field label="Tên pháp lý (theo ĐKKD)" required>
                   <input
                     type="text"
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
-                    placeholder="VD: CÔNG TY CỔ PHẦN GUARDIAN TECH"
-                    className="w-full px-3 py-2 rounded-lg border border-warm-border bg-parchment-bg text-charcoal-text text-xs font-medium focus:outline-none focus:border-primary"
+                    placeholder="CÔNG TY CỔ PHẦN..."
+                    className={`${inputCls} font-medium`}
                   />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-charcoal-text mb-1">
-                    Tên tiếng Anh / Tên viết tắt
-                  </label>
+                </Field>
+                <Field label="Tên tiếng Anh / viết tắt">
                   <input
                     type="text"
                     value={englishName}
                     onChange={(e) => setEnglishName(e.target.value)}
-                    placeholder="VD: GUARDIAN TECH JSC"
-                    className="w-full px-3 py-2 rounded-lg border border-warm-border bg-parchment-bg text-charcoal-text text-xs focus:outline-none focus:border-primary"
+                    placeholder="GUARDIAN TECH JSC"
+                    className={inputCls}
                   />
-                </div>
+                </Field>
               </div>
 
-              {/* Address */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-semibold text-charcoal-text mb-1">
-                    Địa chỉ Trụ sở chính <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={registeredAddress}
-                    onChange={(e) => setRegisteredAddress(e.target.value)}
-                    placeholder="Số nhà, đường, phường/xã..."
-                    className="w-full px-3 py-2 rounded-lg border border-warm-border bg-parchment-bg text-charcoal-text text-xs focus:outline-none focus:border-primary"
-                  />
+                  <Field label="Địa chỉ trụ sở" required>
+                    <input
+                      type="text"
+                      value={registeredAddress}
+                      onChange={(e) => setRegisteredAddress(e.target.value)}
+                      placeholder="Số nhà, đường, phường/xã..."
+                      className={inputCls}
+                    />
+                  </Field>
                 </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-charcoal-text mb-1">
-                    Tỉnh / Thành phố <span className="text-red-500">*</span>
-                  </label>
+                <Field label="Tỉnh / Thành phố" required>
                   <select
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-warm-border bg-parchment-bg text-charcoal-text text-xs focus:outline-none focus:border-primary"
+                    className={inputCls}
                   >
-                    <option value="TP. Hồ Chí Minh">TP. Hồ Chí Minh</option>
-                    <option value="TP. Hà Nội">TP. Hà Nội</option>
-                    <option value="TP. Đà Nẵng">TP. Đà Nẵng</option>
-                    <option value="Bình Dương">Bình Dương</option>
-                    <option value="Đồng Nai">Đồng Nai</option>
-                    <option value="Khác">Khác</option>
+                    <option>TP. Hồ Chí Minh</option>
+                    <option>TP. Hà Nội</option>
+                    <option>TP. Đà Nẵng</option>
+                    <option>Bình Dương</option>
+                    <option>Đồng Nai</option>
+                    <option>Khác</option>
                   </select>
-                </div>
+                </Field>
               </div>
             </div>
 
-            {/* SECTION 2: NGƯỜI ĐẠI DIỆN & LIÊN HỆ */}
+            {/* Section 2 */}
             <div className="bg-paper-white p-5 rounded-xl border border-warm-border shadow-xs">
               <div className="flex items-center gap-2 pb-3 mb-4 border-b border-warm-border">
                 <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-primary text-on-primary">
@@ -667,201 +562,153 @@ function CompanyVerificationPage() {
                 </h3>
               </div>
 
-              {/* Legal Rep Details */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-3.5">
-                <div>
-                  <label className="block text-xs font-semibold text-charcoal-text mb-1">
-                    Họ & Tên Người đại diện pháp luật <span className="text-red-500">*</span>
-                  </label>
+                <Field label="Người đại diện pháp luật" required>
                   <input
                     type="text"
                     value={legalRepresentative}
                     onChange={(e) => setLegalRepresentative(e.target.value)}
-                    placeholder="VD: Nguyễn Văn An"
-                    className="w-full px-3 py-2 rounded-lg border border-warm-border bg-parchment-bg text-charcoal-text text-xs font-medium focus:outline-none focus:border-primary"
+                    placeholder="Nguyễn Văn An"
+                    className={`${inputCls} font-medium`}
                   />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-charcoal-text mb-1">
-                    Chức danh Người đại diện <span className="text-red-500">*</span>
-                  </label>
+                </Field>
+                <Field label="Chức danh" required>
                   <input
                     type="text"
                     value={representativeTitle}
                     onChange={(e) => setRepresentativeTitle(e.target.value)}
-                    placeholder="Tổng Giám đốc / Giám đốc"
-                    className="w-full px-3 py-2 rounded-lg border border-warm-border bg-parchment-bg text-charcoal-text text-xs focus:outline-none focus:border-primary"
+                    placeholder="Tổng Giám đốc"
+                    className={inputCls}
                   />
-                </div>
+                </Field>
               </div>
 
-              {/* Submitter Role Toggle */}
               <div className="mb-3.5 p-3 rounded-lg bg-surface-container-low border border-warm-border text-xs">
                 <span className="font-semibold text-charcoal-text block mb-2">
                   Vai trò người nộp:
                 </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <label
-                    className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer text-xs ${
-                      submitterRole === "LEGAL_REP"
-                        ? "bg-paper-white border-primary font-semibold text-primary"
-                        : "bg-transparent border-warm-border text-charcoal-83"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="submitterRole"
-                      checked={submitterRole === "LEGAL_REP"}
-                      onChange={() => setSubmitterRole("LEGAL_REP")}
-                      className="text-primary"
-                    />
-                    <span>Người đại diện theo PL</span>
-                  </label>
-
-                  <label
-                    className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer text-xs ${
-                      submitterRole === "AUTHORIZED_HR"
-                        ? "bg-paper-white border-primary font-semibold text-primary"
-                        : "bg-transparent border-warm-border text-charcoal-83"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="submitterRole"
-                      checked={submitterRole === "AUTHORIZED_HR"}
-                      onChange={() => setSubmitterRole("AUTHORIZED_HR")}
-                      className="text-primary"
-                    />
-                    <span>Nhân sự được ủy quyền (HR)</span>
-                  </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(["LEGAL_REP", "AUTHORIZED_HR"] as SubmitterRole[]).map((role) => (
+                    <label
+                      key={role}
+                      className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer text-xs ${
+                        submitterRole === role
+                          ? "bg-paper-white border-primary font-semibold text-primary"
+                          : "border-warm-border text-charcoal-83"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="submitterRole"
+                        checked={submitterRole === role}
+                        onChange={() => setSubmitterRole(role)}
+                      />
+                      {role === "LEGAL_REP" ? "Người đại diện PL" : "Nhân sự ủy quyền (HR)"}
+                    </label>
+                  ))}
                 </div>
               </div>
 
-              {/* Contact Info & Email */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-3.5">
-                <div>
-                  <label className="block text-xs font-semibold text-charcoal-text mb-1">
-                    Người liên hệ <span className="text-red-500">*</span>
-                  </label>
+                <Field label="Người liên hệ" required>
                   <input
                     type="text"
                     value={contactPerson}
                     onChange={(e) => setContactPerson(e.target.value)}
-                    placeholder="VD: Lê Hoàng Lan"
-                    className="w-full px-3 py-2 rounded-lg border border-warm-border bg-parchment-bg text-charcoal-text text-xs focus:outline-none focus:border-primary"
+                    placeholder="Lê Hoàng Lan"
+                    className={inputCls}
                   />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-charcoal-text mb-1">
-                    Chức danh <span className="text-red-500">*</span>
-                  </label>
+                </Field>
+                <Field label="Chức danh" required>
                   <input
                     type="text"
                     value={contactTitle}
                     onChange={(e) => setContactTitle(e.target.value)}
-                    placeholder="VD: HR Lead"
-                    className="w-full px-3 py-2 rounded-lg border border-warm-border bg-parchment-bg text-charcoal-text text-xs focus:outline-none focus:border-primary"
+                    placeholder="HR Lead"
+                    className={inputCls}
                   />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-charcoal-text mb-1">
-                    Điện thoại <span className="text-red-500">*</span>
-                  </label>
+                </Field>
+                <Field label="Điện thoại" required>
                   <input
                     type="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="028 7300 8899"
-                    className="w-full px-3 py-2 rounded-lg border border-warm-border bg-parchment-bg text-charcoal-text text-xs focus:outline-none focus:border-primary"
+                    className={inputCls}
                   />
-                </div>
+                </Field>
               </div>
 
-              {/* Corporate Email */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-semibold text-charcoal-text">
-                    Email công vụ doanh nghiệp <span className="text-red-500">*</span>
-                  </label>
+              <Field label="Email công vụ" required>
+                <div className="relative">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="recruiter@company.com"
+                    className={`${inputCls} font-mono`}
+                  />
                   {isFreeEmail && (
-                    <span className="text-[11px] text-amber-700 font-medium">
-                      ⚠️ Nên dùng email tên miền công ty
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-amber-600 font-medium">
+                      ⚠ Gmail/Yahoo
                     </span>
                   )}
                 </div>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="recruiter@guardianwork.com"
-                  className="w-full px-3 py-2 rounded-lg border border-warm-border bg-parchment-bg text-charcoal-text font-mono text-xs focus:outline-none focus:border-primary"
-                />
-              </div>
+              </Field>
 
-              {/* If Authorized HR: Power of Attorney URL */}
               {submitterRole === "AUTHORIZED_HR" && (
                 <div className="mt-3.5 p-3 rounded-lg bg-primary/5 border border-primary/20 text-xs">
                   <label className="block font-semibold text-primary mb-1">
-                    Giấy ủy quyền / Quyết định bổ nhiệm (có mộc đỏ){" "}
-                    <span className="text-red-500">*</span>
+                    Giấy ủy quyền (có mộc đỏ) <span className="text-red-500">*</span>
                   </label>
                   <div className="flex items-center gap-2">
                     <input
                       type="url"
                       value={powerOfAttorneyUrl}
                       onChange={(e) => setPowerOfAttorneyUrl(e.target.value)}
-                      placeholder="Liên kết tệp PDF hoặc ảnh Giấy ủy quyền"
+                      placeholder="Liên kết tệp PDF / ảnh"
                       className="flex-1 px-3 py-1.5 rounded-lg border border-warm-border bg-white text-xs font-mono"
                     />
                     <button
                       type="button"
                       onClick={() => {
                         setPreviewDocUrl(powerOfAttorneyUrl);
-                        setPreviewDocTitle("Giấy Ủy quyền Tuyển dụng");
+                        setPreviewDocTitle("Giấy Ủy quyền");
                       }}
                       className="px-2.5 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-warm-border text-xs font-medium shrink-0"
                     >
-                      Xem mẫu
+                      Xem
                     </button>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* SECTION 3: GIẤY PHÉP ĐKKD */}
+            {/* Section 3 */}
             <div className="bg-paper-white p-5 rounded-xl border border-warm-border shadow-xs">
               <div className="flex items-center justify-between pb-3 mb-4 border-b border-warm-border">
-                <div className="flex items-center gap-2">
+                <h3 className="font-bold text-sm text-charcoal-text font-display flex items-center gap-2">
                   <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-primary text-on-primary">
                     3
                   </span>
-                  <h3 className="font-bold text-sm text-charcoal-text font-display">
-                    Giấy phép ĐKKD (Bản chụp / scan)
-                  </h3>
-                </div>
+                  Giấy phép ĐKKD
+                </h3>
                 <button
                   type="button"
                   onClick={() => {
                     setPreviewDocUrl(certificateUrl);
-                    setPreviewDocTitle("Giấy chứng nhận Đăng ký Doanh nghiệp");
+                    setPreviewDocTitle("Giấy ĐKKD");
                   }}
                   className="text-xs text-primary font-semibold hover:underline flex items-center gap-1"
                 >
-                  <Icon name="visibility" className="!text-sm" /> Xem bản scan
+                  <Icon name="visibility" className="!text-sm" /> Xem scan
                 </button>
               </div>
 
-              {/* Dropzone */}
-              <div className="p-4 rounded-xl border border-dashed border-warm-border bg-surface-container-low/50 text-center mb-3.5">
-                <p className="text-xs font-medium text-charcoal-text">
-                  Kéo thả tệp hoặc chọn tệp từ máy (PDF, PNG, JPG ≤ 10MB)
-                </p>
-                <div className="mt-2.5 flex items-center justify-center gap-2">
+              <div className="p-3.5 rounded-xl border border-dashed border-warm-border bg-surface-container-low/50 text-center mb-3.5">
+                <div className="flex items-center justify-center gap-2">
                   <label className="px-3 py-1.5 bg-primary text-on-primary rounded-lg text-xs font-semibold hover:opacity-90 cursor-pointer">
-                    Chọn tệp ĐKKD
+                    Chọn tệp (PDF / PNG / JPG)
                     <input
                       type="file"
                       className="hidden"
@@ -878,68 +725,59 @@ function CompanyVerificationPage() {
                       setPreviewDocUrl(certificateUrl);
                       setPreviewDocTitle("Giấy ĐKKD Mẫu");
                     }}
-                    className="px-3 py-1.5 bg-paper-white border border-warm-border text-charcoal-text rounded-lg text-xs font-medium"
+                    className="px-3 py-1.5 bg-paper-white border border-warm-border text-charcoal-text rounded-lg text-xs"
                   >
-                    Xem mẫu scan
+                    Xem mẫu
                   </button>
                 </div>
               </div>
 
-              {/* License details */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-3">
-                <div>
-                  <label className="block text-xs font-semibold text-charcoal-text mb-1">
-                    Số Giấy phép / MST <span className="text-red-500">*</span>
-                  </label>
+                <Field label="Số Giấy phép / MST" required>
                   <input
                     type="text"
                     value={certificateNumber}
                     onChange={(e) => setCertificateNumber(e.target.value)}
-                    placeholder="VD: 0316892341"
-                    className="w-full px-3 py-2 rounded-lg border border-warm-border bg-parchment-bg text-charcoal-text font-mono text-xs focus:outline-none focus:border-primary"
+                    placeholder="0316892341"
+                    className={`${inputCls} font-mono`}
                   />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-charcoal-text mb-1">
-                    Ngày cấp <span className="text-red-500">*</span>
-                  </label>
+                </Field>
+                <Field label="Ngày cấp" required>
                   <input
                     type="date"
                     value={issueDate}
                     onChange={(e) => setIssueDate(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-warm-border bg-parchment-bg text-charcoal-text text-xs focus:outline-none focus:border-primary"
+                    className={inputCls}
                   />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-charcoal-text mb-1">
-                    Cơ quan cấp <span className="text-red-500">*</span>
-                  </label>
+                </Field>
+                <Field label="Cơ quan cấp" required>
                   <input
                     type="text"
                     value={issuingAuthority}
                     onChange={(e) => setIssuingAuthority(e.target.value)}
                     placeholder="Sở KH & ĐT..."
-                    className="w-full px-3 py-2 rounded-lg border border-warm-border bg-parchment-bg text-charcoal-text text-xs focus:outline-none focus:border-primary"
+                    className={inputCls}
                   />
-                </div>
+                </Field>
               </div>
 
-              {/* Compact OCR Status Tag */}
-              <div className="flex items-center justify-between text-[11px] text-charcoal-83 px-2 py-1 bg-surface-container-low rounded-lg">
+              <div className="flex items-center gap-3 text-[11px] text-charcoal-83 px-2 py-1 bg-surface-container-low rounded-lg">
                 <span className="flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  Độ khớp OCR: <strong>98.4%</strong>
+                  OCR: <strong>98.4%</strong>
                 </span>
-                <span>✓ Mộc đỏ hợp lệ • Rủi ro: Thấp</span>
+                <span>✓ Mộc đỏ hợp lệ</span>
+                <span>Rủi ro: Thấp</span>
               </div>
             </div>
 
-            {/* SECTION 4: CAM KẾT */}
+            {/* Section 4 */}
             <div className="bg-paper-white p-5 rounded-xl border border-warm-border shadow-xs text-xs">
-              <h3 className="font-bold text-sm text-charcoal-text font-display mb-3">
-                4. Cam kết Tuân thủ
+              <h3 className="font-bold text-sm text-charcoal-text font-display mb-3 flex items-center gap-2">
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-primary text-on-primary">
+                  4
+                </span>
+                Cam kết Tuân thủ
               </h3>
               <div className="space-y-2 text-charcoal-text">
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -949,7 +787,7 @@ function CompanyVerificationPage() {
                     onChange={(e) => setAgreeCommitment(e.target.checked)}
                     className="text-primary rounded"
                   />
-                  <span>Cam kết thông tin và tài liệu cung cấp là chính xác, đúng pháp nhân.</span>
+                  <span>Thông tin và tài liệu cung cấp là chính xác, đúng pháp nhân.</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -959,8 +797,7 @@ function CompanyVerificationPage() {
                     className="text-primary rounded"
                   />
                   <span>
-                    Tuyệt đối không thu bất kỳ phí tuyển dụng, tiền cọc hay đồng phục từ ứng viên
-                    (Điều 17 Luật LĐ).
+                    Không thu phí tuyển dụng, tiền cọc hay đồng phục từ ứng viên (Điều 17 Luật LĐ).
                   </span>
                 </label>
               </div>
@@ -968,7 +805,7 @@ function CompanyVerificationPage() {
 
             {/* Action Bar */}
             <div className="p-4 bg-paper-white rounded-xl border border-warm-border shadow-xs flex items-center justify-between gap-3 text-xs">
-              <span className="text-charcoal-40 font-mono">Phiên bản: v{record.version}</span>
+              <span className="text-charcoal-40 font-mono">v{record.version}</span>
               <div className="flex items-center gap-2.5">
                 <Link
                   to="/recruiter"
@@ -980,17 +817,17 @@ function CompanyVerificationPage() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="px-5 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold transition-all disabled:opacity-50"
+                    className="px-5 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold disabled:opacity-50"
                   >
-                    {isSubmitting ? "Đang gửi..." : `Cập nhật & Nộp lại (v${record.version + 1})`}
+                    {isSubmitting ? "Đang gửi..." : `Nộp lại (v${record.version + 1})`}
                   </button>
                 ) : (
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="px-5 py-2 rounded-lg bg-primary hover:bg-charcoal-83 text-on-primary font-bold transition-all disabled:opacity-50"
+                    className="px-5 py-2 rounded-lg bg-primary hover:bg-charcoal-83 text-on-primary font-bold disabled:opacity-50"
                   >
-                    {isSubmitting ? "Đang gửi..." : "Nộp Hồ sơ Xác thực"}
+                    {isSubmitting ? "Đang gửi..." : "Nộp Hồ sơ"}
                   </button>
                 )}
               </div>
@@ -998,75 +835,72 @@ function CompanyVerificationPage() {
           </form>
         </div>
 
-        {/* Right Sidebar: Concise Checklist & Support: Col 4 */}
+        {/* Sidebar */}
         <div className="lg:col-span-4 flex flex-col gap-4 text-xs">
-          {/* Streamlined 5-Point Checklist */}
           <div className="bg-paper-white p-4 rounded-xl border border-warm-border shadow-xs">
-            <h4 className="font-bold text-charcoal-text font-display mb-2.5 flex items-center gap-1.5">
-              <Icon name="fact_check" className="!text-base text-primary" /> Tiêu chuẩn Thẩm định
-              (5/5)
+            <h4 className="font-bold text-charcoal-text font-display mb-2.5 flex items-center gap-1.5 text-sm">
+              <Icon name="fact_check" className="!text-base text-primary" /> 5 Tiêu chuẩn
             </h4>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between p-2 rounded-lg bg-surface-container-low">
-                <span>1. Mã số thuế trùng khớp Cổng QG</span>
-                <span className="text-emerald-700 font-bold">✓ Đạt</span>
-              </div>
-              <div className="flex items-center justify-between p-2 rounded-lg bg-surface-container-low">
-                <span>2. Tên pháp lý đúng ĐKKD</span>
-                <span className="text-emerald-700 font-bold">✓ Đạt</span>
-              </div>
-              <div className="flex items-center justify-between p-2 rounded-lg bg-surface-container-low">
-                <span>3. Trạng thái Đang hoạt động</span>
-                <span className="text-emerald-700 font-bold">✓ Đạt</span>
-              </div>
-              <div className="flex items-center justify-between p-2 rounded-lg bg-surface-container-low">
-                <span>4. Bản scan rõ mộc đỏ & giáp lai</span>
-                <span className="text-emerald-700 font-bold">✓ Đạt</span>
-              </div>
-              <div className="flex items-center justify-between p-2 rounded-lg bg-surface-container-low">
-                <span>5. Thẩm quyền nộp / Giấy ủy quyền</span>
-                <span className="text-emerald-700 font-bold">✓ Đạt</span>
-              </div>
+            <div className="space-y-1.5">
+              {[
+                "MST trùng khớp Cổng QG",
+                "Tên pháp lý đúng ĐKKD",
+                "Trạng thái Đang hoạt động",
+                "Bản scan rõ mộc đỏ & giáp lai",
+                "Thẩm quyền / Giấy ủy quyền",
+              ].map((item, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between p-2 rounded-lg bg-surface-container-low"
+                >
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-4 h-4 rounded-full bg-primary text-on-primary text-[10px] flex items-center justify-center font-mono shrink-0">
+                      {i + 1}
+                    </span>
+                    {item}
+                  </span>
+                  <span className="text-emerald-700 font-bold shrink-0">✓</span>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Compact Trust Tier Card */}
           <div className="bg-paper-white p-4 rounded-xl border border-warm-border shadow-xs">
             <h4 className="font-bold text-charcoal-text mb-2 flex items-center gap-1.5">
-              <Icon name="shield" className="!text-base text-primary" /> Mô hình 4 Cấp độ Tin cậy
+              <Icon name="shield" className="!text-base text-primary" /> 4 Cấp độ Tin cậy
             </h4>
-            <div className="space-y-1.5 text-charcoal-83 text-[11px]">
-              <p>
-                • <strong>Tier 4:</strong> Giấy ủy quyền / Thẩm quyền đại diện
-              </p>
-              <p>
-                • <strong>Tier 3:</strong> Giám định bản scan ĐKKD & mộc đỏ
-              </p>
-              <p>
-                • <strong>Tier 2:</strong> Đối soát Cổng Thông tin Quốc gia
-              </p>
-              <p>
-                • <strong>Tier 1:</strong> Email công vụ tên miền doanh nghiệp
-              </p>
+            <div className="space-y-1 text-[11px] text-charcoal-83">
+              {[
+                ["T4", "Giấy ủy quyền / Đại diện"],
+                ["T3", "Giám định scan ĐKKD"],
+                ["T2", "Đối soát Cổng Quốc gia"],
+                ["T1", "Email tên miền doanh nghiệp"],
+              ].map(([tier, desc]) => (
+                <div key={tier} className="flex items-center gap-2">
+                  <span className="font-mono font-bold text-primary text-[10px] w-5 shrink-0">
+                    {tier}
+                  </span>
+                  <span>{desc}</span>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Quick Support */}
           <div className="bg-surface-container-low p-3.5 rounded-xl border border-warm-border text-[11px] text-charcoal-83">
-            <div className="font-semibold text-charcoal-text mb-1 flex items-center gap-1">
-              <Icon name="support_agent" className="!text-sm text-primary" /> Hỗ trợ Thẩm định
+            <div className="font-semibold text-charcoal-text mb-1.5 flex items-center gap-1">
+              <Icon name="support_agent" className="!text-sm text-primary" /> Hỗ trợ
             </div>
             <p>
-              Hotline: <strong className="text-primary font-mono">028 7300 8899</strong>
+              📞 <strong className="text-primary font-mono">028 7300 8899</strong>
             </p>
             <p>
-              Email: <span className="text-primary font-mono">kyb@guardianwork.com</span>
+              ✉ <span className="text-primary font-mono">kyb@guardianwork.com</span>
             </p>
           </div>
         </div>
       </div>
 
-      {/* Lightbox Preview Modal */}
+      {/* Lightbox */}
       {previewDocUrl && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-paper-white rounded-2xl border border-warm-border shadow-2xl max-w-3xl w-full max-h-[85vh] flex flex-col overflow-hidden">
