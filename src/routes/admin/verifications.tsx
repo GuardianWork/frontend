@@ -94,7 +94,7 @@ function AdminVerificationsPage() {
             UC-ADM-01
           </span>
           <h2 className="text-2xl font-bold text-charcoal-text tracking-tight font-display mt-1">
-            Thẩm định Hồ sơ KYB
+            Thẩm định KYB
           </h2>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -188,7 +188,7 @@ function AdminVerificationsPage() {
           <div className="flex items-center gap-2 pb-2.5 mb-3 border-b border-warm-border">
             <span className="w-2 h-2 rounded-full bg-primary" />
             <h3 className="font-bold text-xs text-charcoal-40 uppercase tracking-wider">
-              Hồ sơ Khai báo
+              Hồ sơ khai báo
             </h3>
           </div>
           <div className="space-y-2 text-xs">
@@ -390,14 +390,14 @@ function AdminVerificationsPage() {
           {!zoomDoc && (
             <div className="md:col-span-5 text-xs space-y-1.5">
               <h4 className="font-bold text-charcoal-text text-xs uppercase tracking-wider mb-2">
-                Kiểm tra 5 điểm
+                Tiêu chuẩn duyệt
               </h4>
               {[
-                "Khớp MST với ĐKKD",
-                "Tên pháp lý từng ký tự",
-                "Trạng thái Đang hoạt động",
-                "Scan rõ mộc đỏ & giáp lai",
-                "Thẩm quyền / Ủy quyền",
+                "MST khớp ĐKKD",
+                "Tên pháp lý",
+                "Đang hoạt động",
+                "Scan mộc đỏ",
+                "Thẩm quyền/Ủy quyền",
               ].map((item, i) => (
                 <div
                   key={i}

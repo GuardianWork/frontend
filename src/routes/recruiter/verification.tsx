@@ -177,7 +177,7 @@ function CompanyVerificationPage() {
           expectedVersion: record.version,
         });
         setRecord(res);
-        setSuccessMsg("Đã nộp lại hồ sơ thành công!");
+        setSuccessMsg(`Đã nộp lại hồ sơ thành công! Email xác nhận đã được gửi tới ${email}`);
       } else {
         const res = await submitVerification({
           name: companyName,
@@ -201,7 +201,9 @@ function CompanyVerificationPage() {
           powerOfAttorneyUrl,
         });
         setRecord(res);
-        setSuccessMsg(`Hồ sơ đã nộp! Mã phiếu #${res.ticketId}`);
+        setSuccessMsg(
+          `Đăng ký doanh nghiệp thành công! Mã phiếu #${res.ticketId}. Email xác nhận đã được gửi tới ${email}`,
+        );
       }
     } catch (err: unknown) {
       setErrorMsg(err instanceof Error ? err.message : "Đã có lỗi xảy ra.");
@@ -290,9 +292,15 @@ function CompanyVerificationPage() {
 
       {/* Header */}
       <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 className="text-2xl font-bold text-charcoal-text tracking-tight font-display">
-          Xác thực Pháp nhân (KYB)
-        </h2>
+        <div>
+          <h2 className="text-2xl font-bold text-charcoal-text tracking-tight font-display">
+            Đăng ký & Xác thực Doanh nghiệp (KYB)
+          </h2>
+          <p className="text-xs text-charcoal-83 mt-0.5">
+            Điền thông tin pháp nhân để đăng ký. Hệ thống sẽ gửi email xác nhận mã phiếu và thông
+            báo kết quả thẩm định.
+          </p>
+        </div>
         <div className="shrink-0">
           {record.verificationStatus === "VERIFIED" && (
             <span className="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center gap-1.5 text-xs font-semibold">
@@ -419,7 +427,7 @@ function CompanyVerificationPage() {
                   <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-primary text-on-primary">
                     1
                   </span>
-                  Doanh nghiệp & Mã số Thuế
+                  MST & Doanh nghiệp
                 </h3>
                 <button
                   type="button"
@@ -431,7 +439,7 @@ function CompanyVerificationPage() {
                     name={isLookingUp ? "sync" : "travel_explore"}
                     className={`!text-sm ${isLookingUp ? "animate-spin" : ""}`}
                   />
-                  {isLookingUp ? "Đang tra..." : "Tra Cổng QG"}
+                  {isLookingUp ? "Đang tra..." : "Cổng QG"}
                 </button>
               </div>
 
@@ -558,7 +566,7 @@ function CompanyVerificationPage() {
                   2
                 </span>
                 <h3 className="font-bold text-sm text-charcoal-text font-display">
-                  Người Đại diện & Liên hệ
+                  Đại diện & Liên hệ
                 </h3>
               </div>
 
@@ -777,7 +785,7 @@ function CompanyVerificationPage() {
                 <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-primary text-on-primary">
                   4
                 </span>
-                Cam kết Tuân thủ
+                Cam kết
               </h3>
               <div className="space-y-2 text-charcoal-text">
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -787,7 +795,7 @@ function CompanyVerificationPage() {
                     onChange={(e) => setAgreeCommitment(e.target.checked)}
                     className="text-primary rounded"
                   />
-                  <span>Thông tin và tài liệu cung cấp là chính xác, đúng pháp nhân.</span>
+                  <span>Thông tin và tài liệu cung cấp chính xác, đúng pháp nhân.</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -796,9 +804,7 @@ function CompanyVerificationPage() {
                     onChange={(e) => setAgreeNoFees(e.target.checked)}
                     className="text-primary rounded"
                   />
-                  <span>
-                    Không thu phí tuyển dụng, tiền cọc hay đồng phục từ ứng viên (Điều 17 Luật LĐ).
-                  </span>
+                  <span>Không thu phí tuyển dụng hay tiền cọc từ ứng viên.</span>
                 </label>
               </div>
             </div>
@@ -839,15 +845,15 @@ function CompanyVerificationPage() {
         <div className="lg:col-span-4 flex flex-col gap-4 text-xs">
           <div className="bg-paper-white p-4 rounded-xl border border-warm-border shadow-xs">
             <h4 className="font-bold text-charcoal-text font-display mb-2.5 flex items-center gap-1.5 text-sm">
-              <Icon name="fact_check" className="!text-base text-primary" /> 5 Tiêu chuẩn
+              <Icon name="fact_check" className="!text-base text-primary" /> Tiêu chuẩn KYB
             </h4>
             <div className="space-y-1.5">
               {[
-                "MST trùng khớp Cổng QG",
-                "Tên pháp lý đúng ĐKKD",
-                "Trạng thái Đang hoạt động",
-                "Bản scan rõ mộc đỏ & giáp lai",
-                "Thẩm quyền / Giấy ủy quyền",
+                "MST khớp Cổng QG",
+                "Tên pháp lý ĐKKD",
+                "Trạng thái hoạt động",
+                "Scan rõ mộc đỏ",
+                "Thẩm quyền đại diện",
               ].map((item, i) => (
                 <div
                   key={i}
@@ -867,14 +873,14 @@ function CompanyVerificationPage() {
 
           <div className="bg-paper-white p-4 rounded-xl border border-warm-border shadow-xs">
             <h4 className="font-bold text-charcoal-text mb-2 flex items-center gap-1.5">
-              <Icon name="shield" className="!text-base text-primary" /> 4 Cấp độ Tin cậy
+              <Icon name="shield" className="!text-base text-primary" /> Cấp độ Tin cậy
             </h4>
             <div className="space-y-1 text-[11px] text-charcoal-83">
               {[
-                ["T4", "Giấy ủy quyền / Đại diện"],
-                ["T3", "Giám định scan ĐKKD"],
-                ["T2", "Đối soát Cổng Quốc gia"],
-                ["T1", "Email tên miền doanh nghiệp"],
+                ["T4", "Ủy quyền/Đại diện"],
+                ["T3", "Scan ĐKKD"],
+                ["T2", "Cổng Quốc gia"],
+                ["T1", "Email doanh nghiệp"],
               ].map(([tier, desc]) => (
                 <div key={tier} className="flex items-center gap-2">
                   <span className="font-mono font-bold text-primary text-[10px] w-5 shrink-0">
