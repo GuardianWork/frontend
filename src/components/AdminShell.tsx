@@ -7,6 +7,7 @@ type NavItem = { to: string; label: string; icon: string };
 
 const ADMIN_NAV: NavItem[] = [
   { to: "/admin", label: "Dashboard", icon: "dashboard" },
+  { to: "/admin/verifications", label: "Duyệt Pháp nhân", icon: "domain_verification" },
   { to: "/admin/compliance", label: "Compliance Queue", icon: "verified_user" },
   { to: "/admin/candidates", label: "Network Directory", icon: "group" },
   { to: "/admin/analytics", label: "Analytics", icon: "analytics" },
@@ -20,6 +21,7 @@ const CANDIDATE_NAV: NavItem[] = [
 
 const RECRUITER_NAV: NavItem[] = [
   { to: "/recruiter", label: "Recruiter Hub", icon: "hub" },
+  { to: "/recruiter/verification", label: "Xác thực Pháp nhân", icon: "verified" },
   { to: "/recruiter/talent", label: "Talent Profiles", icon: "person_search" },
   { to: "/recruiter/jobs", label: "Manage Jobs", icon: "work" },
 ];
@@ -242,6 +244,26 @@ export function AdminShell({
               <Icon name="public" className="!text-sm text-primary" />
               <span>Cổng ngoài (/vn)</span>
             </Link>
+
+            {currentRole === "recruiter" && (
+              <Link
+                to="/recruiter/verification"
+                className="hidden sm:flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-colors"
+              >
+                <Icon name="verified" className="!text-sm text-primary" />
+                <span>Xác thực KYB</span>
+              </Link>
+            )}
+
+            {currentRole === "admin" && (
+              <Link
+                to="/admin/verifications"
+                className="hidden sm:flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-colors"
+              >
+                <Icon name="domain_verification" className="!text-sm text-primary" />
+                <span>Duyệt Pháp nhân</span>
+              </Link>
+            )}
 
             {topNavExtras}
 

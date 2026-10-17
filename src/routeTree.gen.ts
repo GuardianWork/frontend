@@ -24,6 +24,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin/analytics'
 import { Route as AdminCandidatesRouteImport } from './routes/admin/candidates'
 import { Route as AdminComplianceRouteImport } from './routes/admin/compliance'
+import { Route as AdminVerificationsRouteImport } from './routes/admin/verifications'
 import { Route as CandidateIndexRouteImport } from './routes/candidate/index'
 import { Route as CandidateCopilotRouteImport } from './routes/candidate/copilot'
 import { Route as CandidateJobsRouteImport } from './routes/candidate/jobs'
@@ -33,6 +34,7 @@ import { Route as RecruiterHubRouteImport } from './routes/recruiter/hub'
 import { Route as RecruiterJobsRouteImport } from './routes/recruiter/jobs'
 import { Route as RecruiterProfileRouteImport } from './routes/recruiter/profile'
 import { Route as RecruiterTalentRouteImport } from './routes/recruiter/talent'
+import { Route as RecruiterVerificationRouteImport } from './routes/recruiter/verification'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -109,6 +111,11 @@ const AdminComplianceRoute = AdminComplianceRouteImport.update({
   path: '/admin/compliance',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminVerificationsRoute = AdminVerificationsRouteImport.update({
+  id: '/admin/verifications',
+  path: '/admin/verifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CandidateIndexRoute = CandidateIndexRouteImport.update({
   id: '/candidate/',
   path: '/candidate/',
@@ -154,6 +161,11 @@ const RecruiterTalentRoute = RecruiterTalentRouteImport.update({
   path: '/recruiter/talent',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RecruiterVerificationRoute = RecruiterVerificationRouteImport.update({
+  id: '/recruiter/verification',
+  path: '/recruiter/verification',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -170,6 +182,7 @@ export interface FileRoutesByFullPath {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/candidates': typeof AdminCandidatesRoute
   '/admin/compliance': typeof AdminComplianceRoute
+  '/admin/verifications': typeof AdminVerificationsRoute
   '/candidate/copilot': typeof CandidateCopilotRoute
   '/candidate/jobs': typeof CandidateJobsRoute
   '/candidate/profile': typeof CandidateProfileRoute
@@ -177,6 +190,7 @@ export interface FileRoutesByFullPath {
   '/recruiter/jobs': typeof RecruiterJobsRoute
   '/recruiter/profile': typeof RecruiterProfileRoute
   '/recruiter/talent': typeof RecruiterTalentRoute
+  '/recruiter/verification': typeof RecruiterVerificationRoute
   '/admin/': typeof AdminIndexRoute
   '/candidate/': typeof CandidateIndexRoute
   '/recruiter/': typeof RecruiterIndexRoute
@@ -196,6 +210,7 @@ export interface FileRoutesByTo {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/candidates': typeof AdminCandidatesRoute
   '/admin/compliance': typeof AdminComplianceRoute
+  '/admin/verifications': typeof AdminVerificationsRoute
   '/candidate/copilot': typeof CandidateCopilotRoute
   '/candidate/jobs': typeof CandidateJobsRoute
   '/candidate/profile': typeof CandidateProfileRoute
@@ -203,6 +218,7 @@ export interface FileRoutesByTo {
   '/recruiter/jobs': typeof RecruiterJobsRoute
   '/recruiter/profile': typeof RecruiterProfileRoute
   '/recruiter/talent': typeof RecruiterTalentRoute
+  '/recruiter/verification': typeof RecruiterVerificationRoute
   '/admin': typeof AdminIndexRoute
   '/candidate': typeof CandidateIndexRoute
   '/recruiter': typeof RecruiterIndexRoute
@@ -223,6 +239,7 @@ export interface FileRoutesById {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/candidates': typeof AdminCandidatesRoute
   '/admin/compliance': typeof AdminComplianceRoute
+  '/admin/verifications': typeof AdminVerificationsRoute
   '/candidate/copilot': typeof CandidateCopilotRoute
   '/candidate/jobs': typeof CandidateJobsRoute
   '/candidate/profile': typeof CandidateProfileRoute
@@ -230,6 +247,7 @@ export interface FileRoutesById {
   '/recruiter/jobs': typeof RecruiterJobsRoute
   '/recruiter/profile': typeof RecruiterProfileRoute
   '/recruiter/talent': typeof RecruiterTalentRoute
+  '/recruiter/verification': typeof RecruiterVerificationRoute
   '/admin/': typeof AdminIndexRoute
   '/candidate/': typeof CandidateIndexRoute
   '/recruiter/': typeof RecruiterIndexRoute
@@ -251,6 +269,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/candidates'
     | '/admin/compliance'
+    | '/admin/verifications'
     | '/candidate/copilot'
     | '/candidate/jobs'
     | '/candidate/profile'
@@ -258,6 +277,7 @@ export interface FileRouteTypes {
     | '/recruiter/jobs'
     | '/recruiter/profile'
     | '/recruiter/talent'
+    | '/recruiter/verification'
     | '/admin/'
     | '/candidate/'
     | '/recruiter/'
@@ -277,6 +297,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/candidates'
     | '/admin/compliance'
+    | '/admin/verifications'
     | '/candidate/copilot'
     | '/candidate/jobs'
     | '/candidate/profile'
@@ -284,6 +305,7 @@ export interface FileRouteTypes {
     | '/recruiter/jobs'
     | '/recruiter/profile'
     | '/recruiter/talent'
+    | '/recruiter/verification'
     | '/admin'
     | '/candidate'
     | '/recruiter'
@@ -303,6 +325,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/candidates'
     | '/admin/compliance'
+    | '/admin/verifications'
     | '/candidate/copilot'
     | '/candidate/jobs'
     | '/candidate/profile'
@@ -310,6 +333,7 @@ export interface FileRouteTypes {
     | '/recruiter/jobs'
     | '/recruiter/profile'
     | '/recruiter/talent'
+    | '/recruiter/verification'
     | '/admin/'
     | '/candidate/'
     | '/recruiter/'
@@ -330,6 +354,7 @@ export interface RootRouteChildren {
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminCandidatesRoute: typeof AdminCandidatesRoute
   AdminComplianceRoute: typeof AdminComplianceRoute
+  AdminVerificationsRoute: typeof AdminVerificationsRoute
   CandidateCopilotRoute: typeof CandidateCopilotRoute
   CandidateJobsRoute: typeof CandidateJobsRoute
   CandidateProfileRoute: typeof CandidateProfileRoute
@@ -337,6 +362,7 @@ export interface RootRouteChildren {
   RecruiterJobsRoute: typeof RecruiterJobsRoute
   RecruiterProfileRoute: typeof RecruiterProfileRoute
   RecruiterTalentRoute: typeof RecruiterTalentRoute
+  RecruiterVerificationRoute: typeof RecruiterVerificationRoute
   AdminIndexRoute: typeof AdminIndexRoute
   CandidateIndexRoute: typeof CandidateIndexRoute
   RecruiterIndexRoute: typeof RecruiterIndexRoute
@@ -449,6 +475,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminComplianceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/verifications': {
+      id: '/admin/verifications'
+      path: '/admin/verifications'
+      fullPath: '/admin/verifications'
+      preLoaderRoute: typeof AdminVerificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/candidate/': {
       id: '/candidate/'
       path: '/candidate'
@@ -512,6 +545,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RecruiterTalentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/recruiter/verification': {
+      id: '/recruiter/verification'
+      path: '/recruiter/verification'
+      fullPath: '/recruiter/verification'
+      preLoaderRoute: typeof RecruiterVerificationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -530,6 +570,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminCandidatesRoute: AdminCandidatesRoute,
   AdminComplianceRoute: AdminComplianceRoute,
+  AdminVerificationsRoute: AdminVerificationsRoute,
   CandidateCopilotRoute: CandidateCopilotRoute,
   CandidateJobsRoute: CandidateJobsRoute,
   CandidateProfileRoute: CandidateProfileRoute,
@@ -537,6 +578,7 @@ const rootRouteChildren: RootRouteChildren = {
   RecruiterJobsRoute: RecruiterJobsRoute,
   RecruiterProfileRoute: RecruiterProfileRoute,
   RecruiterTalentRoute: RecruiterTalentRoute,
+  RecruiterVerificationRoute: RecruiterVerificationRoute,
   AdminIndexRoute: AdminIndexRoute,
   CandidateIndexRoute: CandidateIndexRoute,
   RecruiterIndexRoute: RecruiterIndexRoute,

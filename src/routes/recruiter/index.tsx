@@ -165,6 +165,13 @@ function RecruiterIndexPage() {
 
         <div className="flex items-center gap-3">
           <Link
+            to="/recruiter/verification"
+            className="px-4 py-2 border border-primary/20 bg-primary/10 text-primary text-sm font-semibold rounded-lg hover:bg-primary/20 transition-colors flex items-center gap-2 shadow-xs"
+          >
+            <Icon name="verified" className="!text-base text-primary" />
+            <span>Xác thực Pháp nhân</span>
+          </Link>
+          <Link
             to="/recruiter/talent"
             className="px-4 py-2 border border-warm-border bg-paper-white text-charcoal-text text-sm font-medium rounded-lg hover:bg-surface-container transition-colors flex items-center gap-2 shadow-sm"
           >
