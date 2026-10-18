@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useDocumentUrl } from "@/hooks/use-document-url";
 import { AdminShell, Icon } from "@/components/AdminShell";
 import {
   type CompanyVerificationRecord,
@@ -17,7 +18,26 @@ export const Route = createFileRoute("/admin/verifications")({
 });
 
 function AdminVerificationsPage() {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    setReady(true);
+  }, []);
+  if (!ready)
+    return (
+      <AdminShell title="Duyệt Pháp nhân" role="admin">
+        <p role="status">Đang tải hồ sơ doanh nghiệp…</p>
+      </AdminShell>
+    );
+  return <AdminVerificationsContent />;
+}
+
+function AdminVerificationsContent() {
   const [record, setRecord] = useState<CompanyVerificationRecord>(getStoredVerificationRecord());
+  const certificateUrl = useDocumentUrl(record.registrationCertificateUrl);
+  const authorizationUrl = useDocumentUrl(record.powerOfAttorneyUrl || "");
+  const certificateIsPdf =
+    record.registrationCertificateUrl.startsWith("data:application/pdf") ||
+    /\.pdf(?:[?#]|$)/i.test(record.registrationCertificateUrl);
   const [modalOpen, setModalOpen] = useState(false);
   const [decisionType, setDecisionType] = useState<"VERIFIED" | "REJECTED">("VERIFIED");
   const [rejectionCategory, setRejectionCategory] = useState("TAX_CODE_MISMATCH");
@@ -28,10 +48,6 @@ function AdminVerificationsPage() {
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [zoomDoc, setZoomDoc] = useState(false);
-
-  useEffect(() => {
-    setRecord(getStoredVerificationRecord());
-  }, []);
 
   const official = lookupNationalRegistry(record.taxCode);
 
@@ -359,24 +375,29 @@ function AdminVerificationsPage() {
         >
           <div className={zoomDoc ? "" : "md:col-span-7"}>
             <div className="relative rounded-xl border border-warm-border overflow-hidden bg-parchment-bg flex items-center justify-center p-3">
-              <img
-                src={record.registrationCertificateUrl}
-                alt="Business Certificate"
-                className="max-h-96 object-contain rounded-lg shadow-sm"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src =
-                    "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=1200";
-                }}
-              />
-              <div className="absolute top-3 left-3 bg-black/60 text-white text-[11px] px-2 py-0.5 rounded flex items-center gap-1 backdrop-blur-xs font-mono">
-                <Icon name="verified" className="!text-xs text-emerald-400" /> Mộc đỏ hợp lệ
-              </div>
+              {certificateUrl ? (
+                certificateIsPdf ? (
+                  <iframe
+                    src={certificateUrl}
+                    title="Giấy đăng ký doanh nghiệp PDF"
+                    className="h-[600px] w-full rounded-lg border-0"
+                  />
+                ) : (
+                  <img
+                    src={certificateUrl}
+                    alt="Giấy đăng ký doanh nghiệp"
+                    className="max-h-96 object-contain rounded-lg shadow-sm"
+                  />
+                )
+              ) : (
+                <p className="p-8 text-sm text-charcoal-40">Chưa có tài liệu để xem.</p>
+              )}
             </div>
             {record.submitterRole === "AUTHORIZED_HR" && record.powerOfAttorneyUrl && (
               <div className="mt-2 px-3 py-2 rounded-lg bg-primary/5 border border-primary/20 flex items-center justify-between text-xs">
                 <span className="text-primary font-semibold">Giấy ủy quyền HR</span>
                 <a
-                  href={record.powerOfAttorneyUrl}
+                  href={authorizationUrl || undefined}
                   target="_blank"
                   rel="noreferrer"
                   className="text-primary font-bold hover:underline flex items-center gap-0.5"

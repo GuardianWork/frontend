@@ -660,3 +660,6 @@ body[data-theme="blush-lilac"] {
   outline: 2px solid #00a86b;
   outline-offset: 3px;
 }
+.recruiter-workspace .font-display {
+  font-family: inherit;
+}

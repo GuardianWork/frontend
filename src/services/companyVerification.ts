@@ -241,7 +241,10 @@ export function saveStoredVerificationRecord(record: CompanyVerificationRecord):
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(record));
   } catch (e) {
-    console.error("Failed to save verification record:", e);
+    throw new Error(
+      "Không thể lưu hồ sơ trên trình duyệt. Vui lòng giải phóng bộ nhớ hoặc giảm dung lượng tài liệu.",
+      { cause: e },
+    );
   }
 }
 

@@ -1,4 +1,5 @@
 import { useId, useState } from "react";
+import { useDocumentUrl } from "@/hooks/use-document-url";
 import { FileText, UploadCloud, X } from "lucide-react";
 
 export function VerificationUpload({
@@ -13,6 +14,7 @@ export function VerificationUpload({
   disabled?: boolean;
 }) {
   const id = useId();
+  const documentUrl = useDocumentUrl(value);
   const [error, setError] = useState("");
   const [fileName, setFileName] = useState("");
   const [reading, setReading] = useState(false);
@@ -82,7 +84,12 @@ export function VerificationUpload({
         <div className="mt-3 flex items-center gap-2 rounded-md border border-emerald-100 bg-emerald-50 p-3 text-xs text-emerald-800">
           <FileText size={18} />
           <span className="min-w-0 flex-1 truncate">{fileName || "Tài liệu đã lưu"}</span>
-          <a href={value} target="_blank" rel="noreferrer" className="font-semibold underline">
+          <a
+            href={documentUrl || undefined}
+            target="_blank"
+            rel="noreferrer"
+            className="font-semibold underline"
+          >
             Xem tệp
           </a>
           {!disabled && (

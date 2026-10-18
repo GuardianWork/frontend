@@ -81,3 +81,10 @@ test("a stale resubmission cannot overwrite a newer review decision", async () =
   );
   assert.equal(getStoredVerificationRecord().verificationStatus, "VERIFIED");
 });
+
+test("a storage failure is reported instead of confirming an unsaved application", async () => {
+  globalThis.localStorage.setItem = () => {
+    throw new Error("Quota exceeded");
+  };
+  await assert.rejects(submitVerification(request), /Không thể lưu hồ sơ/);
+});

@@ -80,7 +80,11 @@ const INITIAL_JOBS: RecruiterJob[] = [
 function RecruiterJobsPage() {
   const [jobs, setJobs] = useState<RecruiterJob[]>(INITIAL_JOBS);
   const search = Route.useSearch();
-  const [isModalOpen, setIsModalOpen] = useState(search.create === true);
+  const navigate = Route.useNavigate();
+  const isModalOpen = search.create === true;
+  const setIsModalOpen = (open: boolean) => {
+    void navigate({ search: { create: open ? true : undefined }, replace: true });
+  };
   const [title, setTitle] = useState("");
   const [dept, setDept] = useState("Kỹ thuật");
   const [salary, setSalary] = useState("65.000.000 - 90.000.000 VND / tháng");
