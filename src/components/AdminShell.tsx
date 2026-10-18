@@ -28,12 +28,6 @@ const RECRUITER_NAV: NavItem[] = [
   { to: "/recruiter/jobs", label: "Manage Jobs", icon: "work" },
 ];
 
-const ROLES: { id: ShellRole; label: string; to: string; icon: string }[] = [
-  { id: "admin", label: "Admin Console", to: "/admin", icon: "admin_panel_settings" },
-  { id: "candidate", label: "Candidate Portal", to: "/candidate/jobs", icon: "person" },
-  { id: "recruiter", label: "Recruiter Side", to: "/recruiter", icon: "hub" },
-];
-
 function Icon({ name, className = "" }: { name: string; className?: string }) {
   return <span className={`material-symbols-outlined ${className}`}>{name}</span>;
 }
@@ -124,35 +118,6 @@ export function AdminShell({
           </div>
         </div>
 
-        {/* Role Switcher in Sidebar */}
-        <div className="p-3 border-b border-warm-border bg-surface-container-low/40">
-          <div className="text-[10px] font-bold text-charcoal-40 uppercase tracking-wider mb-2 px-1">
-            Chuyển đổi phân hệ
-          </div>
-          <div className="flex flex-col gap-1">
-            {ROLES.map((r) => {
-              const active = currentRole === r.id;
-              return (
-                <Link
-                  key={r.id}
-                  to={r.to}
-                  className={
-                    active
-                      ? "flex items-center justify-between px-3 py-1.5 rounded-md text-xs font-bold bg-primary text-on-primary shadow-xs"
-                      : "flex items-center justify-between px-3 py-1.5 rounded-md text-xs font-medium text-charcoal-83 hover:text-charcoal-text hover:bg-surface-container transition-colors"
-                  }
-                >
-                  <span className="flex items-center gap-2">
-                    <Icon name={r.icon} className="!text-[16px]" />
-                    {r.label}
-                  </span>
-                  {active && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-
         {/* Nav Items */}
         <nav className="flex-1 flex flex-col gap-1 p-3 overflow-y-auto">
           <div className="text-[10px] font-bold text-charcoal-40 uppercase tracking-wider mb-1 px-2 pt-2">
@@ -223,27 +188,6 @@ export function AdminShell({
                 Phân hệ: <strong className="text-primary">{roleMeta.title}</strong>
               </p>
             </div>
-          </div>
-
-          {/* Top Center Role Bar */}
-          <div className="hidden lg:flex items-center bg-surface-container-low p-1 rounded-xl border border-warm-border shadow-2xs">
-            {ROLES.map((r) => {
-              const active = currentRole === r.id;
-              return (
-                <Link
-                  key={r.id}
-                  to={r.to}
-                  className={
-                    active
-                      ? "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-paper-white text-primary text-xs font-bold shadow-xs border border-warm-border"
-                      : "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-charcoal-40 hover:text-charcoal-text text-xs font-medium transition-colors"
-                  }
-                >
-                  <Icon name={r.icon} className="!text-[16px]" />
-                  <span>{r.label}</span>
-                </Link>
-              );
-            })}
           </div>
 
           {/* Top Right Extras & Actions */}
