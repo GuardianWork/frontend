@@ -30,7 +30,7 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <label className="block text-sm text-slate-700">
+    <label className="block text-sm text-charcoal-text">
       <span className="mb-2 block font-medium">
         {label} {required && <span className="text-red-500">*</span>}
       </span>
@@ -47,7 +47,7 @@ function CompanyVerificationPage() {
   if (!ready)
     return (
       <AdminShell title="Cài đặt tài khoản" role="recruiter">
-        <p role="status" className="text-sm text-slate-500">
+        <p role="status" className="text-sm text-charcoal-83">
           Đang tải hồ sơ doanh nghiệp…
         </p>
       </AdminShell>
@@ -236,7 +236,7 @@ function CompanyVerificationForm() {
   };
 
   const inputCls =
-    "w-full px-3 py-2 rounded-lg border border-warm-border bg-white text-charcoal-text text-sm focus:outline-none focus:border-primary";
+    "w-full px-3 py-2 rounded-lg border border-warm-border bg-paper-white text-charcoal-text text-sm focus:outline-none focus:border-primary";
 
   return (
     <AdminShell title="Cài đặt tài khoản" role="recruiter">
@@ -312,7 +312,7 @@ function CompanyVerificationForm() {
           <Icon name="error" className="!text-lg text-red-600 shrink-0 mt-0.5" />
           <div>
             <strong>Lý do từ chối:</strong>
-            <p className="mt-1 p-2.5 bg-white/60 rounded-lg border border-red-200 font-medium text-red-950">
+            <p className="mt-1 p-2.5 bg-paper-white/60 rounded-lg border border-red-200 font-medium text-red-950">
               {record.rejectionReason || "Hồ sơ chưa đạt tiêu chuẩn."}
             </p>
           </div>
@@ -335,10 +335,10 @@ function CompanyVerificationForm() {
             </div>
           </div>
           <div className="flex gap-1.5 text-[11px]">
-            <span className="px-2 py-1 bg-white rounded-lg border border-emerald-200 text-emerald-800 font-semibold">
+            <span className="px-2 py-1 bg-paper-white rounded-lg border border-emerald-200 text-emerald-800 font-semibold">
               ✓ Huy hiệu tích xanh
             </span>
-            <span className="px-2 py-1 bg-white rounded-lg border border-emerald-200 text-emerald-800 font-semibold">
+            <span className="px-2 py-1 bg-paper-white rounded-lg border border-emerald-200 text-emerald-800 font-semibold">
               ✓ Đăng tin
             </span>
           </div>
@@ -375,9 +375,9 @@ function CompanyVerificationForm() {
       <div className="grid grid-cols-1 lg:grid-cols-[240px_minmax(0,1fr)] gap-6">
         <nav
           aria-label="Cài đặt tài khoản"
-          className="h-fit rounded-lg border border-slate-200 bg-white p-2"
+          className="h-fit rounded-lg border border-warm-border bg-paper-white p-2"
         >
-          <p className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
+          <p className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-charcoal-40">
             Thông tin & xác thực
           </p>
           {(
@@ -392,13 +392,13 @@ function CompanyVerificationForm() {
               type="button"
               aria-current={activeSection === item.id ? "step" : undefined}
               onClick={() => setActiveSection(item.id)}
-              className={`flex w-full items-center gap-3 rounded-md px-4 py-3 text-left text-sm ${activeSection === item.id ? "bg-emerald-50 font-semibold text-emerald-700" : "text-slate-500 hover:bg-slate-50"}`}
+              className={`flex w-full items-center gap-3 rounded-md px-4 py-3 text-left text-sm ${activeSection === item.id ? "bg-surface-container font-semibold text-primary" : "text-charcoal-83 hover:bg-surface-container-low"}`}
             >
               <Icon name={item.icon} className="!text-lg" />
               {item.label}
             </button>
           ))}
-          <div className="m-3 border-t border-slate-100 pt-4 text-xs leading-5 text-slate-500">
+          <div className="m-3 border-t border-warm-border pt-4 text-xs leading-5 text-charcoal-83">
             Thông tin doanh nghiệp cần trùng khớp với giấy đăng ký doanh nghiệp đã cung cấp.
           </div>
         </nav>
@@ -677,7 +677,7 @@ function CompanyVerificationForm() {
                   </h3>
                 </div>
 
-                <p className="mb-5 text-sm text-slate-500">
+                <p className="mb-5 text-sm text-charcoal-83">
                   Tải lên bản đầy đủ, rõ nét, không che hoặc cắt thông tin. Tên công ty và mã số
                   thuế phải khớp với hồ sơ doanh nghiệp.
                 </p>
@@ -777,7 +777,7 @@ function CompanyVerificationForm() {
             </fieldset>
             {/* Action Bar */}
             <div className="p-4 bg-paper-white rounded-xl border border-warm-border shadow-xs flex items-center justify-between gap-3 text-xs">
-              <span className="text-slate-500">
+              <span className="text-charcoal-83">
                 {activeSection === "company"
                   ? "Bước 1/3"
                   : activeSection === "contact"
@@ -791,7 +791,7 @@ function CompanyVerificationForm() {
                     onClick={() =>
                       setActiveSection(activeSection === "documents" ? "contact" : "company")
                     }
-                    className="rounded-md border border-slate-200 px-4 py-2 text-sm"
+                    className="rounded-md border border-warm-border px-4 py-2 text-sm"
                   >
                     Quay lại
                   </button>

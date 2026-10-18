@@ -34,11 +34,11 @@ export function RecruiterOverview({
     <div className="mb-8 space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="mb-1 text-sm text-slate-500">Không gian tuyển dụng của bạn</p>
+          <p className="mb-1 text-sm text-charcoal-83">Không gian tuyển dụng của bạn</p>
           <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
-            Chào mừng bạn trở lại <span className="text-emerald-600">!</span>
+            Chào mừng bạn trở lại <span className="text-primary">!</span>
           </h2>
-          <p className="mt-2 text-sm text-slate-500">
+          <p className="mt-2 text-sm text-charcoal-83">
             Kết nối đúng nhân tài. Xây dựng đội ngũ vững mạnh.
           </p>
         </div>
@@ -47,14 +47,14 @@ export function RecruiterOverview({
           Đăng tin tuyển dụng
         </Link>
       </div>
-      <div className="flex flex-col justify-between gap-4 rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-white p-5 sm:flex-row sm:items-center">
+      <div className="flex flex-col justify-between gap-4 rounded-xl border border-warm-border bg-surface-container-low p-5 sm:flex-row sm:items-center">
         <div className="flex items-start gap-3">
-          <div className="rounded-lg bg-white p-2.5 text-emerald-600">
+          <div className="rounded-lg bg-paper-white p-2.5 text-primary">
             <ShieldCheck size={25} />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-slate-800">{statusText}</h3>
-            <p className="mt-1 max-w-xl text-xs leading-5 text-slate-500">
+            <h3 className="text-sm font-semibold text-charcoal-text">{statusText}</h3>
+            <p className="mt-1 max-w-xl text-xs leading-5 text-charcoal-83">
               {status === "VERIFIED"
                 ? "Thông tin doanh nghiệp đã được phê duyệt. Bạn có thể xem lại hồ sơ trong cài đặt tài khoản."
                 : status === "PENDING"
@@ -65,7 +65,7 @@ export function RecruiterOverview({
         </div>
         <Link
           to="/recruiter/verification"
-          className="flex shrink-0 items-center gap-2 text-sm font-semibold text-emerald-700"
+          className="flex shrink-0 items-center gap-2 text-sm font-semibold text-primary"
         >
           {status === "PENDING" || status === "VERIFIED" ? "Xem hồ sơ" : "Xác thực ngay"}
           <ArrowRight size={16} />
@@ -77,34 +77,36 @@ export function RecruiterOverview({
             label: "Ứng viên trong danh sách",
             value: total,
             sub: "Tổng số hồ sơ",
-            color: "text-blue-600 bg-blue-50",
           },
           {
             label: "Ứng viên phù hợp cao",
             value: strong,
             sub: "Phù hợp với vị trí tuyển dụng",
-            color: "text-emerald-600 bg-emerald-50",
           },
           {
             label: "Đang phỏng vấn",
             value: interviews,
             sub: "Theo tiến độ tuyển dụng",
-            color: "text-orange-500 bg-orange-50",
           },
           {
             label: "Đã gửi đề nghị",
             value: offers,
             sub: "Tiến gần hơn đến đội ngũ mới",
-            color: "text-violet-600 bg-violet-50",
           },
         ].map((item) => (
-          <div key={item.label} className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
+          <div
+            key={item.label}
+            className="rounded-xl border border-warm-border bg-paper-white p-4 sm:p-5"
+          >
             <div className="flex items-start justify-between gap-2">
-              <p className="text-xs font-medium leading-5 text-slate-500">{item.label}</p>
-              <Users size={30} className={`shrink-0 rounded-lg p-1.5 ${item.color}`} />
+              <p className="text-xs font-medium leading-5 text-charcoal-83">{item.label}</p>
+              <Users
+                size={30}
+                className="shrink-0 rounded-lg bg-surface-container p-1.5 text-primary"
+              />
             </div>
             <p className="mt-2 text-3xl font-semibold">{item.value}</p>
-            <p className="mt-2 text-[11px] text-slate-400">{item.sub}</p>
+            <p className="mt-2 text-[11px] text-charcoal-40">{item.sub}</p>
           </div>
         ))}
       </div>
@@ -132,16 +134,16 @@ export function RecruiterOverview({
           <Link
             key={to}
             to={to}
-            className="group flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 transition-colors hover:border-emerald-300"
+            className="group flex items-center gap-3 rounded-xl border border-warm-border bg-paper-white p-4 transition-colors hover:border-primary/30"
           >
-            <Icon size={21} className="shrink-0 text-emerald-600" />
+            <Icon size={21} className="shrink-0 text-primary" />
             <div>
               <h3 className="text-sm font-semibold">{title}</h3>
-              <p className="mt-1 text-xs leading-5 text-slate-500">{description}</p>
+              <p className="mt-1 text-xs leading-5 text-charcoal-83">{description}</p>
             </div>
             <ArrowRight
               size={15}
-              className="ml-auto shrink-0 text-slate-400 group-hover:text-emerald-600"
+              className="ml-auto shrink-0 text-charcoal-40 group-hover:text-primary"
             />
           </Link>
         ))}

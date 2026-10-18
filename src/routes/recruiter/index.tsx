@@ -141,7 +141,7 @@ function RecruiterIndexPage() {
       />
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-semibold">Theo dõi ứng viên</h2>
-        <Link to="/recruiter/talent" className="text-xs font-semibold text-emerald-700">
+        <Link to="/recruiter/talent" className="text-xs font-semibold text-primary">
           Xem tất cả ứng viên →
         </Link>
       </div>
