@@ -1,3 +1,4 @@
+import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
 import { LogoutButton } from "./LogoutButton";
 import { useState, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
@@ -17,7 +18,9 @@ import {
 const navigation = [
   { to: "/recruiter", label: "Tổng quan", icon: LayoutDashboard },
   { to: "/recruiter/jobs", label: "Tin tuyển dụng", icon: BriefcaseBusiness },
-  { to: "/recruiter/talent", label: "Quản lý ứng viên", icon: Users },
+  { to: "/recruiter/talent", label: "Tìm kiếm ứng viên", icon: Users },
+  { to: "/recruiter/applications", label: "Đơn ứng tuyển", icon: BriefcaseBusiness },
+  { to: "/recruiter/members", label: "Thành viên công ty", icon: Users },
   { to: "/recruiter/verification", label: "Cài đặt tài khoản", icon: Building2 },
 ];
 
@@ -30,6 +33,7 @@ export function RecruiterShell({
   children: ReactNode;
   topNavExtras?: ReactNode;
 }) {
+  const { company, member } = useCompanyWorkspace();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [menuOpen, setMenuOpen] = useState(false);
   return (
@@ -82,26 +86,32 @@ export function RecruiterShell({
       >
         <div className="mx-4 my-5 rounded-lg border border-warm-border p-3">
           <p className="text-xs text-charcoal-40">KHÔNG GIAN LÀM VIỆC</p>
-          <p className="mt-1 text-sm font-semibold">Nhà tuyển dụng</p>
+          <p className="mt-1 text-sm font-semibold">{member?.role || "Nhà tuyển dụng"}</p>
         </div>
         <nav aria-label="Điều hướng nhà tuyển dụng" className="space-y-1 px-3">
-          {navigation.map(({ to, label, icon: Icon }) => {
-            const active =
-              to === "/recruiter" ? pathname.replace(/\/$/, "") === to : pathname.startsWith(to);
-            return (
-              <Link
-                key={to}
-                to={to}
-                onClick={() => setMenuOpen(false)}
-                aria-current={active ? "page" : undefined}
-                className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${active ? "bg-surface-container text-primary" : "text-charcoal-83 hover:bg-surface-container-low hover:text-charcoal-text"}`}
-              >
-                <Icon size={19} />
-                {label}
-                {active && <ChevronRight size={15} className="ml-auto" />}
-              </Link>
-            );
-          })}
+          {navigation
+            .filter(
+              (item) =>
+                !["/recruiter/members", "/recruiter/applications"].includes(item.to) ||
+                company?.verificationStatus === "VERIFIED",
+            )
+            .map(({ to, label, icon: Icon }) => {
+              const active =
+                to === "/recruiter" ? pathname.replace(/\/$/, "") === to : pathname.startsWith(to);
+              return (
+                <Link
+                  key={to}
+                  to={to}
+                  onClick={() => setMenuOpen(false)}
+                  aria-current={active ? "page" : undefined}
+                  className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${active ? "bg-surface-container text-primary" : "text-charcoal-83 hover:bg-surface-container-low hover:text-charcoal-text"}`}
+                >
+                  <Icon size={19} />
+                  {label}
+                  {active && <ChevronRight size={15} className="ml-auto" />}
+                </Link>
+              );
+            })}
         </nav>
         <div className="mx-4 mt-8 rounded-xl bg-surface-container-low p-4">
           <ShieldCheck className="mb-3 text-primary" size={26} />

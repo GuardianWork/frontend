@@ -1,3 +1,5 @@
+import { getCurrentUser } from "./auth.ts";
+import type { AuthUser } from "./auth.ts";
 /**
  * Company Verification Service & Store
  * Implements the 4-Tier Verification Model, 5-Point Inspection Checklist,
@@ -9,6 +11,7 @@ export type SubmitterRole = "LEGAL_REP" | "AUTHORIZED_HR";
 
 export interface CompanyVerificationRecord {
   id: number;
+  submittedBy?: AuthUser;
   name: string;
   englishName?: string;
   taxCode: string;
@@ -240,6 +243,7 @@ export function saveStoredVerificationRecord(record: CompanyVerificationRecord):
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(record));
+    window.dispatchEvent?.(new Event("guardianwork-company-workspace"));
   } catch (e) {
     throw new Error(
       "Không thể lưu hồ sơ trên trình duyệt. Vui lòng giải phóng bộ nhớ hoặc giảm dung lượng tài liệu.",
@@ -255,11 +259,14 @@ export function saveStoredVerificationRecord(record: CompanyVerificationRecord):
 export async function submitVerification(
   req: CompanyRegistrationRequest,
 ): Promise<CompanyVerificationRecord> {
+  const submitter = getCurrentUser();
+  if (!submitter) throw new Error("Vui lòng đăng nhập trước khi gửi hồ sơ công ty.");
   const now = new Date().toISOString();
   const ticketId = `VER-${Math.floor(1000 + Math.random() * 9000)}`;
 
   const newRecord: CompanyVerificationRecord = {
     id: 101,
+    submittedBy: submitter,
     ticketId,
     name: req.name.trim(),
     englishName: req.englishName?.trim() || "",

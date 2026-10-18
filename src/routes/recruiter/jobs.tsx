@@ -1,3 +1,5 @@
+import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
+import { canViewMemberData, createCompanyJob } from "@/services/companyMembers";
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AdminShell, Icon } from "@/components/AdminShell";
@@ -30,55 +32,19 @@ type RecruiterJob = {
   created: string;
 };
 
-const INITIAL_JOBS: RecruiterJob[] = [
-  {
-    id: "rec-job-1",
-    title: "Kỹ sư Nền tảng Go / Kubernetes Cấp cao",
-    department: "Kỹ thuật Hạ tầng",
-    location: "TP. Hồ Chí Minh (Quận 3)",
-    salary: "60M - 85M VND / tháng",
-    applicants: 14,
-    status: "Active",
-    compliance: "100% Audited",
-    created: "2 ngày trước",
-  },
-  {
-    id: "rec-job-2",
-    title: "Lập trình viên Di động React Native",
-    department: "Kỹ thuật Di động",
-    location: "Hà Nội (Cầu Giấy)",
-    salary: "45M - 60M VND / tháng",
-    applicants: 9,
-    status: "Active",
-    compliance: "Điều 98 Verified",
-    created: "4 ngày trước",
-  },
-  {
-    id: "rec-job-3",
-    title: "Kiến trúc sư Giải pháp AI / Python",
-    department: "Trí tuệ Nhân tạo",
-    location: "Đà Nẵng (Từ xa / Hybrid)",
-    salary: "70M - 100M VND / tháng",
-    applicants: 18,
-    status: "Active",
-    compliance: "100% Audited",
-    created: "1 tuần trước",
-  },
-  {
-    id: "rec-job-4",
-    title: "Kỹ sư Frontend Trưởng Cấp cao",
-    department: "Kỹ thuật",
-    location: "TP. Hồ Chí Minh (Quận 1)",
-    salary: "80M - 110M VND / tháng",
-    applicants: 12,
-    status: "Active",
-    compliance: "100% Audited",
-    created: "2 tuần trước",
-  },
-];
-
 function RecruiterJobsPage() {
-  const [jobs, setJobs] = useState<RecruiterJob[]>(INITIAL_JOBS);
+  const { workspace, member } = useCompanyWorkspace();
+  const [error, setError] = useState("");
+  const jobs: RecruiterJob[] = workspace.jobs
+    .filter((job) => canViewMemberData(workspace, job.authorId, "jobs"))
+    .map((job) => ({
+      ...job,
+      applicants: canViewMemberData(workspace, job.authorId, "applications")
+        ? workspace.applications.filter((a) => a.jobId === job.id).length
+        : 0,
+      compliance: "100% Audited",
+      created: new Date(job.created).toLocaleDateString("vi-VN"),
+    }));
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const isModalOpen = search.create === true;
@@ -89,32 +55,34 @@ function RecruiterJobsPage() {
   const [dept, setDept] = useState("Kỹ thuật");
   const [salary, setSalary] = useState("65.000.000 - 90.000.000 VND / tháng");
   const [loc, setLoc] = useState("TP. Hồ Chí Minh");
-  const [success, setSuccess] = useState(false);
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
-    setSuccess(true);
-    setTimeout(() => {
-      const newJob: RecruiterJob = {
-        id: `rec-job-${Date.now()}`,
-        title,
-        department: dept,
-        location: loc,
-        salary,
-        applicants: 0,
-        status: "Active",
-        compliance: "100% Audited",
-        created: "Vừa xong",
-      };
-      setJobs((prev) => [newJob, ...prev]);
-      setSuccess(false);
+    try {
+      createCompanyJob({ title, department: dept, location: loc, salary, status: "Active" });
+      setError("");
       setIsModalOpen(false);
       setTitle("");
-    }, 1200);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Không thể đăng tin.");
+    }
   };
 
   return (
     <AdminShell title="Tin tuyển dụng" role="recruiter">
+      {error && (
+        <p role="alert" className="mb-4 rounded-lg border border-red-200 p-4 text-red-700">
+          {error}
+        </p>
+      )}
+      {!member && (
+        <p className="mb-4 text-sm">
+          Bạn cần là thành viên của công ty đã xác thực để đăng tin.{" "}
+          <Link to="/recruiter/members" className="text-primary underline">
+            Xem trạng thái công ty
+          </Link>
+        </p>
+      )}
       {/* Page Header */}
       <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
@@ -206,10 +174,26 @@ function RecruiterJobsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-warm-border text-sm">
+              {jobs.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="p-8 text-center text-charcoal-83">
+                    Chưa có tin tuyển dụng trong phạm vi quyền xem của bạn.
+                  </td>
+                </tr>
+              )}
               {jobs.map((job) => (
                 <tr key={job.id} className="hover:bg-surface-container-low transition-colors">
                   <td className="py-4 px-6">
                     <div className="font-bold text-charcoal-text">{job.title}</div>
+                    <p className="mt-1 text-xs text-charcoal-83">
+                      Người đăng:{" "}
+                      {
+                        workspace.members.find(
+                          (m) => m.id === workspace.jobs.find((j) => j.id === job.id)?.authorId,
+                        )?.name
+                      }{" "}
+                      · {job.created}
+                    </p>
                     <div className="text-xs text-charcoal-83 mt-0.5">{job.department}</div>
                   </td>
                   <td className="py-4 px-6">
@@ -220,7 +204,13 @@ function RecruiterJobsPage() {
                   </td>
                   <td className="py-4 px-6">
                     <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-full bg-surface-container text-charcoal-text">
-                      {job.applicants} ứng viên
+                      {canViewMemberData(
+                        workspace,
+                        workspace.jobs.find((j) => j.id === job.id)!.authorId,
+                        "applications",
+                      )
+                        ? `${job.applicants} ứng viên`
+                        : "Chưa có quyền xem"}
                     </span>
                   </td>
                   <td className="py-4 px-6">
@@ -230,10 +220,10 @@ function RecruiterJobsPage() {
                   </td>
                   <td className="py-4 px-6 text-right">
                     <Link
-                      to="/recruiter"
+                      to="/recruiter/applications"
                       className="text-xs font-semibold text-primary hover:underline"
                     >
-                      Xem Pipeline
+                      Xem đơn ứng tuyển
                     </Link>
                   </td>
                 </tr>
@@ -260,83 +250,76 @@ function RecruiterJobsPage() {
               </button>
             </div>
 
-            {success ? (
-              <div className="py-8 text-center space-y-2">
-                <Icon name="check_circle" className="!text-5xl text-green-600" />
-                <h4 className="font-bold text-lg text-charcoal-text">
-                  Tin tuyển dụng đã được lưu!
-                </h4>
-                <p className="text-xs text-charcoal-83">
-                  Hệ thống đã tự động phê duyệt và gắn nhãn Điều 98.
-                </p>
-              </div>
-            ) : (
-              <form onSubmit={handleCreate} className="space-y-4">
-                <div>
-                  <label className="text-xs font-semibold text-charcoal-40 uppercase block mb-1">
-                    Chức danh công việc *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ví dụ: Kỹ sư Giải pháp AI / LLM"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="w-full px-3 py-2 bg-surface-container-low border border-warm-border rounded-lg text-sm text-charcoal-text"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-semibold text-charcoal-40 uppercase block mb-1">
-                      Phòng ban
-                    </label>
-                    <input
-                      type="text"
-                      value={dept}
-                      onChange={(e) => setDept(e.target.value)}
-                      className="w-full px-3 py-2 bg-surface-container-low border border-warm-border rounded-lg text-sm text-charcoal-text"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-charcoal-40 uppercase block mb-1">
-                      Địa điểm
-                    </label>
-                    <input
-                      type="text"
-                      value={loc}
-                      onChange={(e) => setLoc(e.target.value)}
-                      className="w-full px-3 py-2 bg-surface-container-low border border-warm-border rounded-lg text-sm text-charcoal-text"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-charcoal-40 uppercase block mb-1">
-                    Mức lương dự kiến
-                  </label>
-                  <input
-                    type="text"
-                    value={salary}
-                    onChange={(e) => setSalary(e.target.value)}
-                    className="w-full px-3 py-2 bg-surface-container-low border border-warm-border rounded-lg text-sm text-charcoal-text"
-                  />
-                </div>
-                <div className="flex justify-end gap-2 pt-2 border-t border-warm-border">
-                  <button
-                    type="button"
-                    onClick={() => setIsModalOpen(false)}
-                    className="px-4 py-2 border border-warm-border rounded-lg text-xs font-semibold text-charcoal-text hover:bg-surface-container"
-                  >
-                    Hủy
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-5 py-2 bg-primary text-on-primary rounded-lg text-xs font-bold hover:opacity-90 transition-all shadow-sm"
-                  >
-                    Xác nhận & Đăng tin
-                  </button>
-                </div>
-              </form>
+            {error && (
+              <p role="alert" className="text-sm text-red-700">
+                {error}
+              </p>
             )}
+            <form onSubmit={handleCreate} className="space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-charcoal-40 uppercase block mb-1">
+                  Chức danh công việc *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ví dụ: Kỹ sư Giải pháp AI / LLM"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="w-full px-3 py-2 bg-surface-container-low border border-warm-border rounded-lg text-sm text-charcoal-text"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-charcoal-40 uppercase block mb-1">
+                    Phòng ban
+                  </label>
+                  <input
+                    type="text"
+                    value={dept}
+                    onChange={(e) => setDept(e.target.value)}
+                    className="w-full px-3 py-2 bg-surface-container-low border border-warm-border rounded-lg text-sm text-charcoal-text"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-charcoal-40 uppercase block mb-1">
+                    Địa điểm
+                  </label>
+                  <input
+                    type="text"
+                    value={loc}
+                    onChange={(e) => setLoc(e.target.value)}
+                    className="w-full px-3 py-2 bg-surface-container-low border border-warm-border rounded-lg text-sm text-charcoal-text"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-charcoal-40 uppercase block mb-1">
+                  Mức lương dự kiến
+                </label>
+                <input
+                  type="text"
+                  value={salary}
+                  onChange={(e) => setSalary(e.target.value)}
+                  className="w-full px-3 py-2 bg-surface-container-low border border-warm-border rounded-lg text-sm text-charcoal-text"
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2 border-t border-warm-border">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 border border-warm-border rounded-lg text-xs font-semibold text-charcoal-text hover:bg-surface-container"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-primary text-on-primary rounded-lg text-xs font-bold hover:opacity-90 transition-all shadow-sm"
+                >
+                  Xác nhận & Đăng tin
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

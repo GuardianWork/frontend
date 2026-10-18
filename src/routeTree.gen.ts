@@ -31,8 +31,10 @@ import { Route as CandidateCopilotRouteImport } from './routes/candidate/copilot
 import { Route as CandidateJobsRouteImport } from './routes/candidate/jobs'
 import { Route as CandidateProfileRouteImport } from './routes/candidate/profile'
 import { Route as RecruiterIndexRouteImport } from './routes/recruiter/index'
+import { Route as RecruiterApplicationsRouteImport } from './routes/recruiter/applications'
 import { Route as RecruiterHubRouteImport } from './routes/recruiter/hub'
 import { Route as RecruiterJobsRouteImport } from './routes/recruiter/jobs'
+import { Route as RecruiterMembersRouteImport } from './routes/recruiter/members'
 import { Route as RecruiterProfileRouteImport } from './routes/recruiter/profile'
 import { Route as RecruiterTalentRouteImport } from './routes/recruiter/talent'
 import { Route as RecruiterVerificationRouteImport } from './routes/recruiter/verification'
@@ -147,6 +149,11 @@ const RecruiterIndexRoute = RecruiterIndexRouteImport.update({
   path: '/recruiter/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RecruiterApplicationsRoute = RecruiterApplicationsRouteImport.update({
+  id: '/recruiter/applications',
+  path: '/recruiter/applications',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecruiterHubRoute = RecruiterHubRouteImport.update({
   id: '/recruiter/hub',
   path: '/recruiter/hub',
@@ -155,6 +162,11 @@ const RecruiterHubRoute = RecruiterHubRouteImport.update({
 const RecruiterJobsRoute = RecruiterJobsRouteImport.update({
   id: '/recruiter/jobs',
   path: '/recruiter/jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecruiterMembersRoute = RecruiterMembersRouteImport.update({
+  id: '/recruiter/members',
+  path: '/recruiter/members',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecruiterProfileRoute = RecruiterProfileRouteImport.update({
@@ -193,8 +205,10 @@ export interface FileRoutesByFullPath {
   '/candidate/copilot': typeof CandidateCopilotRoute
   '/candidate/jobs': typeof CandidateJobsRoute
   '/candidate/profile': typeof CandidateProfileRoute
+  '/recruiter/applications': typeof RecruiterApplicationsRoute
   '/recruiter/hub': typeof RecruiterHubRoute
   '/recruiter/jobs': typeof RecruiterJobsRoute
+  '/recruiter/members': typeof RecruiterMembersRoute
   '/recruiter/profile': typeof RecruiterProfileRoute
   '/recruiter/talent': typeof RecruiterTalentRoute
   '/recruiter/verification': typeof RecruiterVerificationRoute
@@ -222,8 +236,10 @@ export interface FileRoutesByTo {
   '/candidate/copilot': typeof CandidateCopilotRoute
   '/candidate/jobs': typeof CandidateJobsRoute
   '/candidate/profile': typeof CandidateProfileRoute
+  '/recruiter/applications': typeof RecruiterApplicationsRoute
   '/recruiter/hub': typeof RecruiterHubRoute
   '/recruiter/jobs': typeof RecruiterJobsRoute
+  '/recruiter/members': typeof RecruiterMembersRoute
   '/recruiter/profile': typeof RecruiterProfileRoute
   '/recruiter/talent': typeof RecruiterTalentRoute
   '/recruiter/verification': typeof RecruiterVerificationRoute
@@ -252,8 +268,10 @@ export interface FileRoutesById {
   '/candidate/copilot': typeof CandidateCopilotRoute
   '/candidate/jobs': typeof CandidateJobsRoute
   '/candidate/profile': typeof CandidateProfileRoute
+  '/recruiter/applications': typeof RecruiterApplicationsRoute
   '/recruiter/hub': typeof RecruiterHubRoute
   '/recruiter/jobs': typeof RecruiterJobsRoute
+  '/recruiter/members': typeof RecruiterMembersRoute
   '/recruiter/profile': typeof RecruiterProfileRoute
   '/recruiter/talent': typeof RecruiterTalentRoute
   '/recruiter/verification': typeof RecruiterVerificationRoute
@@ -283,8 +301,10 @@ export interface FileRouteTypes {
     | '/candidate/copilot'
     | '/candidate/jobs'
     | '/candidate/profile'
+    | '/recruiter/applications'
     | '/recruiter/hub'
     | '/recruiter/jobs'
+    | '/recruiter/members'
     | '/recruiter/profile'
     | '/recruiter/talent'
     | '/recruiter/verification'
@@ -312,8 +332,10 @@ export interface FileRouteTypes {
     | '/candidate/copilot'
     | '/candidate/jobs'
     | '/candidate/profile'
+    | '/recruiter/applications'
     | '/recruiter/hub'
     | '/recruiter/jobs'
+    | '/recruiter/members'
     | '/recruiter/profile'
     | '/recruiter/talent'
     | '/recruiter/verification'
@@ -341,8 +363,10 @@ export interface FileRouteTypes {
     | '/candidate/copilot'
     | '/candidate/jobs'
     | '/candidate/profile'
+    | '/recruiter/applications'
     | '/recruiter/hub'
     | '/recruiter/jobs'
+    | '/recruiter/members'
     | '/recruiter/profile'
     | '/recruiter/talent'
     | '/recruiter/verification'
@@ -371,8 +395,10 @@ export interface RootRouteChildren {
   CandidateCopilotRoute: typeof CandidateCopilotRoute
   CandidateJobsRoute: typeof CandidateJobsRoute
   CandidateProfileRoute: typeof CandidateProfileRoute
+  RecruiterApplicationsRoute: typeof RecruiterApplicationsRoute
   RecruiterHubRoute: typeof RecruiterHubRoute
   RecruiterJobsRoute: typeof RecruiterJobsRoute
+  RecruiterMembersRoute: typeof RecruiterMembersRoute
   RecruiterProfileRoute: typeof RecruiterProfileRoute
   RecruiterTalentRoute: typeof RecruiterTalentRoute
   RecruiterVerificationRoute: typeof RecruiterVerificationRoute
@@ -537,6 +563,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RecruiterIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/recruiter/applications': {
+      id: '/recruiter/applications'
+      path: '/recruiter/applications'
+      fullPath: '/recruiter/applications'
+      preLoaderRoute: typeof RecruiterApplicationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/recruiter/hub': {
       id: '/recruiter/hub'
       path: '/recruiter/hub'
@@ -549,6 +582,13 @@ declare module '@tanstack/react-router' {
       path: '/recruiter/jobs'
       fullPath: '/recruiter/jobs'
       preLoaderRoute: typeof RecruiterJobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recruiter/members': {
+      id: '/recruiter/members'
+      path: '/recruiter/members'
+      fullPath: '/recruiter/members'
+      preLoaderRoute: typeof RecruiterMembersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recruiter/profile': {
@@ -595,8 +635,10 @@ const rootRouteChildren: RootRouteChildren = {
   CandidateCopilotRoute: CandidateCopilotRoute,
   CandidateJobsRoute: CandidateJobsRoute,
   CandidateProfileRoute: CandidateProfileRoute,
+  RecruiterApplicationsRoute: RecruiterApplicationsRoute,
   RecruiterHubRoute: RecruiterHubRoute,
   RecruiterJobsRoute: RecruiterJobsRoute,
+  RecruiterMembersRoute: RecruiterMembersRoute,
   RecruiterProfileRoute: RecruiterProfileRoute,
   RecruiterTalentRoute: RecruiterTalentRoute,
   RecruiterVerificationRoute: RecruiterVerificationRoute,

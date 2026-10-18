@@ -144,3 +144,13 @@ export async function logoutAccount(): Promise<void> {
     // The local session is already cleared when the API is unavailable.
   }
 }
+
+export function getCurrentUser(): AuthUser | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const session = JSON.parse(sessionStorage.getItem(AUTH_SESSION_KEY) || "null");
+    return session?.accessToken && session.expiresAt > Date.now() ? session.user : null;
+  } catch {
+    return null;
+  }
+}

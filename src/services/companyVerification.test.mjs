@@ -22,6 +22,20 @@ const request = {
 beforeEach(() => {
   const values = new Map();
   globalThis.window = {};
+  globalThis.sessionStorage = {
+    getItem: () =>
+      JSON.stringify({
+        accessToken: "token",
+        expiresAt: Date.now() + 60000,
+        user: {
+          id: 1,
+          email: "owner@example.com",
+          firstName: "An",
+          lastName: "Nguyễn",
+          role: "USER",
+        },
+      }),
+  };
   globalThis.localStorage = {
     getItem: (key) => values.get(key) ?? null,
     setItem: (key, value) => values.set(key, value),
@@ -30,6 +44,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   globalThis.fetch = originalFetch;
+  delete globalThis.sessionStorage;
   delete globalThis.window;
   delete globalThis.localStorage;
 });

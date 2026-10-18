@@ -64,10 +64,14 @@ export function RecruiterOverview({
           </div>
         </div>
         <Link
-          to="/recruiter/verification"
+          to={status === "VERIFIED" ? "/recruiter/members" : "/recruiter/verification"}
           className="flex shrink-0 items-center gap-2 text-sm font-semibold text-primary"
         >
-          {status === "PENDING" || status === "VERIFIED" ? "Xem hồ sơ" : "Xác thực ngay"}
+          {status === "VERIFIED"
+            ? "Quản lý thành viên"
+            : status === "PENDING"
+              ? "Xem hồ sơ"
+              : "Xác thực ngay"}
           <ArrowRight size={16} />
         </Link>
       </div>
