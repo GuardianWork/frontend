@@ -1,3 +1,5 @@
+import { getCurrentUser } from "./auth.ts";
+import type { AuthUser } from "./auth.ts";
 /**
  * Company Verification Service & Store
  * Implements the 4-Tier Verification Model, 5-Point Inspection Checklist,
@@ -9,6 +11,7 @@ export type SubmitterRole = "LEGAL_REP" | "AUTHORIZED_HR";
 
 export interface CompanyVerificationRecord {
   id: number;
+  submittedBy?: AuthUser;
   name: string;
   englishName?: string;
   taxCode: string;
@@ -166,38 +169,33 @@ export const NATIONAL_REGISTRY_DATABASE: Record<string, NationalRegistryRecord> 
 
 const DEFAULT_COMPANY_RECORD: CompanyVerificationRecord = {
   id: 101,
-  ticketId: "VER-8492",
-  name: "CÔNG TY CỔ PHẦN GUARDIAN TECH VIỆT NAM",
-  englishName: "GUARDIAN TECH VIETNAM JOINT STOCK COMPANY",
-  taxCode: "0316892341",
-  email: "recruitment@guardianwork.com",
-  website: "https://guardianwork.com",
-  phone: "028 7300 8899",
-  registeredAddress:
-    "Tầng 12, Tòa nhà Pearl Plaza, 561A Điện Biên Phủ, Phường 25, Quận Bình Thạnh, TP. Hồ Chí Minh",
+  ticketId: "",
+  name: "",
+  englishName: "",
+  taxCode: "",
+  email: "",
+  website: "",
+  phone: "",
+  registeredAddress: "",
   city: "TP. Hồ Chí Minh",
-  district: "Quận Bình Thạnh",
-  legalRepresentative: "Nguyễn Văn An",
+  district: "",
+  legalRepresentative: "",
   representativeTitle: "Tổng Giám đốc",
   submitterRole: "AUTHORIZED_HR",
-  contactPerson: "Lê Hoàng Lan",
+  contactPerson: "",
   contactTitle: "Trưởng phòng Tuyển dụng & Thu hút Nhân tài",
-  registrationCertificateUrl:
-    "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=1200",
-  certificateNumber: "0316892341",
-  issueDate: "2021-06-15",
-  issuingAuthority: "Sở Kế hoạch và Đầu tư TP. Hồ Chí Minh",
-  powerOfAttorneyUrl:
-    "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&q=80&w=1200",
-  verificationStatus: "PENDING",
+  registrationCertificateUrl: "",
+  certificateNumber: "",
+  issueDate: "",
+  issuingAuthority: "",
+  powerOfAttorneyUrl: "",
+  verificationStatus: "REGISTERED",
   rejectionReason: null,
   verifiedBy: null,
   verifiedAt: null,
   version: 0,
   createdAt: new Date(Date.now() - 3600000 * 4).toISOString(),
   updatedAt: new Date(Date.now() - 3600000 * 4).toISOString(),
-  ocrConfidence: 98.4,
-  tamperingRiskScore: 0.02,
 };
 
 export function lookupNationalRegistry(taxCode: string): NationalRegistryRecord | null {
@@ -245,8 +243,12 @@ export function saveStoredVerificationRecord(record: CompanyVerificationRecord):
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(record));
+    window.dispatchEvent?.(new Event("guardianwork-company-workspace"));
   } catch (e) {
-    console.error("Failed to save verification record:", e);
+    throw new Error(
+      "Không thể lưu hồ sơ trên trình duyệt. Vui lòng giải phóng bộ nhớ hoặc giảm dung lượng tài liệu.",
+      { cause: e },
+    );
   }
 }
 
@@ -257,11 +259,14 @@ export function saveStoredVerificationRecord(record: CompanyVerificationRecord):
 export async function submitVerification(
   req: CompanyRegistrationRequest,
 ): Promise<CompanyVerificationRecord> {
+  const submitter = getCurrentUser();
+  if (!submitter) throw new Error("Vui lòng đăng nhập trước khi gửi hồ sơ công ty.");
   const now = new Date().toISOString();
   const ticketId = `VER-${Math.floor(1000 + Math.random() * 9000)}`;
 
   const newRecord: CompanyVerificationRecord = {
     id: 101,
+    submittedBy: submitter,
     ticketId,
     name: req.name.trim(),
     englishName: req.englishName?.trim() || "",

@@ -1,3 +1,5 @@
+import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
+import { submitCompanyApplication } from "@/services/companyMembers";
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AdminShell, Icon } from "@/components/AdminShell";
@@ -22,7 +24,7 @@ type JobItem = {
   company: string;
   location: string;
   salaryRange: string;
-  badge: "100% Audited" | "Điều 98 Verified" | "High Salary";
+  badge: "100% Audited" | "Điều 98 Verified" | "High Salary" | "Công ty đã xác thực";
   badgeTone: "primary" | "warning" | "success";
   time: string;
   department: string;
@@ -188,20 +190,55 @@ function badgeStyle(tone: JobItem["badgeTone"]) {
 }
 
 function CandidateJobsPage() {
+  const { workspace, company, user } = useCompanyWorkspace();
+  const [applicationError, setApplicationError] = useState("");
+  const companyJobs: JobItem[] = workspace.jobs
+    .filter((j) => j.status === "Active")
+    .map((j) => ({
+      id: j.id,
+      title: j.title,
+      company: company?.name || "",
+      location: j.location,
+      salaryRange: j.salary,
+      badge: "Công ty đã xác thực",
+      badgeTone: "primary",
+      time: new Date(j.created).toLocaleDateString("vi-VN"),
+      department: j.department,
+      matchScore: 0,
+      description: `Vị trí ${j.title} thuộc phòng ban ${j.department}.`,
+      requirements: [],
+      statutoryBase: "Chưa đánh giá tin tuyển dụng",
+      statutoryNote:
+        "Công ty đã xác thực thông tin doanh nghiệp. Vui lòng liên hệ nhà tuyển dụng để nhận mô tả công việc chi tiết.",
+      suggestedRevision: "Trao đổi trực tiếp với nhà tuyển dụng về điều kiện làm việc.",
+    }));
+  const jobs = [...companyJobs, ...JOBS];
   const [selectedId, setSelectedId] = useState(JOBS[0].id);
   const [filter, setFilter] = useState<"all" | "high" | "remote">("all");
   const [appliedList, setAppliedList] = useState<string[]>([]);
 
-  const filteredJobs = JOBS.filter((j) => {
+  const filteredJobs = jobs.filter((j) => {
     if (filter === "high") return j.matchScore >= 95;
     if (filter === "remote") return j.location.includes("Từ xa") || j.location.includes("Hybrid");
     return true;
   });
 
-  const activeJob = JOBS.find((j) => j.id === selectedId) || JOBS[0];
-  const isApplied = appliedList.includes(activeJob.id);
+  const activeJob = jobs.find((j) => j.id === selectedId) || JOBS[0];
+  const hasApplied = (id: string) =>
+    appliedList.includes(id) ||
+    workspace.applications.some((a) => a.jobId === id && a.email === user?.email.toLowerCase());
+  const isApplied = hasApplied(activeJob.id);
 
   const handleApply = (id: string) => {
+    setApplicationError("");
+    if (companyJobs.some((j) => j.id === id)) {
+      try {
+        submitCompanyApplication(id);
+      } catch (e) {
+        setApplicationError(e instanceof Error ? e.message : "Không thể nộp đơn.");
+      }
+      return;
+    }
     if (!appliedList.includes(id)) {
       setAppliedList((prev) => [...prev, id]);
     }
@@ -209,6 +246,11 @@ function CandidateJobsPage() {
 
   return (
     <AdminShell title="Verified Jobs Queue" role="candidate">
+      {applicationError && (
+        <p role="alert" className="mb-4 rounded-lg border border-red-200 p-4 text-red-700">
+          {applicationError}
+        </p>
+      )}
       {/* Page Header */}
       <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
@@ -249,7 +291,7 @@ function CandidateJobsPage() {
                     : "bg-surface-container text-charcoal-text hover:bg-charcoal-04"
                 }`}
               >
-                Tất cả ({JOBS.length})
+                Tất cả ({jobs.length})
               </button>
               <button
                 onClick={() => setFilter("high")}
@@ -279,7 +321,7 @@ function CandidateJobsPage() {
 
           {filteredJobs.map((it) => {
             const isActive = it.id === selectedId;
-            const applied = appliedList.includes(it.id);
+            const applied = hasApplied(it.id);
 
             return (
               <div
@@ -314,7 +356,9 @@ function CandidateJobsPage() {
                 <div className="mt-3 pt-3 border-t border-warm-border flex items-center justify-between text-xs text-charcoal-40">
                   <div className="flex items-center gap-1.5 font-medium text-green-700">
                     <Icon name="verified" className="!text-[15px]" />
-                    <span>Match: {it.matchScore}%</span>
+                    <span>
+                      {it.matchScore ? `Match: ${it.matchScore}%` : "Chưa đánh giá độ phù hợp"}
+                    </span>
                   </div>
                   <div className="flex items-center gap-1 font-mono text-[11px]">
                     {applied ? (
@@ -395,7 +439,9 @@ function CandidateJobsPage() {
                   </span>
                   <span className="text-lg font-bold text-green-700 block flex items-center gap-1 font-mono">
                     <Icon name="auto_awesome" className="!text-lg" />
-                    {activeJob.matchScore}% tương thích
+                    {activeJob.matchScore
+                      ? `${activeJob.matchScore}% tương thích`
+                      : "Chưa đánh giá độ phù hợp"}
                   </span>
                 </div>
               </div>

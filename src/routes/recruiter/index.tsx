@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { RecruiterOverview } from "@/components/RecruiterOverview";
 import { AdminShell, Icon } from "@/components/AdminShell";
 
 export const Route = createFileRoute("/recruiter/")({
@@ -114,15 +115,7 @@ function RecruiterIndexPage() {
   const [candidates, setCandidates] = useState<CandidateItem[]>(CANDIDATES);
   const [selectedId, setSelectedId] = useState(CANDIDATES[0].id);
   const [filter, setFilter] = useState<"all" | "strong" | "interview">("all");
-  const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [pitchSent, setPitchSent] = useState(false);
-
-  // New Job modal form state
-  const [jobTitle, setJobTitle] = useState("");
-  const [jobSalary, setJobSalary] = useState("60.000.000 - 85.000.000 VND / tháng");
-  const [jobDept, setJobDept] = useState("Kỹ thuật");
-  const [jobDesc, setJobDesc] = useState("");
-  const [jobPostedSuccess, setJobPostedSuccess] = useState(false);
 
   const filteredCandidates = candidates.filter((c) => {
     if (filter === "strong") return c.fit === "STRONG FIT";
@@ -138,100 +131,20 @@ function RecruiterIndexPage() {
     );
   };
 
-  const handlePostJob = (e: React.FormEvent) => {
-    e.preventDefault();
-    setJobPostedSuccess(true);
-    setTimeout(() => {
-      setJobPostedSuccess(false);
-      setIsPostModalOpen(false);
-      setJobTitle("");
-      setJobDesc("");
-    }, 1500);
-  };
-
   return (
-    <AdminShell title="Recruiter Hub & Sourcing" role="recruiter">
-      {/* Header */}
-      <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <h2 className="text-3xl md:text-4xl font-bold text-charcoal-text mb-2 tracking-tight">
-            Recruiter Hub & Sourcing
-          </h2>
-          <p className="text-base text-charcoal-83 max-w-2xl">
-            Triển khai đại lý AI tìm kiếm ứng viên công nghệ cao, quản lý kênh tuyển dụng và tạo tin
-            tuyển dụng tuân thủ Điều 98.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Link
-            to="/recruiter/verification"
-            className="px-4 py-2 border border-primary/20 bg-primary/10 text-primary text-sm font-semibold rounded-lg hover:bg-primary/20 transition-colors flex items-center gap-2 shadow-xs"
-          >
-            <Icon name="verified" className="!text-base text-primary" />
-            <span>Xác thực Pháp nhân</span>
-          </Link>
-          <Link
-            to="/recruiter/talent"
-            className="px-4 py-2 border border-warm-border bg-paper-white text-charcoal-text text-sm font-medium rounded-lg hover:bg-surface-container transition-colors flex items-center gap-2 shadow-sm"
-          >
-            <Icon name="person_search" className="!text-base text-primary" />
-            <span>Xem Talent Profiles</span>
-          </Link>
-          <button
-            onClick={() => setIsPostModalOpen(true)}
-            className="px-4 py-2 bg-primary text-on-primary text-sm font-medium rounded-lg hover:opacity-90 transition-all flex items-center gap-2 shadow-sm"
-          >
-            <Icon name="add" className="!text-base" />
-            <span>Đăng tin Tuyển dụng</span>
-          </button>
-        </div>
+    <AdminShell title="Tổng quan" role="recruiter">
+      <RecruiterOverview
+        total={candidates.length}
+        strong={candidates.filter((c) => c.fit === "STRONG FIT").length}
+        interviews={candidates.filter((c) => c.stage === "Interview").length}
+        offers={candidates.filter((c) => c.stage === "Offer").length}
+      />
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Theo dõi ứng viên</h2>
+        <Link to="/recruiter/talent" className="text-xs font-semibold text-primary">
+          Xem tất cả ứng viên →
+        </Link>
       </div>
-
-      {/* KPI Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-paper-white border border-warm-border rounded-xl p-6 shadow-sm">
-          <span className="font-semibold text-charcoal-40 text-xs uppercase tracking-wider block mb-2">
-            Đơn Tuyển dụng Hoạt động
-          </span>
-          <div className="font-semibold text-3xl text-charcoal-text">12 Vị trí</div>
-          <div className="mt-2 text-xs text-charcoal-83 flex items-center gap-1 font-medium">
-            <Icon name="check_circle" className="!text-[15px] text-green-600" /> 100% Đã kiểm toán
-            pháp lý
-          </div>
-        </div>
-
-        <div className="bg-paper-white border border-warm-border rounded-xl p-6 shadow-sm">
-          <span className="font-semibold text-charcoal-40 text-xs uppercase tracking-wider block mb-2">
-            Ứng viên AI Đã Khớp
-          </span>
-          <div className="font-semibold text-3xl text-charcoal-text">142 Hồ sơ</div>
-          <div className="mt-2 text-xs text-green-700 flex items-center gap-1 font-medium">
-            <Icon name="trending_up" className="!text-[15px]" /> +24% tuần này
-          </div>
-        </div>
-
-        <div className="bg-paper-white border border-warm-border rounded-xl p-6 shadow-sm">
-          <span className="font-semibold text-charcoal-40 text-xs uppercase tracking-wider block mb-2">
-            Vòng Phỏng vấn
-          </span>
-          <div className="font-semibold text-3xl text-charcoal-text">18 Ứng viên</div>
-          <div className="mt-2 text-xs text-charcoal-83 flex items-center gap-1 font-medium">
-            <Icon name="schedule" className="!text-[15px]" /> 4 lịch hẹn hôm nay
-          </div>
-        </div>
-
-        <div className="bg-primary text-on-primary border border-primary rounded-xl p-6 shadow-sm">
-          <span className="font-semibold text-on-primary/80 text-xs uppercase tracking-wider block mb-2">
-            Compliance Score
-          </span>
-          <div className="font-semibold text-3xl font-mono">100% Verified</div>
-          <div className="mt-2 text-xs text-on-primary/90 flex items-center gap-1 font-medium">
-            <Icon name="gavel" className="!text-[15px]" /> Điều 98 & Bộ luật 2019
-          </div>
-        </div>
-      </div>
-
       {/* Main Split Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Pane: Candidates list */}
@@ -440,116 +353,6 @@ function RecruiterIndexPage() {
       </div>
 
       {/* Post Job Modal with AI Compliance Guard */}
-      {isPostModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-          <div className="bg-paper-white border border-warm-border rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative flex flex-col gap-5">
-            <div className="flex justify-between items-center pb-3 border-b border-warm-border">
-              <h3 className="text-xl font-bold text-charcoal-text flex items-center gap-2">
-                <Icon name="add_circle" className="text-primary" />
-                Đăng Tin Tuyển dụng Có Kiểm toán Pháp lý
-              </h3>
-              <button
-                onClick={() => setIsPostModalOpen(false)}
-                className="p-1 rounded-md text-charcoal-40 hover:text-charcoal-text"
-              >
-                <Icon name="close" />
-              </button>
-            </div>
-
-            {/* AI Compliance Guard Note */}
-            <div className="p-4 rounded-lg bg-parchment-bg border border-warm-border border-l-4 border-l-primary text-xs space-y-1">
-              <div className="font-bold text-charcoal-text flex items-center gap-1.5">
-                <Icon name="shield" className="!text-sm text-green-700" />
-                <span>AI Compliance Guard: 100% Tuân thủ Bộ luật 2019</span>
-              </div>
-              <p className="text-charcoal-83">
-                JD sẽ được tự động gắn nhãn "Verified Legal Shield", đảm bảo thử việc không quá 60
-                ngày và thanh toán tiền làm thêm giờ theo Điều 98.
-              </p>
-            </div>
-
-            {jobPostedSuccess ? (
-              <div className="py-8 text-center space-y-2">
-                <Icon name="check_circle" className="!text-5xl text-green-600" />
-                <h4 className="font-bold text-lg text-charcoal-text">Đăng tin thành công!</h4>
-                <p className="text-xs text-charcoal-83">
-                  Tin tuyển dụng đã được lưu vào hệ thống và gắn huy hiệu hợp chuẩn.
-                </p>
-              </div>
-            ) : (
-              <form onSubmit={handlePostJob} className="space-y-4">
-                <div>
-                  <label className="text-xs font-semibold text-charcoal-40 uppercase block mb-1">
-                    Chức danh công việc *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ví dụ: Kỹ sư Go / Kubernetes Cấp cao"
-                    value={jobTitle}
-                    onChange={(e) => setJobTitle(e.target.value)}
-                    className="w-full px-3 py-2 bg-surface-container-low border border-warm-border rounded-lg text-sm text-charcoal-text focus:outline-none"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-semibold text-charcoal-40 uppercase block mb-1">
-                      Phòng ban
-                    </label>
-                    <input
-                      type="text"
-                      value={jobDept}
-                      onChange={(e) => setJobDept(e.target.value)}
-                      className="w-full px-3 py-2 bg-surface-container-low border border-warm-border rounded-lg text-sm text-charcoal-text"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-charcoal-40 uppercase block mb-1">
-                      Mức lương dự kiến
-                    </label>
-                    <input
-                      type="text"
-                      value={jobSalary}
-                      onChange={(e) => setJobSalary(e.target.value)}
-                      className="w-full px-3 py-2 bg-surface-container-low border border-warm-border rounded-lg text-sm text-charcoal-text"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-charcoal-40 uppercase block mb-1">
-                    Mô tả công việc
-                  </label>
-                  <textarea
-                    rows={3}
-                    placeholder="Yêu cầu kỹ thuật, trách nhiệm chính..."
-                    value={jobDesc}
-                    onChange={(e) => setJobDesc(e.target.value)}
-                    className="w-full px-3 py-2 bg-surface-container-low border border-warm-border rounded-lg text-sm text-charcoal-text"
-                  />
-                </div>
-
-                <div className="flex justify-end gap-2 pt-2 border-t border-warm-border">
-                  <button
-                    type="button"
-                    onClick={() => setIsPostModalOpen(false)}
-                    className="px-4 py-2 border border-warm-border rounded-lg text-xs font-semibold text-charcoal-text hover:bg-surface-container"
-                  >
-                    Hủy
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-5 py-2 bg-primary text-on-primary rounded-lg text-xs font-bold hover:opacity-90 transition-all shadow-sm"
-                  >
-                    Xác nhận & Đăng tin
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
     </AdminShell>
   );
 }
