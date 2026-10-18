@@ -620,3 +620,43 @@ body[data-theme="blush-lilac"] {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Employer workspace follows the recruitment platform's green and white palette. */
+.recruiter-workspace {
+  --primary: #00a86b;
+  --on-primary: #ffffff;
+  --primary-container: #e8f7f0;
+  --parchment-bg: #f3f5f7;
+  --paper-white: #ffffff;
+  --warm-border: #e2e8f0;
+  --charcoal-text: #1e293b;
+  --charcoal-83: #64748b;
+  --charcoal-40: #64748b;
+  --surface-container: #f1f5f9;
+  --surface-container-low: #f8fafc;
+  font-family: "Inter", sans-serif;
+}
+.recruiter-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.375rem;
+  background: #00a86b;
+  color: white;
+  padding: 0.65rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.recruiter-primary:hover {
+  background: #008f5b;
+}
+.recruiter-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.recruiter-workspace :focus-visible {
+  outline: 2px solid #00a86b;
+  outline-offset: 3px;
+}

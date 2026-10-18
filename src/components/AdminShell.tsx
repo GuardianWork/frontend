@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { RecruiterShell } from "./RecruiterShell";
 
 export type ShellRole = "admin" | "candidate" | "recruiter";
 
@@ -92,6 +93,15 @@ export function AdminShell({
             cta: "Kiểm toán JD mới",
             ctaTo: "/admin/compliance",
           };
+
+  const isRecruiter = currentRole === "recruiter";
+  if (isRecruiter) {
+    return (
+      <RecruiterShell title={title} topNavExtras={topNavExtras}>
+        {children}
+      </RecruiterShell>
+    );
+  }
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background text-charcoal-text">

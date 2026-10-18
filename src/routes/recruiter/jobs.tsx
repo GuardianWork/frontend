@@ -3,9 +3,12 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { AdminShell, Icon } from "@/components/AdminShell";
 
 export const Route = createFileRoute("/recruiter/jobs")({
+  validateSearch: (search: Record<string, unknown>): { create?: boolean } => ({
+    create: search.create === true || search.create === "true" ? true : undefined,
+  }),
   head: () => ({
     meta: [
-      { title: "Manage Jobs — GuardianWork Recruiter" },
+      { title: "Quản lý tin tuyển dụng — GuardianWork Recruiter" },
       {
         name: "description",
         content: "Manage employer job postings, track applicant counts and compliance shields.",
@@ -76,7 +79,8 @@ const INITIAL_JOBS: RecruiterJob[] = [
 
 function RecruiterJobsPage() {
   const [jobs, setJobs] = useState<RecruiterJob[]>(INITIAL_JOBS);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const search = Route.useSearch();
+  const [isModalOpen, setIsModalOpen] = useState(search.create === true);
   const [title, setTitle] = useState("");
   const [dept, setDept] = useState("Kỹ thuật");
   const [salary, setSalary] = useState("65.000.000 - 90.000.000 VND / tháng");
@@ -106,7 +110,7 @@ function RecruiterJobsPage() {
   };
 
   return (
-    <AdminShell title="Manage Jobs" role="recruiter">
+    <AdminShell title="Tin tuyển dụng" role="recruiter">
       {/* Page Header */}
       <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
