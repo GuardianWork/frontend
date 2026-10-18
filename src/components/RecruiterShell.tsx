@@ -33,7 +33,7 @@ export function RecruiterShell({
   children: ReactNode;
   topNavExtras?: ReactNode;
 }) {
-  const { company, member } = useCompanyWorkspace();
+  const { member } = useCompanyWorkspace();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [menuOpen, setMenuOpen] = useState(false);
   return (
@@ -89,29 +89,23 @@ export function RecruiterShell({
           <p className="mt-1 text-sm font-semibold">{member?.role || "Nhà tuyển dụng"}</p>
         </div>
         <nav aria-label="Điều hướng nhà tuyển dụng" className="space-y-1 px-3">
-          {navigation
-            .filter(
-              (item) =>
-                !["/recruiter/members", "/recruiter/applications"].includes(item.to) ||
-                company?.verificationStatus === "VERIFIED",
-            )
-            .map(({ to, label, icon: Icon }) => {
-              const active =
-                to === "/recruiter" ? pathname.replace(/\/$/, "") === to : pathname.startsWith(to);
-              return (
-                <Link
-                  key={to}
-                  to={to}
-                  onClick={() => setMenuOpen(false)}
-                  aria-current={active ? "page" : undefined}
-                  className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${active ? "bg-surface-container text-primary" : "text-charcoal-83 hover:bg-surface-container-low hover:text-charcoal-text"}`}
-                >
-                  <Icon size={19} />
-                  {label}
-                  {active && <ChevronRight size={15} className="ml-auto" />}
-                </Link>
-              );
-            })}
+          {navigation.map(({ to, label, icon: Icon }) => {
+            const active =
+              to === "/recruiter" ? pathname.replace(/\/$/, "") === to : pathname.startsWith(to);
+            return (
+              <Link
+                key={to}
+                to={to}
+                onClick={() => setMenuOpen(false)}
+                aria-current={active ? "page" : undefined}
+                className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${active ? "bg-surface-container text-primary" : "text-charcoal-83 hover:bg-surface-container-low hover:text-charcoal-text"}`}
+              >
+                <Icon size={19} />
+                {label}
+                {active && <ChevronRight size={15} className="ml-auto" />}
+              </Link>
+            );
+          })}
         </nav>
         <div className="mx-4 mt-8 rounded-xl bg-surface-container-low p-4">
           <ShieldCheck className="mb-3 text-primary" size={26} />

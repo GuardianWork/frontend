@@ -81,6 +81,49 @@ function CompanyMembersPage() {
           {error || message}
         </p>
       )}
+      {!owner && (
+        <p className="mb-4 rounded-lg border border-warm-border bg-surface-container-low p-4 text-sm">
+          Chỉ Owner của công ty đã xác thực được mời, xóa thành viên, đổi vai trò và phân quyền. Bạn
+          vẫn có thể xem lịch sử đăng tin và đơn ứng tuyển trong phạm vi quyền được cấp.
+        </p>
+      )}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (owner) run({ type: "invite", email });
+        }}
+        className="mb-6 rounded-xl border border-warm-border bg-paper-white p-5"
+      >
+        <h2 className="mb-3 flex items-center gap-2 font-semibold">
+          <UserPlus size={19} />
+          Mời thành viên
+        </h2>
+        <div className="flex flex-wrap gap-3">
+          <label className="min-w-0 flex-1">
+            <span className="sr-only">Email thành viên</span>
+            <input
+              disabled={!owner}
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email tài khoản nhà tuyển dụng"
+              className="w-full rounded-lg border border-warm-border bg-surface-container-low px-3 py-2 text-sm"
+            />
+          </label>
+          <button
+            className="recruiter-primary disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={!owner}
+            title={!owner ? "Chỉ Owner được mời thành viên" : undefined}
+          >
+            Tạo lời mời
+          </button>
+        </div>
+        <p className="mt-3 text-xs text-charcoal-83">
+          Thành viên mới có vai trò recruiter. Lời mời hiện lưu trên trình duyệt, chưa gửi qua
+          email.
+        </p>
+      </form>
       {!company ? (
         <p>Đang tải công ty…</p>
       ) : company.verificationStatus !== "VERIFIED" ? (
@@ -88,7 +131,8 @@ function CompanyMembersPage() {
           <ShieldCheck className="mb-4 text-primary" />
           <h2 className="text-xl font-semibold">Công ty cần được xác thực</h2>
           <p className="my-3 text-sm text-charcoal-83">
-            Trang thành viên sẽ mở sau khi hệ thống duyệt hồ sơ. Người nộp hồ sơ sẽ trở thành Owner.
+            Các thao tác quản lý sẽ được mở cho Owner sau khi hệ thống duyệt hồ sơ công ty. Người
+            nộp hồ sơ sẽ trở thành Owner.
           </p>
           <Link to="/recruiter/verification" className="recruiter-primary inline-flex">
             Xem hồ sơ xác thực
@@ -136,38 +180,6 @@ function CompanyMembersPage() {
               </div>
             ))}
           </div>
-          {owner && (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                run({ type: "invite", email });
-              }}
-              className="mb-6 rounded-xl border border-warm-border bg-paper-white p-5"
-            >
-              <h2 className="mb-3 flex items-center gap-2 font-semibold">
-                <UserPlus size={19} />
-                Mời thành viên
-              </h2>
-              <div className="flex flex-wrap gap-3">
-                <label className="min-w-0 flex-1">
-                  <span className="sr-only">Email thành viên</span>
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Email tài khoản nhà tuyển dụng"
-                    className="w-full rounded-lg border border-warm-border bg-surface-container-low px-3 py-2 text-sm"
-                  />
-                </label>
-                <button className="recruiter-primary">Tạo lời mời</button>
-              </div>
-              <p className="mt-3 text-xs text-charcoal-83">
-                Thành viên mới có vai trò recruiter. Lời mời hiện lưu trên trình duyệt, chưa gửi qua
-                email.
-              </p>
-            </form>
-          )}
           <div className="overflow-x-auto rounded-xl border border-warm-border bg-paper-white">
             <table className="w-full text-left text-sm">
               <thead className="bg-surface-container-low">
@@ -192,10 +204,12 @@ function CompanyMembersPage() {
                         <p className="mt-1 text-xs text-charcoal-83">{m.email}</p>
                       </td>
                       <td className="p-4">
-                        {owner && m.status === "active" ? (
+                        {m.status === "active" ? (
                           <select
+                            disabled={!owner}
+                            title={!owner ? "Chỉ Owner được đổi vai trò" : undefined}
                             aria-label={`Vai trò của ${m.email}`}
-                            className="rounded-lg border border-warm-border bg-paper-white p-2"
+                            className="rounded-lg border border-warm-border bg-paper-white p-2 disabled:cursor-not-allowed disabled:opacity-50"
                             value={m.role}
                             onChange={(e) =>
                               run({
@@ -230,11 +244,34 @@ function CompanyMembersPage() {
                                 onClick={() => setSelectedId(m.id)}
                               >
                                 <History size={16} />
-                                {owner ? "Lịch sử & phân quyền" : "Xem lịch sử"}
+                                Xem lịch sử
                               </button>
                             )}
-                          {owner && m.status !== "removed" && (
-                            <button className="text-red-700" onClick={() => setRemovingId(m.id)}>
+                          {m.status === "active" && (
+                            <button
+                              disabled={!owner}
+                              title={!owner ? "Chỉ Owner được phân quyền" : undefined}
+                              className="font-semibold text-primary disabled:cursor-not-allowed disabled:opacity-50"
+                              onClick={() => {
+                                if (owner) setSelectedId(m.id);
+                              }}
+                            >
+                              Phân quyền
+                            </button>
+                          )}
+                          {m.status !== "removed" && (
+                            <button
+                              disabled={!owner}
+                              title={
+                                !owner
+                                  ? "Chỉ Owner được xóa thành viên hoặc thu hồi lời mời"
+                                  : undefined
+                              }
+                              className="text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                              onClick={() => {
+                                if (owner) setRemovingId(m.id);
+                              }}
+                            >
                               {m.status === "invited" ? "Thu hồi lời mời" : "Xóa thành viên"}
                             </button>
                           )}
@@ -272,7 +309,7 @@ function CompanyMembersPage() {
           )}
           {selected && (
             <>
-              {owner && selected.status === "active" && (
+              {selected.status === "active" && (
                 <section>
                   <h3 className="mb-3 font-semibold">Cho phép {selected.name} xem dữ liệu của</h3>
                   {selected.role === "Owner" ? (
@@ -294,6 +331,8 @@ function CompanyMembersPage() {
                               {(["jobs", "applications"] as const).map((kind) => (
                                 <label key={kind} className="flex items-center gap-2 text-sm">
                                   <input
+                                    disabled={!owner}
+                                    title={!owner ? "Chỉ Owner được phân quyền" : undefined}
                                     type="checkbox"
                                     checked={grant?.[kind] ?? false}
                                     onChange={(e) =>
@@ -350,7 +389,7 @@ function CompanyMembersPage() {
         </DialogContent>
       </Dialog>
       <Dialog
-        open={!!removing}
+        open={!!removing && owner}
         onOpenChange={(open) => {
           if (!open) setRemovingId(null);
         }}
