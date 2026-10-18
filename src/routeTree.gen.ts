@@ -18,6 +18,7 @@ import { Route as JobsRouteImport } from './routes/jobs'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RecruitRouteImport } from './routes/recruit'
+import { Route as RegisterRouteImport } from './routes/register'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as VnRouteImport } from './routes/vn'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
@@ -79,6 +80,11 @@ const ProfileRoute = ProfileRouteImport.update({
 const RecruitRoute = RecruitRouteImport.update({
   id: '/recruit',
   path: '/recruit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -177,6 +183,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/recruit': typeof RecruitRoute
+  '/register': typeof RegisterRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/vn': typeof VnRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -205,6 +212,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/recruit': typeof RecruitRoute
+  '/register': typeof RegisterRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/vn': typeof VnRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -234,6 +242,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/recruit': typeof RecruitRoute
+  '/register': typeof RegisterRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/vn': typeof VnRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -264,6 +273,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/profile'
     | '/recruit'
+    | '/register'
     | '/sitemap.xml'
     | '/vn'
     | '/admin/analytics'
@@ -292,6 +302,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/profile'
     | '/recruit'
+    | '/register'
     | '/sitemap.xml'
     | '/vn'
     | '/admin/analytics'
@@ -320,6 +331,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/profile'
     | '/recruit'
+    | '/register'
     | '/sitemap.xml'
     | '/vn'
     | '/admin/analytics'
@@ -349,6 +361,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ProfileRoute: typeof ProfileRoute
   RecruitRoute: typeof RecruitRoute
+  RegisterRoute: typeof RegisterRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   VnRoute: typeof VnRoute
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
@@ -431,6 +444,13 @@ declare module '@tanstack/react-router' {
       path: '/recruit'
       fullPath: '/recruit'
       preLoaderRoute: typeof RecruitRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -565,6 +585,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ProfileRoute: ProfileRoute,
   RecruitRoute: RecruitRoute,
+  RegisterRoute: RegisterRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   VnRoute: VnRoute,
   AdminAnalyticsRoute: AdminAnalyticsRoute,

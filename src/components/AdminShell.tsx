@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { LogoutButton } from "./LogoutButton";
 import { RecruiterShell } from "./RecruiterShell";
 
 export type ShellRole = "admin" | "candidate" | "recruiter";
@@ -282,13 +283,7 @@ export function AdminShell({
                 <Icon name="notifications" className="!text-xl" />
                 <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-error border border-paper-white" />
               </button>
-              <Link
-                to="/login"
-                className="w-9 h-9 rounded-md border border-warm-border bg-surface flex items-center justify-center text-charcoal-40 hover:text-charcoal-text hover:bg-charcoal-04 transition-colors"
-                title="Đăng nhập"
-              >
-                <Icon name="account_circle" className="!text-xl" />
-              </Link>
+              <LogoutButton />
             </div>
           </div>
         </header>

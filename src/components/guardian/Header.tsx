@@ -219,13 +219,15 @@ export function Header({
                 {dict.nav.logIn}
               </Link>
               <Link
-                to="/jobs"
+                to="/register"
+                search={{ role: "candidate" }}
                 className="hidden sm:flex flex-interactive-row px-4 py-2 rounded-full border border-rule bg-paper text-ink text-sm font-semibold hover:border-ink hover:bg-paper-2 transition-all min-h-[40px] shadow-2xs cursor-pointer"
               >
-                {dict.nav.findJob}
+                Đăng ký tìm việc
               </Link>
               <Link
-                to="/recruit"
+                to="/register"
+                search={{ role: "recruiter" }}
                 className="flex-interactive-row gap-1.5 px-4.5 py-2 rounded-full bg-ink text-paper text-sm font-bold hover:opacity-90 active:scale-[0.98] transition-all shadow-sm min-h-[40px] cursor-pointer"
               >
                 {dict.nav.startHiring}
@@ -300,7 +302,14 @@ export function Header({
             >
               {dict.nav.logIn} →
             </Link>
-            <span className="font-mono text-xs text-ink-3">Bộ luật Lao động 2019</span>
+            <Link
+              to="/register"
+              search={{ role: "candidate" }}
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-sm font-semibold text-accent"
+            >
+              Đăng ký tài khoản →
+            </Link>
           </div>
         </div>
       )}

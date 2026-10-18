@@ -1,3 +1,4 @@
+import { LogoutButton } from "./LogoutButton";
 import { useState, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
@@ -66,13 +67,7 @@ export function RecruiterShell({
             <Plus size={17} />
             <span className="hidden sm:inline">Đăng tin tuyển dụng</span>
           </Link>
-          <Link
-            to="/recruiter/verification"
-            aria-label="Cài đặt tài khoản"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-container text-sm font-bold text-primary"
-          >
-            NT
-          </Link>
+          <LogoutButton />
         </div>
       </header>
       {menuOpen && (
