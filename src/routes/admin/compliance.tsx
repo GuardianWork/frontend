@@ -1,201 +1,304 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AdminShell, Icon } from "@/components/AdminShell";
+import { useMemo, useState } from "react";
+import { AlertTriangle, ArrowUpRight, Check, RotateCcw, Search } from "lucide-react";
+import { AdminShell } from "@/components/AdminShell";
+
+type Rule = { id: string; title: string; article: string; terms: string[]; guidance: string };
+
+const LABOR_CODE_URL =
+  "https://vanban.chinhphu.vn/?classid=1&docid=198540&pageid=27160&typegroupid=3";
+
+const RULES: Rule[] = [
+  {
+    id: "deposit",
+    title: "Yêu cầu đặt cọc hoặc giữ giấy tờ gốc",
+    article: "Điều 17",
+    terms: ["đặt cọc", "ký quỹ", "giữ bản chính", "giữ bản gốc", "giữ giấy tờ gốc"],
+    guidance:
+      "Đối chiếu Điều 17 về hành vi người sử dụng lao động không được thực hiện. Kiểm tra ngữ cảnh và chủ thể đưa ra yêu cầu.",
+  },
+  {
+    id: "overtime",
+    title: "Nội dung về tiền lương làm thêm giờ",
+    article: "Điều 98",
+    terms: [
+      "không trả lương làm thêm",
+      "không trả tiền làm thêm",
+      "không trả tiền tăng ca",
+      "không tính lương làm thêm",
+    ],
+    guidance:
+      "Đối chiếu quy định về tiền lương làm thêm giờ, thời điểm làm việc và loại ngày. Chỉ từ khóa không đủ để xác định mức trả đúng.",
+  },
+  {
+    id: "probation",
+    title: "Thời gian thử việc cần đối chiếu theo vị trí",
+    article: "Điều 25",
+    terms: [
+      "thử việc 90 ngày",
+      "thử việc 3 tháng",
+      "thử việc 03 tháng",
+      "thử việc 6 tháng",
+      "thử việc 180 ngày",
+    ],
+    guidance:
+      "Thời hạn tối đa phụ thuộc tính chất và yêu cầu chuyên môn của công việc; cần kiểm tra nhóm công việc và trường hợp áp dụng theo Điều 25.",
+  },
+  {
+    id: "post-employment",
+    title: "Điều khoản hạn chế sau khi nghỉ việc",
+    article: "Cần xem xét toàn bộ thỏa thuận",
+    terms: [
+      "không được làm việc cho đối thủ",
+      "cấm làm việc cho đối thủ",
+      "không làm cho đối thủ",
+      "không được làm trong ngành",
+    ],
+    guidance:
+      "Xem xét đầy đủ phạm vi, thời hạn, đối tượng và căn cứ của điều khoản. Từ khóa này không tự xác định điều khoản hợp pháp hay vi phạm.",
+  },
+  {
+    id: "personal-criteria",
+    title: "Điều kiện tuyển dụng gắn với đặc điểm cá nhân",
+    article: "Cần rà soát ngữ cảnh",
+    terms: [
+      "chỉ tuyển nam",
+      "chỉ tuyển nữ",
+      "không tuyển nữ",
+      "không tuyển người đã kết hôn",
+      "ngoại hình bắt buộc",
+    ],
+    guidance:
+      "Kiểm tra yêu cầu có liên quan thực chất đến công việc hay không và xem xét ngoại lệ, ngữ cảnh cụ thể trước khi đánh giá.",
+  },
+];
+
+function scanText(text: string) {
+  const normalized = text.toLocaleLowerCase("vi-VN");
+  return RULES.flatMap((rule) => {
+    const matchedTerms = rule.terms.filter((term) =>
+      normalized.includes(term.toLocaleLowerCase("vi-VN")),
+    );
+    return matchedTerms.length ? [{ ...rule, matchedTerms }] : [];
+  });
+}
 
 export const Route = createFileRoute("/admin/compliance")({
   head: () => ({
     meta: [
-      { title: "Compliance Queue — GuardianWork Admin" },
+      { title: "Rà soát tin tuyển dụng — GuardianWork" },
       {
         name: "description",
-        content:
-          "Review AI-flagged job descriptions for potential risk clauses under Labor Code 2019.",
+        content: "Công cụ hỗ trợ rà soát từ khóa trong nội dung tin tuyển dụng.",
       },
     ],
   }),
   component: CompliancePage,
 });
 
-type Item = {
-  title: string;
-  company: string;
-  badge: "Critical" | "Warning" | "Review";
-  time: string;
-  reason: string;
-  reasonIcon: string;
-  active?: boolean;
-};
-
-const ITEMS: Item[] = [
-  {
-    title: "Senior Rust Engineer",
-    company: "Acme Corp • San Francisco, CA (Vietnam Hub)",
-    badge: "Critical",
-    time: "Flagged 2h ago",
-    reason: "Non-compete clause (Điều 35)",
-    reasonIcon: "policy",
-    active: true,
-  },
-  {
-    title: "Marketing Director",
-    company: "Global Reach Ltd • TP. Hồ Chí Minh",
-    badge: "Warning",
-    time: "Flagged 5h ago",
-    reason: "Age discrimination risk",
-    reasonIcon: "gavel",
-  },
-  {
-    title: "Warehouse Associate",
-    company: "LogisTech Inc • Bình Dương",
-    badge: "Review",
-    time: "Flagged 1d ago",
-    reason: "Physical requirement phrasing",
-    reasonIcon: "accessibility_new",
-  },
-];
-
-function badgeClass(b: Item["badge"]) {
-  if (b === "Critical") return "text-error bg-error-container";
-  if (b === "Warning") return "text-secondary bg-secondary-container";
-  return "text-on-primary bg-primary-container";
-}
-
 function CompliancePage() {
+  const sampleTitle = "Nhân viên kinh doanh khu vực miền Nam";
+  const sampleContent =
+    "Ứng viên nhận việc cần đặt cọc đồng phục. Thử việc 3 tháng. Không trả lương làm thêm giờ.";
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [hasReviewed, setHasReviewed] = useState(false);
+  const [error, setError] = useState("");
+  const matches = useMemo(
+    () => (hasReviewed ? scanText(`${title}\n${content}`) : []),
+    [hasReviewed, title, content],
+  );
+
+  function review(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!content.trim()) {
+      setError("Hãy nhập nội dung tin tuyển dụng để bắt đầu rà soát.");
+      setHasReviewed(false);
+      return;
+    }
+    setError("");
+    setHasReviewed(true);
+  }
+
+  function clear() {
+    setTitle("");
+    setContent("");
+    setHasReviewed(false);
+    setError("");
+  }
+
   return (
-    <AdminShell title="Compliance Queue" role="admin">
-      <div className="mb-8">
-        <h2 className="text-3xl md:text-4xl font-bold text-charcoal-text mb-2 tracking-tight">
-          Compliance Queue
-        </h2>
-        <p className="text-base text-charcoal-83 max-w-2xl">
-          Review AI-flagged job descriptions for potential risk clauses. Rà soát tự động theo Bộ
-          luật Lao động 2019 và chuẩn mực quốc tế.
-        </p>
+    <AdminShell title="Rà soát tin tuyển dụng" role="admin">
+      <div className="admin-page-heading">
+        <div>
+          <h1>Rà soát tin tuyển dụng</h1>
+          <p>Tìm dấu hiệu cần xem lại trong tin tuyển dụng thuộc mọi ngành nghề.</p>
+        </div>
+        <span className="admin-draft-label">Công cụ hỗ trợ</span>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* List */}
-        <div className="lg:col-span-5 flex flex-col gap-4">
-          <div className="flex justify-between items-center bg-paper-white p-3 rounded-xl border border-warm-border">
-            <div className="flex gap-2">
-              <span className="px-3 py-1 bg-error-container text-on-error-container text-xs font-semibold rounded-full">
-                High Risk (3)
-              </span>
-              <span className="px-3 py-1 bg-surface-container text-charcoal-text text-xs font-semibold rounded-full">
-                Pending (12)
-              </span>
+      <div className="admin-review-layout">
+        <section
+          className="admin-panel admin-review-form-panel"
+          aria-labelledby="review-form-title"
+        >
+          <div className="admin-panel-heading">
+            <div>
+              <h2 id="review-form-title">Nội dung cần rà soát</h2>
+              <p>Dữ liệu chỉ được xử lý trong phiên trình duyệt này.</p>
             </div>
-            <button className="text-charcoal-83 hover:text-charcoal-text flex items-center gap-1 text-sm font-medium">
-              <Icon name="filter_list" className="!text-base" /> Filter
-            </button>
           </div>
+          <form onSubmit={review}>
+            <label className="admin-review-label" htmlFor="job-title">
+              Chức danh <span>Tùy chọn</span>
+            </label>
+            <input
+              id="job-title"
+              className="admin-review-input"
+              value={title}
+              onChange={(event) => {
+                setTitle(event.target.value);
+                setHasReviewed(false);
+              }}
+              placeholder="Ví dụ: Nhân viên kế toán tổng hợp"
+            />
+            <label className="admin-review-label" htmlFor="job-description">
+              Mô tả công việc và điều kiện tuyển dụng <span>Bắt buộc</span>
+            </label>
+            <textarea
+              id="job-description"
+              className="admin-review-textarea"
+              value={content}
+              onChange={(event) => {
+                setContent(event.target.value);
+                setHasReviewed(false);
+              }}
+              placeholder="Dán nội dung tin tuyển dụng tại đây…"
+              rows={12}
+            />
+            {error && (
+              <p className="admin-review-error" role="alert">
+                {error}
+              </p>
+            )}
+            <div className="admin-review-actions">
+              <button type="submit" className="admin-review-primary">
+                <Search size={16} aria-hidden="true" /> Rà soát nội dung
+              </button>
+              <button type="button" className="admin-review-clear" onClick={clear}>
+                <RotateCcw size={15} aria-hidden="true" /> Xóa nội dung
+              </button>
+              <button
+                type="button"
+                className="admin-review-clear"
+                onClick={() => {
+                  setTitle(sampleTitle);
+                  setContent(sampleContent);
+                  setHasReviewed(false);
+                  setError("");
+                }}
+              >
+                Điền nội dung mẫu
+              </button>
+            </div>
+          </form>
+        </section>
 
-          {ITEMS.map((it) => (
-            <div
-              key={it.title}
+        <aside className="admin-review-side">
+          <section className="admin-review-note">
+            <div className="admin-review-note-icon">
+              <AlertTriangle size={18} aria-hidden="true" />
+            </div>
+            <h2>Cách đọc kết quả</h2>
+            <p>
+              Công cụ dò các cụm từ đã cấu hình và gợi ý điều khoản để đối chiếu. Kết quả không xác
+              định tin có vi phạm pháp luật hay không.
+            </p>
+            <a href={LABOR_CODE_URL} target="_blank" rel="noreferrer">
+              Mở Bộ luật Lao động 2019 <ArrowUpRight size={14} aria-hidden="true" />
+            </a>
+          </section>
+          <section className="admin-review-rule-summary" aria-label="Phạm vi rà soát">
+            <h2>Phạm vi từ khóa</h2>
+            <ul>
+              <li>
+                <Check size={15} aria-hidden="true" /> Đặt cọc và giấy tờ gốc
+              </li>
+              <li>
+                <Check size={15} aria-hidden="true" /> Tiền lương làm thêm giờ
+              </li>
+              <li>
+                <Check size={15} aria-hidden="true" /> Thời gian thử việc
+              </li>
+              <li>
+                <Check size={15} aria-hidden="true" /> Điều khoản sau khi nghỉ việc
+              </li>
+              <li>
+                <Check size={15} aria-hidden="true" /> Điều kiện tuyển dụng cá nhân
+              </li>
+            </ul>
+          </section>
+        </aside>
+      </div>
+
+      {hasReviewed && (
+        <section
+          className="admin-panel admin-review-results"
+          aria-live="polite"
+          aria-labelledby="review-results-title"
+        >
+          <div className="admin-panel-heading">
+            <div>
+              <h2 id="review-results-title">Kết quả rà soát</h2>
+              <p>
+                {matches.length
+                  ? `Có ${matches.length} nhóm dấu hiệu cần xem lại.`
+                  : "Không tìm thấy từ khóa trong phạm vi rà soát."}
+              </p>
+            </div>
+            <span
               className={
-                it.active
-                  ? "bg-paper-white p-5 rounded-xl border-l-4 border-l-error border border-warm-border shadow-sm cursor-pointer"
-                  : "bg-paper-white p-5 rounded-xl border border-warm-border hover:shadow-sm transition-shadow cursor-pointer opacity-80 hover:opacity-100"
+                matches.length
+                  ? "admin-review-count admin-review-count--flagged"
+                  : "admin-review-count"
               }
             >
-              <div className="flex justify-between items-start mb-2 gap-3">
-                <h3 className="font-semibold text-lg leading-tight text-charcoal-text">
-                  {it.title}
-                </h3>
-                <span
-                  className={`font-semibold text-[10px] uppercase tracking-wider px-2 py-1 rounded ${badgeClass(it.badge)}`}
-                >
-                  {it.badge}
-                </span>
-              </div>
-              <p className="text-sm text-charcoal-83 mb-4">{it.company}</p>
-              <div className="flex items-center gap-2 text-xs text-charcoal-40">
-                <Icon name="schedule" className="!text-[14px]" /> {it.time}
-                <span className="mx-1">•</span>
-                <Icon name={it.reasonIcon} className="!text-[14px]" /> {it.reason}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Review pane */}
-        <div className="lg:col-span-7">
-          <div className="bg-paper-white rounded-xl border border-warm-border shadow-sm h-full flex flex-col overflow-hidden">
-            <div className="p-6 border-b border-warm-border flex justify-between items-center gap-3">
-              <div>
-                <h3 className="text-lg font-semibold text-charcoal-text">
-                  Review: Senior Rust Engineer
-                </h3>
-                <p className="text-sm text-charcoal-83 mt-1">Acme Corp ID: #JD-9921</p>
-              </div>
-              <div className="flex gap-3">
-                <button className="px-4 py-2 text-charcoal-83 text-sm font-medium rounded-lg hover:bg-surface-container transition-colors">
-                  Ignore
-                </button>
-                <button className="px-4 py-2 bg-primary text-on-primary text-sm font-medium rounded-lg hover:opacity-90 transition-all">
-                  Apply Fixes
-                </button>
-              </div>
-            </div>
-
-            <div className="flex-1 p-8 overflow-y-auto">
-              <div className="mb-10">
-                <h4 className="font-semibold text-sm text-charcoal-40 uppercase tracking-wide mb-4 flex items-center gap-2">
-                  <Icon name="description" className="!text-[18px]" />
-                  Flagged Section
-                </h4>
-                <p className="leading-relaxed text-charcoal-text text-lg">
-                  ...We are looking for a rockstar engineer to join our fast-paced team.{" "}
-                  <span className="bg-error-container/60 text-error font-medium px-1 border-b border-error">
-                    The candidate must agree to a 24-month non-compete clause preventing employment
-                    at any competing software firm globally following termination.
-                  </span>{" "}
-                  Additionally, candidates should be digital natives...
-                </p>
-              </div>
-
-              <div className="bg-parchment-bg border border-warm-border border-l-4 border-l-primary p-5 rounded-lg mb-10 flex gap-4">
-                <Icon name="smart_toy" className="text-primary mt-0.5" />
-                <div>
-                  <h5 className="text-sm font-semibold text-charcoal-text mb-1">
-                    AI Compliance Note
-                  </h5>
-                  <p className="text-sm text-charcoal-83 leading-snug mb-2">
-                    Overly broad non-compete clauses violate Vietnam Labor Code 2019 (Điều 35 quyền
-                    tự do việc làm) and international FTC guidelines. Recommend narrowing scope to
-                    specific trade secret protections.
-                  </p>
-                  <button className="text-xs font-medium text-primary hover:underline flex items-center gap-1">
-                    View Legal Guideline <Icon name="open_in_new" className="!text-[14px]" />
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-semibold text-sm text-charcoal-40 uppercase tracking-wide mb-4 flex items-center gap-2">
-                  <Icon name="auto_fix_high" className="!text-[18px] text-primary" />
-                  Suggested Revision
-                </h4>
-                <div className="bg-parchment-bg rounded-lg p-6 border border-warm-border">
-                  <p className="leading-relaxed text-charcoal-text text-lg">
-                    ...We are looking for a highly skilled engineer to join our fast-paced team.{" "}
-                    <span className="bg-secondary-container/60 text-charcoal-text font-medium px-1 border-b border-secondary">
-                      The candidate must agree to protect company trade secrets and proprietary
-                      algorithms as outlined in our standard confidentiality agreement.
-                    </span>{" "}
-                    Additionally, candidates should have deep technical expertise...
-                  </p>
-                  <div className="mt-4 flex justify-end">
-                    <button className="text-xs font-medium text-charcoal-83 flex items-center gap-1 hover:text-charcoal-text transition-colors">
-                      <Icon name="content_copy" className="!text-base" /> Copy to clipboard
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+              {matches.length} dấu hiệu
+            </span>
           </div>
-        </div>
-      </div>
+          {matches.length ? (
+            <div className="admin-review-result-list">
+              {matches.map((match) => (
+                <article className="admin-review-result" key={match.id}>
+                  <div className="admin-review-result-head">
+                    <span>
+                      <AlertTriangle size={16} aria-hidden="true" /> Dấu hiệu cần xem lại
+                    </span>
+                    <small>{match.article}</small>
+                  </div>
+                  <h3>{match.title}</h3>
+                  <p className="admin-review-matched">
+                    Cụm từ tìm thấy: {match.matchedTerms.map((term) => `“${term}”`).join(", ")}
+                  </p>
+                  <p>{match.guidance}</p>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="admin-review-clear-state">
+              <Check size={19} aria-hidden="true" />
+              <p>
+                Không có cụm từ nào trong danh sách rà soát được tìm thấy. Nội dung vẫn cần được đọc
+                theo đầy đủ ngữ cảnh.
+              </p>
+            </div>
+          )}
+          <p className="admin-review-disclaimer">
+            Đây là bước sàng lọc từ khóa, không phải kết luận pháp lý. Cần rà soát toàn bộ ngữ cảnh,
+            loại công việc và trường hợp cụ thể trước khi xử lý tin.
+          </p>
+        </section>
+      )}
     </AdminShell>
   );
 }

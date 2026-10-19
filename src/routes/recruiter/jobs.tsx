@@ -1,3 +1,5 @@
+import { ListSearch } from "@/components/ListSearch";
+import { matchesSearch } from "@/lib/list-search";
 import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
 import { canViewMemberData, createCompanyJob } from "@/services/companyMembers";
 import { useState } from "react";
@@ -34,9 +36,14 @@ type RecruiterJob = {
 
 function RecruiterJobsPage() {
   const { workspace, member } = useCompanyWorkspace();
+  const [query, setQuery] = useState("");
   const [error, setError] = useState("");
   const jobs: RecruiterJob[] = workspace.jobs
-    .filter((job) => canViewMemberData(workspace, job.authorId, "jobs"))
+    .filter(
+      (job) =>
+        canViewMemberData(workspace, job.authorId, "jobs") &&
+        matchesSearch(query, job.title, job.department, job.location),
+    )
     .map((job) => ({
       ...job,
       applicants: canViewMemberData(workspace, job.authorId, "applications")
@@ -52,7 +59,7 @@ function RecruiterJobsPage() {
     void navigate({ search: { create: open ? true : undefined }, replace: true });
   };
   const [title, setTitle] = useState("");
-  const [dept, setDept] = useState("Kỹ thuật");
+  const [dept, setDept] = useState("");
   const [salary, setSalary] = useState("65.000.000 - 90.000.000 VND / tháng");
   const [loc, setLoc] = useState("TP. Hồ Chí Minh");
 
@@ -90,8 +97,8 @@ function RecruiterJobsPage() {
             Quản Lý Tin Tuyển Dụng
           </h2>
           <p className="text-base text-charcoal-83 max-w-2xl">
-            Các vị trí kỹ thuật của doanh nghiệp đã kiểm định pháp lý theo Bộ luật Lao động 2019 và
-            Điều 98 làm thêm giờ.
+            Các vị trí tuyển dụng của doanh nghiệp đã kiểm định pháp lý theo Bộ luật Lao động 2019
+            và Điều 98 làm thêm giờ.
           </p>
         </div>
 
@@ -150,10 +157,18 @@ function RecruiterJobsPage() {
         </div>
       </div>
 
+      <ListSearch
+        value={query}
+        onChange={setQuery}
+        label="Tìm chức danh, phòng ban hoặc địa điểm"
+        count={jobs.length}
+      />
       {/* Jobs Table */}
-      <div className="bg-paper-white border border-warm-border rounded-xl shadow-sm overflow-hidden">
+      <div className="recruiter-jobs-table bg-paper-white border border-warm-border rounded-xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table
+            className={`w-full text-left border-collapse ${jobs.length ? "min-w-[760px]" : ""}`}
+          >
             <thead>
               <tr className="border-b border-warm-border bg-surface-container-low/50">
                 <th className="py-4 px-6 text-xs font-semibold text-charcoal-40 uppercase tracking-wider">
@@ -263,7 +278,7 @@ function RecruiterJobsPage() {
                 <input
                   type="text"
                   required
-                  placeholder="Ví dụ: Kỹ sư Giải pháp AI / LLM"
+                  placeholder="Ví dụ: Chuyên viên kinh doanh"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="w-full px-3 py-2 bg-surface-container-low border border-warm-border rounded-lg text-sm text-charcoal-text"
@@ -277,6 +292,7 @@ function RecruiterJobsPage() {
                   <input
                     type="text"
                     value={dept}
+                    placeholder="Ví dụ: Kinh doanh, kế toán, vận hành, công nghệ"
                     onChange={(e) => setDept(e.target.value)}
                     className="w-full px-3 py-2 bg-surface-container-low border border-warm-border rounded-lg text-sm text-charcoal-text"
                   />

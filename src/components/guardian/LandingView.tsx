@@ -1,451 +1,342 @@
-import React, { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
+import {
+  ArrowRight,
+  Search,
+  MapPin,
+  ShieldCheck,
+  FileUp,
+  CheckCircle2,
+  BriefcaseBusiness,
+  Code2,
+  Megaphone,
+  Calculator,
+  Users,
+  Truck,
+  X,
+} from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { JOBS } from "@/lib/job-listings";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
-import { FileUp, CheckCircle, Sparkles, ArrowRight, ShieldCheck } from "lucide-react";
+
+const categories = [
+  {
+    label: "Kinh doanh",
+    en: "Sales",
+    query: "Kinh doanh",
+    detail: "Bán hàng · Phát triển thị trường",
+    detailEn: "Sales · Business development",
+    icon: BriefcaseBusiness,
+  },
+  {
+    label: "Tiếp thị",
+    en: "Marketing",
+    query: "Tiếp thị",
+    detail: "Nội dung · Thương hiệu · Truyền thông",
+    detailEn: "Content · Brand · Communications",
+    icon: Megaphone,
+  },
+  {
+    label: "Kế toán · Tài chính",
+    en: "Accounting & Finance",
+    query: "Kế toán",
+    detail: "Kế toán · Kiểm toán · Tài chính",
+    detailEn: "Accounting · Audit · Finance",
+    icon: Calculator,
+  },
+  {
+    label: "Nhân sự",
+    en: "Human Resources",
+    query: "Nhân sự",
+    detail: "Tuyển dụng · Đào tạo · Hành chính",
+    detailEn: "Recruitment · Training · Administration",
+    icon: Users,
+  },
+  {
+    label: "Vận hành · Logistics",
+    en: "Operations & Logistics",
+    query: "Vận hành",
+    detail: "Kho vận · Chuỗi cung ứng",
+    detailEn: "Warehouse · Supply chain",
+    icon: Truck,
+  },
+  {
+    label: "Công nghệ thông tin",
+    en: "Information Technology",
+    query: "Công nghệ thông tin",
+    detail: "Phần mềm · Hạ tầng · Dữ liệu",
+    detailEn: "Software · Infrastructure · Data",
+    icon: Code2,
+  },
+];
 
 export function LandingView() {
-  const { dict } = useLanguage();
+  const { dict, locale } = useLanguage();
+  const en = locale === "en";
   const navigate = useNavigate();
-  const [uploadedCv, setUploadedCv] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
-
-  const handleSimulateCv = (fileName: string) => {
-    setUploading(true);
-    setTimeout(() => {
-      setUploading(false);
-      setUploadedCv(fileName);
-    }, 600);
+  const [query, setQuery] = useState("");
+  const [location, setLocation] = useState("");
+  const [uploadedCv, setUploadedCv] = useState("");
+  const [uploadError, setUploadError] = useState("");
+  const search = (event: FormEvent) => {
+    event.preventDefault();
+    void navigate({ to: "/candidate/jobs", search: { q: query.trim(), location, job: "" } });
   };
-
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setUploading(true);
-      setTimeout(() => {
-        setUploading(false);
-        setUploadedCv(file.name);
-      }, 700);
-    }
-  };
-
   return (
-    <div className="min-h-screen flex flex-col bg-paper text-ink transition-colors selection:bg-accent selection:text-accent-ink">
+    <div className="career-site">
+      <a className="skip-link" href="#main-content">
+        {en ? "Skip to content" : "Đến nội dung chính"}
+      </a>
       <Header variant="landing" />
-
-      <main id="main-content" className="flex-1">
-        {/* Hero Section */}
-        <section
-          aria-label="Hero marquee and dual-path cards"
-          className="relative min-h-[90vh] pt-12 pb-24 px-4 sm:px-6 lg:px-8 overflow-hidden bg-paper"
-        >
-          <div
-            className="absolute inset-0 pointer-events-none opacity-40 dark:opacity-20"
-            style={{
-              background:
-                "radial-gradient(ellipse at 50% 20%, var(--color-paper-3) 0%, transparent 60%)",
-            }}
-            aria-hidden="true"
-          />
-
-          {/* Headline */}
-          <div className="relative z-10 max-w-4xl mx-auto text-center pt-8 sm:pt-14 pb-12 sm:pb-16">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-paper-2 border border-rule font-mono text-xs font-semibold text-ink-2 mb-6 shadow-2xs">
-              <span className="w-2 h-2 rounded-full bg-emerald animate-pulse" />
-              <span>Bộ luật Lao động 2019 · AI Compliance Shield</span>
-            </div>
-            <h1 className="font-display text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-ink leading-[1.08] mb-6">
+      <main id="main-content">
+        <section className="career-hero">
+          <div className="career-container">
+            <h1>
               {dict.landing.title}
               <br />
-              <em className="font-normal italic text-accent">{dict.landing.titleAccent}</em>
+              <span>{dict.landing.titleAccent}</span>
             </h1>
-            <p className="font-body text-base sm:text-lg md:text-xl text-ink-2 max-w-4xl mx-auto leading-relaxed">
-              {dict.landing.description}
-            </p>
-          </div>
-
-          {/* Dual-Path Cards */}
-          <div className="relative z-10 max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 items-stretch">
-            {/* Card Left: For Companies (Dark Ink Style) */}
-            <div className="bg-ink text-paper rounded-3xl p-6 sm:p-8 md:p-10 flex flex-col justify-between border border-rule/20 shadow-2xl relative overflow-hidden group">
-              <div
-                className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-accent/20 blur-3xl pointer-events-none"
-                aria-hidden="true"
-              />
-              <div>
-                <div className="font-mono text-xs uppercase tracking-widest text-accent font-bold mb-3">
-                  {dict.landing.forCompanies}
-                </div>
-                <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight mb-4">
-                  <span className="text-paper">{dict.landing.findNextHire}</span>
-                  <em className="italic font-normal text-accent">
-                    {dict.landing.findNextHireAccent}
-                  </em>
-                </h2>
-                <p className="font-body text-sm sm:text-base text-paper/80 leading-relaxed mb-6 max-w-md">
-                  {dict.landing.companiesDesc}
-                </p>
-                <Link
-                  to="/recruit"
-                  className="btn whitespace-nowrap !h-9 !gap-1.5 !px-4 !text-xs font-bold inline-flex items-center mt-2 shadow-md cursor-pointer"
-                >
-                  <span>{dict.landing.startHiring}</span>
-                  <span aria-hidden="true">→</span>
+            <p className="career-hero__description">{dict.landing.description}</p>
+            <form className="career-search" role="search" onSubmit={search}>
+              <label className="career-search__keyword">
+                <Search size={23} aria-hidden="true" />
+                <span className="sr-only">
+                  {en ? "Job title, skill or company" : "Vị trí, kỹ năng hoặc công ty"}
+                </span>
+                <input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder={en ? "Job title, skill or company" : "Vị trí, kỹ năng hoặc công ty"}
+                />
+              </label>
+              <label className="career-search__location">
+                <MapPin size={22} aria-hidden="true" />
+                <span className="sr-only">{en ? "Location" : "Địa điểm"}</span>
+                <select value={location} onChange={(event) => setLocation(event.target.value)}>
+                  <option value="">{en ? "All locations" : "Tất cả địa điểm"}</option>
+                  <option value="Hồ Chí Minh">TP. Hồ Chí Minh</option>
+                  <option value="Hà Nội">Hà Nội</option>
+                  <option value="Đà Nẵng">Đà Nẵng</option>
+                  <option value="Từ xa">{en ? "Remote" : "Làm việc từ xa"}</option>
+                </select>
+              </label>
+              <button className="career-button" type="submit">
+                <Search size={19} />
+                {en ? "Find jobs" : "Tìm việc ngay"}
+              </button>
+            </form>
+            <div className="career-popular">
+              <span>{en ? "Popular searches:" : "Tìm kiếm phổ biến:"}</span>
+              {["Kinh doanh", "Kế toán", "Tiếp thị", "Nhân sự"].map((q) => (
+                <Link key={q} to="/candidate/jobs" search={{ q, location: "", job: "" }}>
+                  {q}
                 </Link>
-              </div>
-
-              {/* Reach Agent Live Simulation */}
-              <div className="mt-10 rounded-2xl bg-paper/10 border border-paper/15 p-4 text-paper/95 backdrop-blur-xs shadow-inner">
-                <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-accent mb-3 pb-2 border-b border-paper/10">
-                  <span>Reach Agent · Đang hoạt động</span>
-                  <span className="flex items-center gap-1.5 font-bold">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald animate-pulse" />
-                    Hoạt động
-                  </span>
-                </div>
-                <div className="flex flex-col gap-2.5 font-mono text-xs">
-                  <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-paper/5">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <span className="w-7 h-7 rounded-full bg-emerald/20 text-emerald flex items-center justify-center font-bold text-xs shrink-0">
-                        PS
-                      </span>
-                      <div className="min-w-0 truncate">
-                        <div className="font-bold truncate text-paper">Priya Shah</div>
-                        <div className="text-[10px] text-paper/60 truncate">
-                          Sr DevOps @ Notion · 7 YOE
-                        </div>
-                      </div>
-                    </div>
-                    <span className="px-2 py-0.5 rounded text-[10px] bg-emerald/20 text-emerald font-bold shrink-0">
-                      ĐÃ PHẢN HỒI
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-paper/5">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <span className="w-7 h-7 rounded-full bg-accent/20 text-accent flex items-center justify-center font-bold text-xs shrink-0">
-                        MB
-                      </span>
-                      <div className="min-w-0 truncate">
-                        <div className="font-bold truncate text-paper">Marcus Bennett</div>
-                        <div className="text-[10px] text-paper/60 truncate">
-                          Staff @ Stripe · 9 YOE
-                        </div>
-                      </div>
-                    </div>
-                    <span className="px-2 py-0.5 rounded text-[10px] bg-paper/15 text-paper/80 font-bold shrink-0">
-                      ĐÃ GỬI PITCH
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Card Right: For Candidates (Paper-2 Style) */}
-            <div className="bg-paper-2 text-ink rounded-3xl p-6 sm:p-8 md:p-10 flex flex-col justify-between border border-rule shadow-md relative overflow-hidden group hover:border-rule-2 transition-all">
-              <div>
-                <div className="font-mono text-xs uppercase tracking-widest text-accent font-bold mb-3">
-                  {dict.landing.forCandidates}
-                </div>
-                <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight mb-4">
-                  <span className="text-ink">{dict.landing.findNextJob}</span>
-                  <em className="italic font-normal text-accent">
-                    {dict.landing.findNextJobAccent}
-                  </em>
-                </h2>
-                <p className="font-body text-sm sm:text-base text-ink-2 leading-relaxed mb-6 max-w-md">
-                  {dict.landing.candidatesDesc}
-                </p>
-                <Link
-                  to="/jobs"
-                  className="btn whitespace-nowrap !h-9 !gap-1.5 !px-4 !text-xs font-bold inline-flex items-center mt-2 shadow-md cursor-pointer"
-                >
-                  <span>{dict.landing.exploreJobs}</span>
-                  <span aria-hidden="true">→</span>
-                </Link>
-
-                {/* CV Dropzone & Sample Files */}
-                <div className="relative mt-6 rounded-2xl border-2 border-dashed p-3.5 transition-all border-rule bg-paper hover:border-ink hover:bg-paper-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <span className="w-8 h-8 rounded-lg bg-paper-2 border border-rule flex items-center justify-center shrink-0 font-mono text-sm">
-                        📄
-                      </span>
-                      <div className="min-w-0">
-                        <div className="font-bold text-xs text-ink truncate">
-                          {uploadedCv ? (
-                            <span className="text-emerald flex items-center gap-1">
-                              <CheckCircle className="w-3.5 h-3.5" /> {uploadedCv} (Đã trích xuất!)
-                            </span>
-                          ) : (
-                            dict.landing.dropCvTitle
-                          )}
-                        </div>
-                        <div className="text-[10px] text-ink-3 font-mono">
-                          {uploading ? "AI đang phân tích..." : dict.landing.noSignUp}
-                        </div>
-                      </div>
-                    </div>
-                    <label
-                      htmlFor="diptych-cv-input"
-                      className="px-3 py-1.5 rounded-full border border-ink bg-paper text-ink font-mono text-[11px] font-bold uppercase tracking-wider cursor-pointer hover:bg-paper-2 shrink-0 transition-colors"
-                    >
-                      {dict.landing.uploadBtn}
-                    </label>
-                    <input
-                      id="diptych-cv-input"
-                      type="file"
-                      accept=".pdf,.doc,.docx"
-                      onChange={handleFileInput}
-                      className="sr-only"
-                    />
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-1.5 mt-2.5 pt-2 border-t border-rule/50">
-                    <span className="font-mono text-[10px] text-ink-3 font-semibold uppercase">
-                      {dict.landing.sampleCv}:
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleSimulateCv("Senior_DevOps.pdf")}
-                      className="font-mono text-[10px] px-2 py-0.5 rounded bg-paper border border-rule hover:border-ink text-ink-2 transition-colors flex items-center gap-1 shadow-2xs cursor-pointer"
-                    >
-                      <span className="text-accent font-bold">⚡</span>
-                      <span>Senior_DevOps.pdf</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleSimulateCv("Fullstack_Lead.docx")}
-                      className="font-mono text-[10px] px-2 py-0.5 rounded bg-paper border border-rule hover:border-ink text-ink-2 transition-colors flex items-center gap-1 shadow-2xs cursor-pointer"
-                    >
-                      <span className="text-accent font-bold">⚡</span>
-                      <span>Fullstack_Lead.docx</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Matched Feed */}
-              <div className="mt-8 rounded-2xl bg-paper border border-rule p-4 shadow-sm text-ink">
-                <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-ink-3 mb-3 pb-2 border-b border-rule">
-                  <span>{dict.landing.matchedFeed}</span>
-                  <span className="text-accent font-bold">2 {dict.landing.newJobs}</span>
-                </div>
-                <div className="flex flex-col gap-2 font-mono text-xs">
-                  <Link
-                    to="/jobs"
-                    className="flex items-center justify-between gap-2 p-2 rounded-lg bg-paper-2 hover:bg-paper-3 transition-colors cursor-pointer border border-transparent hover:border-rule"
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <span className="w-6 h-6 rounded bg-emerald text-white font-black text-[10px] flex items-center justify-center shrink-0">
-                        CH
-                      </span>
-                      <div className="min-w-0 truncate">
-                        <div className="font-bold text-ink truncate">Senior Backend Engineer</div>
-                        <div className="text-[10px] text-ink-3 truncate">
-                          Chime · Remote · $3,500–$4,800/mo
-                        </div>
-                      </div>
-                    </div>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] bg-accent/20 text-accent font-bold shrink-0">
-                      MỚI
-                    </span>
-                  </Link>
-
-                  <Link
-                    to="/jobs"
-                    className="flex items-center justify-between gap-2 p-2 rounded-lg bg-paper-2 hover:bg-paper-3 transition-colors cursor-pointer border border-transparent hover:border-rule"
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <span className="w-6 h-6 rounded bg-accent text-accent-ink font-black text-[10px] flex items-center justify-center shrink-0">
-                        LV
-                      </span>
-                      <div className="min-w-0 truncate">
-                        <div className="font-bold text-ink truncate">Founding Product Engineer</div>
-                        <div className="text-[10px] text-ink-3 truncate">
-                          Lovable · HCMC · $2,800–$4,000/mo
-                        </div>
-                      </div>
-                    </div>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald/20 text-emerald font-bold shrink-0">
-                      ĐÃ XÁC MINH
-                    </span>
-                  </Link>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </section>
-
-        {/* Section 2: Role Browser */}
-        <section
-          id="roles"
-          aria-label="Browse IT roles"
-          className="role-browser-section border-t border-rule"
-        >
-          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="role-browser__head">
-              <h2 className="role-browser__title">
-                {dict.roleBrowser.title.split("\n")[0]}
-                <br />
-                {dict.roleBrowser.title.split("\n")[1] || "một trung tâm xác thực."}
+        <section className="career-container career-jobs" aria-labelledby="opportunities-title">
+          <div className="career-section-heading">
+            <div>
+              <h2 id="opportunities-title">
+                {en ? "Explore your next opportunity" : "Khám phá cơ hội dành cho bạn"}
               </h2>
-              <p className="role-browser__desc">{dict.roleBrowser.desc}</p>
+              <p>
+                {en
+                  ? "Opportunities across industries, with salary and company information in one place."
+                  : "Việc làm đa ngành, mức lương và thông tin doanh nghiệp trong một nơi."}
+              </p>
             </div>
-
-            <div className="role-browser__grid" role="list">
-              {/* Backend - Large */}
+            <Link
+              to="/candidate/jobs"
+              search={{ q: "", location: "", job: "" }}
+              className="career-text-link"
+            >
+              {en ? "View all jobs" : "Xem tất cả việc làm"}
+              <ArrowRight size={18} />
+            </Link>
+          </div>
+          <p className="career-demo-note">
+            {en
+              ? "Sample job listings from the current product."
+              : "Các tin tuyển dụng mẫu trong sản phẩm hiện tại."}
+          </p>
+          <div className="career-job-grid">
+            {JOBS.slice(0, 6).map((job) => (
               <Link
-                to="/jobs"
-                className="role-browser__cell role-browser__cell--large group cursor-pointer"
-                role="listitem"
+                key={job.id}
+                to="/candidate/jobs"
+                search={{ q: "", location: "", job: job.id }}
+                className="career-job"
               >
-                <div className="role-browser__cell-count">
-                  2,840 {dict.roleBrowser.backendCount.replace("{count}", "").trim()}
+                <div className="career-job__company">
+                  <span className="career-company-mark" aria-hidden="true">
+                    {job.company
+                      .split(" ")
+                      .map((word) => word[0])
+                      .slice(0, 2)
+                      .join("")}
+                  </span>
+                  <span>{job.company}</span>
+                  <ArrowRight size={18} className="career-job__arrow" />
                 </div>
-                <div className="role-browser__cell-label">{dict.roleBrowser.backend}</div>
-                <div className="role-browser__tags">
-                  <span className="role-browser__tag">Node.js</span>
-                  <span className="role-browser__tag">Java</span>
-                  <span className="role-browser__tag">Go</span>
-                  <span className="role-browser__tag">Python</span>
-                </div>
-                <div className="role-browser__arrow" aria-hidden="true">
-                  →
+                <h3>{job.title}</h3>
+                <p className="career-job__salary">{job.salaryRange}</p>
+                <p className="career-job__location">
+                  <MapPin size={15} />
+                  {job.location}
+                </p>
+                <div className="career-job__bottom">
+                  <span>{job.department}</span>
+                  <span>{en ? "View details" : "Xem chi tiết"}</span>
                 </div>
               </Link>
-
-              {/* Frontend - Small */}
-              <Link
-                to="/jobs"
-                className="role-browser__cell role-browser__cell--small group cursor-pointer"
-                role="listitem"
-              >
-                <div className="role-browser__cell-count">
-                  1,920 {dict.roleBrowser.frontendCount.replace("{count}", "").trim()}
-                </div>
-                <div className="role-browser__cell-label">{dict.roleBrowser.frontend}</div>
-                <div className="role-browser__tags">
-                  <span className="role-browser__tag">React</span>
-                  <span className="role-browser__tag">Vue</span>
-                  <span className="role-browser__tag">TypeScript</span>
-                </div>
-                <div className="role-browser__arrow" aria-hidden="true">
-                  →
-                </div>
-              </Link>
-
-              {/* Mobile - Small */}
-              <Link
-                to="/jobs"
-                className="role-browser__cell role-browser__cell--small group cursor-pointer"
-                role="listitem"
-              >
-                <div className="role-browser__cell-count">
-                  980 {dict.roleBrowser.mobileCount.replace("{count}", "").trim()}
-                </div>
-                <div className="role-browser__cell-label">{dict.roleBrowser.mobile}</div>
-                <div className="role-browser__tags">
-                  <span className="role-browser__tag">iOS</span>
-                  <span className="role-browser__tag">Android</span>
-                  <span className="role-browser__tag">Flutter</span>
-                </div>
-                <div className="role-browser__arrow" aria-hidden="true">
-                  →
-                </div>
-              </Link>
-
-              {/* DevOps - Medium (Accent) */}
-              <Link
-                to="/jobs"
-                className="role-browser__cell role-browser__cell--medium role-browser__cell--accent group cursor-pointer"
-                role="listitem"
-              >
-                <div className="role-browser__cell-count role-browser__cell-count--light">
-                  1,340 {dict.roleBrowser.devopsCount.replace("{count}", "").trim()}
-                </div>
-                <div className="role-browser__cell-label role-browser__cell-label--light">
-                  {dict.roleBrowser.devops}
-                </div>
-                <div className="role-browser__tags">
-                  <span className="role-browser__tag role-browser__tag--light">AWS</span>
-                  <span className="role-browser__tag role-browser__tag--light">Kubernetes</span>
-                  <span className="role-browser__tag role-browser__tag--light">Terraform</span>
-                </div>
-                <div className="role-browser__arrow" aria-hidden="true">
-                  →
-                </div>
-              </Link>
-
-              {/* Data & ML - Medium */}
-              <Link
-                to="/jobs"
-                className="role-browser__cell role-browser__cell--medium group cursor-pointer"
-                role="listitem"
-              >
-                <div className="role-browser__cell-count">
-                  1,100 {dict.roleBrowser.dataMlCount.replace("{count}", "").trim()}
-                </div>
-                <div className="role-browser__cell-label">{dict.roleBrowser.dataMl}</div>
-                <div className="role-browser__tags">
-                  <span className="role-browser__tag">PyTorch</span>
-                  <span className="role-browser__tag">Spark</span>
-                  <span className="role-browser__tag">dbt</span>
-                </div>
-                <div className="role-browser__arrow" aria-hidden="true">
-                  →
-                </div>
-              </Link>
+            ))}
+          </div>
+        </section>
+        <section id="roles" className="career-fields" aria-labelledby="fields-title">
+          <div className="career-container">
+            <div className="career-section-heading">
+              <h2 id="fields-title">{en ? "Find your field" : "Khám phá theo ngành nghề"}</h2>
+            </div>
+            <div className="career-field-grid">
+              {categories.map(
+                ({ label, en: englishLabel, query: q, detail, detailEn, icon: Icon }) => (
+                  <Link
+                    key={label}
+                    to="/candidate/jobs"
+                    search={{ q, location: "", job: "" }}
+                    className="career-field"
+                  >
+                    <Icon size={25} />
+                    <h3>{en ? englishLabel : label}</h3>
+                    <p>{en ? detailEn : detail}</p>
+                    <ArrowRight size={18} />
+                  </Link>
+                ),
+              )}
             </div>
           </div>
         </section>
-
-        {/* Section 3: How It Works */}
-        <section
-          id="how-it-works"
-          aria-label="How GuardianWork works"
-          className="how-it-works-section"
-        >
-          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="how-it-works__title">{dict.howItWorks.title}</h2>
-            <div className="how-it-works__steps" role="list">
-              {/* Step 1 */}
-              <div className="how-it-works__step how-it-works__step--bordered" role="listitem">
-                <span className="how-it-works__step-num" aria-hidden="true">
-                  01
-                </span>
-                <div className="how-it-works__step-content">
-                  <h3 className="how-it-works__step-title">{dict.howItWorks.step1Title}</h3>
-                  <p className="how-it-works__step-body">{dict.howItWorks.step1Body}</p>
-                </div>
-              </div>
-
-              {/* Step 2 */}
-              <div className="how-it-works__step how-it-works__step--bordered" role="listitem">
-                <span className="how-it-works__step-num" aria-hidden="true">
-                  02
-                </span>
-                <div className="how-it-works__step-content">
-                  <h3 className="how-it-works__step-title">{dict.howItWorks.step2Title}</h3>
-                  <p className="how-it-works__step-body">{dict.howItWorks.step2Body}</p>
-                </div>
-              </div>
-
-              {/* Step 3 */}
-              <div className="how-it-works__step" role="listitem">
-                <span className="how-it-works__step-num" aria-hidden="true">
-                  03
-                </span>
-                <div className="how-it-works__step-content">
-                  <h3 className="how-it-works__step-title">{dict.howItWorks.step3Title}</h3>
-                  <p className="how-it-works__step-body">{dict.howItWorks.step3Body}</p>
-                </div>
-              </div>
+        <section className="career-container career-paths">
+          <div className="career-cv">
+            <div>
+              <h2>
+                {en
+                  ? "Your next job starts with your profile."
+                  : "Cơ hội tiếp theo bắt đầu từ hồ sơ của bạn."}
+              </h2>
+              <p>{dict.landing.candidatesDesc}</p>
             </div>
+            <div className="career-upload">
+              <FileUp size={28} aria-hidden="true" />
+              <div>
+                <strong>{en ? "Try uploading your CV" : "Trải nghiệm tải CV lên"}</strong>
+                <p>{en ? "PDF, DOC or DOCX · up to 15 MB" : "PDF, DOC hoặc DOCX · tối đa 15 MB"}</p>
+              </div>
+              <label className="career-button career-button--outline" htmlFor="career-cv">
+                {en ? "Choose file" : "Chọn tệp"}
+              </label>
+              <input
+                id="career-cv"
+                className="sr-only"
+                type="file"
+                accept=".pdf,.doc,.docx"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (!file) return;
+                  setUploadedCv("");
+                  if (!/\.(pdf|doc|docx)$/i.test(file.name) || file.size > 15 * 1024 * 1024) {
+                    setUploadError(
+                      en
+                        ? "Choose a PDF, DOC or DOCX smaller than 15 MB."
+                        : "Chọn tệp PDF, DOC hoặc DOCX không quá 15 MB.",
+                    );
+                    event.target.value = "";
+                    return;
+                  }
+                  setUploadError("");
+                  setUploadedCv(file.name);
+                }}
+              />
+            </div>
+            {uploadError && (
+              <p role="alert" className="career-upload-error">
+                {uploadError}
+              </p>
+            )}
+            {uploadedCv && (
+              <p className="career-upload-status" role="status">
+                <CheckCircle2 size={17} />
+                <span>{uploadedCv}</span>
+                <button
+                  aria-label={en ? "Remove selected file" : "Bỏ chọn tệp"}
+                  onClick={() => {
+                    setUploadedCv("");
+                    const input = document.getElementById("career-cv") as HTMLInputElement;
+                    input.value = "";
+                  }}
+                >
+                  <X size={16} />
+                </button>
+              </p>
+            )}
+            <p className="career-demo-note">
+              {en
+                ? "This preview selects a file locally. Continue to your profile to manage your CV."
+                : "Bản xem thử chọn tệp trên thiết bị. Vào hồ sơ để quản lý CV của bạn."}
+            </p>
+            <Link to="/candidate/profile" className="career-text-link">
+              {en ? "Go to your profile" : "Đến hồ sơ của bạn"}
+              <ArrowRight size={17} />
+            </Link>
+          </div>
+          <div className="career-employer">
+            <BriefcaseBusiness size={32} />
+            <h2>
+              {dict.landing.findNextHire}
+              {dict.landing.findNextHireAccent}
+            </h2>
+            <p>{dict.landing.companiesDesc}</p>
+            <Link className="career-button" to="/register" search={{ role: "recruiter" }}>
+              {dict.landing.startHiring}
+              <ArrowRight size={18} />
+            </Link>
+            <Link className="career-employer__secondary" to="/recruit">
+              {en ? "Explore the recruiter workspace" : "Khám phá không gian nhà tuyển dụng"}
+              <ArrowRight size={16} />
+            </Link>
+          </div>
+        </section>
+        <section id="how-it-works" className="career-steps">
+          <div className="career-container">
+            <h2>{dict.howItWorks.title}</h2>
+            <ol>
+              {[
+                [dict.howItWorks.step1Title, dict.howItWorks.step1Body],
+                [dict.howItWorks.step2Title, dict.howItWorks.step2Body],
+                [dict.howItWorks.step3Title, dict.howItWorks.step3Body],
+              ].map(([title, body], index) => (
+                <li key={title}>
+                  <span className="career-step-number">{index + 1}</span>
+                  <h3>{title}</h3>
+                  <p>{body}</p>
+                </li>
+              ))}
+            </ol>
+            <Link to="/copilot" className="career-law-link">
+              <ShieldCheck size={23} />
+              <span>
+                {en
+                  ? "Questions about employment terms? Explore Legal Copilot."
+                  : "Có câu hỏi về điều kiện lao động? Khám phá Legal Copilot."}
+              </span>
+              <ArrowRight size={19} />
+            </Link>
           </div>
         </section>
       </main>
-
       <Footer />
     </div>
   );

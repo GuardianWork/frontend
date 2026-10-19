@@ -65,6 +65,7 @@ export function RecruiterShell({
           {topNavExtras}
           <Link
             to="/recruiter/jobs"
+            aria-label="Đăng tin tuyển dụng"
             search={{ create: true }}
             className="recruiter-primary flex items-center gap-2"
           >

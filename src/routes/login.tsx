@@ -59,9 +59,6 @@ function LoginPage() {
 
   return (
     <AuthLayout mode="login" purpose={role}>
-      <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-charcoal-40">
-        Chào mừng trở lại
-      </p>
       <h2 className="text-2xl font-bold tracking-tight">Đăng nhập GuardianWork</h2>
       <p className="mb-7 mt-2 text-sm leading-6 text-charcoal-83">
         Tiếp tục hành trình của bạn cùng những cơ hội mới.

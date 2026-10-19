@@ -32,8 +32,7 @@ function CandidateProfilePage() {
             Hồ Sơ Năng Lực & Quyền Lợi Bảo Vệ
           </h2>
           <p className="text-base text-charcoal-83 max-w-2xl">
-            Hồ sơ kỹ sư công nghệ của bạn đã kiểm định danh tính và được bảo vệ theo Bộ luật Lao
-            động 2019.
+            Hồ sơ ứng viên của bạn đã kiểm định danh tính và được bảo vệ theo Bộ luật Lao động 2019.
           </p>
         </div>
 
@@ -340,7 +339,7 @@ function CandidateProfilePage() {
                     </div>
                     <p className="text-xs text-charcoal-83 mt-2 leading-relaxed">
                       Dẫn dắt kiến trúc bảo mật tuân thủ Bộ luật Lao động 2019, điều phối vi dịch vụ
-                      và triển khai hệ thống xác thực tức thì cho hơn 5.000 kỹ sư công nghệ.
+                      và triển khai hệ thống xác thực tức thì cho hơn 5.000 ứng viên.
                     </p>
                   </div>
 

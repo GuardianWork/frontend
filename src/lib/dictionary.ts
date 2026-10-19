@@ -5,12 +5,12 @@ export const dictionaries = {
       title: "Nơi các công ty được xác thực",
       titleAccent: "gặp gỡ nhân tài được bảo vệ.",
       description:
-        "Nền tảng tuyển dụng AI dành cho chuyên gia công nghệ Việt Nam. Đăng tin tuyển dụng miễn phí kèm kiểm tra tuân thủ, triển khai AI tìm nguồn ứng viên, hoặc tuyển dụng với bảo vệ pháp lý được đảm bảo.",
+        "Nền tảng tuyển dụng đa ngành dành cho người tìm việc và doanh nghiệp Việt Nam. Đăng tin tuyển dụng miễn phí kèm kiểm tra tuân thủ, triển khai AI tìm nguồn ứng viên, hoặc tuyển dụng với bảo vệ pháp lý được đảm bảo.",
       forCompanies: "Dành cho công ty",
       findNextHire: "Tìm kiếm ",
       findNextHireAccent: "nhân sự tiếp theo.",
       companiesDesc:
-        "Đăng tin tuyển dụng miễn phí, triển khai đại lý AI tìm nguồn ứng viên để kiểm tra tuân thủ, hoặc giao cho nhà tuyển dụng công nghệ tự động để xác nhận độ phù hợp tức thì.",
+        "Đăng tin tuyển dụng miễn phí, triển khai đại lý AI tìm nguồn ứng viên để kiểm tra tuân thủ, hoặc giao cho trợ lý tuyển dụng tự động để xác nhận độ phù hợp tức thì.",
       startHiring: "Bắt đầu tuyển dụng",
       forCandidates: "Dành cho ứng viên",
       findNextJob: "Tìm kiếm ",
@@ -41,13 +41,13 @@ export const dictionaries = {
       startHiring: "Tuyển dụng ngay",
     },
     logoWall: {
-      label: "Các công ty công nghệ đã xác thực đang tuyển dụng tại TP.HCM, Hà Nội & APAC:",
+      label: "Các doanh nghiệp đã xác thực đang tuyển dụng tại TP.HCM, Hà Nội & APAC:",
     },
     howItWorks: {
       title: "Ba bước để đến với các vai trò đã được xác thực.",
       step1Title: "Tải CV của bạn lên một lần",
       step1Body:
-        "AI của chúng tôi trích xuất tech stack, cấp bậc, và mức lương mong muốn bằng VND hoặc USD. Không cần điền form thủ công.",
+        "AI của chúng tôi trích xuất kỹ năng chuyên môn, cấp bậc, và mức lương mong muốn bằng VND hoặc USD. Không cần điền form thủ công.",
       step2Title: "Khám phá các vai trò đã kiểm toán pháp lý",
       step2Body:
         "Mỗi JD đều được kiểm tra trước theo Bộ luật Lao động Việt Nam 2019 (BHXH, trần lương thử việc, làm thêm giờ theo Điều 98). Không treo đầu dê bán thịt chó.",
@@ -56,8 +56,8 @@ export const dictionaries = {
         "Hồ sơ đã xác thực của bạn được gửi trực tiếp đến HR với lá chắn tuân thủ của GuardianWork và sự minh bạch lương tức thì.",
     },
     roleBrowser: {
-      title: "Mọi lĩnh vực IT,\nmột trung tâm xác thực.",
-      desc: "Từ hệ thống Backend đến AI/ML, khám phá các vai trò minh bạch cho kỹ sư Việt Nam trên toàn TP.HCM, Hà Nội, Đà Nẵng & các nhóm công nghệ từ xa xuyên biên giới.",
+      title: "Nhiều ngành nghề,\nmột nơi tìm cơ hội.",
+      desc: "Khám phá việc làm kinh doanh, tiếp thị, tài chính, nhân sự, vận hành và công nghệ trên khắp Việt Nam.",
       backend: "Lập trình Backend",
       backendCount: "{count} vị trí",
       frontend: "Lập trình Frontend",
@@ -70,8 +70,8 @@ export const dictionaries = {
       dataCount: "{count} vị trí",
     },
     footer: {
-      statement1: "Lá chắn sự nghiệp IT",
-      statement2: "mà kỹ sư Việt Nam xứng đáng có được.",
+      statement1: "Đồng hành cùng sự nghiệp",
+      statement2: "của người lao động Việt Nam.",
       findJobs: "Tìm việc",
       noSignUp: "Không cần đăng ký để xem.",
       copyright: "GuardianWork © 2026 · Tuân thủ Bộ luật Lao động 2019",
@@ -193,7 +193,7 @@ export const dictionaries = {
       verifiedRoles: "Vai trò Xác thực",
       at: "tại",
       realTimeSearch:
-        "Tìm kiếm theo thời gian thực qua stack công nghệ, mức lương tối thiểu và tuân thủ pháp lý.",
+        "Tìm kiếm theo thời gian thực theo ngành nghề và kỹ năng, mức lương tối thiểu và tuân thủ pháp lý.",
       resetSearch: "Xóa Tìm kiếm & Bộ lọc ×",
       searchPlaceholder:
         "Tìm vị trí tại {company} theo tiêu đề, kỹ năng (vd: Go, TypeScript) hoặc địa điểm...",
@@ -510,7 +510,7 @@ export const dictionaries = {
         compensationMatch: "Mức lương đề xuất",
         workstyleMatch: "Hình thức làm việc",
         experienceFit: "Kinh nghiệm yêu cầu",
-        verifiedCleanDesc: "Tương thích 100% về công nghệ, thu nhập và hình thức làm việc.",
+        verifiedCleanDesc: "Tương thích 100% về kỹ năng, thu nhập và hình thức làm việc.",
         contact: "Thông tin liên hệ",
         pipelineOverview: "Telemetry Khớp nối",
         totalApplicants: "Hồ sơ xác minh",
@@ -957,18 +957,18 @@ export const dictionaries = {
       title: "Where verified companies",
       titleAccent: "meet protected talent.",
       description:
-        "The AI recruiting platform for Vietnamese tech professionals. Post jobs free with compliance checks, deploy AI sourcing agents, or hire with legal protection guaranteed.",
+        "The multi-industry recruitment platform for job seekers and employers in Vietnam. Post jobs free with compliance checks, deploy AI sourcing agents, or hire with legal protection guaranteed.",
       forCompanies: "For companies",
       findNextHire: "Find your ",
       findNextHireAccent: "next hire.",
       companiesDesc:
-        "Post jobs free, deploy AI sourcing agents to audit compliance, or hand it to an Autopilot technical recruiter for instant match validation.",
+        "Post jobs free, deploy AI sourcing agents to audit compliance, or hand it to an Autopilot recruiter for instant match validation.",
       startHiring: "Start hiring",
       forCandidates: "For candidates",
       findNextJob: "Find your ",
       findNextJobAccent: "next job.",
       candidatesDesc:
-        "Apply directly to founders and technical hiring managers at 1,200+ startups verifying Art. 98 overtime pay & legally protected contracts.",
+        "Apply directly to founders and hiring managers at 1,200+ startups verifying Art. 98 overtime pay & legally protected contracts.",
       browseJobs: "Browse jobs",
       reachAgentWorkingNow: "Reach Agent Â· Working now",
       active: "Active",
@@ -993,13 +993,13 @@ export const dictionaries = {
       startHiring: "Start hiring",
     },
     logoWall: {
-      label: "Verified tech companies hiring across Ho Chi Minh City, Hanoi & APAC:",
+      label: "Verified employers hiring across Ho Chi Minh City, Hanoi & APAC:",
     },
     howItWorks: {
       title: "Three steps to verified roles.",
       step1Title: "Upload your CV once",
       step1Body:
-        "Our AI extracts your tech stack, seniority level, and expected salary in VND or USD. No manual forms.",
+        "Our AI extracts your skills, seniority level, and expected salary in VND or USD. No manual forms.",
       step2Title: "Browse legal-audited roles",
       step2Body:
         "Every JD is pre-checked against Vietnam Labour Code 2019 (BHXH, probation pay caps, Art. 98 overtime). No bait-and-switch.",
@@ -1008,8 +1008,8 @@ export const dictionaries = {
         "Your verified profile goes straight to HR with GuardianWork's compliance shield and instant salary transparency.",
     },
     roleBrowser: {
-      title: "Every IT discipline,\none verified hub.",
-      desc: "From Backend systems to AI/ML, explore transparent roles for Vietnamese engineers across Ho Chi Minh City, Hanoi, Da Nang & cross-border remote tech teams.",
+      title: "Many industries,\none place for opportunity.",
+      desc: "Explore opportunities in sales, marketing, finance, human resources, operations and technology across Vietnam.",
       backend: "Backend Engineering",
       backendCount: "{count} roles",
       frontend: "Frontend",
@@ -1022,8 +1022,8 @@ export const dictionaries = {
       dataCount: "{count} roles",
     },
     footer: {
-      statement1: "The IT career shield",
-      statement2: "Vietnamese engineers deserve.",
+      statement1: "Supporting careers",
+      statement2: "across Vietnam.",
       findJobs: "Find Jobs",
       noSignUp: "No sign-up required to browse.",
       copyright: "GuardianWork Â© 2026 Â· Bá» luáº­t Lao Äá»ng 2019 Compliant",
@@ -1145,7 +1145,7 @@ export const dictionaries = {
       verifiedRoles: "Verified Roles",
       at: "at",
       realTimeSearch:
-        "Real-time search across tech stack, salary floor, and verified statutory compliance.",
+        "Real-time search across industries, skills, salary expectations, and verified statutory compliance.",
       resetSearch: "Reset Search & Filters Ã",
       searchPlaceholder:
         "Search {company} openings by title, required skills (e.g. Go, TypeScript, SOC2), or location...",
@@ -1463,7 +1463,7 @@ export const dictionaries = {
         compensationMatch: "Salary Alignment",
         workstyleMatch: "Work Model Fit",
         experienceFit: "Experience Fit",
-        verifiedCleanDesc: "100% compatibility across tech stack, compensation, and work model.",
+        verifiedCleanDesc: "100% compatibility across skills, compensation, and work model.",
         contact: "Contact Details",
         pipelineOverview: "Pipeline Metrics",
         totalApplicants: "Candidate Pool",

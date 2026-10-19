@@ -1,3 +1,5 @@
+import { ListSearch } from "@/components/ListSearch";
+import { matchesSearch } from "@/lib/list-search";
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { RecruiterOverview } from "@/components/RecruiterOverview";
@@ -114,10 +116,12 @@ function fitBadgeClass(fit: CandidateItem["fit"]) {
 function RecruiterIndexPage() {
   const [candidates, setCandidates] = useState<CandidateItem[]>(CANDIDATES);
   const [selectedId, setSelectedId] = useState(CANDIDATES[0].id);
+  const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "strong" | "interview">("all");
   const [pitchSent, setPitchSent] = useState(false);
 
   const filteredCandidates = candidates.filter((c) => {
+    if (!matchesSearch(query, c.role, c.location, c.experience, ...c.skills)) return false;
     if (filter === "strong") return c.fit === "STRONG FIT";
     if (filter === "interview") return c.stage === "Interview" || c.stage === "Offer";
     return true;
@@ -145,6 +149,12 @@ function RecruiterIndexPage() {
           Xem tất cả ứng viên →
         </Link>
       </div>
+      <ListSearch
+        value={query}
+        onChange={setQuery}
+        label="Tìm chức danh, kỹ năng hoặc địa điểm"
+        count={filteredCandidates.length}
+      />
       {/* Main Split Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Pane: Candidates list */}
@@ -185,6 +195,11 @@ function RecruiterIndexPage() {
             <span className="text-xs font-mono text-charcoal-40">AI Sourced</span>
           </div>
 
+          {filteredCandidates.length === 0 && (
+            <p className="p-6 text-sm text-charcoal-83">
+              Không tìm thấy ứng viên phù hợp. Hãy đổi từ khóa hoặc bộ lọc.
+            </p>
+          )}
           {filteredCandidates.map((c) => {
             const isActive = c.id === selectedId;
             return (
@@ -196,7 +211,7 @@ function RecruiterIndexPage() {
                 }}
                 className={
                   isActive
-                    ? "bg-paper-white p-5 rounded-xl border-l-4 border-l-primary border border-warm-border shadow-sm cursor-pointer transition-all"
+                    ? "bg-paper-white p-5 rounded-xl border border-warm-border shadow-sm cursor-pointer transition-all"
                     : "bg-paper-white p-5 rounded-xl border border-warm-border hover:shadow-sm transition-shadow cursor-pointer opacity-85 hover:opacity-100"
                 }
               >
@@ -287,7 +302,7 @@ function RecruiterIndexPage() {
               </div>
 
               {/* AI Verification Note */}
-              <div className="bg-parchment-bg border border-warm-border border-l-4 border-l-primary p-5 rounded-lg flex gap-4">
+              <div className="bg-parchment-bg border border-warm-border p-5 rounded-lg flex gap-4">
                 <Icon name="verified_user" className="text-primary mt-0.5 !text-2xl shrink-0" />
                 <div>
                   <h4 className="text-sm font-semibold text-charcoal-text mb-1">

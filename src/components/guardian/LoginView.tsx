@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useLanguage } from "@/context/LanguageContext";
-import { useTheme } from "@/context/ThemeContext";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { ShieldCheck, ArrowLeft, Sparkles, CheckCircle2 } from "lucide-react";

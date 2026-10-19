@@ -1,13 +1,14 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
+@import "./career.css";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-display: "Fraunces", Georgia, serif;
-  --font-body: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
-  --font-sans: "Plus Jakarta Sans", "Geist", system-ui, sans-serif;
+  --font-display: "Hanken Grotesk", system-ui, sans-serif;
+  --font-body: "Hanken Grotesk", system-ui, -apple-system, sans-serif;
+  --font-sans: "Hanken Grotesk", system-ui, sans-serif;
   --font-mono: "Geist Mono", monospace;
 
   /* Theme color mapping */
@@ -68,186 +69,51 @@
   --radius-2xl: 1.5rem;
   --radius-pill: 9999px;
 
-  /* Default theme: newsprint */
-  --color-paper: #f6ede0;
-  --color-paper-2: #ece3d6;
-  --color-paper-3: #e2d6c2;
-  --color-paper-inverse: #181611;
-  --color-ink: #1b150b;
-  --color-ink-2: #4d473c;
-  --color-ink-3: #877f73;
-  --color-accent: #315e60;
-  --color-accent-hover: #145154;
-  --color-accent-deep: #134245;
-  --color-accent-subtle: #c8e4e6;
-  --color-accent-ink: #fcf8f1;
-  --color-accent-2: #7fa8aa;
-  --color-mint: #49d3a1;
-  --color-lavender: #93afc1;
-  --color-rule: #d5cdc0;
-  --color-rule-2: #b5ada0;
+  --color-paper: #ffffff;
+  --color-paper-2: #f3f6fb;
+  --color-paper-3: #e8eff8;
+  --color-paper-inverse: #152a46;
+  --color-ink: #172d49;
+  --color-ink-2: #435771;
+  --color-ink-3: #5a6d84;
+  --color-accent: #0868c9;
+  --color-accent-hover: #0755a3;
+  --color-accent-deep: #064887;
+  --color-accent-subtle: #e9f3ff;
+  --color-accent-ink: #ffffff;
+  --color-accent-2: #df650d;
+  --color-mint: #147953;
+  --color-lavender: #e8edfb;
+  --color-rule: #dde5ef;
+  --color-rule-2: #afbed0;
   --color-focus: var(--color-accent);
-
   /* Admin console compatibility */
   --radius: 0.5rem;
-  --background: #fbf9f3;
-  --foreground: #1b1c18;
-  --surface: #fbf9f3;
-  --paper-white: #fcfbf8;
-  --parchment-bg: #f7f4ed;
-  --surface-container: #f0eee8;
-  --surface-container-low: #f6f3ed;
-  --surface-container-lowest: #ffffff;
-  --surface-container-high: #eae8e2;
-  --warm-border: #eceae4;
-  --charcoal-text: #1c1c1c;
-  --charcoal-83: rgba(28, 28, 28, 0.83);
-  --charcoal-40: rgba(28, 28, 28, 0.4);
-  --charcoal-04: rgba(28, 28, 28, 0.04);
-  --primary: #010101;
-  --on-primary: #ffffff;
-  --primary-container: #1c1c1c;
-  --secondary: #5f5e59;
-  --secondary-container: #e5e2db;
-  --on-secondary-container: #65645f;
-  --on-surface: #1b1c18;
-  --on-surface-variant: #444748;
-  --error: #ba1a1a;
-  --error-container: #ffdad6;
-  --on-error-container: #93000a;
-}
-
-/* 6 Themes */
-[data-theme="newsprint"],
-body[data-theme="newsprint"] {
-  --color-paper: #f6ede0;
-  --color-paper-2: #ece3d6;
-  --color-paper-3: #e2d6c2;
-  --color-paper-inverse: #181611;
-  --color-ink: #1b150b;
-  --color-ink-2: #4d473c;
-  --color-ink-3: #877f73;
-  --color-accent: #315e60;
-  --color-accent-hover: #145154;
-  --color-accent-deep: #134245;
-  --color-accent-subtle: #c8e4e6;
-  --color-accent-ink: #fcf8f1;
-  --color-accent-2: #7fa8aa;
-  --color-mint: #49d3a1;
-  --color-lavender: #93afc1;
-  --color-rule: #d5cdc0;
-  --color-rule-2: #b5ada0;
-  --color-focus: var(--color-accent);
-}
-
-[data-theme="lumen"],
-body[data-theme="lumen"] {
-  --color-paper: #10111a;
-  --color-paper-2: #191a24;
-  --color-paper-3: #262738;
-  --color-paper-inverse: #f0f1f9;
-  --color-ink: #eaebf2;
-  --color-ink-2: #abadbb;
-  --color-ink-3: #7d7f8c;
-  --color-accent: #e77f3e;
-  --color-accent-hover: #ff893c;
-  --color-accent-deep: #90502a;
-  --color-accent-subtle: #422616;
-  --color-accent-ink: #10111a;
-  --color-accent-2: #f2a679;
-  --color-mint: #49d3a1;
-  --color-lavender: #93afc1;
-  --color-rule: #262738;
-  --color-rule-2: #37394a;
-  --color-focus: var(--color-accent);
-}
-
-[data-theme="cobalt"],
-body[data-theme="cobalt"] {
-  --color-paper: #f9fcff;
-  --color-paper-2: #f1f6fa;
-  --color-paper-3: #e5ecf3;
-  --color-paper-inverse: #1a222b;
-  --color-ink: #13161a;
-  --color-ink-2: #4d5660;
-  --color-ink-3: #86909b;
-  --color-accent: #0559d2;
-  --color-accent-hover: #004bba;
-  --color-accent-deep: #0b4196;
-  --color-accent-subtle: #e5efff;
-  --color-accent-ink: #f9fcff;
-  --color-accent-2: #60a5fa;
-  --color-mint: #49d3a1;
-  --color-lavender: #93afc1;
-  --color-rule: #e0e5eb;
-  --color-rule-2: #c4cfdb;
-  --color-focus: var(--color-accent);
-}
-
-[data-theme="navy-sand"],
-body[data-theme="navy-sand"] {
-  --color-paper: #142a41;
-  --color-paper-2: #203a53;
-  --color-paper-3: #4e708d;
-  --color-paper-inverse: #e4ddcf;
-  --color-ink: #e4ddcf;
-  --color-ink-2: #93afc1;
-  --color-ink-3: #6e8393;
-  --color-accent: #e4ddcf;
-  --color-accent-hover: #f3eee3;
-  --color-accent-deep: #4e708d;
-  --color-accent-subtle: #2a455e;
-  --color-accent-ink: #142a41;
-  --color-accent-2: #93afc1;
-  --color-mint: #49d3a1;
-  --color-lavender: #93afc1;
-  --color-rule: #243f59;
-  --color-rule-2: #3b5b78;
-  --color-focus: var(--color-accent-2);
-}
-
-[data-theme="mint-coral"],
-body[data-theme="mint-coral"] {
-  --color-paper: #f3fbf6;
-  --color-paper-2: #e3f9cf;
-  --color-paper-3: #fae180;
-  --color-paper-inverse: #081f1b;
-  --color-ink: #081f1b;
-  --color-ink-2: #465e59;
-  --color-ink-3: #80908c;
-  --color-accent: #f57371;
-  --color-accent-hover: #e85759;
-  --color-accent-deep: #b3373b;
-  --color-accent-subtle: #ffe3df;
-  --color-accent-ink: #081f1b;
-  --color-accent-2: #7ed8c6;
-  --color-mint: #7ed8c6;
-  --color-lavender: #fae180;
-  --color-rule: #d2e8d5;
-  --color-rule-2: #a4d8c5;
-  --color-focus: var(--color-accent-2);
-}
-
-[data-theme="blush-lilac"],
-body[data-theme="blush-lilac"] {
-  --color-paper: #fdefef;
-  --color-paper-2: #fededf;
-  --color-paper-3: #f5c5c6;
-  --color-paper-inverse: #231c2b;
-  --color-ink: #231c2b;
-  --color-ink-2: #62596b;
-  --color-ink-3: #978ea1;
-  --color-accent: #c2b0d6;
-  --color-accent-hover: #b29ec9;
-  --color-accent-deep: #866ea0;
-  --color-accent-subtle: #efe7f9;
-  --color-accent-ink: #231c2b;
-  --color-accent-2: #f5c5c6;
-  --color-mint: #5bc99e;
-  --color-lavender: #c2b0d6;
-  --color-rule: #f3d8d9;
-  --color-rule-2: #eac3c4;
-  --color-focus: var(--color-accent);
+  --background: var(--color-paper-2);
+  --foreground: var(--color-ink);
+  --surface: var(--color-paper);
+  --paper-white: var(--color-paper);
+  --parchment-bg: var(--color-paper-2);
+  --surface-container: var(--color-paper-3);
+  --surface-container-low: var(--color-paper-2);
+  --surface-container-lowest: var(--color-paper);
+  --surface-container-high: var(--color-paper-3);
+  --warm-border: var(--color-rule);
+  --charcoal-text: var(--color-ink);
+  --charcoal-83: var(--color-ink-2);
+  --charcoal-40: var(--color-ink-3);
+  --charcoal-04: var(--color-accent-subtle);
+  --primary: var(--color-accent);
+  --on-primary: var(--color-accent-ink);
+  --primary-container: var(--color-accent-deep);
+  --secondary: var(--color-ink-2);
+  --secondary-container: var(--color-paper-3);
+  --on-secondary-container: var(--color-ink-2);
+  --on-surface: var(--color-ink);
+  --on-surface-variant: var(--color-ink-2);
+  --error: #b42318;
+  --error-container: #fee4e2;
+  --on-error-container: #912018;
 }
 
 @layer base {
@@ -281,43 +147,26 @@ body[data-theme="blush-lilac"] {
 
 .btn {
   --btn-face: var(--color-accent);
-  --btn-ink: var(--color-accent-ink, #ffffff);
-  --btn-edge: var(--color-accent-deep);
-  --btn-cast: rgba(0, 0, 0, 0.15);
-  border-radius: 9999px;
-  color: var(--btn-ink);
-  background: var(--btn-face);
-  cursor: pointer;
-  box-shadow:
-    0 4px 0 0 var(--btn-edge),
-    0 6px 12px -3px var(--btn-cast);
-  border: 0;
-  justify-content: center;
-  align-items: center;
-  gap: 0.5em;
-  padding: 0.6rem 1.25rem;
-  font-weight: 600;
-  transition:
-    transform 0.14s cubic-bezier(0.2, 0.7, 0.3, 1),
-    box-shadow 0.14s,
-    background-color 0.16s;
+  --btn-ink: var(--color-accent-ink);
   display: inline-flex;
-  position: relative;
-  transform: translateY(0);
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: var(--btn-face);
+  color: var(--btn-ink);
+  padding: 0.7rem 1.25rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 160ms ease;
 }
-
 .btn:hover {
-  box-shadow:
-    0 5px 0 0 var(--btn-edge),
-    0 10px 18px -4px var(--btn-cast);
-  transform: translateY(-2px);
+  background: var(--color-accent-hover);
 }
-
 .btn:active {
-  box-shadow:
-    0 1px 0 0 var(--btn-edge),
-    0 2px 6px -2px var(--btn-cast);
-  transform: translateY(2px);
+  background: var(--color-accent-deep);
 }
 
 .btn--secondary {

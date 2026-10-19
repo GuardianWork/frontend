@@ -367,7 +367,7 @@ export function CandidateProfileView() {
                     </div>
                     <p className="text-xs text-ink-2 font-body mt-2 leading-relaxed">
                       Dẫn dắt kiến trúc bảo mật tuân thủ Bộ luật Lao động 2019, điều phối vi dịch vụ
-                      và triển khai hệ thống xác thực tức thì cho các kỹ sư công nghệ.
+                      và triển khai hệ thống xác thực tức thì cho các ứng viên.
                     </p>
                   </div>
                 </div>

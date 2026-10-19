@@ -34,7 +34,7 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+function ErrorComponent({ error, reset }: { error: unknown; reset: () => void }) {
   console.error(error);
   const router = useRouter();
   useEffect(() => {
@@ -77,20 +77,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "GuardianWork | Verified IT Jobs & Legal Protection for Vietnamese Engineers" },
+      { title: "GuardianWork | Việc làm đa ngành và tuyển dụng tại Việt Nam" },
       {
         name: "description",
         content:
-          "Verified IT and software developer job listings in Vietnam. Find high-salary tech roles across Ho Chi Minh City, Hanoi, Da Nang & Global Remote with instant legal compliance checks against Bộ luật Lao động 2019.",
+          "Tìm việc làm đa ngành tại Việt Nam: kinh doanh, tiếp thị, kế toán, nhân sự, vận hành và công nghệ. Kết nối ứng viên với doanh nghiệp trên GuardianWork.",
       },
       {
         property: "og:title",
-        content: "GuardianWork | Verified IT Jobs & Legal Protection for Vietnamese Engineers",
+        content: "GuardianWork | Việc làm đa ngành và tuyển dụng tại Việt Nam",
       },
       {
         property: "og:description",
         content:
-          "Verified IT and software developer job listings in Vietnam with instant legal compliance checks.",
+          "Khám phá việc làm đa ngành và kết nối với doanh nghiệp tại Việt Nam cùng GuardianWork.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -102,7 +102,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Geist+Mono:wght@300;400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap",
       },
       {
         rel: "stylesheet",
@@ -123,7 +123,7 @@ import { RecruiterProvider } from "../context/RecruiterContext";
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="vn" className="h-full antialiased font-sans">
+    <html lang="vi" className="h-full antialiased font-sans">
       <head>
         <HeadContent />
       </head>

@@ -26,10 +26,10 @@ function CandidateIndexPage() {
             <span>Bảo vệ quyền lợi theo Bộ luật Lao động 2019</span>
           </div>
           <h2 className="text-3xl md:text-4xl font-bold text-charcoal-text tracking-tight mb-2">
-            Chào mừng bạn đến với Cổng Ứng Viên IT
+            Chào mừng bạn đến với Cổng ứng viên
           </h2>
           <p className="text-base text-charcoal-83 max-w-2xl">
-            Tìm việc làm công nghệ đã kiểm định 100% hợp đồng, tra cứu quyền lợi pháp lý với AI
+            Tìm việc làm đa ngành đã kiểm định 100% hợp đồng, tra cứu quyền lợi pháp lý với AI
             Copilot và quản lý hồ sơ ẩn danh.
           </p>
         </div>
@@ -57,8 +57,8 @@ function CandidateIndexPage() {
             </div>
             <h3 className="font-bold text-lg text-charcoal-text mb-2">Kho Việc Làm Đã Thẩm Định</h3>
             <p className="text-xs text-charcoal-83 leading-relaxed mb-4">
-              Khám phá các vị trí kỹ thuật từ các công ty cam kết không vi phạm Điều 98 làm thêm giờ
-              và trần thử việc Điều 25.
+              Khám phá việc làm từ các công ty cam kết không vi phạm Điều 98 làm thêm giờ và trần
+              thử việc Điều 25.
             </p>
           </div>
           <div className="text-xs font-bold text-primary flex items-center gap-1 group-hover:underline">
@@ -114,7 +114,7 @@ function CandidateIndexPage() {
           <Icon name="shield" className="text-primary !text-3xl shrink-0 mt-0.5" />
           <div>
             <h4 className="font-bold text-sm text-charcoal-text">
-              Quyền Lợi Kỹ Sư Công Nghệ Theo Bộ Luật Lao Động 2019
+              Quyền lợi người lao động theo Bộ luật Lao động 2019
             </h4>
             <p className="text-xs text-charcoal-83 mt-1 leading-relaxed">
               Bạn có quyền từ chối các điều khoản không đúng luật: Giữ bằng cấp gốc, thử việc quá 60

@@ -1,187 +1,30 @@
+import { JOBS, type JobItem } from "@/lib/job-listings";
 import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
 import { submitCompanyApplication } from "@/services/companyMembers";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AdminShell, Icon } from "@/components/AdminShell";
 
 export const Route = createFileRoute("/candidate/jobs")({
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { q?: string; location?: string; job?: string } => ({
+    q: typeof search.q === "string" ? search.q : "",
+    location: typeof search.location === "string" ? search.location : "",
+    job: typeof search.job === "string" ? search.job : "",
+  }),
   head: () => ({
     meta: [
-      { title: "Verified Jobs Queue — GuardianWork Candidate" },
+      { title: "Việc làm dành cho bạn — GuardianWork Candidate" },
       {
         name: "description",
         content:
-          "Review and inspect verified IT roles with Labor Code 2019 legal compliance shields.",
+          "Khám phá việc làm đa ngành, thông tin doanh nghiệp và điều kiện tuyển dụng trên GuardianWork.",
       },
     ],
   }),
   component: CandidateJobsPage,
 });
-
-type JobItem = {
-  id: string;
-  title: string;
-  company: string;
-  location: string;
-  salaryRange: string;
-  badge: "100% Audited" | "Điều 98 Verified" | "High Salary" | "Công ty đã xác thực";
-  badgeTone: "primary" | "warning" | "success";
-  time: string;
-  department: string;
-  matchScore: number;
-  description: string;
-  requirements: string[];
-  statutoryBase: string;
-  statutoryNote: string;
-  suggestedRevision: string;
-};
-
-const JOBS: JobItem[] = [
-  {
-    id: "job-1",
-    title: "Kỹ sư Nền tảng Go / Kubernetes Cấp cao",
-    company: "Vellum Studio",
-    location: "TP. Hồ Chí Minh, Việt Nam (Quận 3)",
-    salaryRange: "60.000.000 - 85.000.000 VND / tháng",
-    badge: "100% Audited",
-    badgeTone: "success",
-    time: "Đã kiểm định 2h trước",
-    department: "Kỹ thuật Hạ tầng",
-    matchScore: 98,
-    description:
-      "Chịu trách nhiệm về tính sẵn sàng cao của hệ thống vi dịch vụ backend bằng Go phục vụ hàng triệu người dùng. Tối ưu hóa cụm Kubernetes trên hạ tầng đám mây lai.",
-    requirements: [
-      "Hơn 4 năm kinh nghiệm phát triển backend bằng Go.",
-      "Kinh nghiệm vận hành Kubernetes, Docker và Helm trong môi trường sản xuất.",
-      "Hiểu biết sâu sắc về bảo mật API REST/gRPC.",
-    ],
-    statutoryBase:
-      "Điều 98 (Tiền lương làm thêm giờ) & Điều 25 (Thời gian thử việc tối đa 60 ngày)",
-    statutoryNote:
-      "Hợp đồng lao động quy định rõ ràng mức lương thử việc đạt 85% lương chính thức và cam kết thanh toán làm thêm giờ ít nhất 150% đến 300% theo Bộ luật Lao động 2019.",
-    suggestedRevision:
-      "Mức lương được niêm yết công khai bằng VND, kèm đóng 100% BHXH, BHYT, BHTN theo mức lương ghi trên hợp đồng chính thức.",
-  },
-  {
-    id: "job-2",
-    title: "Lập trình viên Di động React Native",
-    company: "Aura Systems",
-    location: "Hà Nội, Việt Nam (Cầu Giấy)",
-    salaryRange: "45.000.000 - 60.000.000 VND / tháng",
-    badge: "Điều 98 Verified",
-    badgeTone: "primary",
-    time: "Đã kiểm định 4h trước",
-    department: "Kỹ thuật Di động",
-    matchScore: 94,
-    description:
-      "Xây dựng giao diện ứng dụng ví điện tử fintech. Tinh chỉnh các hiệu ứng chuyển động mượt mà, xác thực sinh trắc học và tích hợp cổng thanh toán ZaloPay / MoMo.",
-    requirements: [
-      "Hơn 3 năm kinh nghiệm làm việc với React Native và TypeScript.",
-      "Kinh nghiệm tích hợp cổng thanh toán MoMo, ZaloPay hoặc Stripe.",
-      "Thành thạo viết native bridge và tối ưu hóa hiệu năng ứng dụng di động.",
-    ],
-    statutoryBase: "Điều 168 (Bảo hiểm xã hội bắt buộc) & Bảo vệ sở hữu trí tuệ cá nhân",
-    statutoryNote:
-      "Không có điều khoản phi thực tế về cấm làm việc sau chấm dứt hợp đồng. Quyền sở hữu trí tuệ với các dự án cá nhân ngoài giờ được bảo vệ tuyệt đối.",
-    suggestedRevision:
-      "Thời gian làm việc từ Thứ Hai đến Thứ Sáu, đảm bảo thời gian nghỉ ngơi tuần theo Điều 111 Bộ luật Lao động 2019.",
-  },
-  {
-    id: "job-3",
-    title: "Kiến trúc sư Giải pháp AI / Python",
-    company: "Kestrel Analytics",
-    location: "Đà Nẵng, Việt Nam (Từ xa / Hybrid)",
-    salaryRange: "70.000.000 - 100.000.000 VND / tháng",
-    badge: "High Salary",
-    badgeTone: "warning",
-    time: "Đã kiểm định 6h trước",
-    department: "Trí tuệ Nhân tạo",
-    matchScore: 91,
-    description:
-      "Thiết kế các luồng xử lý LLM và phân tích tài liệu tự động. Xây dựng cơ sở dữ liệu vector và mở rộng quy mô các cổng suy luận để phục vụ hàng ngàn yêu cầu đồng thời.",
-    requirements: [
-      "Hơn 5 năm kinh nghiệm về Python và các luồng xử lý học máy.",
-      "Kinh nghiệm với LangChain, LlamaIndex và cơ sở dữ liệu Vector (Milvus, Pinecone).",
-      "Kiến thức vững chắc về các mô hình thiết kế vi dịch vụ.",
-    ],
-    statutoryBase: "Luật Trí tuệ nhân tạo số 134/2025/QH15 & Nghị định 142/2026/NĐ-CP",
-    statutoryNote:
-      "Tuân thủ các tiêu chuẩn quốc gia về phát triển AI có đạo đức, bảo vệ dữ liệu người dùng và kiểm soát phiên bản mô hình an toàn.",
-    suggestedRevision:
-      "Hợp đồng làm việc từ xa quy định rõ trang thiết bị làm việc, phụ cấp internet và giờ làm việc linh hoạt theo thỏa ước.",
-  },
-  {
-    id: "job-4",
-    title: "Kỹ sư Frontend Trưởng Cấp cao",
-    company: "VNG Corporation",
-    location: "TP. Hồ Chí Minh, Việt Nam (Quận 1)",
-    salaryRange: "80.000.000 - 110.000.000 VND / tháng",
-    badge: "100% Audited",
-    badgeTone: "success",
-    time: "Đã kiểm định 1d trước",
-    department: "Kỹ thuật",
-    matchScore: 97,
-    description:
-      "Xây dựng giao diện người dùng cao cấp sử dụng React và TailwindCSS. Hợp tác với đội ngũ thiết kế và sản phẩm để tinh chỉnh các tương tác vi mô và design system token.",
-    requirements: [
-      "Hơn 5 năm kinh nghiệm làm việc với React và TypeScript.",
-      "Quen thuộc với design system token và tương tác UI.",
-      "Thành tích tốt trong tối ưu hóa hiệu năng ứng dụng web.",
-    ],
-    statutoryBase: "Điều 25 & Điều 102 (Thưởng hiệu quả công việc minh bạch)",
-    statutoryNote:
-      "Chính sách thưởng cổ phiếu ESOP và tháng lương 13 được quy định công khai trong thỏa ước lao động tập thể.",
-    suggestedRevision:
-      "Cam kết rà soát tăng lương hàng năm và bảo hiểm sức khỏe cao cấp cho nhân viên và người thân.",
-  },
-  {
-    id: "job-5",
-    title: "Kiến trúc sư Hạ tầng & DevOps",
-    company: "Momo",
-    location: "Hà Nội, Việt Nam (Cầu Giấy)",
-    salaryRange: "90.000.000 - 125.000.000 VND / tháng",
-    badge: "Điều 98 Verified",
-    badgeTone: "primary",
-    time: "Đã kiểm định 1d trước",
-    department: "Kỹ thuật Nền tảng",
-    matchScore: 95,
-    description:
-      "Làm chủ kiến trúc mở rộng và bảo mật của hạ tầng đám mây lai. Điều phối vi dịch vụ, viết các provider Terraform tùy chỉnh và dẫn dắt các chu kỳ tuân thủ SOC2.",
-    requirements: [
-      "Hơn 8 năm kinh nghiệm về kỹ thuật hệ thống hoặc vận hành.",
-      "Kinh nghiệm vững chắc về hệ thống phân tán và Docker Swarm/Kubernetes.",
-      "Thành thạo các chính sách bảo mật và tự động hóa hạ tầng.",
-    ],
-    statutoryBase: "Quy chuẩn an toàn thông tin & Bộ luật Lao động 2019",
-    statutoryNote:
-      "Chế độ trực on-call ngoài giờ được tính phụ cấp đặc thù theo quy chế nội bộ đã đăng ký với Sở Lao động - Thương binh và Xã hội.",
-    suggestedRevision: "Thời gian nghỉ bù 100% cho các phiên bảo trì khẩn cấp vào ban đêm.",
-  },
-  {
-    id: "job-6",
-    title: "Kỹ sư Sản phẩm Full-Stack Cấp cao",
-    company: "Aura Systems",
-    location: "TP. Hồ Chí Minh, Việt Nam (Trung tâm Thủ Đức)",
-    salaryRange: "65.000.000 - 90.000.000 VND / tháng",
-    badge: "100% Audited",
-    badgeTone: "success",
-    time: "Đã kiểm định 2d trước",
-    department: "Kỹ thuật",
-    matchScore: 96,
-    description:
-      "Cần một kỹ sư sản phẩm có tư duy khởi nghiệp để phát triển từ cơ sở dữ liệu đến giao diện người dùng React hoàn chỉnh. Xây dựng các bảng điều khiển tài chính.",
-    requirements: [
-      "Hơn 5 năm kinh nghiệm với Node.js và React.",
-      "Nền tảng vững chắc về cơ sở dữ liệu quan hệ (PostgreSQL/MySQL).",
-      "Gu thiết kế tốt và tư duy sản phẩm nhạy bén.",
-    ],
-    statutoryBase: "Điều 98 & Điều 135 (Môi trường làm việc bình đẳng)",
-    statutoryNote:
-      "Doanh nghiệp đã hoàn thành quy trình thẩm định KYC và ký cam kết tôn trọng quyền tác giả phần mềm độc lập của kỹ sư.",
-    suggestedRevision:
-      "Hợp đồng lao động không thời hạn sau khi hoàn thành 02 tháng thử việc đạt yêu cầu.",
-  },
-];
 
 function badgeStyle(tone: JobItem["badgeTone"]) {
   if (tone === "success") return "bg-green-50 text-green-700 border border-green-200";
@@ -192,6 +35,8 @@ function badgeStyle(tone: JobItem["badgeTone"]) {
 function CandidateJobsPage() {
   const { workspace, company, user } = useCompanyWorkspace();
   const [applicationError, setApplicationError] = useState("");
+  const detailRef = useRef<HTMLDivElement>(null);
+  const [showDetail, setShowDetail] = useState(false);
   const companyJobs: JobItem[] = workspace.jobs
     .filter((j) => j.status === "Active")
     .map((j) => ({
@@ -213,21 +58,49 @@ function CandidateJobsPage() {
       suggestedRevision: "Trao đổi trực tiếp với nhà tuyển dụng về điều kiện làm việc.",
     }));
   const jobs = [...companyJobs, ...JOBS];
-  const [selectedId, setSelectedId] = useState(JOBS[0].id);
+  const search = Route.useSearch();
+  const [query, setQuery] = useState(search.q || "");
+  const [location, setLocation] = useState(search.location || "");
+  const [industry, setIndustry] = useState("");
+  const [selectedId, setSelectedId] = useState(search.job || JOBS[0].id);
   const [filter, setFilter] = useState<"all" | "high" | "remote">("all");
   const [appliedList, setAppliedList] = useState<string[]>([]);
 
+  const normalize = (value: string) =>
+    value
+      .toLocaleLowerCase("vi")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/đ/g, "d");
+  const selectJob = (id: string) => {
+    setSelectedId(id);
+    setShowDetail(true);
+  };
+  useEffect(() => {
+    if ((showDetail || search.job) && window.matchMedia("(max-width: 1023px)").matches) {
+      detailRef.current?.scrollIntoView({ block: "start" });
+    }
+  }, [selectedId, showDetail, search.job]);
   const filteredJobs = jobs.filter((j) => {
+    if (
+      !normalize(
+        `${j.title} ${j.company} ${j.department} ${j.industry || ""} ${j.description}`,
+      ).includes(normalize(query.trim()))
+    )
+      return false;
+    if (location && !normalize(j.location).includes(normalize(location))) return false;
+    if (industry && !normalize(`${j.industry || ""} ${j.department}`).includes(normalize(industry)))
+      return false;
     if (filter === "high") return j.matchScore >= 95;
     if (filter === "remote") return j.location.includes("Từ xa") || j.location.includes("Hybrid");
     return true;
   });
 
-  const activeJob = jobs.find((j) => j.id === selectedId) || JOBS[0];
+  const activeJob = filteredJobs.find((j) => j.id === selectedId) || filteredJobs[0];
   const hasApplied = (id: string) =>
     appliedList.includes(id) ||
     workspace.applications.some((a) => a.jobId === id && a.email === user?.email.toLowerCase());
-  const isApplied = hasApplied(activeJob.id);
+  const isApplied = activeJob ? hasApplied(activeJob.id) : false;
 
   const handleApply = (id: string) => {
     setApplicationError("");
@@ -245,21 +118,63 @@ function CandidateJobsPage() {
   };
 
   return (
-    <AdminShell title="Verified Jobs Queue" role="candidate">
+    <AdminShell title="Việc làm dành cho bạn" role="candidate">
       {applicationError && (
         <p role="alert" className="mb-4 rounded-lg border border-red-200 p-4 text-red-700">
           {applicationError}
         </p>
       )}
+      <form className="workspace-search" role="search" onSubmit={(event) => event.preventDefault()}>
+        <label>
+          <Icon name="search" />
+          <span className="sr-only">Vị trí, kỹ năng hoặc công ty</span>
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Vị trí, kỹ năng hoặc công ty"
+          />
+        </label>
+        <label>
+          <Icon name="location_on" />
+          <span className="sr-only">Địa điểm làm việc</span>
+          <select value={location} onChange={(event) => setLocation(event.target.value)}>
+            <option value="">Tất cả địa điểm</option>
+            <option value="Hồ Chí Minh">TP. Hồ Chí Minh</option>
+            <option value="Hà Nội">Hà Nội</option>
+            <option value="Đà Nẵng">Đà Nẵng</option>
+            <option value="Từ xa">Làm việc từ xa</option>
+          </select>
+        </label>
+        <label>
+          <Icon name="work" />
+          <span className="sr-only">Ngành nghề</span>
+          <select value={industry} onChange={(event) => setIndustry(event.target.value)}>
+            <option value="">Tất cả ngành nghề</option>
+            {[
+              "Kinh doanh",
+              "Tiếp thị",
+              "Kế toán",
+              "Nhân sự",
+              "Vận hành",
+              "Công nghệ thông tin",
+            ].map((value) => (
+              <option key={value} value={value}>
+                {value}
+              </option>
+            ))}
+          </select>
+        </label>
+        <span aria-live="polite">{filteredJobs.length} vị trí</span>
+      </form>
       {/* Page Header */}
       <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h2 className="text-3xl md:text-4xl font-bold text-charcoal-text mb-2 tracking-tight">
-            Verified Jobs Queue
+            Việc làm dành cho bạn
           </h2>
           <p className="text-base text-charcoal-83 max-w-2xl">
-            Các vị trí kỹ thuật IT đã kiểm định tuân thủ Bộ luật Lao động 2019, Điều 98 làm thêm giờ
-            và trần thử việc.
+            Khám phá việc làm đa ngành. Xem mức lương, yêu cầu chuyên môn và điều kiện làm việc
+            trước khi ứng tuyển.
           </p>
         </div>
 
@@ -301,7 +216,7 @@ function CandidateJobsPage() {
                     : "bg-surface-container text-charcoal-text hover:bg-charcoal-04"
                 }`}
               >
-                Match cao (&gt;95%)
+                Phù hợp cao (&gt;95%)
               </button>
               <button
                 onClick={() => setFilter("remote")}
@@ -320,16 +235,25 @@ function CandidateJobsPage() {
           </div>
 
           {filteredJobs.map((it) => {
-            const isActive = it.id === selectedId;
+            const isActive = it.id === activeJob?.id;
             const applied = hasApplied(it.id);
 
             return (
               <div
                 key={it.id}
-                onClick={() => setSelectedId(it.id)}
+                role="button"
+                tabIndex={0}
+                aria-pressed={isActive}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    selectJob(it.id);
+                  }
+                }}
+                onClick={() => selectJob(it.id)}
                 className={
                   isActive
-                    ? "bg-paper-white p-5 rounded-xl border-l-4 border-l-primary border border-warm-border shadow-sm cursor-pointer transition-all"
+                    ? "bg-paper-white p-5 rounded-xl border border-primary shadow-sm cursor-pointer transition-all"
                     : "bg-paper-white p-5 rounded-xl border border-warm-border hover:shadow-sm transition-shadow cursor-pointer opacity-85 hover:opacity-100"
                 }
               >
@@ -376,149 +300,168 @@ function CandidateJobsPage() {
         </div>
 
         {/* Right Pane: Review & Audit Detail */}
-        <div className="lg:col-span-7">
-          <div className="bg-paper-white rounded-xl border border-warm-border shadow-sm h-full flex flex-col overflow-hidden">
-            {/* Header */}
-            <div className="p-6 border-b border-warm-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-green-50 text-green-700 border border-green-200">
-                    ĐÃ KIỂM ĐỊNH PHÁP LÝ
-                  </span>
-                  <span className="text-xs font-mono text-charcoal-40">
-                    ID: #{activeJob.id.toUpperCase()}
-                  </span>
-                </div>
-                <h3 className="text-xl font-bold text-charcoal-text mt-1">{activeJob.title}</h3>
-                <p className="text-sm text-charcoal-83 font-medium">
-                  {activeJob.company} • {activeJob.location}
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2 shrink-0">
-                <Link
-                  to="/candidate/copilot"
-                  className="px-3.5 py-2 text-charcoal-text text-xs font-semibold rounded-lg border border-warm-border hover:bg-surface-container transition-colors flex items-center gap-1.5"
-                >
-                  <Icon name="help" className="!text-base" />
-                  <span>Hỏi Luật</span>
-                </Link>
-
-                {isApplied ? (
-                  <span className="px-4 py-2 bg-green-50 border border-green-200 text-green-700 text-xs font-bold rounded-lg flex items-center gap-1.5">
-                    <Icon name="check_circle" className="!text-base" />
-                    <span>Đã nộp hồ sơ</span>
-                  </span>
-                ) : (
-                  <button
-                    onClick={() => handleApply(activeJob.id)}
-                    className="px-5 py-2 bg-primary text-on-primary text-xs font-bold rounded-lg hover:opacity-90 transition-all flex items-center gap-1.5 shadow-sm"
-                  >
-                    <Icon name="send" className="!text-base" />
-                    <span>Ứng tuyển (Bảo vệ Luật định)</span>
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Scrollable details */}
-            <div className="flex-1 p-8 overflow-y-auto space-y-8">
-              {/* Salary & Match Callout */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 rounded-xl bg-surface-container-low border border-warm-border">
-                  <span className="text-xs font-semibold text-charcoal-40 uppercase block mb-1">
-                    Mức lương đề xuất
-                  </span>
-                  <span className="text-lg font-bold text-charcoal-text block font-mono">
-                    {activeJob.salaryRange}
-                  </span>
-                </div>
-                <div className="p-4 rounded-xl bg-surface-container-low border border-warm-border">
-                  <span className="text-xs font-semibold text-charcoal-40 uppercase block mb-1">
-                    Độ phù hợp kỹ năng
-                  </span>
-                  <span className="text-lg font-bold text-green-700 block flex items-center gap-1 font-mono">
-                    <Icon name="auto_awesome" className="!text-lg" />
-                    {activeJob.matchScore
-                      ? `${activeJob.matchScore}% tương thích`
-                      : "Chưa đánh giá độ phù hợp"}
-                  </span>
-                </div>
-              </div>
-
-              {/* Statutory Base Note */}
-              <div className="bg-parchment-bg border border-warm-border border-l-4 border-l-primary p-5 rounded-lg flex gap-4">
-                <Icon name="gavel" className="text-primary mt-0.5 !text-2xl shrink-0" />
+        {activeJob ? (
+          <div ref={detailRef} className="job-detail min-w-0 lg:col-span-7">
+            <div className="bg-paper-white rounded-xl border border-warm-border shadow-sm h-full flex flex-col overflow-hidden">
+              {/* Header */}
+              <div className="p-6 border-b border-warm-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                  <h4 className="text-sm font-semibold text-charcoal-text mb-1">
-                    Căn cứ Pháp lý Kiểm toán: {activeJob.statutoryBase}
-                  </h4>
-                  <p className="text-sm text-charcoal-83 leading-relaxed mb-2">
-                    {activeJob.statutoryNote}
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-green-50 text-green-700 border border-green-200">
+                      ĐÃ KIỂM ĐỊNH PHÁP LÝ
+                    </span>
+                    <span className="text-xs font-mono text-charcoal-40">
+                      ID: #{activeJob.id.toUpperCase()}
+                    </span>
+                  </div>
+                  <h3 className="text-xl font-bold text-charcoal-text mt-1">{activeJob.title}</h3>
+                  <p className="text-sm text-charcoal-83 font-medium">
+                    {activeJob.company} • {activeJob.location}
                   </p>
-                  <div className="flex items-center gap-3 text-xs font-semibold text-primary">
-                    <span className="flex items-center gap-1">
-                      <Icon name="check" className="!text-sm text-green-600" /> Không giữ văn bằng
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <Link
+                    to="/candidate/copilot"
+                    className="px-3.5 py-2 text-charcoal-text text-xs font-semibold rounded-lg border border-warm-border hover:bg-surface-container transition-colors flex items-center gap-1.5"
+                  >
+                    <Icon name="help" className="!text-base" />
+                    <span>Hỏi Luật</span>
+                  </Link>
+
+                  {isApplied ? (
+                    <span className="px-4 py-2 bg-green-50 border border-green-200 text-green-700 text-xs font-bold rounded-lg flex items-center gap-1.5">
+                      <Icon name="check_circle" className="!text-base" />
+                      <span>Đã nộp hồ sơ</span>
                     </span>
-                    <span className="flex items-center gap-1">
-                      <Icon name="check" className="!text-sm text-green-600" /> Thử việc tối đa 60
-                      ngày
+                  ) : (
+                    <button
+                      onClick={() => handleApply(activeJob.id)}
+                      className="px-5 py-2 bg-primary text-on-primary text-xs font-bold rounded-lg hover:opacity-90 transition-all flex items-center gap-1.5 shadow-sm"
+                    >
+                      <Icon name="send" className="!text-base" />
+                      <span>Ứng tuyển (Bảo vệ Luật định)</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Scrollable details */}
+              <div className="flex-1 p-8 overflow-y-auto space-y-8">
+                {/* Salary & Match Callout */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 rounded-xl bg-surface-container-low border border-warm-border">
+                    <span className="text-xs font-semibold text-charcoal-40 uppercase block mb-1">
+                      Mức lương đề xuất
                     </span>
-                    <span className="flex items-center gap-1">
-                      <Icon name="check" className="!text-sm text-green-600" /> Điều 98 làm thêm giờ
+                    <span className="text-lg font-bold text-charcoal-text block font-mono">
+                      {activeJob.salaryRange}
+                    </span>
+                  </div>
+                  <div className="p-4 rounded-xl bg-surface-container-low border border-warm-border">
+                    <span className="text-xs font-semibold text-charcoal-40 uppercase block mb-1">
+                      Độ phù hợp kỹ năng
+                    </span>
+                    <span className="text-lg font-bold text-green-700 block flex items-center gap-1 font-mono">
+                      <Icon name="auto_awesome" className="!text-lg" />
+                      {activeJob.matchScore
+                        ? `${activeJob.matchScore}% tương thích`
+                        : "Chưa đánh giá độ phù hợp"}
                     </span>
                   </div>
                 </div>
-              </div>
 
-              {/* Job Description */}
-              <div>
-                <h4 className="font-semibold text-xs text-charcoal-40 uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <Icon name="description" className="!text-[18px]" />
-                  Mô tả Công việc
-                </h4>
-                <p className="text-sm text-charcoal-text leading-relaxed bg-surface-container-low p-4 rounded-lg border border-warm-border">
-                  {activeJob.description}
-                </p>
-              </div>
+                {/* Statutory Base Note */}
+                <div className="bg-parchment-bg border border-warm-border p-5 rounded-lg flex gap-4">
+                  <Icon name="gavel" className="text-primary mt-0.5 !text-2xl shrink-0" />
+                  <div>
+                    <h4 className="text-sm font-semibold text-charcoal-text mb-1">
+                      Căn cứ Pháp lý Kiểm toán: {activeJob.statutoryBase}
+                    </h4>
+                    <p className="text-sm text-charcoal-83 leading-relaxed mb-2">
+                      {activeJob.statutoryNote}
+                    </p>
+                    <div className="flex items-center gap-3 text-xs font-semibold text-primary">
+                      <span className="flex items-center gap-1">
+                        <Icon name="check" className="!text-sm text-green-600" /> Không giữ văn bằng
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Icon name="check" className="!text-sm text-green-600" /> Thử việc tối đa 60
+                        ngày
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Icon name="check" className="!text-sm text-green-600" /> Điều 98 làm thêm
+                        giờ
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
-              {/* Requirements */}
-              <div>
-                <h4 className="font-semibold text-xs text-charcoal-40 uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <Icon name="checklist" className="!text-[18px]" />
-                  Yêu cầu Trọng tâm
-                </h4>
-                <ul className="space-y-2 text-sm text-charcoal-text">
-                  {activeJob.requirements.map((r, idx) => (
-                    <li
-                      key={idx}
-                      className="flex items-start gap-2 bg-paper-white p-3 rounded-lg border border-warm-border"
-                    >
-                      <Icon
-                        name="check_circle"
-                        className="!text-base text-primary shrink-0 mt-0.5"
-                      />
-                      <span>{r}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Suggested Revision Box */}
-              <div>
-                <h4 className="font-semibold text-xs text-charcoal-40 uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <Icon name="verified_user" className="!text-[18px] text-primary" />
-                  Quy định Bảo vệ Hợp đồng Thực thi
-                </h4>
-                <div className="bg-parchment-bg rounded-lg p-5 border border-warm-border">
-                  <p className="leading-relaxed text-charcoal-text text-sm font-mono">
-                    {activeJob.suggestedRevision}
+                {/* Job Description */}
+                <div>
+                  <h4 className="font-semibold text-xs text-charcoal-40 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <Icon name="description" className="!text-[18px]" />
+                    Mô tả Công việc
+                  </h4>
+                  <p className="text-sm text-charcoal-text leading-relaxed bg-surface-container-low p-4 rounded-lg border border-warm-border">
+                    {activeJob.description}
                   </p>
+                </div>
+
+                {/* Requirements */}
+                <div>
+                  <h4 className="font-semibold text-xs text-charcoal-40 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <Icon name="checklist" className="!text-[18px]" />
+                    Yêu cầu Trọng tâm
+                  </h4>
+                  <ul className="space-y-2 text-sm text-charcoal-text">
+                    {activeJob.requirements.map((r, idx) => (
+                      <li
+                        key={idx}
+                        className="flex items-start gap-2 bg-paper-white p-3 rounded-lg border border-warm-border"
+                      >
+                        <Icon
+                          name="check_circle"
+                          className="!text-base text-primary shrink-0 mt-0.5"
+                        />
+                        <span>{r}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Suggested Revision Box */}
+                <div>
+                  <h4 className="font-semibold text-xs text-charcoal-40 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <Icon name="verified_user" className="!text-[18px] text-primary" />
+                    Quy định Bảo vệ Hợp đồng Thực thi
+                  </h4>
+                  <div className="bg-parchment-bg rounded-lg p-5 border border-warm-border">
+                    <p className="leading-relaxed text-charcoal-text text-sm font-mono">
+                      {activeJob.suggestedRevision}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="job-empty lg:col-span-7">
+            <Icon name="search_off" />
+            <h3>Chưa tìm thấy vị trí phù hợp</h3>
+            <p>Thử từ khóa khác hoặc mở rộng địa điểm tìm kiếm.</p>
+            <button
+              onClick={() => {
+                setQuery("");
+                setLocation("");
+                setFilter("all");
+              }}
+              className="recruiter-primary"
+            >
+              Xóa bộ lọc
+            </button>
+          </div>
+        )}
       </div>
     </AdminShell>
   );

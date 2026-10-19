@@ -1,3 +1,5 @@
+import { ListSearch } from "@/components/ListSearch";
+import { matchesSearch } from "@/lib/list-search";
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Users, UserPlus, ShieldCheck, History } from "lucide-react";
@@ -23,6 +25,7 @@ export const Route = createFileRoute("/recruiter/members")({
 
 function CompanyMembersPage() {
   const { workspace, company, member, user, error } = useCompanyWorkspace();
+  const [query, setQuery] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [failed, setFailed] = useState(false);
@@ -180,6 +183,11 @@ function CompanyMembersPage() {
               </div>
             ))}
           </div>
+          <ListSearch
+            value={query}
+            onChange={setQuery}
+            label="Tìm tên, thư điện tử hoặc vai trò thành viên"
+          />
           <div className="overflow-x-auto rounded-xl border border-warm-border bg-paper-white">
             <table className="w-full text-left text-sm">
               <thead className="bg-surface-container-low">
@@ -192,8 +200,23 @@ function CompanyMembersPage() {
                 </tr>
               </thead>
               <tbody>
+                {!workspace.members.some(
+                  (m) =>
+                    (owner || m.status !== "removed") &&
+                    matchesSearch(query, m.name, m.email, m.role),
+                ) && (
+                  <tr>
+                    <td colSpan={4} className="p-8 text-center text-charcoal-83">
+                      Không tìm thấy thành viên phù hợp.
+                    </td>
+                  </tr>
+                )}
                 {workspace.members
-                  .filter((m) => owner || m.status !== "removed")
+                  .filter(
+                    (m) =>
+                      (owner || m.status !== "removed") &&
+                      matchesSearch(query, m.name, m.email, m.role),
+                  )
                   .map((m) => (
                     <tr key={m.id} className="border-t border-warm-border">
                       <td className="p-4">
