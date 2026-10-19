@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ChevronDown } from "lucide-react";
+import { BriefcaseBusiness, ChevronDown, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { LogoutButton } from "./LogoutButton";
 import { RecruiterShell } from "./RecruiterShell";
@@ -18,7 +18,7 @@ const ADMIN_NAV: NavItem[] = [
 ];
 const ADMIN_JOB_NAV: NavItem[] = [
   { to: "/admin/jobs", label: "Kiểm soát tin", icon: "work" },
-  { to: "/admin/compliance", label: "Rà soát nội dung", icon: "gavel" },
+  { to: "/admin/compliance", label: "JD bị AI gắn cờ", icon: "gavel" },
 ];
 
 const CANDIDATE_NAV: NavItem[] = [
@@ -125,6 +125,9 @@ export function AdminShell({
       <Link
         key={item.to}
         to={item.to}
+        activeOptions={{
+          exact: item.to === "/admin" || item.to === "/recruiter" || item.to === "/candidate",
+        }}
         aria-current={active ? "page" : undefined}
         onClick={() => setMenuOpen(false)}
         className={
@@ -164,7 +167,7 @@ export function AdminShell({
         id="workspace-navigation"
         className={`${menuOpen ? "flex" : "hidden"} workspace-sidebar fixed inset-y-0 left-0 z-50 w-64 flex-col border-r border-warm-border bg-paper-white md:static md:z-20 md:flex md:h-screen md:shrink-0`}
       >
-        <div className="p-5 border-b border-warm-border">
+        <div className="workspace-brand p-5 border-b border-warm-border">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-md bg-primary text-on-primary flex items-center justify-center">
               <Icon name={roleMeta.icon} className="!text-2xl" />
@@ -178,6 +181,16 @@ export function AdminShell({
               </p>
             </div>
           </div>
+          {currentRole === "admin" && (
+            <button
+              type="button"
+              className="admin-navigation-close md:hidden"
+              aria-label="Đóng điều hướng"
+              onClick={() => setMenuOpen(false)}
+            >
+              <X size={20} aria-hidden="true" />
+            </button>
+          )}
         </div>
 
         {/* Nav Items */}
@@ -201,7 +214,10 @@ export function AdminShell({
                   aria-controls="admin-job-nav-items"
                   onClick={() => setJobGroupOpen((open) => !(open ?? jobGroupExpanded))}
                 >
-                  <span>Quản lý tin tuyển dụng</span>
+                  <span>
+                    <BriefcaseBusiness size={20} aria-hidden="true" />
+                    Quản lý tin tuyển dụng
+                  </span>
                   <ChevronDown
                     size={16}
                     aria-hidden="true"
@@ -216,7 +232,12 @@ export function AdminShell({
                   {ADMIN_JOB_NAV.map(renderNavItem)}
                 </div>
               </section>
-              {ADMIN_NAV.slice(2).map(renderNavItem)}
+              <div className="admin-navigation-section">
+                {ADMIN_NAV.slice(2, 4).map(renderNavItem)}
+              </div>
+              <div className="admin-navigation-section">
+                {ADMIN_NAV.slice(4).map(renderNavItem)}
+              </div>
             </>
           ) : (
             navItems.map(renderNavItem)
@@ -256,7 +277,7 @@ export function AdminShell({
       {/* Main Container */}
       <div className="workspace-content min-w-0 flex-1 flex flex-col h-screen overflow-hidden bg-parchment-bg">
         <header className="w-full bg-paper-white border-b border-warm-border h-20 px-4 md:px-8 flex items-center justify-between shrink-0 z-10">
-          <div className="flex items-center gap-4">
+          <div className="min-w-0 flex items-center gap-4">
             <button
               aria-label="Mở điều hướng"
               aria-expanded={menuOpen}
@@ -266,7 +287,7 @@ export function AdminShell({
             >
               <Icon name="menu" />
             </button>
-            <div>
+            <div className="min-w-0">
               <p className="workspace-page-title font-bold text-sm md:text-xl text-charcoal-text tracking-tight">
                 {title}
               </p>

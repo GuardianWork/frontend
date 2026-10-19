@@ -5,11 +5,32 @@
 //     React/TanStack dedupe, error logger plugins, and sandbox detection (port/host/strictPort).
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import type { ConfigEnv } from "vite";
 
-export default defineConfig({
+const createProjectConfig = defineConfig({
+  vite: {
+    preview: { port: 5137, strictPort: true },
+    server: {
+      port: 5137,
+      strictPort: true,
+      proxy: {
+        "/api": {
+          target: process.env.VITE_API_PROXY_TARGET || "http://localhost:8080",
+          changeOrigin: true,
+        },
+      },
+    },
+  },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
   },
 });
+
+export default async function projectConfig(env: ConfigEnv) {
+  const config = await createProjectConfig(env);
+  // Dev, mock, and build must not replace another running server's optimized React files.
+  config.cacheDir = `node_modules/.vite/guardianwork-${env.command}-${env.mode}`;
+  return config;
+}

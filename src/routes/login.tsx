@@ -7,6 +7,7 @@ import { PasswordInput, authInputClass } from "@/components/auth/PasswordInput";
 import {
   getLoginDestination,
   loginAccount,
+  loadCurrentUser,
   parseAccountPurpose,
   saveAuthSession,
 } from "@/services/auth";
@@ -49,7 +50,8 @@ function LoginPage() {
     try {
       const session = await loginAccount(identifier, password);
       saveAuthSession(session);
-      await navigate({ to: getLoginDestination(session.user, role) });
+      const user = await loadCurrentUser();
+      await navigate({ to: getLoginDestination(user, role) });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Không thể đăng nhập. Vui lòng thử lại.");
     } finally {

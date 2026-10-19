@@ -27,9 +27,7 @@ function AdminDashboard() {
   const reportsNeedingAttention = reportRows.filter((row) =>
     ["Mới tiếp nhận", "Đang xem xét"].includes(row.status ?? ""),
   ).length;
-  const jobsNeedingAttention = jobRows.filter((row) =>
-    ["Chờ rà soát", "Đã ẩn"].includes(row.status ?? ""),
-  ).length;
+  const jobsNeedingAttention = jobRows.filter((row) => row.status === "Đã ẩn").length;
   const accountsNeedingAttention = accountRows.filter((row) =>
     ["Tạm khóa", "Chờ xác minh"].includes(row.status ?? ""),
   ).length;
@@ -143,21 +141,20 @@ function AdminDashboard() {
             ))}
           </dl>
         </section>
-      </div>
-
-      <div className="admin-dashboard-job-tools">
-        <div>
-          <h2>Quản lý tin tuyển dụng</h2>
-          <p>Kiểm soát trạng thái hiển thị hoặc rà soát nội dung theo quy định.</p>
-        </div>
-        <div>
-          <Link to="/admin/jobs">
-            Kiểm soát tin <ArrowRight size={15} />
-          </Link>
-          <Link to="/admin/compliance">
-            Rà soát nội dung <ArrowRight size={15} />
-          </Link>
-        </div>
+        <section className="admin-dashboard-job-tools" aria-labelledby="job-tools-title">
+          <div>
+            <h2 id="job-tools-title">Quản lý tin tuyển dụng</h2>
+            <p>Quản lý trạng thái tin đã đăng và kiểm tra các JD được AI gắn cờ.</p>
+          </div>
+          <div>
+            <Link to="/admin/jobs">
+              Kiểm soát tin <ArrowRight size={15} />
+            </Link>
+            <Link to="/admin/compliance">
+              JD bị AI gắn cờ <ArrowRight size={15} />
+            </Link>
+          </div>
+        </section>
       </div>
     </AdminShell>
   );

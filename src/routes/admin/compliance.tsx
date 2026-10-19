@@ -1,95 +1,50 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { AlertTriangle, ArrowUpRight, Check, RotateCcw, Search } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  CircleHelp,
+  Database,
+  Eye,
+  Flag,
+  Search,
+  ShieldOff,
+} from "lucide-react";
 import { AdminShell } from "@/components/AdminShell";
+import { ListSearch } from "@/components/ListSearch";
+import { AdminPagination } from "@/components/admin/AdminPagination";
+import { useListPagination } from "@/hooks/useListPagination";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { matchesSearch } from "@/lib/list-search";
+import { COMPLIANCE_SAMPLE_JOBS, type FlaggedPublishedJob } from "@/lib/admin-compliance";
+import "@/components/admin/compliance.css";
 
-type Rule = { id: string; title: string; article: string; terms: string[]; guidance: string };
-
-const LABOR_CODE_URL =
-  "https://vanban.chinhphu.vn/?classid=1&docid=198540&pageid=27160&typegroupid=3";
-
-const RULES: Rule[] = [
-  {
-    id: "deposit",
-    title: "Yêu cầu đặt cọc hoặc giữ giấy tờ gốc",
-    article: "Điều 17",
-    terms: ["đặt cọc", "ký quỹ", "giữ bản chính", "giữ bản gốc", "giữ giấy tờ gốc"],
-    guidance:
-      "Đối chiếu Điều 17 về hành vi người sử dụng lao động không được thực hiện. Kiểm tra ngữ cảnh và chủ thể đưa ra yêu cầu.",
-  },
-  {
-    id: "overtime",
-    title: "Nội dung về tiền lương làm thêm giờ",
-    article: "Điều 98",
-    terms: [
-      "không trả lương làm thêm",
-      "không trả tiền làm thêm",
-      "không trả tiền tăng ca",
-      "không tính lương làm thêm",
-    ],
-    guidance:
-      "Đối chiếu quy định về tiền lương làm thêm giờ, thời điểm làm việc và loại ngày. Chỉ từ khóa không đủ để xác định mức trả đúng.",
-  },
-  {
-    id: "probation",
-    title: "Thời gian thử việc cần đối chiếu theo vị trí",
-    article: "Điều 25",
-    terms: [
-      "thử việc 90 ngày",
-      "thử việc 3 tháng",
-      "thử việc 03 tháng",
-      "thử việc 6 tháng",
-      "thử việc 180 ngày",
-    ],
-    guidance:
-      "Thời hạn tối đa phụ thuộc tính chất và yêu cầu chuyên môn của công việc; cần kiểm tra nhóm công việc và trường hợp áp dụng theo Điều 25.",
-  },
-  {
-    id: "post-employment",
-    title: "Điều khoản hạn chế sau khi nghỉ việc",
-    article: "Cần xem xét toàn bộ thỏa thuận",
-    terms: [
-      "không được làm việc cho đối thủ",
-      "cấm làm việc cho đối thủ",
-      "không làm cho đối thủ",
-      "không được làm trong ngành",
-    ],
-    guidance:
-      "Xem xét đầy đủ phạm vi, thời hạn, đối tượng và căn cứ của điều khoản. Từ khóa này không tự xác định điều khoản hợp pháp hay vi phạm.",
-  },
-  {
-    id: "personal-criteria",
-    title: "Điều kiện tuyển dụng gắn với đặc điểm cá nhân",
-    article: "Cần rà soát ngữ cảnh",
-    terms: [
-      "chỉ tuyển nam",
-      "chỉ tuyển nữ",
-      "không tuyển nữ",
-      "không tuyển người đã kết hôn",
-      "ngoại hình bắt buộc",
-    ],
-    guidance:
-      "Kiểm tra yêu cầu có liên quan thực chất đến công việc hay không và xem xét ngoại lệ, ngữ cảnh cụ thể trước khi đánh giá.",
-  },
-];
-
-function scanText(text: string) {
-  const normalized = text.toLocaleLowerCase("vi-VN");
-  return RULES.flatMap((rule) => {
-    const matchedTerms = rule.terms.filter((term) =>
-      normalized.includes(term.toLocaleLowerCase("vi-VN")),
-    );
-    return matchedTerms.length ? [{ ...rule, matchedTerms }] : [];
-  });
-}
+type QueueFilter = "ALL" | "OPEN" | "REVIEWED" | "HIDDEN";
+type Action = "hide" | "restore";
+const dateTime = (value: string) =>
+  new Intl.DateTimeFormat("vi-VN", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(new Date(value));
+const priorityLabel = (job: FlaggedPublishedJob) =>
+  job.priority === "HIGH" ? "Ưu tiên cao" : "Cần xem xét";
+const queueLabel = (job: FlaggedPublishedJob) =>
+  job.visibility === "HIDDEN" ? "Đã ẩn" : job.reviewed ? "Đã xem xét" : "Chưa xử lý";
 
 export const Route = createFileRoute("/admin/compliance")({
   head: () => ({
     meta: [
-      { title: "Rà soát tin tuyển dụng — GuardianWork" },
+      { title: "JD bị AI gắn cờ — GuardianWork" },
       {
         name: "description",
-        content: "Công cụ hỗ trợ rà soát từ khóa trong nội dung tin tuyển dụng.",
+        content:
+          "Theo dõi các JD đã đăng được AI gắn cờ và xử lý tin tuyển dụng sau khi công khai.",
       },
     ],
   }),
@@ -97,208 +52,471 @@ export const Route = createFileRoute("/admin/compliance")({
 });
 
 function CompliancePage() {
-  const sampleTitle = "Nhân viên kinh doanh khu vực miền Nam";
-  const sampleContent =
-    "Ứng viên nhận việc cần đặt cọc đồng phục. Thử việc 3 tháng. Không trả lương làm thêm giờ.";
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [hasReviewed, setHasReviewed] = useState(false);
-  const [error, setError] = useState("");
-  const matches = useMemo(
-    () => (hasReviewed ? scanText(`${title}\n${content}`) : []),
-    [hasReviewed, title, content],
+  const [jobs, setJobs] = useState(COMPLIANCE_SAMPLE_JOBS);
+  const [query, setQuery] = useState("");
+  const [priority, setPriority] = useState("ALL");
+  const [queue, setQueue] = useState<QueueFilter>("ALL");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [action, setAction] = useState<Action | null>(null);
+  const [reason, setReason] = useState("");
+  const [actionError, setActionError] = useState("");
+  const [notice, setNotice] = useState("");
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const returnFocusId = useRef<string | null>(null);
+  const selected = jobs.find((job) => job.id === selectedId);
+  const remaining = jobs.filter((job) => job.visibility === "PUBLIC" && !job.reviewed).length;
+  const filtered = useMemo(
+    () =>
+      jobs.filter(
+        (job) =>
+          matchesSearch(
+            query,
+            job.id,
+            job.title,
+            job.company,
+            ...job.findings.map((finding) => finding.label),
+          ) &&
+          (priority === "ALL" || priority === job.priority) &&
+          (queue === "ALL" ||
+            (queue === "OPEN" && job.visibility === "PUBLIC" && !job.reviewed) ||
+            (queue === "REVIEWED" && job.visibility === "PUBLIC" && job.reviewed) ||
+            (queue === "HIDDEN" && job.visibility === "HIDDEN")),
+      ),
+    [jobs, priority, query, queue],
   );
 
-  function review(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!content.trim()) {
-      setError("Hãy nhập nội dung tin tuyển dụng để bắt đầu rà soát.");
-      setHasReviewed(false);
+  const pagination = useListPagination(filtered, JSON.stringify([query, priority, queue]));
+  const historyPagination = useListPagination(selected?.history ?? [], selectedId ?? "");
+
+  useEffect(() => {
+    if (selectedId) {
+      headingRef.current?.focus({ preventScroll: true });
+      headingRef.current?.closest("main")?.scrollTo({ top: 0 });
+    } else if (returnFocusId.current) {
+      const trigger = document.getElementById(`compliance-open-${returnFocusId.current}`);
+      if (trigger) trigger.focus();
+      else document.getElementById("compliance-list-title")?.focus();
+    }
+  }, [selectedId]);
+
+  function openJob(id: string) {
+    returnFocusId.current = id;
+    setSelectedId(id);
+    setNotice("");
+  }
+  function openAction(next: Action) {
+    setAction(next);
+    setReason("");
+    setActionError("");
+  }
+  function recordAction(type: Action | "review") {
+    if (!selected) return;
+    if (type !== "review" && !reason.trim()) {
+      setActionError("Nhập lý do để lưu thao tác xử lý.");
       return;
     }
-    setError("");
-    setHasReviewed(true);
+    const label =
+      type === "hide" ? "Đã ẩn tin" : type === "restore" ? "Đã công khai lại" : "Đã xem xét";
+    setJobs((current) =>
+      current.map((job) =>
+        job.id !== selected.id
+          ? job
+          : {
+              ...job,
+              reviewed: true,
+              visibility:
+                type === "hide" ? "HIDDEN" : type === "restore" ? "PUBLIC" : job.visibility,
+              history: [
+                ...job.history,
+                {
+                  label,
+                  at: new Date().toISOString(),
+                  ...(type !== "review" ? { reason: reason.trim() } : {}),
+                },
+              ],
+            },
+      ),
+    );
+    setAction(null);
+    setReason("");
+    setNotice(`${label}. Thay đổi chỉ áp dụng cho dữ liệu mẫu trong màn hình này.`);
   }
-
-  function clear() {
-    setTitle("");
-    setContent("");
-    setHasReviewed(false);
-    setError("");
+  function clearFilters() {
+    setQuery("");
+    setPriority("ALL");
+    setQueue("ALL");
   }
 
   return (
-    <AdminShell title="Rà soát tin tuyển dụng" role="admin">
+    <AdminShell title="JD bị AI gắn cờ" role="admin">
+      {selected && (
+        <button
+          type="button"
+          className="admin-text-link compliance-back"
+          onClick={() => setSelectedId(null)}
+        >
+          <ArrowLeft size={16} aria-hidden="true" />
+          Quay lại danh sách
+        </button>
+      )}
       <div className="admin-page-heading">
         <div>
-          <h1>Rà soát tin tuyển dụng</h1>
-          <p>Tìm dấu hiệu cần xem lại trong tin tuyển dụng thuộc mọi ngành nghề.</p>
+          <h1 ref={headingRef} tabIndex={-1}>
+            {selected ? selected.title : "JD bị AI gắn cờ"}
+          </h1>
+          <p>
+            {selected
+              ? `${selected.company} · ${selected.id}`
+              : "Theo dõi các tin đã đăng được AI phát hiện có dấu hiệu cần xem xét."}
+          </p>
         </div>
-        <span className="admin-draft-label">Công cụ hỗ trợ</span>
+        <span className="admin-draft-label admin-sample-label">
+          <Database size={14} aria-hidden="true" />
+          Dữ liệu minh họa
+        </span>
       </div>
+      <div className="admin-sample-banner" role="note">
+        <CircleHelp size={18} aria-hidden="true" />
+        <p>
+          <strong>Quản lý sau đăng.</strong> Danh sách chỉ gồm JD đã được công khai. Bản ghi và kết
+          quả AI bên dưới là minh họa; thao tác xử lý chỉ áp dụng trong màn hình này.
+        </p>
+      </div>
+      {notice && (
+        <p className="compliance-notice" role="status">
+          <Check size={17} aria-hidden="true" />
+          {notice}
+        </p>
+      )}
 
-      <div className="admin-review-layout">
-        <section
-          className="admin-panel admin-review-form-panel"
-          aria-labelledby="review-form-title"
-        >
+      {!selected ? (
+        <section className="admin-panel compliance-list" aria-labelledby="compliance-list-title">
           <div className="admin-panel-heading">
             <div>
-              <h2 id="review-form-title">Nội dung cần rà soát</h2>
-              <p>Dữ liệu chỉ được xử lý trong phiên trình duyệt này.</p>
+              <h2 id="compliance-list-title" tabIndex={-1}>
+                Tin tuyển dụng cần kiểm tra
+              </h2>
+              <p>
+                {jobs.length} JD được gắn cờ · {remaining} tin công khai chưa xử lý
+              </p>
             </div>
           </div>
-          <form onSubmit={review}>
-            <label className="admin-review-label" htmlFor="job-title">
-              Chức danh <span>Tùy chọn</span>
-            </label>
-            <input
-              id="job-title"
-              className="admin-review-input"
-              value={title}
-              onChange={(event) => {
-                setTitle(event.target.value);
-                setHasReviewed(false);
-              }}
-              placeholder="Ví dụ: Nhân viên kế toán tổng hợp"
+          <div className="admin-sample-toolbar compliance-toolbar">
+            <ListSearch
+              value={query}
+              onChange={setQuery}
+              label="Tìm JD, doanh nghiệp hoặc dấu hiệu"
+              count={filtered.length}
             />
-            <label className="admin-review-label" htmlFor="job-description">
-              Mô tả công việc và điều kiện tuyển dụng <span>Bắt buộc</span>
+            <label className="admin-sample-filter">
+              Mức ưu tiên
+              <select value={priority} onChange={(event) => setPriority(event.target.value)}>
+                <option value="ALL">Tất cả</option>
+                <option value="HIGH">Ưu tiên cao</option>
+                <option value="MEDIUM">Cần xem xét</option>
+              </select>
+            </label>
+            <label className="admin-sample-filter">
+              Xử lý
+              <select
+                value={queue}
+                onChange={(event) => setQueue(event.target.value as QueueFilter)}
+              >
+                <option value="ALL">Tất cả</option>
+                <option value="OPEN">Chưa xử lý</option>
+                <option value="REVIEWED">Đã xem xét</option>
+                <option value="HIDDEN">Đã ẩn</option>
+              </select>
+            </label>
+          </div>
+          {filtered.length ? (
+            <table className="compliance-table">
+              <caption className="sr-only">Danh sách JD đã đăng được AI gắn cờ</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Tin tuyển dụng</th>
+                  <th scope="col">AI phát hiện</th>
+                  <th scope="col">Ưu tiên</th>
+                  <th scope="col">Trạng thái</th>
+                  <th scope="col">Phát hiện lúc</th>
+                  <th scope="col">
+                    <span className="sr-only">Thao tác</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {pagination.items.map((job) => (
+                  <tr key={job.id}>
+                    <td className="compliance-job">
+                      <button
+                        id={`compliance-open-${job.id}`}
+                        type="button"
+                        onClick={() => openJob(job.id)}
+                      >
+                        {job.title}
+                      </button>
+                      <span>{job.company}</span>
+                      <small>
+                        {job.id} · {job.industry}
+                      </small>
+                    </td>
+                    <td className="compliance-findings-cell">
+                      <ul>
+                        {job.findings.map((finding) => (
+                          <li key={finding.label}>{finding.label}</li>
+                        ))}
+                      </ul>
+                    </td>
+                    <td className="compliance-priority-cell">
+                      <span
+                        className={`compliance-priority ${job.priority === "HIGH" ? "is-high" : ""}`}
+                      >
+                        <Flag size={13} aria-hidden="true" />
+                        {priorityLabel(job)}
+                      </span>
+                    </td>
+                    <td className="compliance-state-cell">
+                      <span
+                        className={`compliance-visibility ${job.visibility === "HIDDEN" ? "is-hidden" : ""}`}
+                      >
+                        {job.visibility === "PUBLIC" ? "Đang công khai" : "Đã ẩn"}
+                      </span>
+                      <small>
+                        {job.visibility === "PUBLIC" ? queueLabel(job) : "Sau khi đăng"}
+                      </small>
+                    </td>
+                    <td className="compliance-time">
+                      <span className="compliance-mobile-label">Phát hiện lúc</span>
+                      <time dateTime={job.detectedAt}>{dateTime(job.detectedAt)}</time>
+                    </td>
+                    <td className="compliance-row-action">
+                      <button
+                        type="button"
+                        aria-label={`Xem JD ${job.title}`}
+                        className="admin-sample-detail-button"
+                        onClick={() => openJob(job.id)}
+                      >
+                        <Eye size={16} aria-hidden="true" />
+                        <span>Xem JD</span>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <div className="compliance-empty" role="status">
+              <Search size={26} aria-hidden="true" />
+              <h3>Không có JD phù hợp</h3>
+              <p>Thử từ khóa khác hoặc thay đổi bộ lọc để xem các tin đã được gắn cờ.</p>
+              <button type="button" className="admin-secondary-action" onClick={clearFilters}>
+                Xóa bộ lọc
+              </button>
+            </div>
+          )}
+          <AdminPagination
+            totalItems={filtered.length}
+            page={pagination.page}
+            onPageChange={pagination.onPageChange}
+            itemLabel="JD"
+            label="Phân trang JD bị AI gắn cờ"
+          />
+          <p className="compliance-list-note">
+            Dấu hiệu do AI gắn cờ cần được kiểm tra cùng toàn bộ JD trước khi xử lý tin.
+          </p>
+        </section>
+      ) : (
+        <div className="compliance-detail-layout">
+          <section className="admin-panel compliance-jd" aria-labelledby="published-jd-title">
+            <div className="admin-panel-heading">
+              <h2 id="published-jd-title">Nội dung JD đã đăng</h2>
+              <span
+                className={`compliance-visibility ${selected.visibility === "HIDDEN" ? "is-hidden" : ""}`}
+              >
+                {selected.visibility === "PUBLIC" ? "Đang công khai" : "Đã ẩn"}
+              </span>
+            </div>
+            <dl className="compliance-job-meta">
+              <div>
+                <dt>Doanh nghiệp</dt>
+                <dd>{selected.company}</dd>
+              </div>
+              <div>
+                <dt>Địa điểm</dt>
+                <dd>{selected.location}</dd>
+              </div>
+              <div>
+                <dt>Đã đăng lúc</dt>
+                <dd>
+                  <time dateTime={selected.publishedAt}>{dateTime(selected.publishedAt)}</time>
+                </dd>
+              </div>
+              <div>
+                <dt>Ngành nghề</dt>
+                <dd>{selected.industry}</dd>
+              </div>
+            </dl>
+            <div className="compliance-jd-content">
+              {selected.description.split("\n\n").map((section, index) => {
+                const [title, ...body] = section.split("\n");
+                return (
+                  <section key={index}>
+                    <h3>{title}</h3>
+                    {body.map((line, lineIndex) => (
+                      <p key={lineIndex}>{line}</p>
+                    ))}
+                  </section>
+                );
+              })}
+            </div>
+          </section>
+          <aside className="compliance-inspector">
+            <section className="admin-panel" aria-labelledby="ai-findings-title">
+              <div className="admin-panel-heading">
+                <div>
+                  <h2 id="ai-findings-title">Dấu hiệu AI phát hiện</h2>
+                  <p>
+                    <time dateTime={selected.detectedAt}>{dateTime(selected.detectedAt)}</time>
+                  </p>
+                </div>
+                <span
+                  className={`compliance-priority ${selected.priority === "HIGH" ? "is-high" : ""}`}
+                >
+                  {priorityLabel(selected)}
+                </span>
+              </div>
+              <ol className="compliance-finding-list">
+                {selected.findings.map((finding) => (
+                  <li key={finding.label}>
+                    <h3>{finding.label}</h3>
+                    <blockquote>{finding.excerpt}</blockquote>
+                    <p>{finding.explanation}</p>
+                  </li>
+                ))}
+              </ol>
+              <p className="compliance-list-note">
+                Kết quả gắn cờ hỗ trợ kiểm tra nội dung, chưa phải kết luận vi phạm.
+              </p>
+            </section>
+            <section className="admin-panel compliance-handling" aria-labelledby="handling-title">
+              <h2 id="handling-title">Xử lý tin đã đăng</h2>
+              <p>{queueLabel(selected)} · Thao tác trên dữ liệu minh họa.</p>
+              <div>
+                {selected.visibility === "PUBLIC" ? (
+                  <>
+                    <button
+                      type="button"
+                      className="admin-secondary-action"
+                      disabled={selected.reviewed}
+                      onClick={() => recordAction("review")}
+                    >
+                      <Check size={16} aria-hidden="true" />
+                      {selected.reviewed ? "Đã xem xét" : "Đánh dấu đã xem xét"}
+                    </button>
+                    <button
+                      type="button"
+                      className="admin-primary-action"
+                      onClick={() => openAction("hide")}
+                    >
+                      <ShieldOff size={16} aria-hidden="true" />
+                      Ẩn tin đã đăng
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    className="admin-secondary-action"
+                    onClick={() => openAction("restore")}
+                  >
+                    <Eye size={16} aria-hidden="true" />
+                    Công khai lại tin
+                  </button>
+                )}
+              </div>
+            </section>
+            {selected.history.length > 0 && (
+              <section className="admin-panel compliance-history" aria-labelledby="history-title">
+                <h2 id="history-title">Lịch sử xử lý</h2>
+                <ol>
+                  {historyPagination.items.map((event, index) => (
+                    <li key={index}>
+                      <strong>{event.label}</strong>
+                      <time dateTime={event.at}>{dateTime(event.at)}</time>
+                      {event.reason && <p>{event.reason}</p>}
+                    </li>
+                  ))}
+                </ol>
+                <AdminPagination
+                  totalItems={selected.history.length}
+                  page={historyPagination.page}
+                  onPageChange={historyPagination.onPageChange}
+                  itemLabel="thao tác"
+                  label="Phân trang lịch sử xử lý"
+                />
+              </section>
+            )}
+          </aside>
+        </div>
+      )}
+
+      <Dialog
+        open={Boolean(action)}
+        onOpenChange={(open) => {
+          if (!open) setAction(null);
+        }}
+      >
+        <DialogContent className="compliance-action-dialog">
+          <DialogTitle>
+            {action === "hide" ? "Ẩn tin tuyển dụng đã đăng" : "Công khai lại tin tuyển dụng"}
+          </DialogTitle>
+          <DialogDescription className="compliance-action-description">
+            {selected?.title} · {selected?.company}. Đây là thao tác trên dữ liệu mẫu.
+          </DialogDescription>
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (action) recordAction(action);
+            }}
+          >
+            <label htmlFor="compliance-action-reason">
+              Lý do xử lý <span aria-hidden="true">*</span>
             </label>
             <textarea
-              id="job-description"
-              className="admin-review-textarea"
-              value={content}
+              id="compliance-action-reason"
+              autoFocus
+              required
+              maxLength={1000}
+              rows={4}
+              value={reason}
               onChange={(event) => {
-                setContent(event.target.value);
-                setHasReviewed(false);
+                setReason(event.target.value);
+                setActionError("");
               }}
-              placeholder="Dán nội dung tin tuyển dụng tại đây…"
-              rows={12}
+              aria-invalid={Boolean(actionError)}
+              aria-describedby={actionError ? "compliance-action-error" : undefined}
+              placeholder="Nhập lý do để ghi lại trong lịch sử xử lý"
             />
-            {error && (
-              <p className="admin-review-error" role="alert">
-                {error}
+            {actionError && (
+              <p id="compliance-action-error" role="alert" className="compliance-action-error">
+                {actionError}
               </p>
             )}
-            <div className="admin-review-actions">
-              <button type="submit" className="admin-review-primary">
-                <Search size={16} aria-hidden="true" /> Rà soát nội dung
-              </button>
-              <button type="button" className="admin-review-clear" onClick={clear}>
-                <RotateCcw size={15} aria-hidden="true" /> Xóa nội dung
-              </button>
+            <div className="compliance-dialog-actions">
               <button
                 type="button"
-                className="admin-review-clear"
-                onClick={() => {
-                  setTitle(sampleTitle);
-                  setContent(sampleContent);
-                  setHasReviewed(false);
-                  setError("");
-                }}
+                className="admin-secondary-action"
+                onClick={() => setAction(null)}
               >
-                Điền nội dung mẫu
+                Hủy
+              </button>
+              <button type="submit" className="admin-primary-action">
+                {action === "hide" ? "Xác nhận ẩn tin" : "Xác nhận công khai lại"}
+                <ArrowRight size={15} aria-hidden="true" />
               </button>
             </div>
           </form>
-        </section>
-
-        <aside className="admin-review-side">
-          <section className="admin-review-note">
-            <div className="admin-review-note-icon">
-              <AlertTriangle size={18} aria-hidden="true" />
-            </div>
-            <h2>Cách đọc kết quả</h2>
-            <p>
-              Công cụ dò các cụm từ đã cấu hình và gợi ý điều khoản để đối chiếu. Kết quả không xác
-              định tin có vi phạm pháp luật hay không.
-            </p>
-            <a href={LABOR_CODE_URL} target="_blank" rel="noreferrer">
-              Mở Bộ luật Lao động 2019 <ArrowUpRight size={14} aria-hidden="true" />
-            </a>
-          </section>
-          <section className="admin-review-rule-summary" aria-label="Phạm vi rà soát">
-            <h2>Phạm vi từ khóa</h2>
-            <ul>
-              <li>
-                <Check size={15} aria-hidden="true" /> Đặt cọc và giấy tờ gốc
-              </li>
-              <li>
-                <Check size={15} aria-hidden="true" /> Tiền lương làm thêm giờ
-              </li>
-              <li>
-                <Check size={15} aria-hidden="true" /> Thời gian thử việc
-              </li>
-              <li>
-                <Check size={15} aria-hidden="true" /> Điều khoản sau khi nghỉ việc
-              </li>
-              <li>
-                <Check size={15} aria-hidden="true" /> Điều kiện tuyển dụng cá nhân
-              </li>
-            </ul>
-          </section>
-        </aside>
-      </div>
-
-      {hasReviewed && (
-        <section
-          className="admin-panel admin-review-results"
-          aria-live="polite"
-          aria-labelledby="review-results-title"
-        >
-          <div className="admin-panel-heading">
-            <div>
-              <h2 id="review-results-title">Kết quả rà soát</h2>
-              <p>
-                {matches.length
-                  ? `Có ${matches.length} nhóm dấu hiệu cần xem lại.`
-                  : "Không tìm thấy từ khóa trong phạm vi rà soát."}
-              </p>
-            </div>
-            <span
-              className={
-                matches.length
-                  ? "admin-review-count admin-review-count--flagged"
-                  : "admin-review-count"
-              }
-            >
-              {matches.length} dấu hiệu
-            </span>
-          </div>
-          {matches.length ? (
-            <div className="admin-review-result-list">
-              {matches.map((match) => (
-                <article className="admin-review-result" key={match.id}>
-                  <div className="admin-review-result-head">
-                    <span>
-                      <AlertTriangle size={16} aria-hidden="true" /> Dấu hiệu cần xem lại
-                    </span>
-                    <small>{match.article}</small>
-                  </div>
-                  <h3>{match.title}</h3>
-                  <p className="admin-review-matched">
-                    Cụm từ tìm thấy: {match.matchedTerms.map((term) => `“${term}”`).join(", ")}
-                  </p>
-                  <p>{match.guidance}</p>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <div className="admin-review-clear-state">
-              <Check size={19} aria-hidden="true" />
-              <p>
-                Không có cụm từ nào trong danh sách rà soát được tìm thấy. Nội dung vẫn cần được đọc
-                theo đầy đủ ngữ cảnh.
-              </p>
-            </div>
-          )}
-          <p className="admin-review-disclaimer">
-            Đây là bước sàng lọc từ khóa, không phải kết luận pháp lý. Cần rà soát toàn bộ ngữ cảnh,
-            loại công việc và trường hợp cụ thể trước khi xử lý tin.
-          </p>
-        </section>
-      )}
+        </DialogContent>
+      </Dialog>
     </AdminShell>
   );
 }

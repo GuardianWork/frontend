@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useHydrated, useRouterState } from "@tanstack/react-router";
 import { Menu, X, Globe, ShieldCheck } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCandidate } from "@/context/CandidateContext";
@@ -12,6 +12,7 @@ export function Header({
   const { locale, setLocale, dict } = useLanguage();
   const { appliedJobs, savedJobs } = useCandidate();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const hydrated = useHydrated();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const landing = variant === "landing";
   const en = locale === "en";
@@ -52,6 +53,7 @@ export function Header({
         </nav>
         <div className="career-header__tools">
           <button
+            disabled={!hydrated}
             className="career-language"
             aria-label={en ? "Switch to Vietnamese" : "Chuyển sang tiếng Anh"}
             onClick={() => setLocale(en ? "vn" : "en")}
@@ -72,6 +74,7 @@ export function Header({
             </Link>
           )}
           <button
+            disabled={!hydrated}
             className="career-icon-button career-header__toggle"
             aria-label={
               mobileOpen

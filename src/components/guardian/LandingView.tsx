@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useHydrated, useNavigate } from "@tanstack/react-router";
 import {
   ArrowRight,
   Search,
@@ -75,6 +75,7 @@ export function LandingView() {
   const { dict, locale } = useLanguage();
   const en = locale === "en";
   const navigate = useNavigate();
+  const hydrated = useHydrated();
   const [query, setQuery] = useState("");
   const [location, setLocation] = useState("");
   const [uploadedCv, setUploadedCv] = useState("");
@@ -105,6 +106,7 @@ export function LandingView() {
                   {en ? "Job title, skill or company" : "Vị trí, kỹ năng hoặc công ty"}
                 </span>
                 <input
+                  disabled={!hydrated}
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder={en ? "Job title, skill or company" : "Vị trí, kỹ năng hoặc công ty"}
@@ -113,7 +115,11 @@ export function LandingView() {
               <label className="career-search__location">
                 <MapPin size={22} aria-hidden="true" />
                 <span className="sr-only">{en ? "Location" : "Địa điểm"}</span>
-                <select value={location} onChange={(event) => setLocation(event.target.value)}>
+                <select
+                  disabled={!hydrated}
+                  value={location}
+                  onChange={(event) => setLocation(event.target.value)}
+                >
                   <option value="">{en ? "All locations" : "Tất cả địa điểm"}</option>
                   <option value="Hồ Chí Minh">TP. Hồ Chí Minh</option>
                   <option value="Hà Nội">Hà Nội</option>
@@ -121,7 +127,7 @@ export function LandingView() {
                   <option value="Từ xa">{en ? "Remote" : "Làm việc từ xa"}</option>
                 </select>
               </label>
-              <button className="career-button" type="submit">
+              <button className="career-button" type="submit" disabled={!hydrated}>
                 <Search size={19} />
                 {en ? "Find jobs" : "Tìm việc ngay"}
               </button>

@@ -1,5 +1,6 @@
 import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
 import { LogoutButton } from "./LogoutButton";
+import { useAuthUser } from "@/hooks/useAuthUser";
 import { useState, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
@@ -34,6 +35,7 @@ export function RecruiterShell({
   topNavExtras?: ReactNode;
 }) {
   const { member } = useCompanyWorkspace();
+  const user = useAuthUser();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [menuOpen, setMenuOpen] = useState(false);
   return (
@@ -87,7 +89,12 @@ export function RecruiterShell({
       >
         <div className="mx-4 my-5 rounded-lg border border-warm-border p-3">
           <p className="text-xs text-charcoal-40">KHÔNG GIAN LÀM VIỆC</p>
-          <p className="mt-1 text-sm font-semibold">{member?.role || "Nhà tuyển dụng"}</p>
+          <p className="mt-1 text-sm font-semibold">
+            {user?.activeMembership?.companyName || "Chưa đăng ký công ty"}
+          </p>
+          <p className="mt-1 text-xs text-charcoal-83">
+            {user?.activeMembership?.companyRole || member?.role || "Tài khoản cá nhân"}
+          </p>
         </div>
         <nav aria-label="Điều hướng nhà tuyển dụng" className="space-y-1 px-3">
           {navigation.map(({ to, label, icon: Icon }) => {

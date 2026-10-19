@@ -1,0 +1,103 @@
+.admin-list-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--color-rule);
+  background: var(--color-paper);
+}
+.admin-list-pagination.is-standalone {
+  margin-top: 16px;
+  border: 1px solid var(--color-rule);
+  border-radius: 12px;
+}
+.admin-pagination-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  color: var(--color-ink-3);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+}
+.admin-pagination-meta p {
+  margin: 0;
+}
+.admin-pagination-meta strong {
+  color: var(--color-ink-2);
+  font-weight: 600;
+}
+.admin-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.admin-workspace .admin-pagination-controls button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--color-rule);
+  border-radius: 8px;
+  background: var(--color-paper);
+  color: var(--color-ink-2);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.admin-pagination-controls button:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+}
+.admin-pagination-controls button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+.admin-pagination-controls button:disabled {
+  color: var(--color-ink-3);
+  opacity: 0.5;
+  cursor: default;
+}
+.admin-pagination-controls button[aria-current="page"] {
+  border-color: var(--color-accent);
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+  opacity: 1;
+  font-weight: 650;
+}
+.admin-pagination-number-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.admin-pagination-gap {
+  padding: 0 3px;
+  color: var(--color-ink-3);
+}
+@media (max-width: 640px) {
+  .admin-list-pagination {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 16px;
+  }
+  .admin-pagination-meta {
+    justify-content: space-between;
+  }
+  .admin-pagination-controls {
+    justify-content: space-between;
+  }
+  .admin-pagination-number-group:not(:has([aria-current="page"])),
+  .admin-pagination-gap {
+    display: none;
+  }
+}

@@ -26,7 +26,7 @@ The codebase provides Vietnamese and English language dictionaries, with Vietnam
 
 - Candidate surfaces include job browsing, saved jobs and applications, a profile, and a legal copilot.
 - Recruiter surfaces include an overview, jobs, applications, talent, company profile, company verification, and workspace members.
-- Administrator surfaces include verification, analytics, candidates, and compliance.
+- Administrator surfaces include verification, analytics, candidates, and compliance. Job moderation happens after publication: the compliance screen lists published JDs flagged by AI for administrator investigation. Administrators do not approve job posts before publication. Company verification remains a separate workflow.
 - Authentication, company verification, and membership have service modules. Backend availability and end-to-end production readiness have not been confirmed.
 - Some existing interactions are simulations: the landing-page CV flow uses local timers, and the legal copilot uses preset and generic local responses. These do not establish functioning AI integrations.
 - Keep existing routes, role distinctions, content, and task flows during redesign. The implementation uses React, TanStack Start file-based routing, Vite, Tailwind CSS, and Radix UI primitives.

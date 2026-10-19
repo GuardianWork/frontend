@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import { AdminShell } from "@/components/AdminShell";
 import { ListSearch } from "@/components/ListSearch";
+import { AdminPagination } from "./AdminPagination";
+import { useListPagination } from "@/hooks/useListPagination";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 export type DraftAdminArea = "reports" | "jobs" | "accounts" | "monitoring" | "tasks";
@@ -97,7 +99,7 @@ const AREAS: Record<DraftAdminArea, AreaSpec> = {
   },
   jobs: {
     title: "Kiểm soát tin tuyển dụng",
-    description: "Tra cứu tin tuyển dụng và xem trạng thái, lý do xử lý cùng lịch sử liên quan.",
+    description: "Quản lý tin đã đăng, trạng thái hiển thị và lịch sử xử lý sau khi công khai.",
     listTitle: "Tin tuyển dụng gần đây",
     columns: ["Chức danh", "Doanh nghiệp", "Ngành nghề", "Trạng thái", "Ngày đăng"],
     note: "Tin và trạng thái minh họa. Các thao tác ẩn hoặc công khai lại chưa kết nối backend.",
@@ -143,10 +145,10 @@ const AREAS: Record<DraftAdminArea, AreaSpec> = {
           "Điều phối vận tải",
           "Minh An Logistics",
           "Vận hành · Logistics",
-          "Chờ rà soát",
+          "Đang công khai",
           "15/10/2026",
         ],
-        status: "Chờ rà soát",
+        status: "Đang công khai",
         statusIndex: 3,
         searchable: "Điều phối vận tải Minh An Logistics vận hành logistics",
       },
@@ -343,6 +345,8 @@ export function AdminDraftPage({ area }: { area: DraftAdminArea }) {
     });
   }, [query, sampleRows, statusFilter]);
 
+  const pagination = useListPagination(rows, JSON.stringify([area, query, statusFilter]));
+
   function openDetails(row: SampleRow) {
     setSelectedRow(row);
     setActionType(null);
@@ -515,8 +519,14 @@ export function AdminDraftPage({ area }: { area: DraftAdminArea }) {
           )}
         </div>
         {rows.length ? (
-          <div className="admin-table-scroll">
+          <div
+            className="admin-table-scroll"
+            role="region"
+            aria-label={spec.listTitle}
+            tabIndex={0}
+          >
             <table className="admin-record-table admin-sample-table">
+              <caption className="sr-only">{spec.listTitle}</caption>
               <thead>
                 <tr>
                   {spec.columns.map((column) => (
@@ -526,7 +536,7 @@ export function AdminDraftPage({ area }: { area: DraftAdminArea }) {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row) => (
+                {pagination.items.map((row) => (
                   <tr key={row.searchable}>
                     {row.cells.map((cell, index) => (
                       <td key={`${row.searchable}-${index}`}>
@@ -562,6 +572,12 @@ export function AdminDraftPage({ area }: { area: DraftAdminArea }) {
             <p>Thử từ khóa khác hoặc xóa nội dung tìm kiếm.</p>
           </div>
         )}
+        <AdminPagination
+          totalItems={rows.length}
+          page={pagination.page}
+          onPageChange={pagination.onPageChange}
+          label={`Phân trang ${spec.listTitle.toLowerCase()}`}
+        />
       </section>
 
       <Dialog

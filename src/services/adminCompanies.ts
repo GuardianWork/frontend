@@ -1,4 +1,6 @@
-import { AUTH_SESSION_KEY } from "./auth";
+import { getAccessToken, getCurrentUser } from "./auth";
+import { getApiBaseUrl } from "./api";
+import { DEFAULT_PAGE_SIZE } from "../lib/pagination.ts";
 
 export type VerificationStatus = "REGISTERED" | "PENDING" | "VERIFIED" | "REJECTED";
 export type VerificationFilter = "PENDING" | "VERIFIED" | "REJECTED" | "ALL";
@@ -33,26 +35,21 @@ export class AdminApiError extends Error {
     super(message);
   }
 }
-function authorization() {
+async function authorization() {
   try {
-    const session = JSON.parse(sessionStorage.getItem(AUTH_SESSION_KEY) || "null");
-    if (!session?.accessToken || !(session.expiresAt > Date.now()))
-      throw new AdminApiError(
-        "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại bằng tài khoản quản trị.",
-        401,
-      );
-    if (session.user?.role !== "ADMIN")
+    const token = await getAccessToken();
+    if (getCurrentUser()?.role !== "ADMIN")
       throw new AdminApiError("Tài khoản hiện tại không có quyền quản trị.", 403);
-    return { Authorization: `Bearer ${session.accessToken}` };
+    return { Authorization: `Bearer ${token}` };
   } catch (error) {
     if (error instanceof AdminApiError) throw error;
     throw new AdminApiError("Không đọc được phiên đăng nhập. Vui lòng đăng nhập lại.", 401);
   }
 }
 async function request(path: string, init: RequestInit = {}): Promise<unknown> {
-  const baseUrl = (import.meta.env?.VITE_API_BASE_URL || "/api").replace(/\/$/, "");
+  const baseUrl = getApiBaseUrl();
   const headers = {
-    ...authorization(),
+    ...(await authorization()),
     Accept: "application/json",
     ...(init.body ? { "Content-Type": "application/json" } : {}),
   };
@@ -132,7 +129,7 @@ export async function getAdminVerifications(
   signal?: AbortSignal,
 ): Promise<VerificationPage> {
   const data = await request(
-    `/verifications?${new URLSearchParams({ status, page: String(page), size: "20" })}`,
+    `/verifications?${new URLSearchParams({ status, page: String(page), size: String(DEFAULT_PAGE_SIZE) })}`,
     { signal },
   );
   const result = data as VerificationPage;

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { AdminShell, Icon } from "@/components/AdminShell";
+import { useAuthUser } from "@/hooks/useAuthUser";
 
 export const Route = createFileRoute("/candidate/profile")({
   head: () => ({
@@ -17,6 +18,9 @@ export const Route = createFileRoute("/candidate/profile")({
 });
 
 function CandidateProfilePage() {
+  const user = useAuthUser();
+  const fullName =
+    [user?.lastName, user?.firstName].filter(Boolean).join(" ") || user?.username || "Ứng viên";
   const [isEditing, setIsEditing] = useState(false);
   const [salaryFloor, setSalaryFloor] = useState(
     "150 triệu VND/tháng ($6,000/tháng) hoặc tương đương + Cổ phần",
@@ -95,14 +99,15 @@ function CandidateProfilePage() {
           <div className="bg-paper-white p-6 rounded-xl border border-warm-border shadow-sm">
             <div className="flex items-center gap-4 mb-4">
               <div className="w-16 h-16 rounded-full overflow-hidden border border-warm-border bg-surface-container shrink-0">
-                <img
-                  src="https://api.dicebear.com/7.x/notionists/svg?seed=NguyenVanAn(Alex)"
-                  alt="Alex"
-                  className="w-full h-full object-cover scale-110"
-                />
+                <span
+                  aria-hidden="true"
+                  className="flex h-full items-center justify-center text-xl font-semibold text-primary"
+                >
+                  {user?.firstName?.slice(0, 1) || "U"}
+                </span>
               </div>
               <div>
-                <h3 className="font-bold text-xl text-charcoal-text">Nguyen Van An (Alex)</h3>
+                <h3 className="font-bold text-xl text-charcoal-text">{fullName}</h3>
                 <p className="text-sm font-medium text-charcoal-83 mt-0.5">{titleRole}</p>
                 <div className="flex items-center gap-2 mt-1.5">
                   <span className="w-2 h-2 rounded-full bg-green-500" />
@@ -149,7 +154,7 @@ function CandidateProfilePage() {
               <div className="flex justify-between items-center">
                 <span className="text-charcoal-40 text-xs font-semibold uppercase">Email:</span>
                 <span className="text-charcoal-text font-medium font-mono text-xs">
-                  an.nguyen@guardianwork.vn
+                  {user?.email || "—"}
                 </span>
               </div>
               <div className="flex justify-between items-center">

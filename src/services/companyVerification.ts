@@ -1,4 +1,5 @@
-import { getCurrentUser } from "./auth.ts";
+import { authenticatedRequest, getCurrentUser } from "./auth.ts";
+import { ApiError } from "./api.ts";
 import type { AuthUser } from "./auth.ts";
 /**
  * Company Verification Service & Store
@@ -103,6 +104,9 @@ export interface NationalRegistryRecord {
 }
 
 const STORAGE_KEY = "guardianwork_company_verification";
+function storageKey() {
+  return `${STORAGE_KEY}_${getCurrentUser()?.id ?? "guest"}`;
+}
 
 // Sample registry dataset for instant lookups matching dangkykinhdoanh.gov.vn / gdt.gov.vn
 export const NATIONAL_REGISTRY_DATABASE: Record<string, NationalRegistryRecord> = {
@@ -168,7 +172,7 @@ export const NATIONAL_REGISTRY_DATABASE: Record<string, NationalRegistryRecord> 
 };
 
 const DEFAULT_COMPANY_RECORD: CompanyVerificationRecord = {
-  id: 101,
+  id: 0,
   ticketId: "",
   name: "",
   englishName: "",
@@ -228,9 +232,9 @@ export function getStoredVerificationRecord(): CompanyVerificationRecord {
     return DEFAULT_COMPANY_RECORD;
   }
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(storageKey());
     if (!raw) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_COMPANY_RECORD));
+      localStorage.setItem(storageKey(), JSON.stringify(DEFAULT_COMPANY_RECORD));
       return DEFAULT_COMPANY_RECORD;
     }
     return JSON.parse(raw);
@@ -242,7 +246,7 @@ export function getStoredVerificationRecord(): CompanyVerificationRecord {
 export function saveStoredVerificationRecord(record: CompanyVerificationRecord): void {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(record));
+    localStorage.setItem(storageKey(), JSON.stringify(record));
     window.dispatchEvent?.(new Event("guardianwork-company-workspace"));
   } catch (e) {
     throw new Error(
@@ -252,144 +256,84 @@ export function saveStoredVerificationRecord(record: CompanyVerificationRecord):
   }
 }
 
-/**
- * Submit fresh verification request
- * Corresponds to POST /api/companies/verification-request
- */
+/** Only server-confirmed company state is persisted; failed requests never become PENDING. */
+function companyRecord(
+  result: unknown,
+  local: Partial<CompanyVerificationRecord> = {},
+): CompanyVerificationRecord {
+  const data = result as Partial<CompanyVerificationRecord> & { companyId?: number };
+  const id = data?.id ?? data?.companyId;
+  if (
+    !data ||
+    !Number.isSafeInteger(id) ||
+    typeof data.name !== "string" ||
+    typeof data.taxCode !== "string" ||
+    !["PENDING", "VERIFIED", "REJECTED"].includes(data.verificationStatus ?? "") ||
+    !Number.isSafeInteger(data.version)
+  )
+    throw new ApiError("Phản hồi hồ sơ công ty không hợp lệ. Vui lòng tải lại trước khi gửi tiếp.");
+  return {
+    ...DEFAULT_COMPANY_RECORD,
+    ...local,
+    ...data,
+    id: id!,
+    ticketId: String(id),
+    submittedBy: local.submittedBy,
+  };
+}
+
+export async function loadCompanyVerification(): Promise<CompanyVerificationRecord> {
+  const membership = getCurrentUser()?.activeMembership;
+  if (!membership) return { ...DEFAULT_COMPANY_RECORD };
+  const result = await authenticatedRequest(
+    membership.companyRole === "OWNER"
+      ? "/companies/me/verification"
+      : `/companies/${membership.companyId}`,
+  );
+  const previous = getStoredVerificationRecord();
+  const record = companyRecord(result, {
+    ...(previous.id === membership.companyId ? previous : {}),
+    submittedBy: membership.companyRole === "OWNER" ? (getCurrentUser() ?? undefined) : undefined,
+  });
+  if (record.id !== membership.companyId)
+    throw new ApiError("Hồ sơ công ty không khớp với tài khoản hiện tại.");
+  saveStoredVerificationRecord(record);
+  return record;
+}
+
+function companyPayload(req: CompanyRegistrationRequest | CompanyResubmissionRequest) {
+  if (!/^https?:\/\//i.test(req.registrationCertificateUrl.trim()))
+    throw new Error("Vui lòng nhập URL http hoặc https của giấy đăng ký doanh nghiệp.");
+  return {
+    name: req.name.trim(),
+    email: req.email.trim().toLowerCase(),
+    registrationCertificateUrl: req.registrationCertificateUrl.trim(),
+  };
+}
+
 export async function submitVerification(
   req: CompanyRegistrationRequest,
 ): Promise<CompanyVerificationRecord> {
-  const submitter = getCurrentUser();
-  if (!submitter) throw new Error("Vui lòng đăng nhập trước khi gửi hồ sơ công ty.");
-  const now = new Date().toISOString();
-  const ticketId = `VER-${Math.floor(1000 + Math.random() * 9000)}`;
-
-  const newRecord: CompanyVerificationRecord = {
-    id: 101,
-    submittedBy: submitter,
-    ticketId,
-    name: req.name.trim(),
-    englishName: req.englishName?.trim() || "",
-    taxCode: req.taxCode.trim(),
-    email: req.email.trim().toLowerCase(),
-    website: req.website?.trim() || "",
-    phone: req.phone?.trim() || "",
-    registeredAddress: req.registeredAddress?.trim() || "",
-    city: req.city || "TP. Hồ Chí Minh",
-    district: req.district || "",
-    legalRepresentative: req.legalRepresentative?.trim() || "",
-    representativeTitle: req.representativeTitle || "Tổng Giám đốc",
-    submitterRole: req.submitterRole || "LEGAL_REP",
-    contactPerson: req.contactPerson?.trim() || req.legalRepresentative?.trim() || "",
-    contactTitle: req.contactTitle || "Đại diện pháp luật",
-    registrationCertificateUrl: req.registrationCertificateUrl.trim(),
-    certificateNumber: req.certificateNumber || req.taxCode.trim(),
-    issueDate: req.issueDate || new Date().toISOString().slice(0, 10),
-    issuingAuthority: req.issuingAuthority || "Sở Kế hoạch và Đầu tư",
-    powerOfAttorneyUrl: req.powerOfAttorneyUrl?.trim() || "",
-    verificationStatus: "PENDING",
-    rejectionReason: null,
-    verifiedBy: null,
-    verifiedAt: null,
-    version: 0,
-    createdAt: now,
-    updatedAt: now,
-    ocrConfidence: 97.8,
-    tamperingRiskScore: 0.03,
-  };
-
-  // Try real backend if available
-  try {
-    const res = await fetch("/api/companies/verification-request", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: req.name,
-        taxCode: req.taxCode,
-        email: req.email,
-        registrationCertificateUrl: req.registrationCertificateUrl,
-      }),
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (data?.data) {
-        newRecord.id = data.data.id || newRecord.id;
-        newRecord.version = data.data.version ?? 0;
-      }
-    }
-  } catch {
-    // Backend offline; client mock persistence takes over seamlessly
-  }
-
-  saveStoredVerificationRecord(newRecord);
-  return newRecord;
+  const result = await authenticatedRequest("/companies/verification-request", {
+    method: "POST",
+    body: JSON.stringify({ ...companyPayload(req), taxCode: req.taxCode.trim() }),
+  });
+  const record = companyRecord(result, { submittedBy: getCurrentUser() ?? undefined });
+  saveStoredVerificationRecord(record);
+  return record;
 }
 
-/**
- * Resubmit rejected verification with optimistic lock version
- * Corresponds to PUT /api/companies/{id}/resubmit
- */
 export async function resubmitVerification(
   companyId: number,
   req: CompanyResubmissionRequest,
 ): Promise<CompanyVerificationRecord> {
-  const current = getStoredVerificationRecord();
-  if (current.version !== req.expectedVersion) {
-    throw new Error(
-      `40022 CONCURRENT_MODIFICATION: Version mismatch. Expected: ${req.expectedVersion}, current: ${current.version}`,
-    );
-  }
-
-  const now = new Date().toISOString();
-  const updated: CompanyVerificationRecord = {
-    ...current,
-    name: req.name.trim(),
-    englishName: req.englishName?.trim() || current.englishName,
-    email: req.email.trim().toLowerCase(),
-    website: req.website?.trim() || current.website,
-    phone: req.phone?.trim() || current.phone,
-    registeredAddress: req.registeredAddress?.trim() || current.registeredAddress,
-    city: req.city || current.city,
-    district: req.district || current.district,
-    legalRepresentative: req.legalRepresentative?.trim() || current.legalRepresentative,
-    representativeTitle: req.representativeTitle || current.representativeTitle,
-    submitterRole: req.submitterRole || current.submitterRole,
-    contactPerson: req.contactPerson?.trim() || current.contactPerson,
-    contactTitle: req.contactTitle || current.contactTitle,
-    registrationCertificateUrl: req.registrationCertificateUrl.trim(),
-    certificateNumber: req.certificateNumber || current.certificateNumber,
-    issueDate: req.issueDate || current.issueDate,
-    issuingAuthority: req.issuingAuthority || current.issuingAuthority,
-    powerOfAttorneyUrl: req.powerOfAttorneyUrl?.trim() || current.powerOfAttorneyUrl,
-    verificationStatus: "PENDING",
-    rejectionReason: null,
-    version: current.version + 1,
-    updatedAt: now,
-  };
-
-  try {
-    const res = await fetch(`/api/companies/${companyId}/resubmit`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: req.name,
-        email: req.email,
-        registrationCertificateUrl: req.registrationCertificateUrl,
-        expectedVersion: req.expectedVersion,
-      }),
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (data?.data) {
-        updated.version = data.data.version ?? updated.version;
-      }
-    }
-  } catch {
-    // Fallback to local storage update
-  }
-
-  saveStoredVerificationRecord(updated);
-  return updated;
+  const result = await authenticatedRequest(`/companies/${companyId}/resubmit`, {
+    method: "PUT",
+    body: JSON.stringify({ ...companyPayload(req), expectedVersion: req.expectedVersion }),
+  });
+  const record = companyRecord(result, { submittedBy: getCurrentUser() ?? undefined });
+  saveStoredVerificationRecord(record);
+  return record;
 }
 
 /**

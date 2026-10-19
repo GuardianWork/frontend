@@ -4,6 +4,8 @@ import { AlertCircle, ArrowLeft, ArrowRight, Database, RotateCcw } from "lucide-
 import { AdminShell } from "@/components/AdminShell";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { ListSearch } from "@/components/ListSearch";
+import { AdminPagination } from "@/components/admin/AdminPagination";
+import { useListPagination } from "@/hooks/useListPagination";
 import { matchesSearch } from "@/lib/list-search";
 import {
   AdminApiError,
@@ -56,7 +58,6 @@ function AdminVerificationsPage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const [rows, setRows] = useState<AdminCompany[]>([]);
-  const [pageCount, setPageCount] = useState(0);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -132,7 +133,6 @@ function AdminVerificationsPage() {
         const data = await getAdminVerifications(search.status, search.page, signal);
         if (signal.aborted) return;
         setRows(data.content);
-        setPageCount(data.totalPages);
         setTotal(data.totalElements);
         if (data.totalPages > 0 && search.page >= data.totalPages)
           void navigate({
@@ -142,7 +142,6 @@ function AdminVerificationsPage() {
       } catch (cause) {
         if (!signal.aborted) {
           setRows([]);
-          setPageCount(0);
           setTotal(0);
           setError(cause instanceof Error ? cause.message : "Không tải được danh sách hồ sơ.");
         }
@@ -167,6 +166,8 @@ function AdminVerificationsPage() {
       sourceRows.filter((item) => matchesSearch(query, item.name, item.taxCode, item.email ?? "")),
     [query, sourceRows],
   );
+  const mockPagination = useListPagination(visibleRows, JSON.stringify([query, search.status]));
+  const displayedRows = mockMode ? mockPagination.items : visibleRows;
   const updateSearch = (values: Partial<typeof search>) =>
     void navigate({ search: (previous) => ({ ...previous, ...values }) });
   const retry = () => setReload((value) => value + 1);
@@ -258,7 +259,10 @@ function AdminVerificationsPage() {
           <div className="admin-list-toolbar">
             <ListSearch
               value={query}
-              onChange={setQuery}
+              onChange={(value) => {
+                setQuery(value);
+                if (search.page !== 0) updateSearch({ page: 0 });
+              }}
               label="Tìm trong hồ sơ đang hiển thị theo tên, mã số thuế hoặc email"
               count={visibleRows.length}
             />
@@ -295,7 +299,12 @@ function AdminVerificationsPage() {
               Đang tải hồ sơ xác minh…
             </div>
           ) : (
-            <div className="admin-panel admin-table-scroll">
+            <div
+              className="admin-panel admin-table-scroll"
+              role="region"
+              aria-label="Danh sách hồ sơ xác minh công ty"
+              tabIndex={0}
+            >
               <table className="admin-record-table">
                 <caption className="sr-only">Danh sách hồ sơ xác minh công ty</caption>
                 <thead>
@@ -311,7 +320,7 @@ function AdminVerificationsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {visibleRows.map((item) => (
+                  {displayedRows.map((item) => (
                     <tr key={item.id}>
                       <td>
                         <button
@@ -364,28 +373,17 @@ function AdminVerificationsPage() {
               )}
             </div>
           )}
-          {!mockMode && !loading && !error && pageCount > 0 && (
-            <nav aria-label="Phân trang hồ sơ xác minh" className="admin-pagination">
-              <span>
-                Trang {search.page + 1} / {pageCount} · {total} hồ sơ
-              </span>
-              <button
-                type="button"
-                disabled={search.page === 0}
-                onClick={() => updateSearch({ page: search.page - 1 })}
-              >
-                <ArrowLeft size={16} />
-                Trang trước
-              </button>
-              <button
-                type="button"
-                disabled={search.page >= pageCount - 1}
-                onClick={() => updateSearch({ page: search.page + 1 })}
-              >
-                Trang sau
-                <ArrowRight size={16} />
-              </button>
-            </nav>
+          {(mockMode || (!loading && !error)) && (
+            <AdminPagination
+              totalItems={mockMode ? visibleRows.length : total}
+              page={mockMode ? mockPagination.page : search.page}
+              onPageChange={
+                mockMode ? mockPagination.onPageChange : (page) => updateSearch({ page })
+              }
+              itemLabel="hồ sơ"
+              label="Phân trang hồ sơ xác minh"
+              standalone
+            />
           )}
         </>
       ) : (
