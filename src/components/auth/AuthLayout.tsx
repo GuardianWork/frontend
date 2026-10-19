@@ -51,10 +51,6 @@ export function AuthLayout({
             <ArrowLeft size={14} />
             Về trang chủ
           </Link>
-          <div className="mb-5 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em]">
-            <span className="h-px w-7 bg-primary" />
-            Mỗi kết nối, một cơ hội
-          </div>
           <h1 className="max-w-lg text-3xl font-bold leading-tight tracking-tight sm:text-4xl lg:text-[46px]">
             {purpose === "recruiter" ? (
               <>
@@ -115,7 +111,7 @@ export function AuthLayout({
         </section>
         <section
           aria-label={registering ? "Biểu mẫu đăng ký" : "Biểu mẫu đăng nhập"}
-          className="rounded-2xl border border-warm-border bg-paper-white p-5 shadow-sm sm:p-8"
+          className="rounded-2xl border border-warm-border bg-paper-white p-5 sm:p-8"
         >
           {children}
         </section>

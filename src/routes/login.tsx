@@ -7,6 +7,7 @@ import { PasswordInput, authInputClass } from "@/components/auth/PasswordInput";
 import {
   getLoginDestination,
   loginAccount,
+  loadCurrentUser,
   parseAccountPurpose,
   saveAuthSession,
 } from "@/services/auth";
@@ -49,7 +50,8 @@ function LoginPage() {
     try {
       const session = await loginAccount(identifier, password);
       saveAuthSession(session);
-      await navigate({ to: getLoginDestination(session.user, role) });
+      const user = await loadCurrentUser();
+      await navigate({ to: getLoginDestination(user, role) });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Không thể đăng nhập. Vui lòng thử lại.");
     } finally {
@@ -59,9 +61,6 @@ function LoginPage() {
 
   return (
     <AuthLayout mode="login" purpose={role}>
-      <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-charcoal-40">
-        Chào mừng trở lại
-      </p>
       <h2 className="text-2xl font-bold tracking-tight">Đăng nhập GuardianWork</h2>
       <p className="mb-7 mt-2 text-sm leading-6 text-charcoal-83">
         Tiếp tục hành trình của bạn cùng những cơ hội mới.

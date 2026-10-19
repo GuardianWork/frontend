@@ -40,7 +40,7 @@ export function RecruiterView() {
 
   // New Job Modal state
   const [newTitle, setNewTitle] = useState("");
-  const [newDept, setNewDept] = useState("Kỹ thuật");
+  const [newDept, setNewDept] = useState("");
   const [newLocation, setNewLocation] = useState("TP. Hồ Chí Minh (Quận 1)");
   const [newSalary, setNewSalary] = useState("50.000.000 - 75.000.000 VND / tháng");
   const [newDesc, setNewDesc] = useState("");
@@ -371,7 +371,7 @@ export function RecruiterView() {
                   Đại lý AI Tìm nguồn Ứng viên
                 </h2>
                 <p className="text-xs text-ink-3 font-mono mt-1">
-                  Kỹ sư IT Việt Nam đã kiểm toán CV và xác minh danh tính
+                  Ứng viên nhiều ngành nghề đã rà soát CV và xác minh danh tính
                 </p>
               </div>
             </div>
@@ -552,7 +552,7 @@ export function RecruiterView() {
                 <input
                   type="text"
                   required
-                  placeholder="Ví dụ: Kỹ sư Backend Go / Python Cấp cao"
+                  placeholder="Ví dụ: Kế toán tổng hợp"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-paper-2 border border-rule font-body text-xs text-ink focus:outline-2 focus:outline-accent"
@@ -567,6 +567,7 @@ export function RecruiterView() {
                   <input
                     type="text"
                     value={newDept}
+                    placeholder="Ví dụ: Kinh doanh, kế toán, vận hành, công nghệ"
                     onChange={(e) => setNewDept(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl bg-paper-2 border border-rule font-body text-xs text-ink"
                   />
@@ -602,7 +603,7 @@ export function RecruiterView() {
                 </label>
                 <textarea
                   rows={3}
-                  placeholder="Mô tả tech stack, kinh nghiệm yêu cầu và trách nhiệm chính..."
+                  placeholder="Mô tả chuyên môn, kinh nghiệm yêu cầu và trách nhiệm chính..."
                   value={newDesc}
                   onChange={(e) => setNewDesc(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-paper-2 border border-rule font-body text-xs text-ink"

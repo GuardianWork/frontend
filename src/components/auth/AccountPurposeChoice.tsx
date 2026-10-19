@@ -12,7 +12,7 @@ export function AccountPurposeChoice({
 }) {
   return (
     <fieldset disabled={disabled} className="mb-6">
-      <legend className="mb-3 text-sm font-semibold">Bạn muốn tham gia với vai trò nào?</legend>
+      <legend className="mb-3 text-sm font-semibold">Bạn muốn làm gì tiếp theo?</legend>
       <div className="grid grid-cols-2 gap-3">
         {(
           [
@@ -24,8 +24,8 @@ export function AccountPurposeChoice({
             },
             {
               value: "recruiter",
-              title: "Tôi muốn tuyển dụng",
-              description: "Tìm nhân tài cho đội ngũ",
+              title: "Đăng ký công ty",
+              description: "Bắt đầu tuyển dụng",
               icon: BriefcaseBusiness,
             },
           ] as const

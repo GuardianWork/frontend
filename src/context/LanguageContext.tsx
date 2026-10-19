@@ -43,9 +43,13 @@ export function LanguageProvider({
     setLocaleState(nextLocale);
     if (typeof window !== "undefined") {
       localStorage.setItem("guardian-locale", nextLocale);
-      document.documentElement.lang = nextLocale;
+      document.documentElement.lang = nextLocale === "vn" ? "vi" : "en";
     }
   };
+
+  useEffect(() => {
+    document.documentElement.lang = locale === "vn" ? "vi" : "en";
+  }, [locale]);
 
   const dict = (dictionaries[locale] || dictionaries.vn) as Dictionary;
 

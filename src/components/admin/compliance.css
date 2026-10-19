@@ -1,0 +1,528 @@
+.compliance-back {
+  margin-bottom: 20px;
+  min-height: 44px;
+}
+.compliance-list .admin-panel-heading p,
+.compliance-inspector .admin-panel-heading p {
+  margin-top: 6px;
+  color: var(--color-ink-3);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.compliance-list .compliance-toolbar {
+  gap: 16px;
+}
+.compliance-toolbar .admin-sample-filter select {
+  min-width: 160px;
+}
+.compliance-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  text-align: left;
+}
+.compliance-table th {
+  padding: 14px 16px;
+  background: var(--color-paper-2);
+  color: var(--color-ink-3);
+  font-size: 12px;
+  font-weight: 500;
+}
+.compliance-table th:nth-child(1) {
+  width: 27%;
+}
+.compliance-table th:nth-child(2) {
+  width: 24%;
+}
+.compliance-table th:nth-child(3) {
+  width: 12%;
+}
+.compliance-table th:nth-child(4) {
+  width: 13%;
+}
+.compliance-table th:nth-child(5) {
+  width: 14%;
+}
+.compliance-table th:nth-child(6) {
+  width: 10%;
+}
+.compliance-table td {
+  padding: 22px 16px;
+  border-top: 1px solid var(--color-rule);
+  vertical-align: top;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.compliance-table tbody tr:hover {
+  background: var(--color-paper-2);
+}
+.compliance-job > button {
+  color: var(--color-ink);
+  font-size: 15px;
+  font-weight: 650;
+  line-height: 1.4;
+  text-align: left;
+}
+.compliance-job > button:hover {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.compliance-job > span {
+  display: block;
+  margin-top: 5px;
+  color: var(--color-ink-2);
+  font-size: 13px;
+}
+.compliance-job > small {
+  display: block;
+  margin-top: 7px;
+  color: var(--color-ink-3);
+  font-size: 12px;
+}
+.compliance-findings-cell ul {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--color-ink-2);
+}
+.compliance-findings-cell li {
+  display: flex;
+  gap: 7px;
+  align-items: baseline;
+}
+.compliance-findings-cell li::before {
+  content: "";
+  flex-shrink: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--color-ink-3);
+}
+.compliance-priority {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  padding: 5px 7px;
+  border-radius: 5px;
+  background: var(--color-paper-2);
+  color: var(--color-ink-2);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.compliance-priority svg {
+  flex-shrink: 0;
+}
+.compliance-priority.is-high {
+  background: var(--error-container);
+  color: var(--error);
+}
+.compliance-visibility {
+  display: inline-flex;
+  color: var(--color-mint);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.compliance-visibility.is-hidden {
+  color: var(--color-ink-3);
+}
+.compliance-state-cell small {
+  display: block;
+  margin-top: 6px;
+  color: var(--color-ink-3);
+  font-size: 12px;
+}
+.compliance-time {
+  color: var(--color-ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.compliance-time time {
+  font-size: 12px;
+}
+.compliance-mobile-label {
+  display: none;
+}
+.compliance-table .compliance-row-action {
+  padding-inline: 8px;
+}
+.compliance-row-action .admin-sample-detail-button {
+  gap: 6px;
+  padding-inline: 0;
+}
+.compliance-list-note {
+  margin: 0;
+  padding: 16px 24px;
+  border-top: 1px solid var(--color-rule);
+  color: var(--color-ink-3);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.compliance-empty {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 56px 24px;
+  text-align: center;
+}
+.compliance-empty > svg {
+  color: var(--color-ink-3);
+}
+.compliance-empty h3 {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: 18px;
+  font-weight: 600;
+}
+.compliance-empty p {
+  max-width: 46ch;
+  color: var(--color-ink-3);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.compliance-empty button {
+  margin-top: 8px;
+}
+.compliance-detail-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(300px, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.compliance-detail-layout .admin-panel-heading {
+  align-items: flex-start;
+}
+.compliance-detail-layout .admin-panel-heading h2 {
+  font-size: 16px;
+  font-weight: 650;
+}
+.compliance-job-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 24px;
+  margin: 0;
+  padding: 24px;
+  border-bottom: 1px solid var(--color-rule);
+  background: var(--color-paper-2);
+}
+.compliance-job-meta div {
+  min-width: 0;
+}
+.compliance-job-meta dt {
+  color: var(--color-ink-3);
+  font-size: 12px;
+}
+.compliance-job-meta dd {
+  margin: 5px 0 0;
+  color: var(--color-ink);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.compliance-jd-content {
+  display: grid;
+  gap: 28px;
+  padding: 28px 24px;
+}
+.compliance-jd-content h3 {
+  margin: 0 0 10px;
+  color: var(--color-ink);
+  font-size: 16px;
+  font-weight: 650;
+}
+.compliance-jd-content p {
+  max-width: 65ch;
+  margin: 8px 0 0;
+  color: var(--color-ink-2);
+  font-size: 15px;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+.compliance-inspector {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+.compliance-finding-list {
+  display: grid;
+  gap: 24px;
+  margin: 0;
+  padding: 24px;
+  list-style: none;
+}
+.compliance-finding-list h3 {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: 14px;
+  font-weight: 650;
+}
+.compliance-finding-list blockquote {
+  margin: 12px 0;
+  padding: 12px 14px;
+  border-left: 1px solid var(--color-rule-2);
+  background: var(--color-paper-2);
+  color: var(--color-ink);
+  font-size: 14px;
+  line-height: 1.65;
+}
+.compliance-finding-list p {
+  margin: 0;
+  color: var(--color-ink-3);
+  font-size: 13px;
+  line-height: 1.65;
+}
+.compliance-handling,
+.compliance-history {
+  padding: 24px;
+}
+.compliance-handling h2,
+.compliance-history h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+}
+.compliance-handling p {
+  margin: 8px 0 20px;
+  color: var(--color-ink-3);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.compliance-handling > div {
+  display: grid;
+  gap: 10px;
+}
+.compliance-handling button {
+  min-height: 44px;
+  font-size: 13px;
+}
+.compliance-handling button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.compliance-history ol {
+  display: grid;
+  gap: 16px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.compliance-history li + li {
+  padding-top: 16px;
+  border-top: 1px solid var(--color-rule);
+}
+.compliance-history li strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+}
+.compliance-history time {
+  display: block;
+  margin-top: 4px;
+  color: var(--color-ink-3);
+  font-size: 12px;
+}
+.compliance-history li p {
+  margin: 8px 0 0;
+  color: var(--color-ink-2);
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.compliance-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 20px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-rule);
+  border-radius: 8px;
+  background: var(--color-paper);
+  color: var(--color-mint);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.compliance-notice svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.compliance-action-dialog {
+  width: min(520px, calc(100vw - 32px));
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+  border: 1px solid var(--color-rule);
+  border-radius: 12px;
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+.compliance-action-dialog h2 {
+  padding-right: 16px;
+  font-size: 18px;
+  line-height: 1.4;
+}
+.compliance-action-description {
+  color: var(--color-ink-3);
+}
+.compliance-action-dialog label {
+  display: block;
+  margin: 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+.compliance-action-dialog textarea {
+  width: 100%;
+  min-height: 112px;
+  padding: 12px;
+  border: 1px solid var(--color-rule);
+  border-radius: 8px;
+  background: var(--color-paper);
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.5;
+  resize: vertical;
+}
+.compliance-action-dialog :is(button, textarea):focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+.compliance-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+.compliance-dialog-actions button {
+  min-height: 44px;
+}
+.compliance-action-error {
+  margin: 8px 0;
+  color: var(--error);
+  font-size: 13px;
+}
+
+@media (max-width: 1100px) {
+  .compliance-detail-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .compliance-table {
+    table-layout: auto;
+  }
+  .compliance-table thead {
+    display: none;
+  }
+  .compliance-table tbody {
+    display: block;
+  }
+  .compliance-table tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "job action" "findings findings" "priority state" "time time";
+    gap: 14px 16px;
+    padding: 20px 24px;
+    border-top: 1px solid var(--color-rule);
+  }
+  .compliance-table td,
+  .compliance-table .compliance-row-action {
+    min-width: 0;
+    padding: 0;
+    border: 0;
+  }
+  .compliance-job {
+    grid-area: job;
+  }
+  .compliance-findings-cell {
+    grid-area: findings;
+  }
+  .compliance-priority-cell {
+    grid-area: priority;
+  }
+  .compliance-state-cell {
+    grid-area: state;
+    text-align: right;
+  }
+  .compliance-time {
+    grid-area: time;
+  }
+  .compliance-row-action {
+    grid-area: action;
+  }
+  .compliance-mobile-label {
+    display: inline;
+    margin-right: 8px;
+    font-size: 12px;
+  }
+  .compliance-findings-cell ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px 18px;
+  }
+}
+@media (max-width: 640px) {
+  .compliance-list .admin-panel-heading,
+  .compliance-detail-layout .admin-panel-heading {
+    padding: 20px;
+  }
+  .compliance-list .compliance-toolbar {
+    gap: 16px;
+  }
+  .compliance-toolbar .admin-sample-filter {
+    width: calc(50% - 8px);
+    min-width: 0;
+  }
+  .compliance-toolbar .admin-sample-filter select {
+    width: 100%;
+    min-width: 0;
+    padding-inline: 10px;
+    font-size: 16px;
+  }
+  .compliance-table tr {
+    padding: 20px 16px;
+  }
+  .compliance-job > button {
+    font-size: 16px;
+  }
+  .compliance-job > small {
+    line-height: 1.6;
+  }
+  .compliance-row-action .admin-sample-detail-button span {
+    display: none;
+  }
+  .compliance-row-action .admin-sample-detail-button {
+    justify-content: center;
+    min-width: 44px;
+    padding: 0;
+    border: 1px solid var(--color-rule);
+    border-radius: 8px;
+  }
+  .compliance-job-meta {
+    padding: 20px;
+    gap: 20px 16px;
+  }
+  .compliance-jd-content {
+    padding: 24px 20px;
+  }
+  .compliance-finding-list,
+  .compliance-handling,
+  .compliance-history {
+    padding: 20px;
+  }
+  .compliance-list-note {
+    padding: 16px 20px;
+  }
+  .compliance-detail-layout {
+    gap: 20px;
+  }
+  .compliance-action-dialog {
+    padding: 20px;
+  }
+}
+
+.compliance-history .admin-list-pagination {
+  margin-top: 20px;
+  padding: 16px 0 0;
+}

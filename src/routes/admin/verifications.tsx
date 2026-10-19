@@ -1,542 +1,594 @@
-import { useState, useEffect } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useDocumentUrl } from "@/hooks/use-document-url";
-import { AdminShell, Icon } from "@/components/AdminShell";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { AlertCircle, ArrowLeft, ArrowRight, Database, RotateCcw } from "lucide-react";
+import { AdminShell } from "@/components/AdminShell";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { ListSearch } from "@/components/ListSearch";
+import { AdminPagination } from "@/components/admin/AdminPagination";
+import { useListPagination } from "@/hooks/useListPagination";
+import { matchesSearch } from "@/lib/list-search";
 import {
-  type CompanyVerificationRecord,
-  getStoredVerificationRecord,
-  saveStoredVerificationRecord,
-  executeAdminDecision,
-  lookupNationalRegistry,
-} from "@/services/companyVerification";
+  AdminApiError,
+  decideAdminVerification,
+  getAdminVerifications,
+  type AdminCompany,
+  type VerificationFilter,
+} from "@/services/adminCompanies";
 
 export const Route = createFileRoute("/admin/verifications")({
-  head: () => ({
-    meta: [{ title: "Duyệt Pháp nhân — GuardianWork Admin" }],
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { status: VerificationFilter; page: number } => ({
+    status:
+      search.status === "ALL" || search.status === "VERIFIED" || search.status === "REJECTED"
+        ? search.status
+        : "PENDING",
+    page:
+      typeof search.page === "number" && Number.isInteger(search.page) && search.page >= 0
+        ? search.page
+        : 0,
   }),
+  head: () => ({ meta: [{ title: "Hồ sơ xác minh công ty — Quản trị GuardianWork" }] }),
   component: AdminVerificationsPage,
 });
-
-function AdminVerificationsPage() {
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    setReady(true);
-  }, []);
-  if (!ready)
-    return (
-      <AdminShell title="Duyệt Pháp nhân" role="admin">
-        <p role="status">Đang tải hồ sơ doanh nghiệp…</p>
-      </AdminShell>
-    );
-  return <AdminVerificationsContent />;
+const LABELS = {
+  REGISTERED: "Chưa gửi",
+  PENDING: "Chờ duyệt",
+  VERIFIED: "Đã xác minh",
+  REJECTED: "Đã từ chối",
+} as const;
+const STATUS_OPTIONS: { id: VerificationFilter; label: string }[] = [
+  { id: "PENDING", label: "Chờ duyệt" },
+  { id: "VERIFIED", label: "Đã xác minh" },
+  { id: "REJECTED", label: "Đã từ chối" },
+  { id: "ALL", label: "Tất cả" },
+];
+function date(value: string | null) {
+  if (!value) return "Chưa có thông tin";
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime())
+    ? "Chưa có thông tin"
+    : new Intl.DateTimeFormat("vi-VN", {
+        dateStyle: "medium",
+        timeStyle: "short",
+        timeZone: "Asia/Ho_Chi_Minh",
+      }).format(parsed);
 }
-
-function AdminVerificationsContent() {
-  const [record, setRecord] = useState<CompanyVerificationRecord>(getStoredVerificationRecord());
-  const certificateUrl = useDocumentUrl(record.registrationCertificateUrl);
-  const authorizationUrl = useDocumentUrl(record.powerOfAttorneyUrl || "");
-  const certificateIsPdf =
-    record.registrationCertificateUrl.startsWith("data:application/pdf") ||
-    /\.pdf(?:[?#]|$)/i.test(record.registrationCertificateUrl);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [decisionType, setDecisionType] = useState<"VERIFIED" | "REJECTED">("VERIFIED");
-  const [rejectionCategory, setRejectionCategory] = useState("TAX_CODE_MISMATCH");
-  const [rejectionReason, setRejectionReason] = useState(
-    "Bản scan ĐKKD mờ con dấu đỏ và thiếu trang ngành nghề. Vui lòng tải lại bản scan rõ nét có dấu giáp lai.",
-  );
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [actionSuccess, setActionSuccess] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [zoomDoc, setZoomDoc] = useState(false);
-
-  const official = lookupNationalRegistry(record.taxCode);
-
-  const handleOpenDecision = (type: "VERIFIED" | "REJECTED") => {
-    setDecisionType(type);
-    setModalOpen(true);
-  };
-
-  const handleExecuteDecision = async () => {
-    setIsProcessing(true);
-    setActionError(null);
-    try {
-      if (decisionType === "REJECTED" && rejectionReason.trim().length < 10) {
-        throw new Error("Lý do từ chối tối thiểu 10 ký tự (BR-ADM-05).");
-      }
-      const updated = await executeAdminDecision(
-        record.id,
-        decisionType,
-        decisionType === "REJECTED" ? rejectionReason : undefined,
-        record.version,
-      );
-      setRecord(updated);
-      setModalOpen(false);
-      setActionSuccess(
-        decisionType === "VERIFIED" ? "Phê duyệt thành công!" : "Đã ghi nhận từ chối.",
-      );
-    } catch (err: unknown) {
-      setActionError(err instanceof Error ? err.message : "Đã có lỗi xảy ra.");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleResetToPending = () => {
-    const updated: CompanyVerificationRecord = {
-      ...record,
+function AdminVerificationsPage() {
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const [rows, setRows] = useState<AdminCompany[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [selected, setSelected] = useState<AdminCompany | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [decision, setDecision] = useState<"VERIFIED" | "REJECTED">("VERIFIED");
+  const [reason, setReason] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [decisionError, setDecisionError] = useState<AdminApiError | null>(null);
+  const [reload, setReload] = useState(0);
+  const [mockMode, setMockMode] = useState(false);
+  const mockRows: AdminCompany[] = [
+    {
+      id: -1,
+      name: "An Phúc Retail",
+      taxCode: "0318456721",
+      email: "phaply@anphuc.example.test",
+      registrationCertificateUrl: null,
       verificationStatus: "PENDING",
       rejectionReason: null,
       verifiedBy: null,
       verifiedAt: null,
-    };
-    saveStoredVerificationRecord(updated);
-    setRecord(updated);
-    setActionSuccess("Đã đặt lại về PENDING.");
-  };
-
-  const Row = ({ label, value }: { label: string; value: React.ReactNode }) => (
-    <div className="p-2 rounded-lg bg-surface-container-low text-xs">
-      <span className="text-charcoal-40 block mb-0.5">{label}</span>
-      <strong className="text-charcoal-text">{value}</strong>
-    </div>
+      version: 1,
+      createdAt: "2026-10-19T02:15:00Z",
+    },
+    {
+      id: -2,
+      name: "Mộc Lan Foods",
+      taxCode: "0109283645",
+      email: "hr@moclan.example.test",
+      registrationCertificateUrl: null,
+      verificationStatus: "VERIFIED",
+      rejectionReason: null,
+      verifiedBy: 42,
+      verifiedAt: "2026-10-17T04:30:00Z",
+      version: 3,
+      createdAt: "2026-10-15T06:20:00Z",
+    },
+    {
+      id: -3,
+      name: "Minh An Logistics",
+      taxCode: "0316720984",
+      email: "admin@minhan.example.test",
+      registrationCertificateUrl: null,
+      verificationStatus: "REJECTED",
+      rejectionReason: "Thông tin mã số thuế chưa khớp với hồ sơ đăng ký.",
+      verifiedBy: 37,
+      verifiedAt: "2026-10-16T08:45:00Z",
+      version: 2,
+      createdAt: "2026-10-14T03:10:00Z",
+    },
+    {
+      id: -4,
+      name: "Hợp Nhất Services",
+      taxCode: "0105847392",
+      email: "contact@hopnhat.example.test",
+      registrationCertificateUrl: null,
+      verificationStatus: "PENDING",
+      rejectionReason: null,
+      verifiedBy: null,
+      verifiedAt: null,
+      version: 1,
+      createdAt: "2026-10-18T09:05:00Z",
+    },
+  ];
+  const load = useCallback(
+    async (signal: AbortSignal) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await getAdminVerifications(search.status, search.page, signal);
+        if (signal.aborted) return;
+        setRows(data.content);
+        setTotal(data.totalElements);
+        if (data.totalPages > 0 && search.page >= data.totalPages)
+          void navigate({
+            search: (previous) => ({ ...previous, page: data.totalPages - 1 }),
+            replace: true,
+          });
+      } catch (cause) {
+        if (!signal.aborted) {
+          setRows([]);
+          setTotal(0);
+          setError(cause instanceof Error ? cause.message : "Không tải được danh sách hồ sơ.");
+        }
+      } finally {
+        if (!signal.aborted) setLoading(false);
+      }
+    },
+    [navigate, search.page, search.status],
   );
-
+  useEffect(() => {
+    const controller = new AbortController();
+    void load(controller.signal);
+    return () => controller.abort();
+  }, [load, reload]);
+  const sourceRows = mockMode
+    ? mockRows.filter(
+        (item) => search.status === "ALL" || item.verificationStatus === search.status,
+      )
+    : rows;
+  const visibleRows = useMemo(
+    () =>
+      sourceRows.filter((item) => matchesSearch(query, item.name, item.taxCode, item.email ?? "")),
+    [query, sourceRows],
+  );
+  const mockPagination = useListPagination(visibleRows, JSON.stringify([query, search.status]));
+  const displayedRows = mockMode ? mockPagination.items : visibleRows;
+  const updateSearch = (values: Partial<typeof search>) =>
+    void navigate({ search: (previous) => ({ ...previous, ...values }) });
+  const retry = () => setReload((value) => value + 1);
+  const choose = (item: AdminCompany) => {
+    setSelected(item);
+    setNotice(null);
+    setDecisionError(null);
+  };
+  const openDecision = (value: "VERIFIED" | "REJECTED") => {
+    setDecision(value);
+    setDecisionError(null);
+    setReason("");
+    setDialogOpen(true);
+  };
+  const submitDecision = async () => {
+    if (!selected || selected.verificationStatus !== "PENDING" || mockMode) return;
+    setSaving(true);
+    setDecisionError(null);
+    try {
+      const updated = await decideAdminVerification(selected, decision, reason);
+      setSelected(updated);
+      setNotice(
+        decision === "VERIFIED" ? "Hồ sơ đã được xác minh." : "Đã từ chối hồ sơ và lưu lý do.",
+      );
+      setDialogOpen(false);
+      retry();
+    } catch (cause) {
+      setDecisionError(
+        cause instanceof AdminApiError
+          ? cause
+          : new AdminApiError(
+              "Không thể xác nhận kết quả. Tải lại danh sách để kiểm tra trạng thái hồ sơ.",
+              0,
+              true,
+            ),
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+  const reloadAfterConflict = () => {
+    setSelected(null);
+    setDecisionError(null);
+    setNotice("Danh sách đang được tải lại để lấy trạng thái mới nhất.");
+    retry();
+  };
+  const certificateValue = selected?.registrationCertificateUrl;
+  const certificateHref =
+    certificateValue &&
+    (/^https?:\/\//i.test(certificateValue) ||
+      (certificateValue.startsWith("/") && !certificateValue.startsWith("//")))
+      ? certificateValue
+      : null;
   return (
-    <AdminShell title="Duyệt Pháp nhân" role="admin">
-      {/* Header */}
-      <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <span className="text-[11px] font-mono font-bold text-primary px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20">
-            UC-ADM-01
-          </span>
-          <h2 className="text-2xl font-bold text-charcoal-text tracking-tight font-display mt-1">
-            Thẩm định KYB
-          </h2>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <Link
-            to="/recruiter/verification"
-            className="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-warm-border text-charcoal-text text-xs font-medium flex items-center gap-1"
-          >
-            <Icon name="visibility" className="!text-sm text-primary" /> Form
-          </Link>
-          <button
-            type="button"
-            onClick={handleResetToPending}
-            className="px-3 py-1.5 rounded-lg bg-paper-white hover:bg-surface-container border border-warm-border text-charcoal-83 text-xs"
-          >
-            Reset PENDING
-          </button>
-        </div>
-      </div>
-
-      {/* Alerts */}
-      {actionSuccess && (
-        <div className="mb-4 px-4 py-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center justify-between gap-2">
-          <span className="flex items-center gap-2">
-            <Icon name="check_circle" className="!text-base text-emerald-600" />
-            {actionSuccess}
-          </span>
-          <button onClick={() => setActionSuccess(null)}>
-            <Icon name="close" className="!text-sm" />
-          </button>
-        </div>
-      )}
-      {actionError && (
-        <div className="mb-4 px-4 py-2.5 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs flex items-center justify-between gap-2">
-          <span className="flex items-center gap-2">
-            <Icon name="error" className="!text-base text-red-600" />
-            {actionError}
-          </span>
-          <button onClick={() => setActionError(null)}>
-            <Icon name="close" className="!text-sm" />
-          </button>
-        </div>
-      )}
-
-      {/* Status + Actions */}
-      <div className="mb-4 px-4 py-3 rounded-xl bg-paper-white border border-warm-border shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-3">
-          {record.verificationStatus === "PENDING" && (
-            <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 font-bold flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" /> PENDING
-            </span>
-          )}
-          {record.verificationStatus === "VERIFIED" && (
-            <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center gap-1">
-              <Icon name="verified" className="!text-xs" /> VERIFIED
-            </span>
-          )}
-          {record.verificationStatus === "REJECTED" && (
-            <span className="px-2.5 py-1 rounded-full bg-red-100 text-red-800 font-bold">
-              REJECTED
-            </span>
-          )}
-          <span className="text-charcoal-40">
-            v<strong className="font-mono text-charcoal-text">{record.version}</strong>
-          </span>
-          <span className="text-charcoal-40">
-            #<strong className="font-mono text-primary">{record.ticketId}</strong>
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => handleOpenDecision("REJECTED")}
-            className="px-3.5 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 font-bold text-xs flex items-center gap-1.5"
-          >
-            <Icon name="close" className="!text-sm" /> Từ chối
-          </button>
-          <button
-            type="button"
-            onClick={() => handleOpenDecision("VERIFIED")}
-            className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5"
-          >
-            <Icon name="verified" className="!text-sm" /> Phê duyệt
-          </button>
-        </div>
-      </div>
-
-      {/* Side-by-side comparison */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-        {/* Submitted */}
-        <div className="bg-paper-white p-4 rounded-xl border border-warm-border shadow-xs">
-          <div className="flex items-center gap-2 pb-2.5 mb-3 border-b border-warm-border">
-            <span className="w-2 h-2 rounded-full bg-primary" />
-            <h3 className="font-bold text-xs text-charcoal-40 uppercase tracking-wider">
-              Hồ sơ khai báo
-            </h3>
-          </div>
-          <div className="space-y-2 text-xs">
+    <AdminShell title="Hồ sơ xác minh công ty" role="admin">
+      {!selected ? (
+        <>
+          <div className="admin-page-heading">
             <div>
-              <span className="text-charcoal-40 block mb-0.5 text-xs">Tên doanh nghiệp</span>
-              <strong className="text-sm text-charcoal-text font-display">{record.name}</strong>
-              {record.englishName && (
-                <span className="text-charcoal-40 block text-[11px]">{record.englishName}</span>
-              )}
+              <h1>Hồ sơ xác minh công ty</h1>
+              <p>Xem hồ sơ doanh nghiệp và xử lý yêu cầu đang chờ duyệt.</p>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <Row
-                label="MST"
-                value={<span className="font-mono text-primary">{record.taxCode}</span>}
-              />
-              <Row
-                label="Email"
-                value={<span className="font-mono text-[11px] break-all">{record.email}</span>}
-              />
-            </div>
-            <Row label="Địa chỉ" value={record.registeredAddress} />
-            <div className="grid grid-cols-2 gap-2">
-              <Row
-                label="Đại diện PL"
-                value={
-                  <>
-                    {record.legalRepresentative}
-                    <span className="text-charcoal-40 block text-[11px] font-normal">
-                      {record.representativeTitle}
-                    </span>
-                  </>
-                }
-              />
-              <Row
-                label="Vai trò nộp"
-                value={
-                  <span className="text-primary font-semibold">
-                    {record.submitterRole === "LEGAL_REP" ? "Đại diện PL" : "HR ủy quyền"}
-                  </span>
-                }
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <Row
-                label="Website"
-                value={<span className="truncate block">{record.website}</span>}
-              />
-              <Row
-                label="Liên hệ"
-                value={
-                  <>
-                    {record.contactPerson}
-                    <span className="text-charcoal-40 block text-[11px] font-normal">
-                      {record.contactTitle}
-                    </span>
-                  </>
-                }
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Official Registry */}
-        <div className="bg-paper-white p-4 rounded-xl border border-warm-border shadow-xs">
-          <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-warm-border">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              <h3 className="font-bold text-xs text-charcoal-40 uppercase tracking-wider">
-                Cổng Quốc gia
-              </h3>
-            </div>
-            <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-mono font-bold">
-              LIVE
-            </span>
-          </div>
-          <div className="space-y-2 text-xs">
-            <div className="p-2.5 rounded-lg bg-emerald-50/50 border border-emerald-100">
-              <span className="text-emerald-700 block mb-0.5 text-xs">
-                Tên pháp lý (Cơ quan QLKD)
-              </span>
-              <strong className="text-sm text-emerald-950 font-display">
-                {official ? official.legalName : record.name}
-              </strong>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="p-2 rounded-lg bg-surface-container-low">
-                <span className="text-charcoal-40 block mb-0.5">Tình trạng</span>
-                <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[11px] inline-block">
-                  HOẠT ĐỘNG
-                </span>
-              </div>
-              <Row
-                label="Mã số"
-                value={
-                  <span className="font-mono text-emerald-800">
-                    {official ? official.taxCode : record.taxCode}
-                  </span>
-                }
-              />
-            </div>
-            <Row
-              label="Địa chỉ đăng ký"
-              value={official ? official.registeredAddress : record.registeredAddress}
-            />
-            <div className="grid grid-cols-2 gap-2">
-              <Row
-                label="Đại diện hợp pháp"
-                value={
-                  <>
-                    {official ? official.legalRepresentative : record.legalRepresentative}
-                    <span className="text-charcoal-40 block text-[11px] font-normal">
-                      {official ? official.representativeTitle : record.representativeTitle}
-                    </span>
-                  </>
-                }
-              />
-              <Row
-                label="Cơ quan cấp phép"
-                value={official ? official.licensingAuthority : record.issuingAuthority}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-1.5 text-[11px] pt-1">
-              <span
-                className={`px-2 py-1 rounded text-center font-semibold ${record.taxCode === (official?.taxCode ?? record.taxCode) ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}
-              >
-                {record.taxCode === (official?.taxCode ?? record.taxCode)
-                  ? "✓ MST khớp"
-                  : "✗ MST lệch"}
-              </span>
-              <span
-                className={`px-2 py-1 rounded text-center font-semibold ${record.legalRepresentative === (official?.legalRepresentative ?? record.legalRepresentative) ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}
-              >
-                {record.legalRepresentative ===
-                (official?.legalRepresentative ?? record.legalRepresentative)
-                  ? "✓ Đại diện khớp"
-                  : "⚠ Đại diện lệch"}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Document Panel */}
-      <div className="bg-paper-white p-4 rounded-xl border border-warm-border shadow-xs mb-4">
-        <div className="flex flex-wrap items-center justify-between gap-2 pb-3 mb-3 border-b border-warm-border">
-          <h3 className="font-bold text-sm text-charcoal-text font-display flex items-center gap-2">
-            <Icon name="document_scanner" className="!text-lg text-primary" /> Giấy phép ĐKKD
-          </h3>
-          <div className="flex items-center gap-2 text-[11px]">
-            <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 font-semibold border border-emerald-200">
-              OCR 98.4%
-            </span>
-            <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 font-semibold border border-emerald-200">
-              Rủi ro: Thấp
-            </span>
             <button
               type="button"
-              onClick={() => setZoomDoc(!zoomDoc)}
-              className="px-2.5 py-0.5 rounded bg-surface-container hover:bg-surface-container-high border border-warm-border text-charcoal-text font-medium"
+              className="admin-secondary-action"
+              onClick={() => {
+                setMockMode((value) => !value);
+                setSelected(null);
+                setQuery("");
+              }}
             >
-              {zoomDoc ? "Thu nhỏ" : "Phóng to"}
+              {mockMode ? "Quay lại dữ liệu hệ thống" : "Xem dữ liệu mẫu"}
             </button>
           </div>
-        </div>
-
-        <div
-          className={`grid gap-4 items-start ${zoomDoc ? "grid-cols-1" : "grid-cols-1 md:grid-cols-12"}`}
-        >
-          <div className={zoomDoc ? "" : "md:col-span-7"}>
-            <div className="relative rounded-xl border border-warm-border overflow-hidden bg-parchment-bg flex items-center justify-center p-3">
-              {certificateUrl ? (
-                certificateIsPdf ? (
-                  <iframe
-                    src={certificateUrl}
-                    title="Giấy đăng ký doanh nghiệp PDF"
-                    className="h-[600px] w-full rounded-lg border-0"
-                  />
-                ) : (
-                  <img
-                    src={certificateUrl}
-                    alt="Giấy đăng ký doanh nghiệp"
-                    className="max-h-96 object-contain rounded-lg shadow-sm"
-                  />
-                )
-              ) : (
-                <p className="p-8 text-sm text-charcoal-40">Chưa có tài liệu để xem.</p>
-              )}
-            </div>
-            {record.submitterRole === "AUTHORIZED_HR" && record.powerOfAttorneyUrl && (
-              <div className="mt-2 px-3 py-2 rounded-lg bg-primary/5 border border-primary/20 flex items-center justify-between text-xs">
-                <span className="text-primary font-semibold">Giấy ủy quyền HR</span>
-                <a
-                  href={authorizationUrl || undefined}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-primary font-bold hover:underline flex items-center gap-0.5"
-                >
-                  Mở <Icon name="open_in_new" className="!text-xs" />
-                </a>
-              </div>
-            )}
-          </div>
-
-          {!zoomDoc && (
-            <div className="md:col-span-5 text-xs space-y-1.5">
-              <h4 className="font-bold text-charcoal-text text-xs uppercase tracking-wider mb-2">
-                Tiêu chuẩn duyệt
-              </h4>
-              {[
-                "MST khớp ĐKKD",
-                "Tên pháp lý",
-                "Đang hoạt động",
-                "Scan mộc đỏ",
-                "Thẩm quyền/Ủy quyền",
-              ].map((item, i) => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between p-2 rounded-lg bg-surface-container-low"
-                >
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-4 h-4 rounded-full bg-primary text-on-primary text-[10px] flex items-center justify-center font-mono shrink-0">
-                      {i + 1}
-                    </span>
-                    {item}
-                  </span>
-                  <span className="text-emerald-700 font-bold shrink-0">✓</span>
-                </div>
-              ))}
+          {mockMode && (
+            <div className="admin-sample-banner" role="note">
+              <Database size={17} aria-hidden="true" />
+              <p>
+                <strong>Chế độ xem mẫu.</strong> Hồ sơ bên dưới là hư cấu; quyết định phê duyệt và
+                từ chối đã được tắt.
+              </p>
             </div>
           )}
-        </div>
-      </div>
-
-      {/* Decision Modal */}
-      {modalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-paper-white rounded-2xl border border-warm-border shadow-2xl max-w-md w-full p-5">
-            <div className="flex items-center justify-between pb-3 mb-4 border-b border-warm-border">
-              <div className="flex items-center gap-2">
-                <Icon
-                  name={decisionType === "VERIFIED" ? "verified" : "cancel"}
-                  className={`!text-xl ${decisionType === "VERIFIED" ? "text-emerald-600" : "text-red-600"}`}
-                />
-                <h3 className="font-bold text-sm text-charcoal-text font-display">
-                  {decisionType === "VERIFIED" ? "Xác nhận Phê duyệt" : "Xác nhận Từ chối"}
-                </h3>
-              </div>
-              <button type="button" onClick={() => setModalOpen(false)}>
-                <Icon name="close" className="!text-lg text-charcoal-40 hover:text-charcoal-text" />
+          {notice && (
+            <p role="status" className="admin-inline-notice">
+              {notice}
+            </p>
+          )}
+          <div className="admin-list-toolbar">
+            <ListSearch
+              value={query}
+              onChange={(value) => {
+                setQuery(value);
+                if (search.page !== 0) updateSearch({ page: 0 });
+              }}
+              label="Tìm trong hồ sơ đang hiển thị theo tên, mã số thuế hoặc email"
+              count={visibleRows.length}
+            />
+            <label className="list-filter-label">
+              Trạng thái
+              <select
+                className="list-status-select"
+                aria-label="Lọc trạng thái hồ sơ"
+                value={search.status}
+                onChange={(event) =>
+                  updateSearch({ status: event.target.value as VerificationFilter, page: 0 })
+                }
+              >
+                {STATUS_OPTIONS.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          {!mockMode && error ? (
+            <div className="admin-list-state" role="alert">
+              <AlertCircle aria-hidden="true" />
+              <h2>Không tải được hồ sơ</h2>
+              <p>{error}</p>
+              <button type="button" className="admin-secondary-action" onClick={retry}>
+                <RotateCcw size={16} />
+                Thử tải lại
               </button>
             </div>
-
-            <div className="text-xs space-y-3">
-              {decisionType === "VERIFIED" ? (
-                <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-emerald-900 space-y-1">
+          ) : !mockMode && loading ? (
+            <div className="admin-list-state" role="status">
+              Đang tải hồ sơ xác minh…
+            </div>
+          ) : (
+            <div
+              className="admin-panel admin-table-scroll"
+              role="region"
+              aria-label="Danh sách hồ sơ xác minh công ty"
+              tabIndex={0}
+            >
+              <table className="admin-record-table">
+                <caption className="sr-only">Danh sách hồ sơ xác minh công ty</caption>
+                <thead>
+                  <tr>
+                    <th>Tên công ty</th>
+                    <th>Mã số thuế</th>
+                    <th>Email</th>
+                    <th>Thời điểm gửi</th>
+                    <th>Trạng thái</th>
+                    <th>
+                      <span className="sr-only">Thao tác</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {displayedRows.map((item) => (
+                    <tr key={item.id}>
+                      <td>
+                        <button
+                          type="button"
+                          className="admin-record-name"
+                          onClick={() => choose(item)}
+                        >
+                          {item.name}
+                        </button>
+                      </td>
+                      <td>{item.taxCode}</td>
+                      <td>{item.email || "Chưa cung cấp"}</td>
+                      <td>{date(item.createdAt)}</td>
+                      <td>
+                        <span
+                          className={`admin-record-status admin-record-status--${item.verificationStatus.toLowerCase()}`}
+                        >
+                          {LABELS[item.verificationStatus]}
+                        </span>
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          className="admin-text-link"
+                          onClick={() => choose(item)}
+                        >
+                          Mở hồ sơ <ArrowRight size={16} aria-hidden="true" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {visibleRows.length === 0 && (
+                <div className="admin-list-empty">
+                  <h2>
+                    {rows.length ? "Không tìm thấy hồ sơ phù hợp" : "Không có hồ sơ trong mục này"}
+                  </h2>
                   <p>
-                    • Trạng thái → <code className="font-mono">VERIFIED</code>
+                    {rows.length
+                      ? "Thử từ khóa khác trong trang hiện tại."
+                      : "Khi có hồ sơ phù hợp với bộ lọc, hồ sơ sẽ xuất hiện tại đây."}
                   </p>
-                  <p>• Cấp huy hiệu Verified Employer & mở đăng tin</p>
-                  <p>
-                    • Ghi <code className="font-mono">audit_logs</code> (Admin #901)
-                  </p>
+                  {query && (
+                    <button type="button" className="admin-text-link" onClick={() => setQuery("")}>
+                      Xóa từ khóa tìm kiếm
+                    </button>
+                  )}
                 </div>
-              ) : (
-                <>
-                  <div>
-                    <label className="block font-semibold mb-1 uppercase tracking-wide text-[11px]">
-                      Nhóm lý do:
-                    </label>
-                    <select
-                      value={rejectionCategory}
-                      onChange={(e) => setRejectionCategory(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border border-warm-border bg-parchment-bg text-xs"
-                    >
-                      <option value="TAX_CODE_MISMATCH">MST không khớp ĐKKD</option>
-                      <option value="NAME_MISMATCH">Tên pháp lý không khớp</option>
-                      <option value="DOCUMENT_ALTERED">Tài liệu mờ / chỉnh sửa</option>
-                      <option value="COMPANY_INACTIVE">Không đang hoạt động</option>
-                      <option value="UNAUTHORIZED_REPRESENTATIVE">Thiếu Giấy ủy quyền HR</option>
-                    </select>
-                  </div>
-                  <div>
-                    <div className="flex justify-between mb-1">
-                      <label className="font-semibold uppercase tracking-wide text-[11px]">
-                        Nội dung phản hồi <span className="text-red-500">*</span>
-                      </label>
-                      <span className="text-[10px] text-charcoal-40">
-                        {rejectionReason.length} ký tự
-                      </span>
-                    </div>
-                    <textarea
-                      rows={3}
-                      value={rejectionReason}
-                      onChange={(e) => setRejectionReason(e.target.value)}
-                      className="w-full p-3 rounded-lg border border-warm-border bg-parchment-bg text-xs leading-relaxed focus:outline-none focus:border-red-400"
-                    />
-                    {rejectionReason.trim().length < 10 && (
-                      <p className="text-[10px] text-red-500 mt-1">
-                        Tối thiểu 10 ký tự (BR-ADM-05)
-                      </p>
-                    )}
-                  </div>
-                </>
               )}
             </div>
-
-            <div className="mt-4 pt-3 border-t border-warm-border flex justify-end gap-2 text-xs">
-              <button
-                type="button"
-                onClick={() => setModalOpen(false)}
-                className="px-4 py-1.5 rounded-lg border border-warm-border text-charcoal-83 hover:text-charcoal-text"
-              >
-                Hủy
-              </button>
-              <button
-                type="button"
-                onClick={handleExecuteDecision}
-                disabled={
-                  isProcessing ||
-                  (decisionType === "REJECTED" && rejectionReason.trim().length < 10)
-                }
-                className={`px-5 py-1.5 rounded-lg text-white font-bold disabled:opacity-50 ${decisionType === "VERIFIED" ? "bg-emerald-600 hover:bg-emerald-700" : "bg-red-600 hover:bg-red-700"}`}
-              >
-                {isProcessing
-                  ? "Đang xử lý..."
-                  : decisionType === "VERIFIED"
-                    ? "Xác nhận Duyệt"
-                    : "Gửi Từ chối"}
-              </button>
+          )}
+          {(mockMode || (!loading && !error)) && (
+            <AdminPagination
+              totalItems={mockMode ? visibleRows.length : total}
+              page={mockMode ? mockPagination.page : search.page}
+              onPageChange={
+                mockMode ? mockPagination.onPageChange : (page) => updateSearch({ page })
+              }
+              itemLabel="hồ sơ"
+              label="Phân trang hồ sơ xác minh"
+              standalone
+            />
+          )}
+        </>
+      ) : (
+        <>
+          <button
+            type="button"
+            className="admin-text-link mb-5"
+            onClick={() => {
+              setSelected(null);
+              setNotice(null);
+            }}
+          >
+            <ArrowLeft size={16} />
+            Quay lại danh sách
+          </button>
+          <div className="admin-page-heading">
+            <div>
+              <h1>{selected.name}</h1>
+              <p>Hồ sơ xác minh công ty · Mã số thuế {selected.taxCode}</p>
             </div>
+            <span
+              className={`admin-record-status admin-record-status--${selected.verificationStatus.toLowerCase()}`}
+            >
+              {LABELS[selected.verificationStatus]}
+            </span>
           </div>
-        </div>
+          {mockMode && (
+            <div className="admin-sample-banner" role="note">
+              <Database size={17} aria-hidden="true" />
+              <p>
+                <strong>Hồ sơ minh họa.</strong> Đây không phải hồ sơ doanh nghiệp thật; thao tác
+                quyết định không khả dụng.
+              </p>
+            </div>
+          )}
+          {notice && (
+            <p role="status" className="admin-inline-notice">
+              {notice}
+            </p>
+          )}
+          {decisionError && (
+            <div className="admin-inline-error" role="alert">
+              <AlertCircle size={18} />
+              <div>
+                <p>{decisionError.message}</p>
+                {decisionError.conflict && (
+                  <button type="button" className="admin-text-link" onClick={reloadAfterConflict}>
+                    Tải lại danh sách <RotateCcw size={15} />
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+          <section className="admin-panel admin-company-detail" aria-labelledby="company-info">
+            <div className="admin-panel-heading">
+              <h2 id="company-info">Thông tin hồ sơ</h2>
+            </div>
+            <dl className="admin-company-fields">
+              <div>
+                <dt>Tên công ty</dt>
+                <dd>{selected.name}</dd>
+              </div>
+              <div>
+                <dt>Mã số thuế</dt>
+                <dd>{selected.taxCode}</dd>
+              </div>
+              <div>
+                <dt>Email</dt>
+                <dd>{selected.email || "Chưa cung cấp"}</dd>
+              </div>
+              <div>
+                <dt>Thời điểm gửi</dt>
+                <dd>{date(selected.createdAt)}</dd>
+              </div>
+              <div>
+                <dt>Thời điểm xét duyệt</dt>
+                <dd>{date(selected.verifiedAt)}</dd>
+              </div>
+              <div>
+                <dt>Người duyệt</dt>
+                <dd>
+                  {selected.verifiedBy == null
+                    ? "Chưa có thông tin"
+                    : `Mã người duyệt: ${selected.verifiedBy}`}
+                </dd>
+              </div>
+              <div className="admin-company-fields-wide">
+                <dt>Giấy đăng ký công ty</dt>
+                <dd>
+                  {certificateHref ? (
+                    <a
+                      href={certificateHref}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="admin-text-link"
+                    >
+                      Mở đường dẫn giấy đăng ký <ArrowRight size={16} />
+                    </a>
+                  ) : (
+                    "Chưa có đường dẫn tài liệu trong hồ sơ."
+                  )}
+                </dd>
+              </div>
+              {selected.verificationStatus === "REJECTED" && (
+                <div className="admin-company-fields-wide">
+                  <dt>Lý do từ chối</dt>
+                  <dd>{selected.rejectionReason || "Không có lý do trong hồ sơ."}</dd>
+                </div>
+              )}
+            </dl>
+          </section>
+          {selected.verificationStatus === "PENDING" && !mockMode && (
+            <div className="admin-decision-actions">
+              <p>Chỉ hồ sơ đang chờ duyệt mới có thể được quyết định.</p>
+              <div>
+                <button
+                  type="button"
+                  className="admin-secondary-action"
+                  onClick={() => openDecision("REJECTED")}
+                >
+                  Từ chối hồ sơ
+                </button>
+                <button
+                  type="button"
+                  className="admin-primary-action"
+                  onClick={() => openDecision("VERIFIED")}
+                >
+                  Phê duyệt <ArrowRight size={16} />
+                </button>
+              </div>
+            </div>
+          )}
+          {dialogOpen && (
+            <Dialog
+              open
+              onOpenChange={(open) => {
+                if (!saving) setDialogOpen(open);
+              }}
+            >
+              <DialogContent
+                aria-describedby="decision-description"
+                className="admin-decision-dialog"
+              >
+                <div className="admin-panel-heading">
+                  <DialogTitle>
+                    {decision === "VERIFIED" ? "Phê duyệt hồ sơ" : "Từ chối hồ sơ"}
+                  </DialogTitle>
+                </div>
+                <p id="decision-description">
+                  {selected.name} · Mã số thuế {selected.taxCode}
+                </p>
+                {decision === "REJECTED" && (
+                  <div>
+                    <label htmlFor="rejection-reason">
+                      Lý do từ chối <span aria-hidden="true">*</span>
+                    </label>
+                    <textarea
+                      id="rejection-reason"
+                      autoFocus
+                      rows={5}
+                      maxLength={1000}
+                      value={reason}
+                      onChange={(event) => setReason(event.target.value)}
+                      placeholder="Nhập lý do từ chối (10–1.000 ký tự)"
+                    />
+                    <p className="admin-form-hint" aria-live="polite">
+                      {reason.trim().length} / 1.000 ký tự · Tối thiểu 10 ký tự
+                    </p>
+                  </div>
+                )}
+                {decisionError && (
+                  <p role="alert" className="admin-inline-error">
+                    {decisionError.message}
+                  </p>
+                )}
+                <div className="admin-dialog-actions">
+                  <button
+                    type="button"
+                    className="admin-secondary-action"
+                    disabled={saving}
+                    onClick={() => setDialogOpen(false)}
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    type="button"
+                    className="admin-primary-action"
+                    disabled={
+                      saving ||
+                      (decision === "REJECTED" &&
+                        (reason.trim().length < 10 || reason.trim().length > 1000))
+                    }
+                    onClick={() => void submitDecision()}
+                  >
+                    {saving
+                      ? "Đang gửi…"
+                      : decision === "VERIFIED"
+                        ? "Xác nhận phê duyệt"
+                        : "Xác nhận từ chối"}
+                  </button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
+        </>
       )}
     </AdminShell>
   );

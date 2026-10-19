@@ -22,9 +22,14 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as VnRouteImport } from './routes/vn'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminAccountsRouteImport } from './routes/admin/accounts'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin/analytics'
 import { Route as AdminCandidatesRouteImport } from './routes/admin/candidates'
 import { Route as AdminComplianceRouteImport } from './routes/admin/compliance'
+import { Route as AdminJobsRouteImport } from './routes/admin/jobs'
+import { Route as AdminMonitoringRouteImport } from './routes/admin/monitoring'
+import { Route as AdminReportsRouteImport } from './routes/admin/reports'
+import { Route as AdminTasksRouteImport } from './routes/admin/tasks'
 import { Route as AdminVerificationsRouteImport } from './routes/admin/verifications'
 import { Route as CandidateIndexRouteImport } from './routes/candidate/index'
 import { Route as CandidateCopilotRouteImport } from './routes/candidate/copilot'
@@ -104,6 +109,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminAccountsRoute = AdminAccountsRouteImport.update({
+  id: '/admin/accounts',
+  path: '/admin/accounts',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
   id: '/admin/analytics',
   path: '/admin/analytics',
@@ -117,6 +127,26 @@ const AdminCandidatesRoute = AdminCandidatesRouteImport.update({
 const AdminComplianceRoute = AdminComplianceRouteImport.update({
   id: '/admin/compliance',
   path: '/admin/compliance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminJobsRoute = AdminJobsRouteImport.update({
+  id: '/admin/jobs',
+  path: '/admin/jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminMonitoringRoute = AdminMonitoringRouteImport.update({
+  id: '/admin/monitoring',
+  path: '/admin/monitoring',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminReportsRoute = AdminReportsRouteImport.update({
+  id: '/admin/reports',
+  path: '/admin/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminTasksRoute = AdminTasksRouteImport.update({
+  id: '/admin/tasks',
+  path: '/admin/tasks',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminVerificationsRoute = AdminVerificationsRouteImport.update({
@@ -198,9 +228,14 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/vn': typeof VnRoute
+  '/admin/accounts': typeof AdminAccountsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/candidates': typeof AdminCandidatesRoute
   '/admin/compliance': typeof AdminComplianceRoute
+  '/admin/jobs': typeof AdminJobsRoute
+  '/admin/monitoring': typeof AdminMonitoringRoute
+  '/admin/reports': typeof AdminReportsRoute
+  '/admin/tasks': typeof AdminTasksRoute
   '/admin/verifications': typeof AdminVerificationsRoute
   '/candidate/copilot': typeof CandidateCopilotRoute
   '/candidate/jobs': typeof CandidateJobsRoute
@@ -229,9 +264,14 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/vn': typeof VnRoute
+  '/admin/accounts': typeof AdminAccountsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/candidates': typeof AdminCandidatesRoute
   '/admin/compliance': typeof AdminComplianceRoute
+  '/admin/jobs': typeof AdminJobsRoute
+  '/admin/monitoring': typeof AdminMonitoringRoute
+  '/admin/reports': typeof AdminReportsRoute
+  '/admin/tasks': typeof AdminTasksRoute
   '/admin/verifications': typeof AdminVerificationsRoute
   '/candidate/copilot': typeof CandidateCopilotRoute
   '/candidate/jobs': typeof CandidateJobsRoute
@@ -261,9 +301,14 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/vn': typeof VnRoute
+  '/admin/accounts': typeof AdminAccountsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/candidates': typeof AdminCandidatesRoute
   '/admin/compliance': typeof AdminComplianceRoute
+  '/admin/jobs': typeof AdminJobsRoute
+  '/admin/monitoring': typeof AdminMonitoringRoute
+  '/admin/reports': typeof AdminReportsRoute
+  '/admin/tasks': typeof AdminTasksRoute
   '/admin/verifications': typeof AdminVerificationsRoute
   '/candidate/copilot': typeof CandidateCopilotRoute
   '/candidate/jobs': typeof CandidateJobsRoute
@@ -294,9 +339,14 @@ export interface FileRouteTypes {
     | '/register'
     | '/sitemap.xml'
     | '/vn'
+    | '/admin/accounts'
     | '/admin/analytics'
     | '/admin/candidates'
     | '/admin/compliance'
+    | '/admin/jobs'
+    | '/admin/monitoring'
+    | '/admin/reports'
+    | '/admin/tasks'
     | '/admin/verifications'
     | '/candidate/copilot'
     | '/candidate/jobs'
@@ -325,9 +375,14 @@ export interface FileRouteTypes {
     | '/register'
     | '/sitemap.xml'
     | '/vn'
+    | '/admin/accounts'
     | '/admin/analytics'
     | '/admin/candidates'
     | '/admin/compliance'
+    | '/admin/jobs'
+    | '/admin/monitoring'
+    | '/admin/reports'
+    | '/admin/tasks'
     | '/admin/verifications'
     | '/candidate/copilot'
     | '/candidate/jobs'
@@ -356,9 +411,14 @@ export interface FileRouteTypes {
     | '/register'
     | '/sitemap.xml'
     | '/vn'
+    | '/admin/accounts'
     | '/admin/analytics'
     | '/admin/candidates'
     | '/admin/compliance'
+    | '/admin/jobs'
+    | '/admin/monitoring'
+    | '/admin/reports'
+    | '/admin/tasks'
     | '/admin/verifications'
     | '/candidate/copilot'
     | '/candidate/jobs'
@@ -388,9 +448,14 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   VnRoute: typeof VnRoute
+  AdminAccountsRoute: typeof AdminAccountsRoute
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminCandidatesRoute: typeof AdminCandidatesRoute
   AdminComplianceRoute: typeof AdminComplianceRoute
+  AdminJobsRoute: typeof AdminJobsRoute
+  AdminMonitoringRoute: typeof AdminMonitoringRoute
+  AdminReportsRoute: typeof AdminReportsRoute
+  AdminTasksRoute: typeof AdminTasksRoute
   AdminVerificationsRoute: typeof AdminVerificationsRoute
   CandidateCopilotRoute: typeof CandidateCopilotRoute
   CandidateJobsRoute: typeof CandidateJobsRoute
@@ -500,6 +565,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/accounts': {
+      id: '/admin/accounts'
+      path: '/admin/accounts'
+      fullPath: '/admin/accounts'
+      preLoaderRoute: typeof AdminAccountsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/analytics': {
       id: '/admin/analytics'
       path: '/admin/analytics'
@@ -519,6 +591,34 @@ declare module '@tanstack/react-router' {
       path: '/admin/compliance'
       fullPath: '/admin/compliance'
       preLoaderRoute: typeof AdminComplianceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/jobs': {
+      id: '/admin/jobs'
+      path: '/admin/jobs'
+      fullPath: '/admin/jobs'
+      preLoaderRoute: typeof AdminJobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/monitoring': {
+      id: '/admin/monitoring'
+      path: '/admin/monitoring'
+      fullPath: '/admin/monitoring'
+      preLoaderRoute: typeof AdminMonitoringRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/reports': {
+      id: '/admin/reports'
+      path: '/admin/reports'
+      fullPath: '/admin/reports'
+      preLoaderRoute: typeof AdminReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/tasks': {
+      id: '/admin/tasks'
+      path: '/admin/tasks'
+      fullPath: '/admin/tasks'
+      preLoaderRoute: typeof AdminTasksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/verifications': {
@@ -628,9 +728,14 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   VnRoute: VnRoute,
+  AdminAccountsRoute: AdminAccountsRoute,
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminCandidatesRoute: AdminCandidatesRoute,
   AdminComplianceRoute: AdminComplianceRoute,
+  AdminJobsRoute: AdminJobsRoute,
+  AdminMonitoringRoute: AdminMonitoringRoute,
+  AdminReportsRoute: AdminReportsRoute,
+  AdminTasksRoute: AdminTasksRoute,
   AdminVerificationsRoute: AdminVerificationsRoute,
   CandidateCopilotRoute: CandidateCopilotRoute,
   CandidateJobsRoute: CandidateJobsRoute,

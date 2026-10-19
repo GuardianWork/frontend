@@ -1,0 +1,399 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-19T04:52:14.694961+00:00",
+  "title": "Design System: GuardianWork",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Primary",
+        "tonalRamp": [
+          "oklch(15% 0.18 255)",
+          "oklch(26% 0.18 255)",
+          "oklch(38% 0.18 255)",
+          "oklch(49% 0.18 255)",
+          "oklch(61% 0.18 255)",
+          "oklch(72% 0.18 255)",
+          "oklch(84% 0.18 255)",
+          "oklch(95% 0.18 255)"
+        ]
+      },
+      "primary-hover": {
+        "role": "primary",
+        "displayName": "Primary Hover",
+        "tonalRamp": [
+          "oklch(15% 0.16 255)",
+          "oklch(26% 0.16 255)",
+          "oklch(38% 0.16 255)",
+          "oklch(49% 0.16 255)",
+          "oklch(61% 0.16 255)",
+          "oklch(72% 0.16 255)",
+          "oklch(84% 0.16 255)",
+          "oklch(95% 0.16 255)"
+        ]
+      },
+      "primary-deep": {
+        "role": "primary",
+        "displayName": "Primary Deep",
+        "tonalRamp": [
+          "oklch(15% 0.14 255)",
+          "oklch(26% 0.14 255)",
+          "oklch(38% 0.14 255)",
+          "oklch(49% 0.14 255)",
+          "oklch(61% 0.14 255)",
+          "oklch(72% 0.14 255)",
+          "oklch(84% 0.14 255)",
+          "oklch(95% 0.14 255)"
+        ]
+      },
+      "primary-subtle": {
+        "role": "primary",
+        "displayName": "Primary Subtle",
+        "tonalRamp": [
+          "oklch(15% 0.025 255)",
+          "oklch(26% 0.025 255)",
+          "oklch(38% 0.025 255)",
+          "oklch(49% 0.025 255)",
+          "oklch(61% 0.025 255)",
+          "oklch(72% 0.025 255)",
+          "oklch(84% 0.025 255)",
+          "oklch(95% 0.025 255)"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "paper-2": {
+        "role": "neutral",
+        "displayName": "Paper 2",
+        "tonalRamp": [
+          "oklch(15% 0.012 255)",
+          "oklch(26% 0.012 255)",
+          "oklch(38% 0.012 255)",
+          "oklch(49% 0.012 255)",
+          "oklch(61% 0.012 255)",
+          "oklch(72% 0.012 255)",
+          "oklch(84% 0.012 255)",
+          "oklch(95% 0.012 255)"
+        ]
+      },
+      "paper-3": {
+        "role": "neutral",
+        "displayName": "Paper 3",
+        "tonalRamp": [
+          "oklch(15% 0.02 255)",
+          "oklch(26% 0.02 255)",
+          "oklch(38% 0.02 255)",
+          "oklch(49% 0.02 255)",
+          "oklch(61% 0.02 255)",
+          "oklch(72% 0.02 255)",
+          "oklch(84% 0.02 255)",
+          "oklch(95% 0.02 255)"
+        ]
+      },
+      "paper-inverse": {
+        "role": "neutral",
+        "displayName": "Paper Inverse",
+        "tonalRamp": [
+          "oklch(15% 0.045 255)",
+          "oklch(26% 0.045 255)",
+          "oklch(38% 0.045 255)",
+          "oklch(49% 0.045 255)",
+          "oklch(61% 0.045 255)",
+          "oklch(72% 0.045 255)",
+          "oklch(84% 0.045 255)",
+          "oklch(95% 0.045 255)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "tonalRamp": [
+          "oklch(15% 0.04 255)",
+          "oklch(26% 0.04 255)",
+          "oklch(38% 0.04 255)",
+          "oklch(49% 0.04 255)",
+          "oklch(61% 0.04 255)",
+          "oklch(72% 0.04 255)",
+          "oklch(84% 0.04 255)",
+          "oklch(95% 0.04 255)"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Ink 2",
+        "tonalRamp": [
+          "oklch(15% 0.035 255)",
+          "oklch(26% 0.035 255)",
+          "oklch(38% 0.035 255)",
+          "oklch(49% 0.035 255)",
+          "oklch(61% 0.035 255)",
+          "oklch(72% 0.035 255)",
+          "oklch(84% 0.035 255)",
+          "oklch(95% 0.035 255)"
+        ]
+      },
+      "ink-3": {
+        "role": "neutral",
+        "displayName": "Ink 3",
+        "tonalRamp": [
+          "oklch(15% 0.03 255)",
+          "oklch(26% 0.03 255)",
+          "oklch(38% 0.03 255)",
+          "oklch(49% 0.03 255)",
+          "oklch(61% 0.03 255)",
+          "oklch(72% 0.03 255)",
+          "oklch(84% 0.03 255)",
+          "oklch(95% 0.03 255)"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Rule",
+        "tonalRamp": [
+          "oklch(15% 0.015 255)",
+          "oklch(26% 0.015 255)",
+          "oklch(38% 0.015 255)",
+          "oklch(49% 0.015 255)",
+          "oklch(61% 0.015 255)",
+          "oklch(72% 0.015 255)",
+          "oklch(84% 0.015 255)",
+          "oklch(95% 0.015 255)"
+        ]
+      },
+      "rule-2": {
+        "role": "neutral",
+        "displayName": "Rule 2",
+        "tonalRamp": [
+          "oklch(15% 0.025 255)",
+          "oklch(26% 0.025 255)",
+          "oklch(38% 0.025 255)",
+          "oklch(49% 0.025 255)",
+          "oklch(61% 0.025 255)",
+          "oklch(72% 0.025 255)",
+          "oklch(84% 0.025 255)",
+          "oklch(95% 0.025 255)"
+        ]
+      },
+      "support-orange": {
+        "role": "secondary",
+        "displayName": "Support Orange",
+        "tonalRamp": [
+          "oklch(15% 0.16 50)",
+          "oklch(26% 0.16 50)",
+          "oklch(38% 0.16 50)",
+          "oklch(49% 0.16 50)",
+          "oklch(61% 0.16 50)",
+          "oklch(72% 0.16 50)",
+          "oklch(84% 0.16 50)",
+          "oklch(95% 0.16 50)"
+        ]
+      },
+      "success": {
+        "role": "secondary",
+        "displayName": "Success",
+        "tonalRamp": [
+          "oklch(15% 0.12 160)",
+          "oklch(26% 0.12 160)",
+          "oklch(38% 0.12 160)",
+          "oklch(49% 0.12 160)",
+          "oklch(61% 0.12 160)",
+          "oklch(72% 0.12 160)",
+          "oklch(84% 0.12 160)",
+          "oklch(95% 0.12 160)"
+        ]
+      },
+      "error": {
+        "role": "secondary",
+        "displayName": "Error",
+        "tonalRamp": [
+          "oklch(15% 0.16 28)",
+          "oklch(26% 0.16 28)",
+          "oklch(38% 0.16 28)",
+          "oklch(49% 0.16 28)",
+          "oklch(61% 0.16 28)",
+          "oklch(72% 0.16 28)",
+          "oklch(84% 0.16 28)",
+          "oklch(95% 0.16 28)"
+        ]
+      },
+      "error-container": {
+        "role": "secondary",
+        "displayName": "Error Container",
+        "tonalRamp": [
+          "oklch(15% 0.035 28)",
+          "oklch(26% 0.035 28)",
+          "oklch(38% 0.035 28)",
+          "oklch(49% 0.035 28)",
+          "oklch(61% 0.035 28)",
+          "oklch(72% 0.035 28)",
+          "oklch(84% 0.035 28)",
+          "oklch(95% 0.035 28)"
+        ]
+      },
+      "on-error-container": {
+        "role": "secondary",
+        "displayName": "On Error Container",
+        "tonalRamp": [
+          "oklch(15% 0.14 28)",
+          "oklch(26% 0.14 28)",
+          "oklch(38% 0.14 28)",
+          "oklch(49% 0.14 28)",
+          "oklch(61% 0.14 28)",
+          "oklch(72% 0.14 28)",
+          "oklch(84% 0.14 28)",
+          "oklch(95% 0.14 28)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Hero Display",
+        "purpose": "Public landing headline."
+      },
+      "headline": {
+        "displayName": "Section Headline",
+        "purpose": "Public section headings."
+      },
+      "title": {
+        "displayName": "Listing Title",
+        "purpose": "Jobs and step headings."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Application reading and explanatory copy."
+      },
+      "label": {
+        "displayName": "Navigation Label",
+        "purpose": "Compact destinations and labels."
+      }
+    },
+    "shadows": [
+      {
+        "name": "search-elevation",
+        "value": "0 8px 28px -12px #193b5b40",
+        "purpose": "Separate the search assembly from the hero ground."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state-color",
+        "value": "160ms ease",
+        "purpose": "Public buttons, job-card border, and ground transitions."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "0.01ms",
+        "purpose": "Animation and transition duration under reduced-motion preference."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "public-compact-desktop-max",
+        "value": "1100px"
+      },
+      {
+        "name": "public-tablet-max",
+        "value": "950px"
+      },
+      {
+        "name": "public-phone-max",
+        "value": "640px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main public recruitment action.",
+      "html": "<button class=\"ds-button\">Tìm việc</button>",
+      "css": ".ds-button{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:13px 24px;min-height:48px;border:1px solid transparent;border-radius:8px;background:var(--color-accent);color:var(--color-accent-ink);font-family:var(--font-body);font-size:15px;font-weight:700;cursor:pointer;transition:background-color 160ms ease}.ds-button:hover{background:var(--color-accent-hover)}.ds-button:focus-visible{outline:3px solid var(--color-focus);outline-offset:3px}.ds-button:disabled{opacity:.55;cursor:not-allowed}"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Supporting action beside a primary action.",
+      "html": "<button class=\"ds-outline\">Xem công việc</button>",
+      "css": ".ds-outline{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:13px 24px;min-height:48px;border:1px solid transparent;border-radius:8px;background:var(--color-accent);color:var(--color-accent-ink);font-family:var(--font-body);font-size:15px;font-weight:700;cursor:pointer;transition:background-color 160ms ease}.ds-outline:hover{background:var(--color-accent-hover)}.ds-outline:focus-visible{outline:3px solid var(--color-focus);outline-offset:3px}.ds-outline:disabled{opacity:.55;cursor:not-allowed}.ds-outline{background:var(--color-paper);color:var(--color-accent);border-color:var(--color-accent)}.ds-outline:hover{background:var(--color-accent-subtle)}"
+    },
+    {
+      "name": "Search Input",
+      "kind": "input",
+      "refersTo": "search-input",
+      "description": "Keyword input inside the public search form.",
+      "html": "<label class=\"ds-field\"><span>Từ khóa</span><input placeholder=\"Chức danh, kỹ năng hoặc công ty\" /></label>",
+      "css": ".ds-field{display:flex;flex-direction:column;gap:8px;padding:10px 16px;background:var(--color-paper);color:var(--color-ink);font-family:var(--font-body);font-size:15px}.ds-field input{min-height:44px;border:0;background:transparent;color:var(--color-ink);font:inherit;caret-color:var(--color-accent)}.ds-field input::placeholder{color:var(--color-ink-3)}.ds-field input:focus-visible{outline:3px solid var(--color-focus);outline-offset:3px}"
+    },
+    {
+      "name": "Popular Skill Chip",
+      "kind": "chip",
+      "refersTo": "popular-chip",
+      "description": "A linked popular keyword beneath search.",
+      "html": "<a class=\"ds-chip\" href=\"#jobs\">React</a>",
+      "css": ".ds-chip{display:inline-block;padding:4px 12px;border-radius:5px;background:var(--color-paper);color:var(--color-ink-2);font-family:var(--font-body);font-size:13px;text-decoration:none}.ds-chip:hover{color:var(--color-accent);text-decoration:underline}.ds-chip:focus-visible{outline:3px solid var(--color-focus);outline-offset:3px}"
+    },
+    {
+      "name": "Job Card",
+      "kind": "card",
+      "refersTo": "job-card",
+      "description": "Recruitment listing with company, title, and salary.",
+      "html": "<a class=\"ds-card\" href=\"#job\"><span class=\"ds-company\">GuardianWork</span><h3>Frontend Developer</h3><span class=\"ds-salary\">Thỏa thuận</span><span class=\"ds-location\">TP. Hồ Chí Minh</span></a>",
+      "css": ".ds-card{display:flex;flex-direction:column;gap:10px;padding:22px;border:1px solid var(--color-rule);border-radius:12px;background:var(--color-paper);color:var(--color-ink);font-family:var(--font-body);text-decoration:none;transition:border-color 160ms ease,background-color 160ms ease}.ds-card:hover{border-color:var(--color-accent);background:var(--color-paper-2)}.ds-card:focus-visible{outline:3px solid var(--color-focus);outline-offset:3px}.ds-company,.ds-location{color:var(--color-ink-2);font-size:13px}.ds-card h3{font-size:18px;font-weight:700;line-height:1.45;margin:8px 0 0}.ds-salary{font-size:14px;font-weight:650;color:var(--color-accent)}"
+    },
+    {
+      "name": "Public Navigation",
+      "kind": "nav",
+      "refersTo": "navigation",
+      "description": "Current and supporting public destinations.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Điều hướng\"><a href=\"#jobs\" aria-current=\"page\">Tìm việc làm</a><a href=\"#employers\">Nhà tuyển dụng</a></nav>",
+      "css": ".ds-nav{display:flex;flex-wrap:wrap;gap:26px;background:var(--color-paper);border-bottom:1px solid var(--color-rule);font-family:var(--font-body)}.ds-nav a{padding:20px 0;border-bottom:2px solid transparent;color:var(--color-ink);font-size:14px;font-weight:600;text-decoration:none}.ds-nav a:hover,.ds-nav a[aria-current]{color:var(--color-accent);border-color:var(--color-accent)}.ds-nav a:focus-visible{outline:3px solid var(--color-focus);outline-offset:3px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Familiar recruitment, clear next steps",
+    "overview": "Guardian Blue is a familiar, clear recruitment interface: white surfaces, cool blue-gray supporting grounds, dark blue text, and decisive blue actions. The user selected the category-standard direction with VietnamWorks as the craft reference. The implementation is code-first; the reference was not accessible for direct visual comparison.\n\nPublic browsing uses generous search and listing areas. Candidate, recruiter, administrator, and authentication surfaces use the same tokens with task-appropriate density. Existing role boundaries and workflows remain the source of product behavior.",
+    "keyCharacteristics": [
+      "White and cool blue-gray surfaces with Guardian Blue actions.",
+      "Hanken Grotesk for headings, body copy, labels, and workspace UI.",
+      "Quiet borders, gently curved controls, and compact information hierarchy."
+    ],
+    "rules": [
+      {
+        "name": "The Guardian Blue Rule",
+        "body": "Guardian Blue is the only product theme. Keep primary actions and focus consistent across public pages, authentication, and workspaces.",
+        "section": "colors"
+      },
+      {
+        "name": "The Quiet Surface Rule",
+        "body": "Use tonal grounds and thin rules for ordinary content; preserve the search form's soft elevation as a functional exception.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use Guardian Blue for primary actions, active navigation, and keyboard focus.",
+      "Do keep muted text on light surfaces and preserve visible field labels and focus outlines.",
+      "Do adapt grids and search controls to a single column on small phones.",
+      "Do preserve role-specific routes, existing content, and the distinction between simulated and integrated capabilities."
+    ],
+    "donts": [
+      "Don't expose a theme selector or restore a saved palette preference.",
+      "Don't introduce a different visual identity for a workspace or authentication page.",
+      "Don't strengthen unverified product claims or document simulated actions as production integrations.",
+      "Don't inherit legacy icon-font or decorative eyebrow treatments as new component patterns."
+    ]
+  }
+}

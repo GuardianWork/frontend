@@ -1,3 +1,5 @@
+import { ListSearch } from "@/components/ListSearch";
+import { matchesSearch } from "@/lib/list-search";
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AdminShell, Icon } from "@/components/AdminShell";
@@ -5,7 +7,7 @@ import { AdminShell, Icon } from "@/components/AdminShell";
 export const Route = createFileRoute("/recruiter/talent")({
   head: () => ({
     meta: [
-      { title: "Talent Profiles & Audit — GuardianWork Recruiter" },
+      { title: "Hồ sơ ứng viên — GuardianWork Recruiter" },
       {
         name: "description",
         content:
@@ -17,6 +19,7 @@ export const Route = createFileRoute("/recruiter/talent")({
 });
 
 function RecruiterTalentPage() {
+  const [query, setQuery] = useState("");
   const [pitchSent, setPitchSent] = useState(false);
   const [selectedCandidateId, setSelectedCandidateId] = useState("seeker-1");
 
@@ -59,16 +62,16 @@ function RecruiterTalentPage() {
   const current = candidatesList.find((c) => c.id === selectedCandidateId) || candidatesList[0];
 
   return (
-    <AdminShell title="Talent Profiles & Audit" role="recruiter">
+    <AdminShell title="Hồ sơ ứng viên" role="recruiter">
       {/* Header */}
       <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h2 className="text-3xl md:text-4xl font-bold text-charcoal-text mb-2 tracking-tight">
-            Talent Profiles Directory
+            Danh sách hồ sơ ứng viên
           </h2>
           <p className="text-base text-charcoal-83 max-w-2xl">
-            Danh mục hồ sơ kỹ sư công nghệ đã qua kiểm định KYC, chứng chỉ ngoại ngữ và mức lương
-            sàn minh bạch.
+            Danh mục hồ sơ ứng viên đã qua kiểm định KYC, chứng chỉ ngoại ngữ và mức lương sàn minh
+            bạch.
           </p>
         </div>
 
@@ -78,7 +81,7 @@ function RecruiterTalentPage() {
             className="px-4 py-2 border border-warm-border bg-paper-white text-charcoal-text text-sm font-medium rounded-lg hover:bg-surface-container transition-colors flex items-center gap-2 shadow-sm"
           >
             <Icon name="hub" className="!text-base text-primary" />
-            <span>Quay lại Recruiter Hub</span>
+            <span>Quay lại tổng quan tuyển dụng</span>
           </Link>
           <button
             onClick={() => setPitchSent(true)}
@@ -132,6 +135,14 @@ function RecruiterTalentPage() {
         </div>
       </div>
 
+      <ListSearch
+        value={query}
+        onChange={setQuery}
+        label="Tìm ứng viên, chuyên môn hoặc địa điểm"
+        count={
+          candidatesList.filter((c) => matchesSearch(query, c.name, c.role, c.location)).length
+        }
+      />
       {/* Split Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Pane: Candidates list & Active Card */}
@@ -139,41 +150,46 @@ function RecruiterTalentPage() {
           {/* Candidate selector pills */}
           <div className="bg-paper-white p-3 rounded-xl border border-warm-border flex flex-col gap-2">
             <span className="text-[10px] font-bold text-charcoal-40 uppercase tracking-wider px-1">
-              Chọn Hồ Sơ Kỹ Sư Công Nghệ
+              Chọn hồ sơ ứng viên
             </span>
             <div className="flex flex-col gap-1.5">
-              {candidatesList.map((c) => {
-                const active = c.id === current.id;
-                return (
-                  <div
-                    key={c.id}
-                    onClick={() => {
-                      setSelectedCandidateId(c.id);
-                      setPitchSent(false);
-                    }}
-                    className={
-                      active
-                        ? "p-3 rounded-lg bg-surface-container border border-primary/40 cursor-pointer flex items-center justify-between"
-                        : "p-3 rounded-lg bg-surface-container-low hover:bg-surface-container border border-warm-border cursor-pointer transition-colors flex items-center justify-between opacity-80 hover:opacity-100"
-                    }
-                  >
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={c.avatar}
-                        alt={c.name}
-                        className="w-8 h-8 rounded-full border border-warm-border"
-                      />
-                      <div>
-                        <div className="font-bold text-xs text-charcoal-text">{c.name}</div>
-                        <div className="text-[11px] text-charcoal-83">{c.role}</div>
+              {!candidatesList.some((c) => matchesSearch(query, c.name, c.role, c.location)) && (
+                <p className="p-3 text-sm text-charcoal-83">Không tìm thấy hồ sơ phù hợp.</p>
+              )}
+              {candidatesList
+                .filter((c) => matchesSearch(query, c.name, c.role, c.location))
+                .map((c) => {
+                  const active = c.id === current.id;
+                  return (
+                    <div
+                      key={c.id}
+                      onClick={() => {
+                        setSelectedCandidateId(c.id);
+                        setPitchSent(false);
+                      }}
+                      className={
+                        active
+                          ? "p-3 rounded-lg bg-surface-container border border-primary/40 cursor-pointer flex items-center justify-between"
+                          : "p-3 rounded-lg bg-surface-container-low hover:bg-surface-container border border-warm-border cursor-pointer transition-colors flex items-center justify-between opacity-80 hover:opacity-100"
+                      }
+                    >
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={c.avatar}
+                          alt={c.name}
+                          className="w-8 h-8 rounded-full border border-warm-border"
+                        />
+                        <div>
+                          <div className="font-bold text-xs text-charcoal-text">{c.name}</div>
+                          <div className="text-[11px] text-charcoal-83">{c.role}</div>
+                        </div>
                       </div>
+                      <span className="text-[10px] font-mono font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200">
+                        {c.ielts}
+                      </span>
                     </div>
-                    <span className="text-[10px] font-mono font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200">
-                      {c.ielts}
-                    </span>
-                  </div>
-                );
-              })}
+                  );
+                })}
             </div>
           </div>
 
@@ -338,7 +354,7 @@ function RecruiterTalentPage() {
                     </div>
                     <p className="text-xs text-charcoal-83 mt-2 leading-relaxed">
                       Dẫn dắt kiến trúc bảo mật tuân thủ Bộ luật Lao động 2019, điều phối vi dịch vụ
-                      và triển khai hệ thống xác thực tức thì cho hơn 5.000 kỹ sư công nghệ.
+                      và triển khai hệ thống xác thực tức thì cho hơn 5.000 ứng viên.
                     </p>
                   </div>
 

@@ -1,201 +1,522 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AdminShell, Icon } from "@/components/AdminShell";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  CircleHelp,
+  Database,
+  Eye,
+  Flag,
+  Search,
+  ShieldOff,
+} from "lucide-react";
+import { AdminShell } from "@/components/AdminShell";
+import { ListSearch } from "@/components/ListSearch";
+import { AdminPagination } from "@/components/admin/AdminPagination";
+import { useListPagination } from "@/hooks/useListPagination";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { matchesSearch } from "@/lib/list-search";
+import { COMPLIANCE_SAMPLE_JOBS, type FlaggedPublishedJob } from "@/lib/admin-compliance";
+import "@/components/admin/compliance.css";
+
+type QueueFilter = "ALL" | "OPEN" | "REVIEWED" | "HIDDEN";
+type Action = "hide" | "restore";
+const dateTime = (value: string) =>
+  new Intl.DateTimeFormat("vi-VN", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(new Date(value));
+const priorityLabel = (job: FlaggedPublishedJob) =>
+  job.priority === "HIGH" ? "Ưu tiên cao" : "Cần xem xét";
+const queueLabel = (job: FlaggedPublishedJob) =>
+  job.visibility === "HIDDEN" ? "Đã ẩn" : job.reviewed ? "Đã xem xét" : "Chưa xử lý";
 
 export const Route = createFileRoute("/admin/compliance")({
   head: () => ({
     meta: [
-      { title: "Compliance Queue — GuardianWork Admin" },
+      { title: "JD bị AI gắn cờ — GuardianWork" },
       {
         name: "description",
         content:
-          "Review AI-flagged job descriptions for potential risk clauses under Labor Code 2019.",
+          "Theo dõi các JD đã đăng được AI gắn cờ và xử lý tin tuyển dụng sau khi công khai.",
       },
     ],
   }),
   component: CompliancePage,
 });
 
-type Item = {
-  title: string;
-  company: string;
-  badge: "Critical" | "Warning" | "Review";
-  time: string;
-  reason: string;
-  reasonIcon: string;
-  active?: boolean;
-};
-
-const ITEMS: Item[] = [
-  {
-    title: "Senior Rust Engineer",
-    company: "Acme Corp • San Francisco, CA (Vietnam Hub)",
-    badge: "Critical",
-    time: "Flagged 2h ago",
-    reason: "Non-compete clause (Điều 35)",
-    reasonIcon: "policy",
-    active: true,
-  },
-  {
-    title: "Marketing Director",
-    company: "Global Reach Ltd • TP. Hồ Chí Minh",
-    badge: "Warning",
-    time: "Flagged 5h ago",
-    reason: "Age discrimination risk",
-    reasonIcon: "gavel",
-  },
-  {
-    title: "Warehouse Associate",
-    company: "LogisTech Inc • Bình Dương",
-    badge: "Review",
-    time: "Flagged 1d ago",
-    reason: "Physical requirement phrasing",
-    reasonIcon: "accessibility_new",
-  },
-];
-
-function badgeClass(b: Item["badge"]) {
-  if (b === "Critical") return "text-error bg-error-container";
-  if (b === "Warning") return "text-secondary bg-secondary-container";
-  return "text-on-primary bg-primary-container";
-}
-
 function CompliancePage() {
+  const [jobs, setJobs] = useState(COMPLIANCE_SAMPLE_JOBS);
+  const [query, setQuery] = useState("");
+  const [priority, setPriority] = useState("ALL");
+  const [queue, setQueue] = useState<QueueFilter>("ALL");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [action, setAction] = useState<Action | null>(null);
+  const [reason, setReason] = useState("");
+  const [actionError, setActionError] = useState("");
+  const [notice, setNotice] = useState("");
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const returnFocusId = useRef<string | null>(null);
+  const selected = jobs.find((job) => job.id === selectedId);
+  const remaining = jobs.filter((job) => job.visibility === "PUBLIC" && !job.reviewed).length;
+  const filtered = useMemo(
+    () =>
+      jobs.filter(
+        (job) =>
+          matchesSearch(
+            query,
+            job.id,
+            job.title,
+            job.company,
+            ...job.findings.map((finding) => finding.label),
+          ) &&
+          (priority === "ALL" || priority === job.priority) &&
+          (queue === "ALL" ||
+            (queue === "OPEN" && job.visibility === "PUBLIC" && !job.reviewed) ||
+            (queue === "REVIEWED" && job.visibility === "PUBLIC" && job.reviewed) ||
+            (queue === "HIDDEN" && job.visibility === "HIDDEN")),
+      ),
+    [jobs, priority, query, queue],
+  );
+
+  const pagination = useListPagination(filtered, JSON.stringify([query, priority, queue]));
+  const historyPagination = useListPagination(selected?.history ?? [], selectedId ?? "");
+
+  useEffect(() => {
+    if (selectedId) {
+      headingRef.current?.focus({ preventScroll: true });
+      headingRef.current?.closest("main")?.scrollTo({ top: 0 });
+    } else if (returnFocusId.current) {
+      const trigger = document.getElementById(`compliance-open-${returnFocusId.current}`);
+      if (trigger) trigger.focus();
+      else document.getElementById("compliance-list-title")?.focus();
+    }
+  }, [selectedId]);
+
+  function openJob(id: string) {
+    returnFocusId.current = id;
+    setSelectedId(id);
+    setNotice("");
+  }
+  function openAction(next: Action) {
+    setAction(next);
+    setReason("");
+    setActionError("");
+  }
+  function recordAction(type: Action | "review") {
+    if (!selected) return;
+    if (type !== "review" && !reason.trim()) {
+      setActionError("Nhập lý do để lưu thao tác xử lý.");
+      return;
+    }
+    const label =
+      type === "hide" ? "Đã ẩn tin" : type === "restore" ? "Đã công khai lại" : "Đã xem xét";
+    setJobs((current) =>
+      current.map((job) =>
+        job.id !== selected.id
+          ? job
+          : {
+              ...job,
+              reviewed: true,
+              visibility:
+                type === "hide" ? "HIDDEN" : type === "restore" ? "PUBLIC" : job.visibility,
+              history: [
+                ...job.history,
+                {
+                  label,
+                  at: new Date().toISOString(),
+                  ...(type !== "review" ? { reason: reason.trim() } : {}),
+                },
+              ],
+            },
+      ),
+    );
+    setAction(null);
+    setReason("");
+    setNotice(`${label}. Thay đổi chỉ áp dụng cho dữ liệu mẫu trong màn hình này.`);
+  }
+  function clearFilters() {
+    setQuery("");
+    setPriority("ALL");
+    setQueue("ALL");
+  }
+
   return (
-    <AdminShell title="Compliance Queue" role="admin">
-      <div className="mb-8">
-        <h2 className="text-3xl md:text-4xl font-bold text-charcoal-text mb-2 tracking-tight">
-          Compliance Queue
-        </h2>
-        <p className="text-base text-charcoal-83 max-w-2xl">
-          Review AI-flagged job descriptions for potential risk clauses. Rà soát tự động theo Bộ
-          luật Lao động 2019 và chuẩn mực quốc tế.
+    <AdminShell title="JD bị AI gắn cờ" role="admin">
+      {selected && (
+        <button
+          type="button"
+          className="admin-text-link compliance-back"
+          onClick={() => setSelectedId(null)}
+        >
+          <ArrowLeft size={16} aria-hidden="true" />
+          Quay lại danh sách
+        </button>
+      )}
+      <div className="admin-page-heading">
+        <div>
+          <h1 ref={headingRef} tabIndex={-1}>
+            {selected ? selected.title : "JD bị AI gắn cờ"}
+          </h1>
+          <p>
+            {selected
+              ? `${selected.company} · ${selected.id}`
+              : "Theo dõi các tin đã đăng được AI phát hiện có dấu hiệu cần xem xét."}
+          </p>
+        </div>
+        <span className="admin-draft-label admin-sample-label">
+          <Database size={14} aria-hidden="true" />
+          Dữ liệu minh họa
+        </span>
+      </div>
+      <div className="admin-sample-banner" role="note">
+        <CircleHelp size={18} aria-hidden="true" />
+        <p>
+          <strong>Quản lý sau đăng.</strong> Danh sách chỉ gồm JD đã được công khai. Bản ghi và kết
+          quả AI bên dưới là minh họa; thao tác xử lý chỉ áp dụng trong màn hình này.
         </p>
       </div>
+      {notice && (
+        <p className="compliance-notice" role="status">
+          <Check size={17} aria-hidden="true" />
+          {notice}
+        </p>
+      )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* List */}
-        <div className="lg:col-span-5 flex flex-col gap-4">
-          <div className="flex justify-between items-center bg-paper-white p-3 rounded-xl border border-warm-border">
-            <div className="flex gap-2">
-              <span className="px-3 py-1 bg-error-container text-on-error-container text-xs font-semibold rounded-full">
-                High Risk (3)
-              </span>
-              <span className="px-3 py-1 bg-surface-container text-charcoal-text text-xs font-semibold rounded-full">
-                Pending (12)
+      {!selected ? (
+        <section className="admin-panel compliance-list" aria-labelledby="compliance-list-title">
+          <div className="admin-panel-heading">
+            <div>
+              <h2 id="compliance-list-title" tabIndex={-1}>
+                Tin tuyển dụng cần kiểm tra
+              </h2>
+              <p>
+                {jobs.length} JD được gắn cờ · {remaining} tin công khai chưa xử lý
+              </p>
+            </div>
+          </div>
+          <div className="admin-sample-toolbar compliance-toolbar">
+            <ListSearch
+              value={query}
+              onChange={setQuery}
+              label="Tìm JD, doanh nghiệp hoặc dấu hiệu"
+              count={filtered.length}
+            />
+            <label className="admin-sample-filter">
+              Mức ưu tiên
+              <select value={priority} onChange={(event) => setPriority(event.target.value)}>
+                <option value="ALL">Tất cả</option>
+                <option value="HIGH">Ưu tiên cao</option>
+                <option value="MEDIUM">Cần xem xét</option>
+              </select>
+            </label>
+            <label className="admin-sample-filter">
+              Xử lý
+              <select
+                value={queue}
+                onChange={(event) => setQueue(event.target.value as QueueFilter)}
+              >
+                <option value="ALL">Tất cả</option>
+                <option value="OPEN">Chưa xử lý</option>
+                <option value="REVIEWED">Đã xem xét</option>
+                <option value="HIDDEN">Đã ẩn</option>
+              </select>
+            </label>
+          </div>
+          {filtered.length ? (
+            <table className="compliance-table">
+              <caption className="sr-only">Danh sách JD đã đăng được AI gắn cờ</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Tin tuyển dụng</th>
+                  <th scope="col">AI phát hiện</th>
+                  <th scope="col">Ưu tiên</th>
+                  <th scope="col">Trạng thái</th>
+                  <th scope="col">Phát hiện lúc</th>
+                  <th scope="col">
+                    <span className="sr-only">Thao tác</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {pagination.items.map((job) => (
+                  <tr key={job.id}>
+                    <td className="compliance-job">
+                      <button
+                        id={`compliance-open-${job.id}`}
+                        type="button"
+                        onClick={() => openJob(job.id)}
+                      >
+                        {job.title}
+                      </button>
+                      <span>{job.company}</span>
+                      <small>
+                        {job.id} · {job.industry}
+                      </small>
+                    </td>
+                    <td className="compliance-findings-cell">
+                      <ul>
+                        {job.findings.map((finding) => (
+                          <li key={finding.label}>{finding.label}</li>
+                        ))}
+                      </ul>
+                    </td>
+                    <td className="compliance-priority-cell">
+                      <span
+                        className={`compliance-priority ${job.priority === "HIGH" ? "is-high" : ""}`}
+                      >
+                        <Flag size={13} aria-hidden="true" />
+                        {priorityLabel(job)}
+                      </span>
+                    </td>
+                    <td className="compliance-state-cell">
+                      <span
+                        className={`compliance-visibility ${job.visibility === "HIDDEN" ? "is-hidden" : ""}`}
+                      >
+                        {job.visibility === "PUBLIC" ? "Đang công khai" : "Đã ẩn"}
+                      </span>
+                      <small>
+                        {job.visibility === "PUBLIC" ? queueLabel(job) : "Sau khi đăng"}
+                      </small>
+                    </td>
+                    <td className="compliance-time">
+                      <span className="compliance-mobile-label">Phát hiện lúc</span>
+                      <time dateTime={job.detectedAt}>{dateTime(job.detectedAt)}</time>
+                    </td>
+                    <td className="compliance-row-action">
+                      <button
+                        type="button"
+                        aria-label={`Xem JD ${job.title}`}
+                        className="admin-sample-detail-button"
+                        onClick={() => openJob(job.id)}
+                      >
+                        <Eye size={16} aria-hidden="true" />
+                        <span>Xem JD</span>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <div className="compliance-empty" role="status">
+              <Search size={26} aria-hidden="true" />
+              <h3>Không có JD phù hợp</h3>
+              <p>Thử từ khóa khác hoặc thay đổi bộ lọc để xem các tin đã được gắn cờ.</p>
+              <button type="button" className="admin-secondary-action" onClick={clearFilters}>
+                Xóa bộ lọc
+              </button>
+            </div>
+          )}
+          <AdminPagination
+            totalItems={filtered.length}
+            page={pagination.page}
+            onPageChange={pagination.onPageChange}
+            itemLabel="JD"
+            label="Phân trang JD bị AI gắn cờ"
+          />
+          <p className="compliance-list-note">
+            Dấu hiệu do AI gắn cờ cần được kiểm tra cùng toàn bộ JD trước khi xử lý tin.
+          </p>
+        </section>
+      ) : (
+        <div className="compliance-detail-layout">
+          <section className="admin-panel compliance-jd" aria-labelledby="published-jd-title">
+            <div className="admin-panel-heading">
+              <h2 id="published-jd-title">Nội dung JD đã đăng</h2>
+              <span
+                className={`compliance-visibility ${selected.visibility === "HIDDEN" ? "is-hidden" : ""}`}
+              >
+                {selected.visibility === "PUBLIC" ? "Đang công khai" : "Đã ẩn"}
               </span>
             </div>
-            <button className="text-charcoal-83 hover:text-charcoal-text flex items-center gap-1 text-sm font-medium">
-              <Icon name="filter_list" className="!text-base" /> Filter
-            </button>
-          </div>
-
-          {ITEMS.map((it) => (
-            <div
-              key={it.title}
-              className={
-                it.active
-                  ? "bg-paper-white p-5 rounded-xl border-l-4 border-l-error border border-warm-border shadow-sm cursor-pointer"
-                  : "bg-paper-white p-5 rounded-xl border border-warm-border hover:shadow-sm transition-shadow cursor-pointer opacity-80 hover:opacity-100"
-              }
-            >
-              <div className="flex justify-between items-start mb-2 gap-3">
-                <h3 className="font-semibold text-lg leading-tight text-charcoal-text">
-                  {it.title}
-                </h3>
+            <dl className="compliance-job-meta">
+              <div>
+                <dt>Doanh nghiệp</dt>
+                <dd>{selected.company}</dd>
+              </div>
+              <div>
+                <dt>Địa điểm</dt>
+                <dd>{selected.location}</dd>
+              </div>
+              <div>
+                <dt>Đã đăng lúc</dt>
+                <dd>
+                  <time dateTime={selected.publishedAt}>{dateTime(selected.publishedAt)}</time>
+                </dd>
+              </div>
+              <div>
+                <dt>Ngành nghề</dt>
+                <dd>{selected.industry}</dd>
+              </div>
+            </dl>
+            <div className="compliance-jd-content">
+              {selected.description.split("\n\n").map((section, index) => {
+                const [title, ...body] = section.split("\n");
+                return (
+                  <section key={index}>
+                    <h3>{title}</h3>
+                    {body.map((line, lineIndex) => (
+                      <p key={lineIndex}>{line}</p>
+                    ))}
+                  </section>
+                );
+              })}
+            </div>
+          </section>
+          <aside className="compliance-inspector">
+            <section className="admin-panel" aria-labelledby="ai-findings-title">
+              <div className="admin-panel-heading">
+                <div>
+                  <h2 id="ai-findings-title">Dấu hiệu AI phát hiện</h2>
+                  <p>
+                    <time dateTime={selected.detectedAt}>{dateTime(selected.detectedAt)}</time>
+                  </p>
+                </div>
                 <span
-                  className={`font-semibold text-[10px] uppercase tracking-wider px-2 py-1 rounded ${badgeClass(it.badge)}`}
+                  className={`compliance-priority ${selected.priority === "HIGH" ? "is-high" : ""}`}
                 >
-                  {it.badge}
+                  {priorityLabel(selected)}
                 </span>
               </div>
-              <p className="text-sm text-charcoal-83 mb-4">{it.company}</p>
-              <div className="flex items-center gap-2 text-xs text-charcoal-40">
-                <Icon name="schedule" className="!text-[14px]" /> {it.time}
-                <span className="mx-1">•</span>
-                <Icon name={it.reasonIcon} className="!text-[14px]" /> {it.reason}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Review pane */}
-        <div className="lg:col-span-7">
-          <div className="bg-paper-white rounded-xl border border-warm-border shadow-sm h-full flex flex-col overflow-hidden">
-            <div className="p-6 border-b border-warm-border flex justify-between items-center gap-3">
+              <ol className="compliance-finding-list">
+                {selected.findings.map((finding) => (
+                  <li key={finding.label}>
+                    <h3>{finding.label}</h3>
+                    <blockquote>{finding.excerpt}</blockquote>
+                    <p>{finding.explanation}</p>
+                  </li>
+                ))}
+              </ol>
+              <p className="compliance-list-note">
+                Kết quả gắn cờ hỗ trợ kiểm tra nội dung, chưa phải kết luận vi phạm.
+              </p>
+            </section>
+            <section className="admin-panel compliance-handling" aria-labelledby="handling-title">
+              <h2 id="handling-title">Xử lý tin đã đăng</h2>
+              <p>{queueLabel(selected)} · Thao tác trên dữ liệu minh họa.</p>
               <div>
-                <h3 className="text-lg font-semibold text-charcoal-text">
-                  Review: Senior Rust Engineer
-                </h3>
-                <p className="text-sm text-charcoal-83 mt-1">Acme Corp ID: #JD-9921</p>
-              </div>
-              <div className="flex gap-3">
-                <button className="px-4 py-2 text-charcoal-83 text-sm font-medium rounded-lg hover:bg-surface-container transition-colors">
-                  Ignore
-                </button>
-                <button className="px-4 py-2 bg-primary text-on-primary text-sm font-medium rounded-lg hover:opacity-90 transition-all">
-                  Apply Fixes
-                </button>
-              </div>
-            </div>
-
-            <div className="flex-1 p-8 overflow-y-auto">
-              <div className="mb-10">
-                <h4 className="font-semibold text-sm text-charcoal-40 uppercase tracking-wide mb-4 flex items-center gap-2">
-                  <Icon name="description" className="!text-[18px]" />
-                  Flagged Section
-                </h4>
-                <p className="leading-relaxed text-charcoal-text text-lg">
-                  ...We are looking for a rockstar engineer to join our fast-paced team.{" "}
-                  <span className="bg-error-container/60 text-error font-medium px-1 border-b border-error">
-                    The candidate must agree to a 24-month non-compete clause preventing employment
-                    at any competing software firm globally following termination.
-                  </span>{" "}
-                  Additionally, candidates should be digital natives...
-                </p>
-              </div>
-
-              <div className="bg-parchment-bg border border-warm-border border-l-4 border-l-primary p-5 rounded-lg mb-10 flex gap-4">
-                <Icon name="smart_toy" className="text-primary mt-0.5" />
-                <div>
-                  <h5 className="text-sm font-semibold text-charcoal-text mb-1">
-                    AI Compliance Note
-                  </h5>
-                  <p className="text-sm text-charcoal-83 leading-snug mb-2">
-                    Overly broad non-compete clauses violate Vietnam Labor Code 2019 (Điều 35 quyền
-                    tự do việc làm) and international FTC guidelines. Recommend narrowing scope to
-                    specific trade secret protections.
-                  </p>
-                  <button className="text-xs font-medium text-primary hover:underline flex items-center gap-1">
-                    View Legal Guideline <Icon name="open_in_new" className="!text-[14px]" />
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-semibold text-sm text-charcoal-40 uppercase tracking-wide mb-4 flex items-center gap-2">
-                  <Icon name="auto_fix_high" className="!text-[18px] text-primary" />
-                  Suggested Revision
-                </h4>
-                <div className="bg-parchment-bg rounded-lg p-6 border border-warm-border">
-                  <p className="leading-relaxed text-charcoal-text text-lg">
-                    ...We are looking for a highly skilled engineer to join our fast-paced team.{" "}
-                    <span className="bg-secondary-container/60 text-charcoal-text font-medium px-1 border-b border-secondary">
-                      The candidate must agree to protect company trade secrets and proprietary
-                      algorithms as outlined in our standard confidentiality agreement.
-                    </span>{" "}
-                    Additionally, candidates should have deep technical expertise...
-                  </p>
-                  <div className="mt-4 flex justify-end">
-                    <button className="text-xs font-medium text-charcoal-83 flex items-center gap-1 hover:text-charcoal-text transition-colors">
-                      <Icon name="content_copy" className="!text-base" /> Copy to clipboard
+                {selected.visibility === "PUBLIC" ? (
+                  <>
+                    <button
+                      type="button"
+                      className="admin-secondary-action"
+                      disabled={selected.reviewed}
+                      onClick={() => recordAction("review")}
+                    >
+                      <Check size={16} aria-hidden="true" />
+                      {selected.reviewed ? "Đã xem xét" : "Đánh dấu đã xem xét"}
                     </button>
-                  </div>
-                </div>
+                    <button
+                      type="button"
+                      className="admin-primary-action"
+                      onClick={() => openAction("hide")}
+                    >
+                      <ShieldOff size={16} aria-hidden="true" />
+                      Ẩn tin đã đăng
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    className="admin-secondary-action"
+                    onClick={() => openAction("restore")}
+                  >
+                    <Eye size={16} aria-hidden="true" />
+                    Công khai lại tin
+                  </button>
+                )}
               </div>
-            </div>
-          </div>
+            </section>
+            {selected.history.length > 0 && (
+              <section className="admin-panel compliance-history" aria-labelledby="history-title">
+                <h2 id="history-title">Lịch sử xử lý</h2>
+                <ol>
+                  {historyPagination.items.map((event, index) => (
+                    <li key={index}>
+                      <strong>{event.label}</strong>
+                      <time dateTime={event.at}>{dateTime(event.at)}</time>
+                      {event.reason && <p>{event.reason}</p>}
+                    </li>
+                  ))}
+                </ol>
+                <AdminPagination
+                  totalItems={selected.history.length}
+                  page={historyPagination.page}
+                  onPageChange={historyPagination.onPageChange}
+                  itemLabel="thao tác"
+                  label="Phân trang lịch sử xử lý"
+                />
+              </section>
+            )}
+          </aside>
         </div>
-      </div>
+      )}
+
+      <Dialog
+        open={Boolean(action)}
+        onOpenChange={(open) => {
+          if (!open) setAction(null);
+        }}
+      >
+        <DialogContent className="compliance-action-dialog">
+          <DialogTitle>
+            {action === "hide" ? "Ẩn tin tuyển dụng đã đăng" : "Công khai lại tin tuyển dụng"}
+          </DialogTitle>
+          <DialogDescription className="compliance-action-description">
+            {selected?.title} · {selected?.company}. Đây là thao tác trên dữ liệu mẫu.
+          </DialogDescription>
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (action) recordAction(action);
+            }}
+          >
+            <label htmlFor="compliance-action-reason">
+              Lý do xử lý <span aria-hidden="true">*</span>
+            </label>
+            <textarea
+              id="compliance-action-reason"
+              autoFocus
+              required
+              maxLength={1000}
+              rows={4}
+              value={reason}
+              onChange={(event) => {
+                setReason(event.target.value);
+                setActionError("");
+              }}
+              aria-invalid={Boolean(actionError)}
+              aria-describedby={actionError ? "compliance-action-error" : undefined}
+              placeholder="Nhập lý do để ghi lại trong lịch sử xử lý"
+            />
+            {actionError && (
+              <p id="compliance-action-error" role="alert" className="compliance-action-error">
+                {actionError}
+              </p>
+            )}
+            <div className="compliance-dialog-actions">
+              <button
+                type="button"
+                className="admin-secondary-action"
+                onClick={() => setAction(null)}
+              >
+                Hủy
+              </button>
+              <button type="submit" className="admin-primary-action">
+                {action === "hide" ? "Xác nhận ẩn tin" : "Xác nhận công khai lại"}
+                <ArrowRight size={15} aria-hidden="true" />
+              </button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </AdminShell>
   );
 }

@@ -1,5 +1,12 @@
-export type AccountPurpose = "candidate" | "recruiter";
+import { ApiError, apiRequest, getApiBaseUrl } from "./api.ts";
 
+export type AccountPurpose = "candidate" | "recruiter";
+export interface ActiveMembership {
+  companyId: number;
+  companyName: string;
+  companyRole: string;
+  joinedAt: string;
+}
 export interface AuthUser {
   id: number;
   firstName: string;
@@ -7,8 +14,8 @@ export interface AuthUser {
   username: string;
   email: string;
   role: string;
+  activeMembership?: ActiveMembership | null;
 }
-
 export interface RegistrationInput {
   firstName: string;
   lastName: string;
@@ -16,7 +23,6 @@ export interface RegistrationInput {
   email: string;
   password: string;
 }
-
 export interface AuthSession {
   accessToken: string;
   refreshToken: string;
@@ -24,133 +30,229 @@ export interface AuthSession {
   expiresIn: number;
   user: AuthUser;
 }
+type StoredSession = AuthSession & { expiresAt: number };
+export const AUTH_SESSION_KEY = "guardianwork_auth_session";
+export const AUTH_SESSION_EVENT = "guardianwork-auth-session";
 
 export function parseAccountPurpose(search: Record<string, unknown>): { role?: AccountPurpose } {
   return { role: search.role === "recruiter" ? "recruiter" : "candidate" };
 }
-
-async function authRequest(path: string, body: object): Promise<unknown> {
-  const baseUrl = (import.meta.env?.VITE_API_BASE_URL || "/api").replace(/\/$/, "");
-  let response: Response;
-  try {
-    response = await fetch(`${baseUrl}/auth/${path}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify(body),
-    });
-  } catch {
-    throw new Error("Không thể kết nối dịch vụ tài khoản. Vui lòng thử lại sau.");
-  }
-  if (response.status === 401)
-    throw new Error("Email, tên đăng nhập hoặc mật khẩu không chính xác.");
-  if (response.status === 409) throw new Error("Email hoặc tên đăng nhập đã được sử dụng.");
-  if (response.status === 403)
-    throw new Error("Tài khoản chưa được phép đăng nhập. Vui lòng liên hệ bộ phận hỗ trợ.");
-  if (response.status === 400)
-    throw new Error("Thông tin chưa hợp lệ. Vui lòng kiểm tra lại các trường đã nhập.");
-  if (!response.ok) throw new Error("Dịch vụ tài khoản hiện chưa sẵn sàng. Vui lòng thử lại sau.");
-  try {
-    const result = await response.json();
-    if (!result || typeof result !== "object" || !result.data) throw new Error();
-    return result.data;
-  } catch {
-    throw new Error("Phản hồi từ dịch vụ tài khoản không hợp lệ. Vui lòng thử lại sau.");
-  }
-}
-
 function isAuthUser(value: unknown): value is AuthUser {
   if (!value || typeof value !== "object") return false;
   const user = value as Partial<AuthUser>;
   return (
-    typeof user.id === "number" && typeof user.email === "string" && typeof user.role === "string"
+    Number.isSafeInteger(user.id) && typeof user.email === "string" && typeof user.role === "string"
   );
 }
-
-export async function registerAccount(input: RegistrationInput): Promise<AuthUser> {
-  const result = await authRequest("register", {
-    firstName: input.firstName.trim(),
-    lastName: input.lastName.trim(),
-    username: input.username.trim(),
-    email: input.email.trim().toLowerCase(),
-    password: input.password,
-  });
-  if (!isAuthUser(result)) throw new Error("Phản hồi đăng ký không hợp lệ. Vui lòng thử lại sau.");
-  return result;
+function isAuthSession(value: unknown): value is AuthSession {
+  const session = value as Partial<AuthSession> | null;
+  return Boolean(
+    session &&
+    typeof session.accessToken === "string" &&
+    session.accessToken &&
+    typeof session.refreshToken === "string" &&
+    session.refreshToken &&
+    typeof session.expiresIn === "number" &&
+    Number.isFinite(session.expiresIn) &&
+    session.expiresIn > 0 &&
+    session.tokenType === "Bearer" &&
+    isAuthUser(session.user),
+  );
 }
-
-export async function loginAccount(
-  usernameOrEmail: string,
-  password: string,
-): Promise<AuthSession> {
-  const result = await authRequest("login", { usernameOrEmail: usernameOrEmail.trim(), password });
-  const session = result as Partial<AuthSession> | null;
-  if (
-    !session ||
-    typeof session.accessToken !== "string" ||
-    !session.accessToken ||
-    typeof session.refreshToken !== "string" ||
-    !session.refreshToken ||
-    !isAuthUser(session.user)
-  ) {
-    throw new Error("Phản hồi đăng nhập không hợp lệ. Vui lòng thử lại sau.");
-  }
-  return session as AuthSession;
-}
-
-export function getLoginDestination(user: AuthUser, purpose: AccountPurpose) {
-  if (user.role === "ADMIN") return "/admin" as const;
-  return purpose === "recruiter" ? ("/recruiter" as const) : ("/candidate/jobs" as const);
-}
-
-export const AUTH_SESSION_KEY = "guardianwork_auth_session";
-
-export function saveAuthSession(session: AuthSession): void {
+function readSession(): StoredSession | null {
   try {
-    sessionStorage.setItem(
-      AUTH_SESSION_KEY,
-      JSON.stringify({ ...session, expiresAt: Date.now() + session.expiresIn * 1000 }),
-    );
+    return JSON.parse(sessionStorage.getItem(AUTH_SESSION_KEY) || "null");
+  } catch {
+    return null;
+  }
+}
+function emitSessionChange() {
+  if (typeof window !== "undefined") window.dispatchEvent?.(new Event(AUTH_SESSION_EVENT));
+}
+function storeSession(session: StoredSession) {
+  try {
+    sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
   } catch {
     throw new Error(
       "Không thể lưu phiên đăng nhập. Vui lòng cho phép trình duyệt lưu dữ liệu và thử lại.",
     );
   }
+  emitSessionChange();
+}
+export function saveAuthSession(session: AuthSession): void {
+  storeSession({ ...session, expiresAt: Date.now() + session.expiresIn * 1000 });
+}
+export function clearAuthSession() {
+  sessionStorage.removeItem(AUTH_SESSION_KEY);
+  emitSessionChange();
+}
+export function hasAuthSession() {
+  const session = readSession();
+  return Boolean(session?.accessToken && session?.refreshToken);
+}
+export function getCurrentUser(): AuthUser | null {
+  const session = readSession();
+  return session?.accessToken && session.expiresAt > Date.now() ? session.user : null;
+}
+export async function registerAccount(input: RegistrationInput): Promise<AuthUser> {
+  let result: unknown;
+  try {
+    result = await apiRequest("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({
+        firstName: input.firstName.trim(),
+        lastName: input.lastName.trim(),
+        username: input.username.trim(),
+        email: input.email.trim().toLowerCase(),
+        password: input.password,
+      }),
+    });
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 409)
+      throw new Error("Email hoặc tên đăng nhập đã được sử dụng.");
+    throw error;
+  }
+  if (!isAuthUser(result)) throw new Error("Phản hồi đăng ký không hợp lệ. Vui lòng thử lại sau.");
+  return result;
+}
+export async function loginAccount(
+  usernameOrEmail: string,
+  password: string,
+): Promise<AuthSession> {
+  let result: unknown;
+  try {
+    result = await apiRequest("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ usernameOrEmail: usernameOrEmail.trim(), password }),
+    });
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401)
+      throw new Error("Email, tên đăng nhập hoặc mật khẩu không chính xác.");
+    if (error instanceof ApiError && error.status === 403)
+      throw new Error("Tài khoản chưa được phép đăng nhập. Vui lòng liên hệ bộ phận hỗ trợ.");
+    throw error;
+  }
+  if (!isAuthSession(result))
+    throw new Error("Phản hồi đăng nhập không hợp lệ. Vui lòng thử lại sau.");
+  return result;
+}
+export function getLoginDestination(user: AuthUser, purpose: AccountPurpose) {
+  if (user.role === "ADMIN") return "/admin" as const;
+  return purpose === "recruiter"
+    ? user.activeMembership
+      ? ("/recruiter" as const)
+      : ("/recruiter/verification" as const)
+    : ("/candidate/jobs" as const);
 }
 
-/** End the local session first; revocation must not delay returning to login. */
-export async function logoutAccount(): Promise<void> {
-  let session: Partial<AuthSession> | null = null;
+let refreshing: { token: string; promise: Promise<AuthSession> } | null = null;
+export async function refreshAuthSession(): Promise<AuthSession> {
+  const previous = readSession();
+  if (!previous?.refreshToken) throw new ApiError("Vui lòng đăng nhập để tiếp tục.", 401);
+  if (refreshing?.token === previous.refreshToken) return refreshing.promise;
+  const promise = (async () => {
+    try {
+      const result = await apiRequest("/auth/refresh", {
+        method: "POST",
+        body: JSON.stringify({ refreshToken: previous.refreshToken }),
+      });
+      if (!isAuthSession(result)) throw new ApiError("Phản hồi làm mới phiên không hợp lệ.");
+      if (readSession()?.refreshToken !== previous.refreshToken)
+        throw new ApiError("Phiên đăng nhập đã thay đổi. Vui lòng đăng nhập lại.", 401);
+      // /refresh does not include activeMembership; /me remains authoritative.
+      saveAuthSession({
+        ...result,
+        user: { ...result.user, activeMembership: previous.user.activeMembership },
+      });
+      return result;
+    } catch (error) {
+      if (
+        error instanceof ApiError &&
+        [400, 401, 403].includes(error.status) &&
+        readSession()?.refreshToken === previous.refreshToken
+      )
+        clearAuthSession();
+      throw error;
+    }
+  })();
+  refreshing = { token: previous.refreshToken, promise };
   try {
-    const stored = sessionStorage.getItem(AUTH_SESSION_KEY);
-    if (stored) session = JSON.parse(stored);
-  } catch {
-    // An unreadable session should still be removed.
+    return await promise;
+  } finally {
+    if (refreshing?.promise === promise) refreshing = null;
   }
-  sessionStorage.removeItem(AUTH_SESSION_KEY);
-  if (!session?.refreshToken) return;
-  const baseUrl = (import.meta.env?.VITE_API_BASE_URL || "/api").replace(/\/$/, "");
+}
+export async function getAccessToken(): Promise<string> {
+  const session = readSession();
+  if (!session?.accessToken) throw new ApiError("Vui lòng đăng nhập để tiếp tục.", 401);
+  if (session.expiresAt <= Date.now() + 10000) return (await refreshAuthSession()).accessToken;
+  return session.accessToken;
+}
+export async function authenticatedRequest(path: string, init: RequestInit = {}): Promise<unknown> {
+  const token = await getAccessToken();
+  const request = (accessToken: string) =>
+    apiRequest(path, {
+      ...init,
+      headers: { ...init.headers, Authorization: `Bearer ${accessToken}` },
+    });
   try {
-    await fetch(`${baseUrl}/auth/logout`, {
+    return await request(token);
+  } catch (error) {
+    if (!(error instanceof ApiError) || error.status !== 401) throw error;
+    if (!hasAuthSession()) throw error;
+    const current = readSession();
+    const refreshedToken =
+      current?.accessToken !== token
+        ? await getAccessToken()
+        : (await refreshAuthSession()).accessToken;
+    try {
+      return await request(refreshedToken);
+    } catch (retryError) {
+      if (
+        retryError instanceof ApiError &&
+        retryError.status === 401 &&
+        readSession()?.accessToken === refreshedToken
+      )
+        clearAuthSession();
+      throw retryError;
+    }
+  }
+}
+export async function loadCurrentUser(): Promise<AuthUser> {
+  const result = await authenticatedRequest("/auth/me");
+  const user = result as AuthUser;
+  const membership = user?.activeMembership;
+  if (
+    !isAuthUser(user) ||
+    !(
+      membership === null ||
+      (membership &&
+        Number.isSafeInteger(membership.companyId) &&
+        typeof membership.companyName === "string" &&
+        typeof membership.companyRole === "string")
+    )
+  )
+    throw new ApiError("Thông tin tài khoản trả về không hợp lệ. Vui lòng thử lại.");
+  const session = readSession();
+  if (!session || session.user.id !== user.id)
+    throw new ApiError("Phiên đăng nhập đã thay đổi.", 401);
+  storeSession({ ...session, user });
+  return user;
+}
+/** Clear both local tokens immediately; revoke the refresh token on the backend. */
+export async function logoutAccount(): Promise<void> {
+  const session = readSession();
+  clearAuthSession();
+  if (!session?.refreshToken) return;
+  try {
+    await fetch(`${getApiBaseUrl()}/auth/logout`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(session.accessToken ? { Authorization: `Bearer ${session.accessToken}` } : {}),
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refreshToken: session.refreshToken }),
       keepalive: true,
       signal: AbortSignal.timeout(5000),
     });
   } catch {
     // The local session is already cleared when the API is unavailable.
-  }
-}
-
-export function getCurrentUser(): AuthUser | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const session = JSON.parse(sessionStorage.getItem(AUTH_SESSION_KEY) || "null");
-    return session?.accessToken && session.expiresAt > Date.now() ? session.user : null;
-  } catch {
-    return null;
   }
 }

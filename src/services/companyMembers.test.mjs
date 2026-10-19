@@ -35,17 +35,21 @@ function storage() {
   };
 }
 function login(user) {
+  const company = getStoredVerificationRecord();
   sessionStorage.setItem(
     AUTH_SESSION_KEY,
     JSON.stringify({ user, accessToken: "token", expiresAt: Date.now() + 60000 }),
   );
+  // Seed the same local workspace fixture for each test participant. Real UI reloads
+  // the signed-in member's company from the backend rather than sharing account caches.
+  if (company.verificationStatus === "VERIFIED") saveStoredVerificationRecord(company);
 }
 async function verifiedCompany() {
   await submitVerification({
     name: "Company",
     taxCode: "0316892341",
     email: "company@example.com",
-    registrationCertificateUrl: "certificate",
+    registrationCertificateUrl: "https://example.test/license.pdf",
   });
   await executeAdminDecision(101, "VERIFIED");
 }
@@ -61,7 +65,24 @@ beforeEach(() => {
   globalThis.window = { dispatchEvent() {} };
   globalThis.localStorage = storage();
   globalThis.sessionStorage = storage();
-  globalThis.fetch = async () => new Response(null, { status: 503 });
+  globalThis.fetch = async (url, init) => {
+    if (url.endsWith("/verification-request")) {
+      return Response.json(
+        {
+          status: 201,
+          data: {
+            ...JSON.parse(init.body),
+            id: 101,
+            verificationStatus: "PENDING",
+            version: 0,
+            createdAt: new Date().toISOString(),
+          },
+        },
+        { status: 201 },
+      );
+    }
+    return new Response(null, { status: 503 });
+  };
   login(owner);
 });
 afterEach(() => {
@@ -75,7 +96,7 @@ test("only the recorded submitter becomes Owner after approval, independent of c
     name: "Company",
     taxCode: "0316892341",
     email: "company@example.com",
-    registrationCertificateUrl: "certificate",
+    registrationCertificateUrl: "https://example.test/license.pdf",
   });
   assert.equal(getStoredVerificationRecord().submittedBy.id, owner.id);
   assert.equal(currentMember(getCompanyWorkspace()), undefined);
@@ -220,7 +241,7 @@ test("expired or missing identities cannot submit ownerless verification request
       name: "Company",
       taxCode: "0316892341",
       email: "company@example.com",
-      registrationCertificateUrl: "certificate",
+      registrationCertificateUrl: "https://example.test/license.pdf",
     }),
     /đăng nhập/,
   );
@@ -234,7 +255,7 @@ test("expired or missing identities cannot submit ownerless verification request
       name: "Company",
       taxCode: "0316892341",
       email: "company@example.com",
-      registrationCertificateUrl: "certificate",
+      registrationCertificateUrl: "https://example.test/license.pdf",
     }),
     /đăng nhập/,
   );
