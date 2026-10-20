@@ -44,7 +44,6 @@ jobs:
         run: bun run build
 
       - name: Upload build artifact
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
           name: pages
@@ -52,7 +51,6 @@ jobs:
 
   deploy:
     name: Deploy to GitHub Pages
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     needs: ci
     runs-on: ubuntu-latest
     environment:

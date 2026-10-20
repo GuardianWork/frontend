@@ -1,8 +1,9 @@
 # Hướng dẫn workflow CI/CD
 
-Workflow trong thư mục này là `.github/workflows/static.yml`, có tên
-**CI and deploy to Pages**. Workflow dùng Bun để kiểm tra mã nguồn, build ứng
-dụng và triển khai output lên GitHub Pages.
+
+Workflow trong thư mục này là `.github/workflows/static.yml`, hiện có tên
+**Deploy static content to Pages**. Workflow dùng Bun để cài dependency, build
+ứng dụng và triển khai output lên GitHub Pages.
 
 ## Khi nào workflow chạy
 
@@ -16,41 +17,30 @@ Workflow chạy trong các trường hợp sau:
 
 ### Job `ci`
 
-Job `ci` chạy trên `ubuntu-latest` và thực hiện:
+Job `ci` chạy trên `ubuntu-latest` và thực hiện các bước:
 
 1. Checkout mã nguồn bằng `actions/checkout`.
 2. Cài Bun bằng `oven-sh/setup-bun`.
-3. Cài dependency bằng `bun install --frozen-lockfile`.
-4. Chạy lint:
+3. Cài dependency bằng:
    ```sh
-   bun run lint
+   bun install
    ```
-5. Chạy test:
-   ```sh
-   bun test
-   ```
-6. Kiểm tra TypeScript:
-   ```sh
-   bunx tsc --noEmit
-   ```
-7. Build production:
+4. Build production bằng:
    ```sh
    bun run build
    ```
 
-Build của TanStack Start tạo output tĩnh tại `.output/public`. Khi workflow
-chạy do push lên `main` hoặc chạy thủ công, thư mục này được upload thành
-artifact có tên `pages`.
+Build của TanStack Start tạo output tại `.output/public`. Thư mục này được
+upload thành artifact có tên `pages` cho mọi loại sự kiện của workflow.
 
-Pull request vẫn chạy toàn bộ kiểm tra và build, nhưng không upload artifact
-deploy và không chạy job triển khai.
+Pull request cũng chạy bước cài dependency, build và job triển khai. Nghĩa là
+thay đổi trong pull request có thể được deploy lên GitHub Pages production.
 
 ### Job `deploy`
 
-Job `deploy` phụ thuộc vào `ci` và chỉ chạy khi:
-
-- Sự kiện là push lên `main`; hoặc
-- Workflow được chạy thủ công.
+Job `deploy` phụ thuộc vào `ci` và chạy sau khi job này thành công. Vì workflow
+được kích hoạt bởi push, pull request và workflow thủ công, cả ba loại sự kiện
+đều có thể triển khai lên GitHub Pages production.
 
 Job này:
 
@@ -66,6 +56,10 @@ contents: read
 pages: write
 id-token: write
 ```
+
+Quyền mặc định ở cấp workflow hiện cũng bao gồm `pages: write` và `id-token:
+write`; job deploy khai báo lại các quyền này để thể hiện rõ quyền cần cho bước
+triển khai.
 
 ## Cấu hình GitHub Pages
 
@@ -109,10 +103,16 @@ và thông tin cấu hình của repository trên GitHub; khi chạy local, work
 thường sẽ dừng ở bước xác thực của `configure-pages`. `--dryrun` chỉ kiểm tra
 cú pháp, điều kiện và thứ tự các bước.
 
-## Lưu ý về output hiện tại
+## Lưu ý về output, quyền và cú pháp
 
 Lệnh `bun run build` hiện tạo `.output/public`, nhưng output không có
 `index.html` ở thư mục gốc. Workflow vẫn có thể build và upload artifact thành
 công, nhưng cần xác nhận cách triển khai TanStack Start/SSR này có phù hợp với
 GitHub Pages tĩnh hay không. Nếu GitHub Pages yêu cầu một site tĩnh hoàn chỉnh,
 cần điều chỉnh build output hoặc chọn môi trường hosting hỗ trợ SSR.
+
+Workflow hiện cấp quyền `pages: write` và `id-token: write` ở cấp deploy để
+đăng nhập và triển khai GitHub Pages. Vì pull request cũng được phép deploy,
+chỉ nên bật cấu hình này nếu repository không nhận pull request không đáng tin
+cậy hoặc từ fork. Pull request từ fork có thể bị GitHub hạn chế quyền ghi và
+không phù hợp để deploy production.
