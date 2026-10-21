@@ -126,6 +126,11 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="vi" className="h-full antialiased font-sans">
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){function capture(){if(location.hash && /(?:^#|&)(?:secret|memberEmailSecret)=/.test(location.hash)){window.guardianworkPrivateFragment=location.hash;history.replaceState(null,'',location.pathname+location.search);window.dispatchEvent(new Event('guardianwork-private-link'))}}capture();window.addEventListener('hashchange',capture)})();`,
+          }}
+        />
         <HeadContent />
       </head>
       <body className="min-h-full flex flex-col bg-paper text-ink">

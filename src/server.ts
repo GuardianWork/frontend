@@ -49,7 +49,20 @@ export default {
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
+      const normalized = await normalizeCatastrophicSsrResponse(response);
+      if (
+        ["/company-invitations", "/employer-onboarding"].includes(new URL(request.url).pathname)
+      ) {
+        const headers = new Headers(normalized.headers);
+        headers.set("Referrer-Policy", "no-referrer");
+        headers.set("Cache-Control", "no-store");
+        return new Response(normalized.body, {
+          status: normalized.status,
+          statusText: normalized.statusText,
+          headers,
+        });
+      }
+      return normalized;
     } catch (error) {
       console.error(error);
       return new Response(renderErrorPage(), {

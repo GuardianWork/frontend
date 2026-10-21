@@ -8,18 +8,30 @@ import {
   ShieldCheck,
   Users,
 } from "lucide-react";
+import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import type { AccountPurpose } from "@/services/auth";
 
 export function AuthLayout({
   mode,
   purpose,
   children,
+  next,
 }: {
   mode: "login" | "register";
   purpose: AccountPurpose;
   children: ReactNode;
+  next?: "/company-invitations" | "/employer-onboarding";
 }) {
   const registering = mode === "register";
+  if (next)
+    return (
+      <OnboardingLayout
+        title={registering ? "Tạo tài khoản để tiếp tục" : "Tiếp tục với tài khoản của bạn"}
+        description="Dùng đúng email nhận lời mời hoặc liên kết xác thực. Việc đăng nhập chưa chấp nhận lời mời tham gia công ty."
+      >
+        {children}
+      </OnboardingLayout>
+    );
   return (
     <div className="min-h-screen bg-parchment-bg font-sans text-charcoal-text">
       <header className="border-b border-warm-border bg-paper-white">
@@ -34,7 +46,7 @@ export function AuthLayout({
             </span>
             <Link
               to={registering ? "/login" : "/register"}
-              search={{ role: purpose }}
+              search={{ role: purpose, next }}
               className="rounded-lg border border-warm-border px-4 py-2 font-semibold transition-colors hover:bg-surface-container"
             >
               {registering ? "Đăng nhập" : "Đăng ký"}

@@ -1,7 +1,7 @@
 import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
 import { LogoutButton } from "./LogoutButton";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   BriefcaseBusiness,
@@ -11,9 +11,9 @@ import {
   Menu,
   X,
   Plus,
-  ChevronRight,
   ShieldCheck,
   ArrowUpRight,
+  Globe,
 } from "lucide-react";
 
 const navigation = [
@@ -36,98 +36,116 @@ export function RecruiterShell({
 }) {
   const { member } = useCompanyWorkspace();
   const user = useAuthUser();
+  const invitedRecruiter = user?.activeMembership?.companyRole === "RECRUITER";
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [menuOpen, setMenuOpen] = useState(false);
+  useEffect(() => {
+    const close = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMenuOpen(false);
+    };
+    window.addEventListener("keydown", close);
+    return () => window.removeEventListener("keydown", close);
+  }, []);
+
   return (
-    <div className="recruiter-workspace min-h-screen bg-parchment-bg text-charcoal-text">
-      <header className="sticky top-0 z-40 flex h-[72px] items-center justify-between gap-3 border-b border-warm-border bg-paper-white px-4 lg:px-7">
-        <div className="flex items-center gap-3 lg:gap-10">
-          <button
-            aria-label={menuOpen ? "Đóng menu" : "Mở menu"}
-            aria-expanded={menuOpen}
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="rounded-lg p-2 lg:hidden"
-          >
-            {menuOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
-          <Link
-            to="/recruiter"
-            className="flex items-center gap-2 text-xl font-extrabold tracking-tight"
-          >
-            <ShieldCheck className="text-primary" size={30} />
-            <span>
-              Guardian<span className="text-primary">Work</span>
-            </span>
-          </Link>
-          <span className="hidden border-l border-warm-border pl-6 text-sm text-charcoal-83 xl:block">
-            Nền tảng tuyển dụng dành cho doanh nghiệp
-          </span>
-        </div>
-        <div className="flex items-center gap-4">
-          {topNavExtras}
-          <Link
-            to="/recruiter/jobs"
-            aria-label="Đăng tin tuyển dụng"
-            search={{ create: true }}
-            className="recruiter-primary flex items-center gap-2"
-          >
-            <Plus size={17} />
-            <span className="hidden sm:inline">Đăng tin tuyển dụng</span>
-          </Link>
-          <LogoutButton />
-        </div>
-      </header>
+    <div className="recruiter-workspace workspace-shell flex h-dvh w-full overflow-hidden bg-background text-charcoal-text">
       {menuOpen && (
         <button
           aria-label="Đóng menu điều hướng"
-          className="fixed inset-0 top-[72px] z-20 bg-primary/30 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/30 md:hidden"
           onClick={() => setMenuOpen(false)}
         />
       )}
       <aside
-        className={`${menuOpen ? "flex" : "hidden"} fixed bottom-0 left-0 top-[72px] z-30 w-60 flex-col border-r border-warm-border bg-paper-white lg:flex`}
+        id="recruiter-navigation"
+        className={`${menuOpen ? "flex" : "hidden"} workspace-sidebar fixed inset-y-0 left-0 z-50 h-dvh w-64 flex-col border-r border-warm-border bg-paper-white md:static md:z-20 md:flex md:shrink-0`}
       >
-        <div className="mx-4 my-5 rounded-lg border border-warm-border p-3">
-          <p className="text-xs text-charcoal-40">KHÔNG GIAN LÀM VIỆC</p>
-          <p className="mt-1 text-sm font-semibold">
-            {user?.activeMembership?.companyName || "Chưa đăng ký công ty"}
-          </p>
-          <p className="mt-1 text-xs text-charcoal-83">
-            {user?.activeMembership?.companyRole || member?.role || "Tài khoản cá nhân"}
-          </p>
-        </div>
-        <nav aria-label="Điều hướng nhà tuyển dụng" className="space-y-1 px-3">
-          {navigation.map(({ to, label, icon: Icon }) => {
-            const active =
-              to === "/recruiter" ? pathname.replace(/\/$/, "") === to : pathname.startsWith(to);
-            return (
-              <Link
-                key={to}
-                to={to}
-                onClick={() => setMenuOpen(false)}
-                aria-current={active ? "page" : undefined}
-                className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${active ? "bg-surface-container text-primary" : "text-charcoal-83 hover:bg-surface-container-low hover:text-charcoal-text"}`}
-              >
-                <Icon size={19} />
-                {label}
-                {active && <ChevronRight size={15} className="ml-auto" />}
-              </Link>
-            );
-          })}
-        </nav>
-        <div className="mx-4 mt-8 rounded-xl bg-surface-container-low p-4">
-          <ShieldCheck className="mb-3 text-primary" size={26} />
-          <p className="text-sm font-semibold">Xây dựng uy tín doanh nghiệp</p>
-          <p className="mt-2 text-xs leading-5 text-charcoal-83">
-            Hoàn thiện hồ sơ để ứng viên an tâm kết nối với bạn.
-          </p>
+        <div className="workspace-brand flex min-h-[76px] items-center justify-between border-b border-warm-border px-5 py-4">
           <Link
-            to="/recruiter/verification"
+            to="/recruiter"
             onClick={() => setMenuOpen(false)}
-            className="mt-3 flex items-center gap-2 text-xs font-semibold text-primary"
+            className="flex min-w-0 items-center gap-3"
           >
-            Xác thực công ty <ArrowUpRight size={14} />
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary text-on-primary">
+              <ShieldCheck size={24} aria-hidden="true" />
+            </span>
+            <span>
+              <span className="block text-lg font-semibold leading-tight tracking-tight text-primary">
+                GuardianWork
+              </span>
+              <span className="block text-xs font-medium text-charcoal-40">Nhà tuyển dụng</span>
+            </span>
           </Link>
+          <button
+            type="button"
+            aria-label="Đóng menu"
+            onClick={() => setMenuOpen(false)}
+            className="flex h-11 w-10 shrink-0 items-center justify-center rounded-lg hover:bg-charcoal-04 md:hidden"
+          >
+            <X size={20} aria-hidden="true" />
+          </button>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="mx-5 border-b border-warm-border py-4">
+            <p className="break-words text-sm font-semibold">
+              {user?.activeMembership?.companyName || "Chưa đăng ký công ty"}
+            </p>
+            <p className="mt-1 text-xs text-charcoal-83">
+              {user?.activeMembership?.companyRole || member?.role || "Tài khoản cá nhân"}
+            </p>
+          </div>
+          <nav aria-label="Điều hướng nhà tuyển dụng" className="flex flex-col gap-1 px-3 pt-4">
+            {navigation
+              .filter(
+                (item) =>
+                  !invitedRecruiter ||
+                  !["/recruiter/members", "/recruiter/verification"].includes(item.to),
+              )
+              .map(({ to, label, icon: Icon }) => {
+                const active =
+                  to === "/recruiter"
+                    ? pathname.replace(/\/$/, "") === to
+                    : pathname.startsWith(to);
+                return (
+                  <Link
+                    key={to}
+                    to={to}
+                    onClick={() => setMenuOpen(false)}
+                    aria-current={active ? "page" : undefined}
+                    className={`flex min-h-11 items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors ${active ? "bg-surface-container font-semibold text-primary" : "font-medium text-charcoal-40 hover:bg-charcoal-04 hover:text-charcoal-text"}`}
+                  >
+                    <Icon size={20} className="shrink-0" aria-hidden="true" />
+                    {label}
+                  </Link>
+                );
+              })}
+            {invitedRecruiter && (
+              <Link
+                to="/employer-onboarding"
+                onClick={() => setMenuOpen(false)}
+                className="flex min-h-11 items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-charcoal-40 hover:bg-charcoal-04 hover:text-charcoal-text"
+              >
+                <ShieldCheck size={20} aria-hidden="true" />
+                Xác thực cá nhân
+              </Link>
+            )}
+          </nav>
+          {!invitedRecruiter && (
+            <div className="mx-3 mb-4 mt-6 rounded-lg bg-surface-container-low p-4">
+              <ShieldCheck className="mb-3 text-primary" size={26} />
+              <p className="text-sm font-semibold">Xây dựng uy tín doanh nghiệp</p>
+              <p className="mt-2 text-xs leading-5 text-charcoal-83">
+                Hoàn thiện hồ sơ để ứng viên an tâm kết nối với bạn.
+              </p>
+              <Link
+                to="/recruiter/verification"
+                onClick={() => setMenuOpen(false)}
+                className="mt-3 flex items-center gap-2 text-xs font-semibold text-primary"
+              >
+                Xác thực công ty <ArrowUpRight size={14} />
+              </Link>
+            </div>
+          )}
         </div>
         <div className="mt-auto space-y-3 border-t border-warm-border p-5 text-xs text-charcoal-83">
           <Link to="/vn" className="block hover:text-primary">
@@ -141,16 +159,47 @@ export function RecruiterShell({
           </Link>
         </div>
       </aside>
-      <main className="min-w-0 p-4 sm:p-6 lg:ml-60 lg:p-8">
-        <div className="mx-auto max-w-[1400px]">
-          <div className="mb-6 flex items-center gap-2 text-xs text-charcoal-40">
-            <span>Nhà tuyển dụng</span>
-            <ChevronRight size={13} />
-            <span className="text-charcoal-83">{title}</span>
+      <div className="workspace-content flex h-dvh min-w-0 flex-1 flex-col overflow-hidden bg-parchment-bg">
+        <header className="flex min-h-[76px] shrink-0 items-center justify-between gap-3 border-b border-warm-border bg-paper-white px-4 md:px-8">
+          <div className="flex min-w-0 items-center gap-3">
+            <button
+              type="button"
+              aria-label="Mở menu"
+              aria-expanded={menuOpen}
+              aria-controls="recruiter-navigation"
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="rounded-md border border-warm-border p-2 text-charcoal-83 md:hidden"
+            >
+              <Menu size={22} aria-hidden="true" />
+            </button>
+            <p className="workspace-page-title text-sm font-semibold tracking-tight [overflow-wrap:anywhere]">
+              {title}
+            </p>
           </div>
-          {children}
-        </div>
-      </main>
+          <div className="flex shrink-0 items-center gap-2 md:gap-5">
+            <Link
+              to="/vn"
+              className="hidden items-center gap-1.5 rounded-lg border border-warm-border bg-surface-container px-3 py-1.5 text-xs font-semibold hover:bg-surface-container-high xl:flex"
+            >
+              <Globe size={14} className="text-primary" aria-hidden="true" /> Trang chủ
+            </Link>
+            {topNavExtras}
+            <Link
+              to="/recruiter/jobs"
+              aria-label="Đăng tin tuyển dụng"
+              search={{ create: true }}
+              className="recruiter-primary flex items-center gap-2"
+            >
+              <Plus size={17} aria-hidden="true" />
+              <span className="hidden sm:inline">Đăng tin tuyển dụng</span>
+            </Link>
+            <LogoutButton />
+          </div>
+        </header>
+        <main className="min-h-0 flex-1 overflow-y-auto p-4 md:p-8">
+          <div className="mx-auto max-w-[1200px]">{children}</div>
+        </main>
+      </div>
     </div>
   );
 }

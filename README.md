@@ -100,3 +100,7 @@ UI_BASE_URL=http://localhost:5137 npm run test:ui
 ```
 
 Vite dùng cache riêng theo lệnh và chế độ chạy để `dev`, `dev:mock` và `build` không ghi đè các module React của nhau. Nếu tab đã mở trước khi đổi cấu hình, tải lại trang.
+
+### Invited recruiter onboarding
+
+The recipient flow is available at `/company-invitations`, with personal verification at `/employer-onboarding`. It uses API_FOR_FE's real invitation and member-proof contracts. See [integration and delivery configuration](docs/invited-recruiter-onboarding.md). The basic `dev:mock` server does not simulate these new endpoints; the invitation browser suite supplies isolated API fixtures. SMS delivery and phone OTP verification are owned by a separate ticket and are not implemented in this branch. Pending backend phone proof continues to block workspace entry.

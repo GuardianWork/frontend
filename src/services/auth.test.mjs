@@ -225,3 +225,12 @@ test("logging out during token refresh never restores the signed-out session", a
   assert.equal(sessionStorage.getItem(AUTH_SESSION_KEY), null);
   delete globalThis.sessionStorage;
 });
+
+test("authentication continuation accepts only the two internal onboarding routes", async () => {
+  const { parseAccountPurpose } = await import("./auth.ts");
+  assert.equal(parseAccountPurpose({ next: "https://example.test" }).next, undefined);
+  assert.equal(parseAccountPurpose({ next: "//example.test" }).next, undefined);
+  assert.equal(parseAccountPurpose({ next: "/admin" }).next, undefined);
+  assert.equal(parseAccountPurpose({ next: "/company-invitations" }).next, "/company-invitations");
+  assert.equal(parseAccountPurpose({ next: "/employer-onboarding" }).next, "/employer-onboarding");
+});

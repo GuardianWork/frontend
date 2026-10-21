@@ -27,7 +27,7 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginPage() {
-  const { role = "candidate" } = Route.useSearch();
+  const { role = "candidate", next } = Route.useSearch();
   const navigate = Route.useNavigate();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
@@ -51,7 +51,7 @@ function LoginPage() {
       const session = await loginAccount(identifier, password);
       saveAuthSession(session);
       const user = await loadCurrentUser();
-      await navigate({ to: getLoginDestination(user, role) });
+      await navigate({ to: next || getLoginDestination(user, role) });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Không thể đăng nhập. Vui lòng thử lại.");
     } finally {
@@ -60,19 +60,23 @@ function LoginPage() {
   };
 
   return (
-    <AuthLayout mode="login" purpose={role}>
+    <AuthLayout mode="login" purpose={role} next={next}>
       <h2 className="text-2xl font-bold tracking-tight">Đăng nhập GuardianWork</h2>
       <p className="mb-7 mt-2 text-sm leading-6 text-charcoal-83">
-        Tiếp tục hành trình của bạn cùng những cơ hội mới.
+        {next
+          ? "Đăng nhập bằng email nhận lời mời để tiếp tục. Bạn có thể dùng tên đăng nhập của tài khoản đó."
+          : "Tiếp tục hành trình của bạn cùng những cơ hội mới."}
       </p>
-      <AccountPurposeChoice
-        value={role}
-        disabled={loading || !ready}
-        onChange={(next) => {
-          setError("");
-          void navigate({ search: { role: next }, replace: true });
-        }}
-      />
+      {!next && (
+        <AccountPurposeChoice
+          value={role}
+          disabled={loading || !ready}
+          onChange={(next) => {
+            setError("");
+            void navigate({ search: { role: next }, replace: true });
+          }}
+        />
+      )}
       <form onSubmit={handleSubmit} className="space-y-5" aria-busy={loading}>
         {error && (
           <p
@@ -131,7 +135,7 @@ function LoginPage() {
         Bạn chưa có tài khoản?{" "}
         <Link
           to="/register"
-          search={{ role }}
+          search={{ role, next }}
           className="font-semibold text-primary underline-offset-4 hover:underline"
         >
           Đăng ký ngay

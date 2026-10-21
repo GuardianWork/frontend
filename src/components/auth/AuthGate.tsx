@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { ApiError } from "@/services/api";
 import { hasAuthSession, loadCurrentUser } from "@/services/auth";
+import { loadPersonalProof, needsInvitedOnboarding } from "@/services/recruiterOnboarding";
 import { loadCompanyVerification } from "@/services/companyVerification";
 
 /** Restore identity from /me before showing an authenticated workspace. */
@@ -29,7 +30,21 @@ export function AuthGate({ children }: { children: ReactNode }) {
         const user = await loadCurrentUser();
         if (area === "admin" && user.role !== "ADMIN")
           throw new ApiError("Tài khoản hiện tại không có quyền quản trị.", 403);
-        if (area === "recruiter" && user.activeMembership) await loadCompanyVerification();
+        if (area === "recruiter" && needsInvitedOnboarding(user.id) && !user.activeMembership) {
+          if (!cancelled) await navigate({ to: "/employer-onboarding", replace: true });
+          return;
+        }
+        if (area === "recruiter" && user.activeMembership) {
+          if (needsInvitedOnboarding(user.id)) {
+            const proof = await loadPersonalProof();
+            if (!proof.emailVerified || !proof.phoneVerified || proof.stage !== "VERIFIED") {
+              if (!cancelled) await navigate({ to: "/employer-onboarding", replace: true });
+              return;
+            }
+          }
+          // Private company dossiers belong to the Owner; Recruiters cannot read them.
+          if (user.activeMembership.companyRole === "OWNER") await loadCompanyVerification();
+        }
         if (!cancelled) setState({ area, ready: true, error: "" });
       } catch (error) {
         if (cancelled) return;
