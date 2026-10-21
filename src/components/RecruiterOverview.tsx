@@ -70,25 +70,19 @@ export function RecruiterOverview({
             </p>
           </div>
         </div>
-        <Link
-          to={
-            invitedRecruiter
-              ? "/employer-onboarding"
-              : status === "VERIFIED"
-                ? "/recruiter/members"
-                : "/recruiter/verification"
-          }
-          className="flex shrink-0 items-center gap-2 text-sm font-semibold text-primary"
-        >
-          {invitedRecruiter
-            ? "Xác thực cá nhân"
-            : status === "VERIFIED"
+        {!invitedRecruiter && (
+          <Link
+            to={status === "VERIFIED" ? "/recruiter/members" : "/recruiter/verification"}
+            className="flex shrink-0 items-center gap-2 text-sm font-semibold text-primary"
+          >
+            {status === "VERIFIED"
               ? "Quản lý thành viên"
               : status === "PENDING"
                 ? "Xem hồ sơ"
                 : "Xác thực ngay"}
-          <ArrowRight size={16} />
-        </Link>
+            <ArrowRight size={16} />
+          </Link>
+        )}
       </div>
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
         {[
@@ -144,30 +138,30 @@ export function RecruiterOverview({
             icon: Search,
           },
           {
-            title: invitedRecruiter ? "Xác thực cá nhân" : "Hồ sơ doanh nghiệp",
-            description: invitedRecruiter
-              ? "Xem trạng thái xác thực tài khoản của bạn."
-              : "Quản lý thông tin và giấy tờ xác thực.",
-            to: invitedRecruiter ? "/employer-onboarding" : "/recruiter/verification",
+            title: "Hồ sơ doanh nghiệp",
+            description: "Quản lý thông tin và giấy tờ xác thực.",
+            to: "/recruiter/verification",
             icon: Building2,
           },
-        ].map(({ title, description, to, icon: Icon }) => (
-          <Link
-            key={to}
-            to={to}
-            className="group flex items-center gap-3 rounded-xl border border-warm-border bg-paper-white p-4 transition-colors hover:border-primary/30"
-          >
-            <Icon size={21} className="shrink-0 text-primary" />
-            <div>
-              <h3 className="text-sm font-semibold">{title}</h3>
-              <p className="mt-1 text-xs leading-5 text-charcoal-83">{description}</p>
-            </div>
-            <ArrowRight
-              size={15}
-              className="ml-auto shrink-0 text-charcoal-40 group-hover:text-primary"
-            />
-          </Link>
-        ))}
+        ]
+          .filter((item) => !invitedRecruiter || item.to !== "/recruiter/verification")
+          .map(({ title, description, to, icon: Icon }) => (
+            <Link
+              key={to}
+              to={to}
+              className="group flex items-center gap-3 rounded-xl border border-warm-border bg-paper-white p-4 transition-colors hover:border-primary/30"
+            >
+              <Icon size={21} className="shrink-0 text-primary" />
+              <div>
+                <h3 className="text-sm font-semibold">{title}</h3>
+                <p className="mt-1 text-xs leading-5 text-charcoal-83">{description}</p>
+              </div>
+              <ArrowRight
+                size={15}
+                className="ml-auto shrink-0 text-charcoal-40 group-hover:text-primary"
+              />
+            </Link>
+          ))}
       </div>
     </div>
   );

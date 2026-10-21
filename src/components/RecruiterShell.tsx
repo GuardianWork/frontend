@@ -119,16 +119,6 @@ export function RecruiterShell({
                   </Link>
                 );
               })}
-            {invitedRecruiter && (
-              <Link
-                to="/employer-onboarding"
-                onClick={() => setMenuOpen(false)}
-                className="flex min-h-11 items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-charcoal-40 hover:bg-charcoal-04 hover:text-charcoal-text"
-              >
-                <ShieldCheck size={20} aria-hidden="true" />
-                Xác thực cá nhân
-              </Link>
-            )}
           </nav>
           {!invitedRecruiter && (
             <div className="mx-3 mb-4 mt-6 rounded-lg bg-surface-container-low p-4">

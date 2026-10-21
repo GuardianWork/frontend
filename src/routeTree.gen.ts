@@ -12,10 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as CandidatesRouteImport } from './routes/candidates'
-import { Route as CompanyInvitationsRouteImport } from './routes/company-invitations'
 import { Route as ComplianceRouteImport } from './routes/compliance'
 import { Route as CopilotRouteImport } from './routes/copilot'
-import { Route as EmployerOnboardingRouteImport } from './routes/employer-onboarding'
 import { Route as JobsRouteImport } from './routes/jobs'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ProfileRouteImport } from './routes/profile'
@@ -61,11 +59,6 @@ const CandidatesRoute = CandidatesRouteImport.update({
   path: '/candidates',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CompanyInvitationsRoute = CompanyInvitationsRouteImport.update({
-  id: '/company-invitations',
-  path: '/company-invitations',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ComplianceRoute = ComplianceRouteImport.update({
   id: '/compliance',
   path: '/compliance',
@@ -74,11 +67,6 @@ const ComplianceRoute = ComplianceRouteImport.update({
 const CopilotRoute = CopilotRouteImport.update({
   id: '/copilot',
   path: '/copilot',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EmployerOnboardingRoute = EmployerOnboardingRouteImport.update({
-  id: '/employer-onboarding',
-  path: '/employer-onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
 const JobsRoute = JobsRouteImport.update({
@@ -231,10 +219,8 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
   '/candidates': typeof CandidatesRoute
-  '/company-invitations': typeof CompanyInvitationsRoute
   '/compliance': typeof ComplianceRoute
   '/copilot': typeof CopilotRoute
-  '/employer-onboarding': typeof EmployerOnboardingRoute
   '/jobs': typeof JobsRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
@@ -269,10 +255,8 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
   '/candidates': typeof CandidatesRoute
-  '/company-invitations': typeof CompanyInvitationsRoute
   '/compliance': typeof ComplianceRoute
   '/copilot': typeof CopilotRoute
-  '/employer-onboarding': typeof EmployerOnboardingRoute
   '/jobs': typeof JobsRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
@@ -308,10 +292,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
   '/candidates': typeof CandidatesRoute
-  '/company-invitations': typeof CompanyInvitationsRoute
   '/compliance': typeof ComplianceRoute
   '/copilot': typeof CopilotRoute
-  '/employer-onboarding': typeof EmployerOnboardingRoute
   '/jobs': typeof JobsRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
@@ -348,10 +330,8 @@ export interface FileRouteTypes {
     | '/'
     | '/analytics'
     | '/candidates'
-    | '/company-invitations'
     | '/compliance'
     | '/copilot'
-    | '/employer-onboarding'
     | '/jobs'
     | '/login'
     | '/profile'
@@ -386,10 +366,8 @@ export interface FileRouteTypes {
     | '/'
     | '/analytics'
     | '/candidates'
-    | '/company-invitations'
     | '/compliance'
     | '/copilot'
-    | '/employer-onboarding'
     | '/jobs'
     | '/login'
     | '/profile'
@@ -424,10 +402,8 @@ export interface FileRouteTypes {
     | '/'
     | '/analytics'
     | '/candidates'
-    | '/company-invitations'
     | '/compliance'
     | '/copilot'
-    | '/employer-onboarding'
     | '/jobs'
     | '/login'
     | '/profile'
@@ -463,10 +439,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnalyticsRoute: typeof AnalyticsRoute
   CandidatesRoute: typeof CandidatesRoute
-  CompanyInvitationsRoute: typeof CompanyInvitationsRoute
   ComplianceRoute: typeof ComplianceRoute
   CopilotRoute: typeof CopilotRoute
-  EmployerOnboardingRoute: typeof EmployerOnboardingRoute
   JobsRoute: typeof JobsRoute
   LoginRoute: typeof LoginRoute
   ProfileRoute: typeof ProfileRoute
@@ -521,13 +495,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CandidatesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/company-invitations': {
-      id: '/company-invitations'
-      path: '/company-invitations'
-      fullPath: '/company-invitations'
-      preLoaderRoute: typeof CompanyInvitationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/compliance': {
       id: '/compliance'
       path: '/compliance'
@@ -540,13 +507,6 @@ declare module '@tanstack/react-router' {
       path: '/copilot'
       fullPath: '/copilot'
       preLoaderRoute: typeof CopilotRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/employer-onboarding': {
-      id: '/employer-onboarding'
-      path: '/employer-onboarding'
-      fullPath: '/employer-onboarding'
-      preLoaderRoute: typeof EmployerOnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/jobs': {
@@ -759,10 +719,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnalyticsRoute: AnalyticsRoute,
   CandidatesRoute: CandidatesRoute,
-  CompanyInvitationsRoute: CompanyInvitationsRoute,
   ComplianceRoute: ComplianceRoute,
   CopilotRoute: CopilotRoute,
-  EmployerOnboardingRoute: EmployerOnboardingRoute,
   JobsRoute: JobsRoute,
   LoginRoute: LoginRoute,
   ProfileRoute: ProfileRoute,

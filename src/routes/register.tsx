@@ -22,7 +22,7 @@ export const Route = createFileRoute("/register")({
 });
 
 function RegisterPage() {
-  const { role = "candidate", next } = Route.useSearch();
+  const { role = "candidate" } = Route.useSearch();
   const navigate = Route.useNavigate();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -77,22 +77,20 @@ function RegisterPage() {
   };
 
   return (
-    <AuthLayout mode="register" purpose={role} next={next}>
+    <AuthLayout mode="register" purpose={role}>
       {registered ? (
         <div role="status" className="py-8 text-center">
           <CheckCircle2 size={46} className="mx-auto mb-5" />
           <h2 className="text-2xl font-bold">Tạo tài khoản thành công!</h2>
           <p className="mt-3 text-sm leading-7 text-charcoal-83">
             Chào {firstName.trim()}, tài khoản của bạn đã sẵn sàng.{" "}
-            {next
-              ? "Đăng nhập để tiếp tục lời mời của bạn."
-              : role === "recruiter"
-                ? "Đăng nhập để hoàn thiện và xác thực hồ sơ công ty trước khi bắt đầu tuyển dụng."
-                : "Đăng nhập để tạo hồ sơ và khám phá những công việc phù hợp."}
+            {role === "recruiter"
+              ? "Đăng nhập để hoàn thiện và xác thực hồ sơ công ty trước khi bắt đầu tuyển dụng."
+              : "Đăng nhập để tạo hồ sơ và khám phá những công việc phù hợp."}
           </p>
           <Link
             to="/login"
-            search={{ role, next }}
+            search={{ role }}
             className="mt-6 inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-on-primary"
           >
             Đến trang đăng nhập
@@ -106,21 +104,17 @@ function RegisterPage() {
           </p>
           <h2 className="text-2xl font-bold tracking-tight">Tạo tài khoản của bạn</h2>
           <p className="mb-7 mt-2 text-sm leading-6 text-charcoal-83">
-            {next
-              ? "Dùng đúng email nhận lời mời. Sau khi tạo tài khoản, đăng nhập để xem và xác nhận lời mời."
-              : "Chọn mục tiêu và điền thông tin để tham gia GuardianWork."}
+            Chọn mục tiêu và điền thông tin để tham gia GuardianWork.
           </p>
-          {!next && (
-            <AccountPurposeChoice
-              value={role}
-              disabled={loading || !ready}
-              onChange={(next) => {
-                setError("");
-                void navigate({ search: { role: next }, replace: true });
-              }}
-            />
-          )}
-          {role === "recruiter" && !next && (
+          <AccountPurposeChoice
+            value={role}
+            disabled={loading || !ready}
+            onChange={(next) => {
+              setError("");
+              void navigate({ search: { role: next }, replace: true });
+            }}
+          />
+          {role === "recruiter" && (
             <p className="mb-5 rounded-lg border border-warm-border bg-surface-container-low p-3 text-xs leading-6 text-charcoal-83">
               Dành cho người đại diện doanh nghiệp và nhân sự tuyển dụng. Bạn sẽ bổ sung thông tin
               công ty trong bước xác thực sau khi đăng nhập.
@@ -251,7 +245,7 @@ function RegisterPage() {
             Đã có tài khoản?{" "}
             <Link
               to="/login"
-              search={{ role, next }}
+              search={{ role }}
               className="font-semibold text-primary underline-offset-4 hover:underline"
             >
               Đăng nhập
