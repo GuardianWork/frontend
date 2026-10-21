@@ -1,4 +1,5 @@
 import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
+import { LeaveCompanyButton } from "./LeaveCompanyButton";
 import { LogoutButton } from "./LogoutButton";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useEffect, useState, type ReactNode } from "react";
@@ -138,6 +139,9 @@ export function RecruiterShell({
           )}
         </div>
         <div className="mt-auto space-y-3 border-t border-warm-border p-5 text-xs text-charcoal-83">
+          {invitedRecruiter && user.activeMembership && (
+            <LeaveCompanyButton companyName={user.activeMembership.companyName} />
+          )}
           <Link to="/vn" className="block hover:text-primary">
             Trang chủ GuardianWork ↗
           </Link>
