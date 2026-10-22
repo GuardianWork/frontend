@@ -14,6 +14,10 @@ import {
   canViewMemberData,
   createCompanyJob,
   submitCompanyApplication,
+  reviewCompanyJob,
+  setCompanyJobVisibility,
+  getJobApprovalQueue,
+  jobModerationStatus,
 } from "./companyMembers.ts";
 const originalFetch = globalThis.fetch;
 const owner = {
@@ -29,6 +33,10 @@ const third = { ...owner, id: 3, email: "other@example.com" };
 function storage() {
   const values = new Map();
   return {
+    get length() {
+      return values.size;
+    },
+    key: (index) => Array.from(values.keys())[index] ?? null,
     getItem: (key) => values.get(key) ?? null,
     setItem: (key, value) => values.set(key, value),
     removeItem: (key) => values.delete(key),
@@ -274,6 +282,8 @@ test("candidate applications are linked to the posting author and respect applic
     status: "Active",
   });
   const jobId = getCompanyWorkspace().jobs[0].id;
+  login({ ...owner, role: "ADMIN" });
+  reviewCompanyJob(jobId, "approved");
   login({ ...owner, id: 4, email: "candidate@example.com" });
   submitCompanyApplication(jobId);
   assert.throws(() => submitCompanyApplication(jobId), /đã ứng tuyển/);
@@ -304,4 +314,116 @@ test("candidate applications are linked to the posting author and respect applic
   });
   login(third);
   assert.equal(canViewMemberData(getCompanyWorkspace(), authorId, "applications"), false);
+});
+
+test("new jobs require admin review before applications and decisions persist", async () => {
+  await verifiedCompany();
+  createCompanyJob({
+    title: "Kế toán",
+    department: "Tài chính",
+    location: "HCM",
+    salary: "20M",
+    status: "Active",
+  });
+  const id = getCompanyWorkspace().jobs[0].id;
+  assert.equal(jobModerationStatus(getCompanyWorkspace().jobs[0]), "pending");
+  assert.throws(() => submitCompanyApplication(id), /không còn nhận đơn/);
+  assert.throws(() => reviewCompanyJob(id, "approved"), /quản trị viên/);
+  login({ ...owner, role: "ADMIN" });
+  assert.throws(() => reviewCompanyJob(id, "rejected", "   "), /10 đến/);
+  reviewCompanyJob(id, "approved");
+  assert.equal(jobModerationStatus(getCompanyWorkspace().jobs[0]), "approved");
+  assert.equal(getCompanyWorkspace().jobs[0].reviewedBy, owner.email);
+  assert.throws(() => reviewCompanyJob(id, "rejected", "Thông tin chưa đầy đủ"), /đã được xử lý/);
+  login(third);
+  submitCompanyApplication(id);
+  assert.equal(getCompanyWorkspace().applications[0].jobId, id);
+});
+
+test("rejection reasons persist, rejected jobs stay unavailable and failed writes are reported", async () => {
+  await verifiedCompany();
+  createCompanyJob({
+    title: "Sales",
+    department: "Sales",
+    location: "HCM",
+    salary: "20M",
+    status: "Active",
+  });
+  const id = getCompanyWorkspace().jobs[0].id;
+  login({ ...owner, role: "ADMIN" });
+  const setItem = localStorage.setItem;
+  localStorage.setItem = () => {
+    throw new Error("quota");
+  };
+  assert.throws(() => reviewCompanyJob(id, "approved"), /Không thể lưu/);
+  localStorage.setItem = setItem;
+  assert.equal(jobModerationStatus(getCompanyWorkspace().jobs[0]), "pending");
+  reviewCompanyJob(id, "rejected", "  Vui lòng bổ sung mức lương.  ");
+  assert.equal(getCompanyWorkspace().jobs[0].rejectionReason, "Vui lòng bổ sung mức lương.");
+  assert.throws(() => submitCompanyApplication(id), /không còn nhận đơn/);
+  assert.equal(jobModerationStatus({ status: "Active" }), "approved");
+});
+
+test("an admin with a separate identity can review another company's browser-local submissions", async () => {
+  await verifiedCompany();
+  createCompanyJob({
+    title: "HR",
+    department: "Nhân sự",
+    location: "HCM",
+    salary: "20M",
+    status: "Active",
+  });
+  assert.throws(() => getJobApprovalQueue(), /quản trị viên/);
+  const id = getCompanyWorkspace().jobs[0].id;
+  login({ ...third, id: 999, role: "ADMIN" });
+  saveStoredVerificationRecord({
+    ...getStoredVerificationRecord(),
+    verificationStatus: "REGISTERED",
+  });
+  assert.equal(getCompanyWorkspace().jobs.length, 0);
+  const queue = getJobApprovalQueue();
+  assert.equal(queue.length, 1);
+  assert.equal(queue[0].id, id);
+  assert.equal(queue[0].companyName, "Company");
+  reviewCompanyJob(id, "approved", "", queue[0].workspaceKey);
+  login(owner);
+  assert.equal(jobModerationStatus(getCompanyWorkspace().jobs[0]), "approved");
+});
+
+test("visibility controls require admin and approved jobs, persist reasons and prevent applications while hidden", async () => {
+  await verifiedCompany();
+  createCompanyJob({
+    title: "Finance",
+    department: "Finance",
+    location: "HCM",
+    salary: "20M",
+    status: "Active",
+  });
+  const id = getCompanyWorkspace().jobs[0].id;
+  login({ ...owner, role: "ADMIN" });
+  const key = getJobApprovalQueue()[0].workspaceKey;
+  assert.throws(
+    () => setCompanyJobVisibility(id, "HIDDEN", "Thông tin cần xem xét", key),
+    /Chỉ thay đổi/,
+  );
+  reviewCompanyJob(id, "approved");
+  assert.throws(() => setCompanyJobVisibility(id, "HIDDEN", "   ", key), /10 đến/);
+  login(third);
+  assert.throws(
+    () => setCompanyJobVisibility(id, "HIDDEN", "Thông tin cần xem xét", key),
+    /quản trị viên/,
+  );
+  login({ ...owner, role: "ADMIN" });
+  setCompanyJobVisibility(id, "HIDDEN", "Thông tin cần xem xét", key);
+  assert.equal(getCompanyWorkspace().jobs[0].visibility, "HIDDEN");
+  assert.equal(getCompanyWorkspace().jobs[0].visibilityReason, "Thông tin cần xem xét");
+  assert.throws(() => submitCompanyApplication(id), /không còn nhận đơn/);
+  assert.throws(
+    () => setCompanyJobVisibility(id, "HIDDEN", "Thông tin cần xem xét", key),
+    /đã thay đổi/,
+  );
+  setCompanyJobVisibility(id, "PUBLIC", "Đã kiểm tra thông tin đầy đủ", key);
+  assert.equal(getCompanyWorkspace().jobs[0].visibility, "PUBLIC");
+  submitCompanyApplication(id);
+  assert.equal(getCompanyWorkspace().applications.length, 1);
 });

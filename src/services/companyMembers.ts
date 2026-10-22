@@ -27,6 +27,16 @@ export interface CompanyJob {
   salary: string;
   status: "Active" | "Draft" | "Closed";
   created: string;
+  moderationStatus?: "pending" | "approved" | "rejected";
+  rejectionReason?: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  companyName?: string;
+  companyTaxCode?: string;
+  visibility?: "PUBLIC" | "HIDDEN";
+  visibilityReason?: string;
+  visibilityUpdatedAt?: string;
+  visibilityUpdatedBy?: string;
 }
 export interface CompanyApplication {
   id: string;
@@ -92,9 +102,9 @@ export function canViewMemberData(
   );
 }
 
-function persist(workspace: CompanyWorkspace) {
+function persist(workspace: CompanyWorkspace, key = storageKey()) {
   try {
-    localStorage.setItem(storageKey(), JSON.stringify(workspace));
+    localStorage.setItem(key, JSON.stringify(workspace));
   } catch {
     throw new Error("Không thể lưu thay đổi. Vui lòng kiểm tra bộ nhớ trình duyệt.");
   }
@@ -180,7 +190,9 @@ export function updateCompanyMembers(action: MemberAction): CompanyWorkspace {
   return persist(workspace);
 }
 
-export function createCompanyJob(input: Omit<CompanyJob, "id" | "authorId" | "created">) {
+export function createCompanyJob(
+  input: Pick<CompanyJob, "title" | "department" | "location" | "salary" | "status">,
+) {
   const workspace = getCompanyWorkspace();
   const member = currentMember(workspace);
   if (!member || getStoredVerificationRecord().verificationStatus !== "VERIFIED")
@@ -192,8 +204,106 @@ export function createCompanyJob(input: Omit<CompanyJob, "id" | "authorId" | "cr
     id: crypto.randomUUID(),
     authorId: member.id,
     created: new Date().toISOString(),
+    moderationStatus: "pending",
+    companyName: getStoredVerificationRecord().name,
+    companyTaxCode: getStoredVerificationRecord().taxCode,
   });
   return persist(workspace);
+}
+
+/** Existing published postings retain their visibility; only new submissions require review. */
+export function jobModerationStatus(job: CompanyJob) {
+  return job.moderationStatus ?? "approved";
+}
+
+export interface JobApproval extends CompanyJob {
+  workspaceKey: string;
+  authorName: string;
+}
+
+/** Admin sees submissions across the company workspaces stored in this browser. */
+export function getJobApprovalQueue(): JobApproval[] {
+  if (getCurrentUser()?.role !== "ADMIN")
+    throw new Error("Chỉ quản trị viên được xem danh sách phê duyệt.");
+  const jobs: JobApproval[] = [];
+  for (let index = 0; index < localStorage.length; index++) {
+    const key = localStorage.key(index);
+    if (!key?.startsWith("guardianwork_company_members_")) continue;
+    const workspace: CompanyWorkspace = JSON.parse(localStorage.getItem(key) || "null");
+    if (!workspace || !Array.isArray(workspace.jobs) || !Array.isArray(workspace.members))
+      throw new Error(
+        "Không đọc được dữ liệu tuyển dụng trên trình duyệt. Vui lòng kiểm tra dữ liệu và tải lại.",
+      );
+    jobs.push(
+      ...workspace.jobs
+        .filter((job) => job.status === "Active")
+        .map((job) => ({
+          ...job,
+          workspaceKey: key,
+          authorName:
+            workspace.members.find((member) => member.id === job.authorId)?.name || "Chưa cung cấp",
+        })),
+    );
+  }
+  return jobs.sort((a, b) => b.created.localeCompare(a.created));
+}
+
+export function setCompanyJobVisibility(
+  id: string,
+  visibility: "PUBLIC" | "HIDDEN",
+  reason: string,
+  workspaceKey: string,
+) {
+  const user = getCurrentUser();
+  if (user?.role !== "ADMIN") throw new Error("Chỉ quản trị viên được kiểm soát hiển thị tin.");
+  if (!workspaceKey.startsWith("guardianwork_company_members_"))
+    throw new Error("Workspace không hợp lệ.");
+  if (reason.trim().length < 10 || reason.trim().length > 1000)
+    throw new Error("Lý do phải dài từ 10 đến 1.000 ký tự.");
+  const workspace: CompanyWorkspace = JSON.parse(localStorage.getItem(workspaceKey) || "null");
+  const job = workspace?.jobs?.find((item) => item.id === id);
+  if (!job || job.status !== "Active" || jobModerationStatus(job) !== "approved")
+    throw new Error("Chỉ thay đổi hiển thị của tin đã duyệt và đang hoạt động. Vui lòng tải lại.");
+  if ((job.visibility ?? "PUBLIC") === visibility)
+    throw new Error("Trạng thái hiển thị đã thay đổi. Vui lòng tải lại danh sách.");
+  job.visibility = visibility;
+  job.visibilityReason = reason.trim();
+  job.visibilityUpdatedAt = new Date().toISOString();
+  job.visibilityUpdatedBy = user.email;
+  return persist(workspace, workspaceKey);
+}
+
+export function reviewCompanyJob(
+  id: string,
+  decision: "approved" | "rejected",
+  reason = "",
+  workspaceKey = storageKey(),
+) {
+  const user = getCurrentUser();
+  if (user?.role !== "ADMIN") throw new Error("Chỉ quản trị viên được phê duyệt tin tuyển dụng.");
+  if (!workspaceKey.startsWith("guardianwork_company_members_"))
+    throw new Error("Workspace không hợp lệ.");
+  const workspace: CompanyWorkspace = JSON.parse(localStorage.getItem(workspaceKey) || "null");
+  if (!workspace || !Array.isArray(workspace.jobs))
+    throw new Error("Không đọc được workspace. Vui lòng tải lại.");
+  const job = workspace.jobs.find((item) => item.id === id);
+  if (!job || job.status !== "Active")
+    throw new Error("Tin không còn chờ duyệt. Vui lòng tải lại danh sách.");
+  if (jobModerationStatus(job) !== "pending")
+    throw new Error("Tin đã được xử lý. Vui lòng tải lại danh sách.");
+  if (decision === "rejected" && (reason.trim().length < 10 || reason.trim().length > 1000))
+    throw new Error("Lý do từ chối phải dài từ 10 đến 1.000 ký tự.");
+  job.moderationStatus = decision;
+  job.rejectionReason = decision === "rejected" ? reason.trim() : undefined;
+  job.reviewedAt = new Date().toISOString();
+  job.reviewedBy = user.email;
+  try {
+    localStorage.setItem(workspaceKey, JSON.stringify(workspace));
+  } catch {
+    throw new Error("Không thể lưu quyết định. Vui lòng kiểm tra bộ nhớ trình duyệt và thử lại.");
+  }
+  window.dispatchEvent(new Event(COMPANY_WORKSPACE_EVENT));
+  return workspace;
 }
 
 /** Browser-local application flow, shared with the candidate job page. */
@@ -203,7 +313,13 @@ export function submitCompanyApplication(jobId: string) {
   const user = getCurrentUser();
   if (!user) throw new Error("Vui lòng đăng nhập trước khi ứng tuyển.");
   const workspace = getCompanyWorkspace();
-  const job = workspace.jobs.find((j) => j.id === jobId && j.status === "Active");
+  const job = workspace.jobs.find(
+    (j) =>
+      j.id === jobId &&
+      j.status === "Active" &&
+      jobModerationStatus(j) === "approved" &&
+      j.visibility !== "HIDDEN",
+  );
   if (!job) throw new Error("Tin tuyển dụng không còn nhận đơn.");
   if (workspace.applications.some((a) => a.jobId === jobId && a.email === user.email.toLowerCase()))
     throw new Error("Bạn đã ứng tuyển tin này.");
