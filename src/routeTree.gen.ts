@@ -26,6 +26,7 @@ import { Route as AdminAccountsRouteImport } from './routes/admin/accounts'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin/analytics'
 import { Route as AdminCandidatesRouteImport } from './routes/admin/candidates'
 import { Route as AdminComplianceRouteImport } from './routes/admin/compliance'
+import { Route as AdminJobApprovalsRouteImport } from './routes/admin/job-approvals'
 import { Route as AdminJobsRouteImport } from './routes/admin/jobs'
 import { Route as AdminMonitoringRouteImport } from './routes/admin/monitoring'
 import { Route as AdminReportsRouteImport } from './routes/admin/reports'
@@ -127,6 +128,11 @@ const AdminCandidatesRoute = AdminCandidatesRouteImport.update({
 const AdminComplianceRoute = AdminComplianceRouteImport.update({
   id: '/admin/compliance',
   path: '/admin/compliance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminJobApprovalsRoute = AdminJobApprovalsRouteImport.update({
+  id: '/admin/job-approvals',
+  path: '/admin/job-approvals',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminJobsRoute = AdminJobsRouteImport.update({
@@ -232,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/candidates': typeof AdminCandidatesRoute
   '/admin/compliance': typeof AdminComplianceRoute
+  '/admin/job-approvals': typeof AdminJobApprovalsRoute
   '/admin/jobs': typeof AdminJobsRoute
   '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/reports': typeof AdminReportsRoute
@@ -268,6 +275,7 @@ export interface FileRoutesByTo {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/candidates': typeof AdminCandidatesRoute
   '/admin/compliance': typeof AdminComplianceRoute
+  '/admin/job-approvals': typeof AdminJobApprovalsRoute
   '/admin/jobs': typeof AdminJobsRoute
   '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/reports': typeof AdminReportsRoute
@@ -305,6 +313,7 @@ export interface FileRoutesById {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/candidates': typeof AdminCandidatesRoute
   '/admin/compliance': typeof AdminComplianceRoute
+  '/admin/job-approvals': typeof AdminJobApprovalsRoute
   '/admin/jobs': typeof AdminJobsRoute
   '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/reports': typeof AdminReportsRoute
@@ -343,6 +352,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/candidates'
     | '/admin/compliance'
+    | '/admin/job-approvals'
     | '/admin/jobs'
     | '/admin/monitoring'
     | '/admin/reports'
@@ -379,6 +389,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/candidates'
     | '/admin/compliance'
+    | '/admin/job-approvals'
     | '/admin/jobs'
     | '/admin/monitoring'
     | '/admin/reports'
@@ -415,6 +426,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/candidates'
     | '/admin/compliance'
+    | '/admin/job-approvals'
     | '/admin/jobs'
     | '/admin/monitoring'
     | '/admin/reports'
@@ -452,6 +464,7 @@ export interface RootRouteChildren {
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminCandidatesRoute: typeof AdminCandidatesRoute
   AdminComplianceRoute: typeof AdminComplianceRoute
+  AdminJobApprovalsRoute: typeof AdminJobApprovalsRoute
   AdminJobsRoute: typeof AdminJobsRoute
   AdminMonitoringRoute: typeof AdminMonitoringRoute
   AdminReportsRoute: typeof AdminReportsRoute
@@ -593,6 +606,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminComplianceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/job-approvals': {
+      id: '/admin/job-approvals'
+      path: '/admin/job-approvals'
+      fullPath: '/admin/job-approvals'
+      preLoaderRoute: typeof AdminJobApprovalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/jobs': {
       id: '/admin/jobs'
       path: '/admin/jobs'
@@ -732,6 +752,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminCandidatesRoute: AdminCandidatesRoute,
   AdminComplianceRoute: AdminComplianceRoute,
+  AdminJobApprovalsRoute: AdminJobApprovalsRoute,
   AdminJobsRoute: AdminJobsRoute,
   AdminMonitoringRoute: AdminMonitoringRoute,
   AdminReportsRoute: AdminReportsRoute,

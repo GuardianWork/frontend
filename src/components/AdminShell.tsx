@@ -17,7 +17,7 @@ const ADMIN_NAV: NavItem[] = [
   { to: "/admin/tasks", label: "Tác vụ nền", icon: "schedule" },
 ];
 const ADMIN_JOB_NAV: NavItem[] = [
-  { to: "/admin/jobs", label: "Kiểm soát tin", icon: "work" },
+  { to: "/admin/jobs", label: "Tất cả tin tuyển dụng", icon: "work" },
   { to: "/admin/compliance", label: "JD bị AI gắn cờ", icon: "gavel" },
 ];
 
@@ -64,13 +64,19 @@ export function AdminShell({
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [jobGroupOpen, setJobGroupOpen] = useState<boolean | null>(null);
   useEffect(() => {
-    if (pathname.startsWith("/admin/jobs") || pathname.startsWith("/admin/compliance")) {
+    if (
+      pathname.startsWith("/admin/jobs") ||
+      pathname.startsWith("/admin/job-approvals") ||
+      pathname.startsWith("/admin/compliance")
+    ) {
       setJobGroupOpen(true);
     }
   }, [pathname]);
   const jobGroupExpanded =
     jobGroupOpen ??
-    (pathname.startsWith("/admin/jobs") || pathname.startsWith("/admin/compliance"));
+    (pathname.startsWith("/admin/jobs") ||
+      pathname.startsWith("/admin/job-approvals") ||
+      pathname.startsWith("/admin/compliance"));
 
   // Infer role from pathname or use forcedRole
   let currentRole: ShellRole = forcedRole || "admin";
