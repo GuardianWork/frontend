@@ -54,3 +54,7 @@ Preserve the GuardianWork product name and the product facts represented by the 
 ## Open Decisions
 
 Audience priority, measurable success criteria, production readiness, and product-specific accessibility requirements remain unspecified.
+
+## Staff portal
+
+Platform staff runs as a separate frontend surface on port 5138 (`staff` / `staff-mock` Vite modes), alongside the public app on 5137. It has a login-only entry with no registration or audience selector. The existing auth API and server-issued `STAFF` role remain authoritative. Tokens are scoped to each portal's origin; private routes restore `/auth/me` before rendering. Staff builds use `.output-staff`; public builds use `.output`.
