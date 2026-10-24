@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useAuthUser } from "@/hooks/useAuthUser";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Building2, FilePlus2, Search, ShieldCheck, Users } from "lucide-react";
 import {
@@ -17,6 +18,8 @@ export function RecruiterOverview({
   interviews: number;
   offers: number;
 }) {
+  const user = useAuthUser();
+  const invitedRecruiter = user?.activeMembership?.companyRole === "RECRUITER";
   const [company, setCompany] = useState<CompanyVerificationRecord | null>(null);
   useEffect(() => {
     setCompany(getStoredVerificationRecord());
@@ -53,27 +56,33 @@ export function RecruiterOverview({
             <ShieldCheck size={25} />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-charcoal-text">{statusText}</h3>
+            <h3 className="text-sm font-semibold text-charcoal-text">
+              {invitedRecruiter ? user?.activeMembership?.companyName : statusText}
+            </h3>
             <p className="mt-1 max-w-xl text-xs leading-5 text-charcoal-83">
-              {status === "VERIFIED"
-                ? "Thông tin doanh nghiệp đã được phê duyệt. Bạn có thể xem lại hồ sơ trong cài đặt tài khoản."
-                : status === "PENDING"
-                  ? "Hồ sơ đã được tiếp nhận. Theo dõi kết quả và yêu cầu bổ sung tại cài đặt tài khoản."
-                  : "Cập nhật thông tin công ty và giấy đăng ký doanh nghiệp để xây dựng uy tín với ứng viên."}
+              {invitedRecruiter
+                ? "Bạn đang tham gia công ty với vai trò Nhà tuyển dụng. Hồ sơ pháp lý do chủ sở hữu phụ trách."
+                : status === "VERIFIED"
+                  ? "Thông tin doanh nghiệp đã được phê duyệt. Bạn có thể xem lại hồ sơ trong cài đặt tài khoản."
+                  : status === "PENDING"
+                    ? "Hồ sơ đã được tiếp nhận. Theo dõi kết quả và yêu cầu bổ sung tại cài đặt tài khoản."
+                    : "Cập nhật thông tin công ty và giấy đăng ký doanh nghiệp để xây dựng uy tín với ứng viên."}
             </p>
           </div>
         </div>
-        <Link
-          to={status === "VERIFIED" ? "/recruiter/members" : "/recruiter/verification"}
-          className="flex shrink-0 items-center gap-2 text-sm font-semibold text-primary"
-        >
-          {status === "VERIFIED"
-            ? "Quản lý thành viên"
-            : status === "PENDING"
-              ? "Xem hồ sơ"
-              : "Xác thực ngay"}
-          <ArrowRight size={16} />
-        </Link>
+        {!invitedRecruiter && (
+          <Link
+            to={status === "VERIFIED" ? "/recruiter/members" : "/recruiter/verification"}
+            className="flex shrink-0 items-center gap-2 text-sm font-semibold text-primary"
+          >
+            {status === "VERIFIED"
+              ? "Quản lý thành viên"
+              : status === "PENDING"
+                ? "Xem hồ sơ"
+                : "Xác thực ngay"}
+            <ArrowRight size={16} />
+          </Link>
+        )}
       </div>
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
         {[
@@ -134,23 +143,25 @@ export function RecruiterOverview({
             to: "/recruiter/verification",
             icon: Building2,
           },
-        ].map(({ title, description, to, icon: Icon }) => (
-          <Link
-            key={to}
-            to={to}
-            className="group flex items-center gap-3 rounded-xl border border-warm-border bg-paper-white p-4 transition-colors hover:border-primary/30"
-          >
-            <Icon size={21} className="shrink-0 text-primary" />
-            <div>
-              <h3 className="text-sm font-semibold">{title}</h3>
-              <p className="mt-1 text-xs leading-5 text-charcoal-83">{description}</p>
-            </div>
-            <ArrowRight
-              size={15}
-              className="ml-auto shrink-0 text-charcoal-40 group-hover:text-primary"
-            />
-          </Link>
-        ))}
+        ]
+          .filter((item) => !invitedRecruiter || item.to !== "/recruiter/verification")
+          .map(({ title, description, to, icon: Icon }) => (
+            <Link
+              key={to}
+              to={to}
+              className="group flex items-center gap-3 rounded-xl border border-warm-border bg-paper-white p-4 transition-colors hover:border-primary/30"
+            >
+              <Icon size={21} className="shrink-0 text-primary" />
+              <div>
+                <h3 className="text-sm font-semibold">{title}</h3>
+                <p className="mt-1 text-xs leading-5 text-charcoal-83">{description}</p>
+              </div>
+              <ArrowRight
+                size={15}
+                className="ml-auto shrink-0 text-charcoal-40 group-hover:text-primary"
+              />
+            </Link>
+          ))}
       </div>
     </div>
   );

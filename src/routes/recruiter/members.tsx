@@ -1,6 +1,6 @@
 import { ListSearch } from "@/components/ListSearch";
 import { matchesSearch } from "@/lib/list-search";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Users, UserPlus, ShieldCheck, History } from "lucide-react";
 import { RecruiterShell } from "@/components/RecruiterShell";
@@ -10,6 +10,12 @@ import {
   updateCompanyMembers,
   type MemberAction,
 } from "@/services/companyMembers";
+import {
+  issueCompanyInvitation,
+  resendCompanyInvitation,
+  companyInvitationError,
+  type OwnerInvitation,
+} from "@/services/companyInvitations";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +33,31 @@ function CompanyMembersPage() {
   const { workspace, company, member, user, error } = useCompanyWorkspace();
   const [query, setQuery] = useState("");
   const [email, setEmail] = useState("");
+  const [invitationResult, setInvitationResult] = useState<OwnerInvitation | null>(null);
+  const [invitationError, setInvitationError] = useState("");
+  const [sendingInvitation, setSendingInvitation] = useState(false);
+  const invitationPending = useRef(false);
+  const canInvite =
+    user?.activeMembership?.companyRole === "OWNER" && company?.verificationStatus === "VERIFIED";
+  async function sendInvitation(resend = false) {
+    if (!canInvite || invitationPending.current || (resend && !invitationResult)) return;
+    invitationPending.current = true;
+    setSendingInvitation(true);
+    setInvitationError("");
+    try {
+      const result =
+        resend && invitationResult
+          ? await resendCompanyInvitation(invitationResult.id)
+          : await issueCompanyInvitation(email);
+      setInvitationResult(result);
+      if (!resend) setEmail("");
+    } catch (cause) {
+      setInvitationError(companyInvitationError(cause));
+    } finally {
+      invitationPending.current = false;
+      setSendingInvitation(false);
+    }
+  }
   const [message, setMessage] = useState("");
   const [failed, setFailed] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -38,12 +69,7 @@ function CompanyMembersPage() {
     try {
       updateCompanyMembers(action);
       setFailed(false);
-      setMessage(
-        action.type === "invite"
-          ? "Đã tạo lời mời. Thành viên đăng nhập bằng email này và mở trang Thành viên công ty để nhận lời mời trên trình duyệt hiện tại."
-          : "Đã lưu thay đổi.",
-      );
-      if (action.type === "invite") setEmail("");
+      setMessage("Đã lưu thay đổi.");
       return true;
     } catch (e) {
       setFailed(true);
@@ -93,9 +119,10 @@ function CompanyMembersPage() {
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          if (owner) run({ type: "invite", email });
+          void sendInvitation();
         }}
         className="mb-6 rounded-xl border border-warm-border bg-paper-white p-5"
+        aria-busy={sendingInvitation}
       >
         <h2 className="mb-3 flex items-center gap-2 font-semibold">
           <UserPlus size={19} />
@@ -105,9 +132,10 @@ function CompanyMembersPage() {
           <label className="min-w-0 flex-1">
             <span className="sr-only">Email thành viên</span>
             <input
-              disabled={!owner}
+              disabled={!canInvite || sendingInvitation}
               type="email"
               required
+              maxLength={255}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Email tài khoản nhà tuyển dụng"
@@ -116,17 +144,58 @@ function CompanyMembersPage() {
           </label>
           <button
             className="recruiter-primary disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={!owner}
-            title={!owner ? "Chỉ Owner được mời thành viên" : undefined}
+            disabled={!canInvite || sendingInvitation}
+            title={!canInvite ? "Chỉ Owner của công ty đã xác thực được mời thành viên" : undefined}
           >
-            Tạo lời mời
+            {sendingInvitation ? "Đang gửi…" : "Tạo lời mời"}
           </button>
         </div>
         <p className="mt-3 text-xs text-charcoal-83">
-          Thành viên mới có vai trò recruiter. Lời mời hiện lưu trên trình duyệt, chưa gửi qua
-          email.
+          Thành viên mới có vai trò Nhà tuyển dụng. Hệ thống sẽ gửi liên kết lời mời qua email. Việc
+          tạo lời mời chưa cấp quyền thành viên.
         </p>
       </form>
+      {invitationError && (
+        <p
+          role="alert"
+          className="mb-5 rounded-lg border border-warm-border bg-paper-white p-4 text-sm"
+        >
+          {invitationError}
+        </p>
+      )}
+      {invitationResult && (
+        <section
+          aria-label="Kết quả lời mời"
+          className="mb-6 rounded-xl border border-warm-border bg-paper-white p-5"
+        >
+          <h2 className="break-words font-semibold">Lời mời: {invitationResult.email}</h2>
+          <p role="status" className="mt-3 text-sm leading-6 text-charcoal-83">
+            {invitationResult.deliveryStatus === "PROVIDER_ACCEPTED"
+              ? "Đã tạo lời mời. Dịch vụ email đã tiếp nhận yêu cầu gửi; người nhận cần kiểm tra hộp thư và thư rác."
+              : invitationResult.deliveryStatus === "FAILED"
+                ? "Lời mời đã được lưu nhưng gửi email thất bại. Bạn có thể gửi lại lời mời."
+                : "Lời mời đã được lưu nhưng chưa xác nhận được kết quả gửi email. Bạn có thể gửi lại lời mời."}
+          </p>
+          <p className="mt-2 text-xs leading-6 text-charcoal-83">
+            Hết hạn:{" "}
+            {new Date(invitationResult.expiresAt).toLocaleString("vi-VN", {
+              timeZone: "Asia/Ho_Chi_Minh",
+            })}{" "}
+            (giờ Việt Nam)
+          </p>
+          {invitationResult.status === "PENDING" &&
+            invitationResult.deliveryStatus !== "PROVIDER_ACCEPTED" && (
+              <button
+                type="button"
+                disabled={!canInvite || sendingInvitation}
+                onClick={() => void sendInvitation(true)}
+                className="recruiter-primary mt-4"
+              >
+                {sendingInvitation ? "Đang gửi…" : "Gửi lại lời mời"}
+              </button>
+            )}
+        </section>
+      )}
       {!company ? (
         <p>Đang tải công ty…</p>
       ) : company.verificationStatus !== "VERIFIED" ? (
@@ -171,11 +240,10 @@ function CompanyMembersPage() {
         </div>
       ) : (
         <>
-          <div className="mb-6 grid gap-4 sm:grid-cols-3">
+          <div className="mb-6 grid gap-4 sm:grid-cols-2">
             {[
               ["Thành viên", activeMembers.length],
               ["Owner", activeMembers.filter((m) => m.role === "Owner").length],
-              ["Lời mời đang chờ", workspace.members.filter((m) => m.status === "invited").length],
             ].map(([label, count]) => (
               <div key={label} className="rounded-xl border border-warm-border bg-paper-white p-5">
                 <p className="text-sm text-charcoal-83">{label}</p>
