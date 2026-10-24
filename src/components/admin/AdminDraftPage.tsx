@@ -12,6 +12,7 @@ import {
 import { AdminShell } from "@/components/AdminShell";
 import { ListSearch } from "@/components/ListSearch";
 import { AdminPagination } from "./AdminPagination";
+import { StaffStatusBadge, type StaffStatusTone } from "./StaffStatusBadge";
 import { useListPagination } from "@/hooks/useListPagination";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
@@ -541,9 +542,7 @@ export function AdminDraftPage({ area }: { area: DraftAdminArea }) {
                     {row.cells.map((cell, index) => (
                       <td key={`${row.searchable}-${index}`}>
                         {index === (row.statusIndex ?? row.cells.length - 1) && row.status ? (
-                          <span className={`admin-sample-status ${statusTone(row.status)}`}>
-                            {cell}
-                          </span>
+                          <StaffStatusBadge tone={statusTone(row.status)}>{cell}</StaffStatusBadge>
                         ) : area === "monitoring" && index === 1 ? (
                           (row.periodValues?.[period] ?? cell)
                         ) : (
@@ -600,9 +599,9 @@ export function AdminDraftPage({ area }: { area: DraftAdminArea }) {
                 <p id="admin-sample-detail-description">Chi tiết bản ghi minh họa</p>
               </div>
               {selectedRow.status && (
-                <span className={`admin-sample-status ${statusTone(selectedRow.status)}`}>
+                <StaffStatusBadge tone={statusTone(selectedRow.status)}>
                   {selectedRow.status}
-                </span>
+                </StaffStatusBadge>
               )}
             </div>
             {actionNotice && (
@@ -778,21 +777,13 @@ export function AdminDraftPage({ area }: { area: DraftAdminArea }) {
   );
 }
 
-function statusTone(status: string) {
-  if (
-    [
-      "Đang công khai",
-      "Hoạt động",
-      "Trong ngưỡng",
-      "Bình thường",
-      "Hoàn tất",
-      "Đang chạy",
-    ].includes(status)
-  )
-    return "admin-sample-status--good";
-  if (["Đã ẩn", "Tạm khóa", "Khóa vĩnh viễn", "Thất bại"].includes(status))
-    return "admin-sample-status--attention";
-  return "admin-sample-status--pending";
+function statusTone(status: string): StaffStatusTone {
+  if (["Đang công khai", "Hoạt động", "Trong ngưỡng", "Bình thường", "Hoàn tất"].includes(status))
+    return "verified";
+  if (["Tạm khóa", "Khóa vĩnh viễn", "Thất bại"].includes(status)) return "rejected";
+  if (["Đã ẩn", "Đã ghi nhận"].includes(status)) return "neutral";
+  if (["Mới tiếp nhận", "Đang chạy"].includes(status)) return "info";
+  return "pending";
 }
 
 export { AREAS };

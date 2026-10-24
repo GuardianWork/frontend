@@ -80,12 +80,16 @@ function AdminDashboard() {
         </p>
       </div>
 
-      <section className="admin-dashboard-metrics" aria-label="Chỉ số hàng đợi">
+      <section
+        className="admin-dashboard-metrics staff-dashboard-metrics"
+        aria-label="Chỉ số hàng đợi"
+      >
         <Link
           to="/staff/verifications"
           search={{ status: "PENDING", page: 0 }}
           className="admin-dashboard-metric"
           data-kind="verification"
+          aria-busy={loading}
         >
           <span>Hồ sơ chờ xác minh</span>
           <strong>{loading ? "…" : (pendingVerifications ?? "—")}</strong>
