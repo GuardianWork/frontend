@@ -1,4 +1,4 @@
-import { getAccessToken, getCurrentUser } from "./auth";
+import { getAccessToken, getCurrentUser, isStaffUser } from "./auth";
 import { getApiBaseUrl } from "./api";
 import { DEFAULT_PAGE_SIZE } from "../lib/pagination.ts";
 
@@ -38,7 +38,7 @@ export class AdminApiError extends Error {
 async function authorization() {
   try {
     const token = await getAccessToken();
-    if (getCurrentUser()?.role !== "ADMIN")
+    if (!isStaffUser(getCurrentUser()))
       throw new AdminApiError("Tài khoản hiện tại không có quyền quản trị.", 403);
     return { Authorization: `Bearer ${token}` };
   } catch (error) {
@@ -55,7 +55,7 @@ async function request(path: string, init: RequestInit = {}): Promise<unknown> {
   };
   let response: Response;
   try {
-    response = await fetch(`${baseUrl}/admin/companies${path}`, {
+    response = await fetch(`${baseUrl}/staff/companies${path}`, {
       ...init,
       headers,
       signal: init.signal || AbortSignal.timeout(20000),

@@ -26,10 +26,18 @@ export default defineConfig({
   ],
   webServer: externalBaseUrl
     ? undefined
-    : {
-        command: "npm run dev:mock",
-        url: "http://localhost:5137/login",
-        reuseExistingServer: false,
-        timeout: 90000,
-      },
+    : [
+        {
+          command: "npm run dev:mock",
+          url: "http://localhost:5137/login",
+          reuseExistingServer: true,
+          timeout: 90000,
+        },
+        {
+          command: "npm run dev:staff:mock",
+          url: "http://localhost:5138/login",
+          reuseExistingServer: true,
+          timeout: 90000,
+        },
+      ],
 });

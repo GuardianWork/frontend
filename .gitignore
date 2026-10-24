@@ -34,3 +34,10 @@ playwright-report/
 *.njsproj
 *.sln
 *.sw?
+
+.output-staff/
+
+# Local environment values are private; only the template belongs in Git.
+.env
+.env.*
+!.env.example

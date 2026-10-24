@@ -1,29 +1,38 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, LoaderCircle } from "lucide-react";
+import { IS_STAFF_PORTAL, staffPortalHref } from "@/lib/portal";
+import { StaffLoginPage } from "@/components/auth/StaffLoginPage";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { AccountPurposeChoice } from "@/components/auth/AccountPurposeChoice";
 import { PasswordInput, authInputClass } from "@/components/auth/PasswordInput";
 import {
   getLoginDestination,
+  isStaffUser,
   loginAccount,
+  logoutAccount,
   loadCurrentUser,
   parseAccountPurpose,
   saveAuthSession,
 } from "@/services/auth";
 
 export const Route = createFileRoute("/login")({
-  validateSearch: parseAccountPurpose,
+  validateSearch: (search: Record<string, unknown>): ReturnType<typeof parseAccountPurpose> =>
+    IS_STAFF_PORTAL ? {} : parseAccountPurpose(search),
   head: () => ({
     meta: [
-      { title: "Đăng nhập — GuardianWork" },
+      {
+        title: IS_STAFF_PORTAL
+          ? "Đăng nhập Platform staff — GuardianWork"
+          : "Đăng nhập — GuardianWork",
+      },
       {
         name: "description",
         content: "Đăng nhập GuardianWork để tìm việc, quản lý hồ sơ hoặc tuyển dụng nhân tài.",
       },
     ],
   }),
-  component: LoginPage,
+  component: () => (IS_STAFF_PORTAL ? <StaffLoginPage /> : <LoginPage />),
 });
 
 function LoginPage() {
@@ -51,6 +60,11 @@ function LoginPage() {
       const session = await loginAccount(identifier, password);
       saveAuthSession(session);
       const user = await loadCurrentUser();
+      if (isStaffUser(user)) {
+        await logoutAccount();
+        window.location.assign(staffPortalHref("/login"));
+        return;
+      }
       await navigate({ to: getLoginDestination(user, role) });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Không thể đăng nhập. Vui lòng thử lại.");
@@ -127,6 +141,14 @@ function LoginPage() {
           )}
         </button>
       </form>
+      <p className="mt-6 text-center text-sm">
+        <a
+          href={staffPortalHref()}
+          className="font-semibold text-primary underline-offset-4 hover:underline"
+        >
+          Đăng nhập Platform staff
+        </a>
+      </p>
       <p className="mt-6 text-center text-sm text-charcoal-83">
         Bạn chưa có tài khoản?{" "}
         <Link
