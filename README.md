@@ -1,5 +1,31 @@
 # GuardianWork frontend
 
+## Cấu hình môi trường
+
+Sao chép `.env.example` thành `.env` và chỉnh cấu hình thực tế trong `.env`. File `.env` và các biến thể `.env.*` được Git bỏ qua; chỉ `.env.example` được đưa lên repository. Template chỉ chứa ví dụ local, không chứa thông tin đăng nhập hay khóa API.
+
+`API_PROXY_TARGET`, `PUBLIC_FRONTEND_PORT` và `STAFF_FRONTEND_PORT` chỉ dùng phía server. Các biến bắt đầu bằng `VITE_` xuất hiện trong trình duyệt, vì vậy chỉ đặt API path và public origin vào đó; không đặt mật khẩu, token hay secret. Mỗi khi đổi port, cập nhật cả public origin tương ứng và khởi động lại hai server.
+
+## Platform staff chạy riêng
+
+Frontend chính: **http://localhost:5137**. Platform staff: **http://localhost:5138**.
+
+```sh
+# Terminal 1 — frontend ứng viên / nhà tuyển dụng
+npm run dev
+
+# Terminal 2 — frontend Platform staff
+npm run dev:staff
+```
+
+Cả hai dùng cùng backend qua proxy `/api`. Proxy dev gắn đè header `X-Guardian-Portal` thành `staff` hoặc `public` theo mode. Header này chỉ là thông tin định tuyến từ proxy; backend vẫn phải xác thực token và quyền. Khi triển khai, gateway tin cậy cần xóa header do client gửi rồi gắn lại giá trị tương ứng. Mở cổng `5138` sẽ vào màn hình đăng nhập staff, không có đăng ký hoặc chọn vai trò. Chỉ tài khoản có role backend `STAFF` được truy cập. Đăng xuất trở về màn hình đăng nhập riêng. Phiên đăng nhập được lưu theo origin của từng cổng.
+
+Nếu không có backend, chạy `npm run dev:mock` và `npm run dev:staff:mock` trong hai terminal; mỗi lệnh có bộ API mock độc lập trong RAM. Staff mẫu: `admin_demo` / `Guardian123!`.
+
+Các đường dẫn `/staff` và `/admin` trên cổng chính chuyển sang cổng staff. Có thể cấu hình `VITE_STAFF_PORTAL_URL` và `VITE_PUBLIC_PORTAL_URL` trong môi trường khi triển khai trên domain riêng.
+
+Build riêng bằng `npm run build:staff`, output `.output-staff`; `npm run preview:staff` xem bản build staff ở cổng `5138`. Build frontend chính vẫn dùng `npm run build` và output `.output`.
+
 ## Chạy với dữ liệu mẫu
 
 Yêu cầu Node.js 22.18+ và các dependency đã cài bằng `npm install`.
@@ -19,7 +45,7 @@ Mật khẩu chung cho tất cả tài khoản mẫu: **`Guardian123!`**.
 | `candidate_demo` | `candidate@example.test` | Tôi muốn tìm việc            | `USER`       | `activeMembership: null`, mở trang tìm việc         |
 | `recruiter_demo` | `recruiter@example.test` | Đăng ký công ty              | `USER`       | Chưa có công ty, mở form đăng ký công ty            |
 | `owner_demo`     | `owner@example.test`     | Đăng ký công ty              | `USER`       | `OWNER` của Alpha, công ty `PENDING`                |
-| `admin_demo`     | `admin@example.test`     | Chọn mục nào cũng được       | `ADMIN`      | Mở `/admin`, có hồ sơ Alpha trong hàng đợi xác minh |
+| `admin_demo`     | `admin@example.test`     | Đăng nhập cổng 5138           | `STAFF`      | Mở `/staff` ở cổng 5138, có hồ sơ Alpha trong hàng đợi xác minh |
 
 Có thể đăng nhập bằng username hoặc email. Tài khoản đăng ký mới luôn có role `USER`.
 
@@ -60,7 +86,7 @@ npm run dev
 Nếu backend chạy ở địa chỉ khác:
 
 ```sh
-VITE_API_PROXY_TARGET=http://localhost:9090 npm run dev
+API_PROXY_TARGET=http://localhost:9090 npm run dev
 ```
 
 Xem `.env.example` cho cấu hình `VITE_API_BASE_URL`. Khi deploy, cần reverse proxy `/api` đến backend hoặc đặt `VITE_API_BASE_URL=https://backend.example.com/api` lúc build và cấu hình CORS ở backend. Vite proxy chỉ phục vụ môi trường phát triển.

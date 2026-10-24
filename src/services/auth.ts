@@ -136,7 +136,12 @@ export async function loginAccount(
     throw new Error("Phản hồi đăng nhập không hợp lệ. Vui lòng thử lại sau.");
   return result;
 }
+export function isStaffUser(user: Pick<AuthUser, "role"> | null | undefined): boolean {
+  return user?.role === "STAFF";
+}
+
 export function getLoginDestination(user: AuthUser, purpose: AccountPurpose) {
+  if (isStaffUser(user)) return "/staff" as const;
   if (user.role === "ADMIN") return "/admin" as const;
   return purpose === "recruiter"
     ? user.activeMembership

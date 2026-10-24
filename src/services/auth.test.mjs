@@ -77,6 +77,7 @@ test("portal selection is an onboarding intent; admin destination requires the s
   assert.equal(getLoginDestination(user, "candidate"), "/candidate/jobs");
   assert.equal(getLoginDestination(user, "recruiter"), "/recruiter/verification");
   assert.equal(getLoginDestination({ ...user, role: "ADMIN" }, "candidate"), "/admin");
+  assert.equal(getLoginDestination({ ...user, role: "STAFF" }, "candidate"), "/staff");
 });
 
 test("logout clears local tokens and revokes the server refresh token", async () => {

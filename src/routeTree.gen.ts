@@ -22,6 +22,7 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as VnRouteImport } from './routes/vn'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminSplatRouteImport } from './routes/admin/$'
 import { Route as AdminAccountsRouteImport } from './routes/admin/accounts'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin/analytics'
 import { Route as AdminCandidatesRouteImport } from './routes/admin/candidates'
@@ -44,6 +45,17 @@ import { Route as RecruiterMembersRouteImport } from './routes/recruiter/members
 import { Route as RecruiterProfileRouteImport } from './routes/recruiter/profile'
 import { Route as RecruiterTalentRouteImport } from './routes/recruiter/talent'
 import { Route as RecruiterVerificationRouteImport } from './routes/recruiter/verification'
+import { Route as StaffIndexRouteImport } from './routes/staff/index'
+import { Route as StaffAccountsRouteImport } from './routes/staff/accounts'
+import { Route as StaffAnalyticsRouteImport } from './routes/staff/analytics'
+import { Route as StaffAuditLogsRouteImport } from './routes/staff/audit-logs'
+import { Route as StaffCandidatesRouteImport } from './routes/staff/candidates'
+import { Route as StaffComplianceRouteImport } from './routes/staff/compliance'
+import { Route as StaffJobsRouteImport } from './routes/staff/jobs'
+import { Route as StaffMonitoringRouteImport } from './routes/staff/monitoring'
+import { Route as StaffReportsRouteImport } from './routes/staff/reports'
+import { Route as StaffTasksRouteImport } from './routes/staff/tasks'
+import { Route as StaffVerificationsRouteImport } from './routes/staff/verifications'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -108,6 +120,11 @@ const VnRoute = VnRouteImport.update({
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminSplatRoute = AdminSplatRouteImport.update({
+  id: '/admin/$',
+  path: '/admin/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminAccountsRoute = AdminAccountsRouteImport.update({
@@ -220,6 +237,61 @@ const RecruiterVerificationRoute = RecruiterVerificationRouteImport.update({
   path: '/recruiter/verification',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StaffIndexRoute = StaffIndexRouteImport.update({
+  id: '/staff/',
+  path: '/staff/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffAccountsRoute = StaffAccountsRouteImport.update({
+  id: '/staff/accounts',
+  path: '/staff/accounts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffAnalyticsRoute = StaffAnalyticsRouteImport.update({
+  id: '/staff/analytics',
+  path: '/staff/analytics',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffAuditLogsRoute = StaffAuditLogsRouteImport.update({
+  id: '/staff/audit-logs',
+  path: '/staff/audit-logs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffCandidatesRoute = StaffCandidatesRouteImport.update({
+  id: '/staff/candidates',
+  path: '/staff/candidates',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffComplianceRoute = StaffComplianceRouteImport.update({
+  id: '/staff/compliance',
+  path: '/staff/compliance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffJobsRoute = StaffJobsRouteImport.update({
+  id: '/staff/jobs',
+  path: '/staff/jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffMonitoringRoute = StaffMonitoringRouteImport.update({
+  id: '/staff/monitoring',
+  path: '/staff/monitoring',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffReportsRoute = StaffReportsRouteImport.update({
+  id: '/staff/reports',
+  path: '/staff/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffTasksRoute = StaffTasksRouteImport.update({
+  id: '/staff/tasks',
+  path: '/staff/tasks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffVerificationsRoute = StaffVerificationsRouteImport.update({
+  id: '/staff/verifications',
+  path: '/staff/verifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -234,6 +306,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/vn': typeof VnRoute
+  '/admin/$': typeof AdminSplatRoute
   '/admin/accounts': typeof AdminAccountsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/candidates': typeof AdminCandidatesRoute
@@ -254,9 +327,20 @@ export interface FileRoutesByFullPath {
   '/recruiter/profile': typeof RecruiterProfileRoute
   '/recruiter/talent': typeof RecruiterTalentRoute
   '/recruiter/verification': typeof RecruiterVerificationRoute
+  '/staff/accounts': typeof StaffAccountsRoute
+  '/staff/analytics': typeof StaffAnalyticsRoute
+  '/staff/audit-logs': typeof StaffAuditLogsRoute
+  '/staff/candidates': typeof StaffCandidatesRoute
+  '/staff/compliance': typeof StaffComplianceRoute
+  '/staff/jobs': typeof StaffJobsRoute
+  '/staff/monitoring': typeof StaffMonitoringRoute
+  '/staff/reports': typeof StaffReportsRoute
+  '/staff/tasks': typeof StaffTasksRoute
+  '/staff/verifications': typeof StaffVerificationsRoute
   '/admin/': typeof AdminIndexRoute
   '/candidate/': typeof CandidateIndexRoute
   '/recruiter/': typeof RecruiterIndexRoute
+  '/staff/': typeof StaffIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -271,6 +355,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/vn': typeof VnRoute
+  '/admin/$': typeof AdminSplatRoute
   '/admin/accounts': typeof AdminAccountsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/candidates': typeof AdminCandidatesRoute
@@ -291,9 +376,20 @@ export interface FileRoutesByTo {
   '/recruiter/profile': typeof RecruiterProfileRoute
   '/recruiter/talent': typeof RecruiterTalentRoute
   '/recruiter/verification': typeof RecruiterVerificationRoute
+  '/staff/accounts': typeof StaffAccountsRoute
+  '/staff/analytics': typeof StaffAnalyticsRoute
+  '/staff/audit-logs': typeof StaffAuditLogsRoute
+  '/staff/candidates': typeof StaffCandidatesRoute
+  '/staff/compliance': typeof StaffComplianceRoute
+  '/staff/jobs': typeof StaffJobsRoute
+  '/staff/monitoring': typeof StaffMonitoringRoute
+  '/staff/reports': typeof StaffReportsRoute
+  '/staff/tasks': typeof StaffTasksRoute
+  '/staff/verifications': typeof StaffVerificationsRoute
   '/admin': typeof AdminIndexRoute
   '/candidate': typeof CandidateIndexRoute
   '/recruiter': typeof RecruiterIndexRoute
+  '/staff': typeof StaffIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -309,6 +405,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/vn': typeof VnRoute
+  '/admin/$': typeof AdminSplatRoute
   '/admin/accounts': typeof AdminAccountsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/candidates': typeof AdminCandidatesRoute
@@ -329,9 +426,20 @@ export interface FileRoutesById {
   '/recruiter/profile': typeof RecruiterProfileRoute
   '/recruiter/talent': typeof RecruiterTalentRoute
   '/recruiter/verification': typeof RecruiterVerificationRoute
+  '/staff/accounts': typeof StaffAccountsRoute
+  '/staff/analytics': typeof StaffAnalyticsRoute
+  '/staff/audit-logs': typeof StaffAuditLogsRoute
+  '/staff/candidates': typeof StaffCandidatesRoute
+  '/staff/compliance': typeof StaffComplianceRoute
+  '/staff/jobs': typeof StaffJobsRoute
+  '/staff/monitoring': typeof StaffMonitoringRoute
+  '/staff/reports': typeof StaffReportsRoute
+  '/staff/tasks': typeof StaffTasksRoute
+  '/staff/verifications': typeof StaffVerificationsRoute
   '/admin/': typeof AdminIndexRoute
   '/candidate/': typeof CandidateIndexRoute
   '/recruiter/': typeof RecruiterIndexRoute
+  '/staff/': typeof StaffIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -348,6 +456,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/sitemap.xml'
     | '/vn'
+    | '/admin/$'
     | '/admin/accounts'
     | '/admin/analytics'
     | '/admin/candidates'
@@ -368,9 +477,20 @@ export interface FileRouteTypes {
     | '/recruiter/profile'
     | '/recruiter/talent'
     | '/recruiter/verification'
+    | '/staff/accounts'
+    | '/staff/analytics'
+    | '/staff/audit-logs'
+    | '/staff/candidates'
+    | '/staff/compliance'
+    | '/staff/jobs'
+    | '/staff/monitoring'
+    | '/staff/reports'
+    | '/staff/tasks'
+    | '/staff/verifications'
     | '/admin/'
     | '/candidate/'
     | '/recruiter/'
+    | '/staff/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -385,6 +505,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/sitemap.xml'
     | '/vn'
+    | '/admin/$'
     | '/admin/accounts'
     | '/admin/analytics'
     | '/admin/candidates'
@@ -405,9 +526,20 @@ export interface FileRouteTypes {
     | '/recruiter/profile'
     | '/recruiter/talent'
     | '/recruiter/verification'
+    | '/staff/accounts'
+    | '/staff/analytics'
+    | '/staff/audit-logs'
+    | '/staff/candidates'
+    | '/staff/compliance'
+    | '/staff/jobs'
+    | '/staff/monitoring'
+    | '/staff/reports'
+    | '/staff/tasks'
+    | '/staff/verifications'
     | '/admin'
     | '/candidate'
     | '/recruiter'
+    | '/staff'
   id:
     | '__root__'
     | '/'
@@ -422,6 +554,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/sitemap.xml'
     | '/vn'
+    | '/admin/$'
     | '/admin/accounts'
     | '/admin/analytics'
     | '/admin/candidates'
@@ -442,9 +575,20 @@ export interface FileRouteTypes {
     | '/recruiter/profile'
     | '/recruiter/talent'
     | '/recruiter/verification'
+    | '/staff/accounts'
+    | '/staff/analytics'
+    | '/staff/audit-logs'
+    | '/staff/candidates'
+    | '/staff/compliance'
+    | '/staff/jobs'
+    | '/staff/monitoring'
+    | '/staff/reports'
+    | '/staff/tasks'
+    | '/staff/verifications'
     | '/admin/'
     | '/candidate/'
     | '/recruiter/'
+    | '/staff/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -460,6 +604,7 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   VnRoute: typeof VnRoute
+  AdminSplatRoute: typeof AdminSplatRoute
   AdminAccountsRoute: typeof AdminAccountsRoute
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminCandidatesRoute: typeof AdminCandidatesRoute
@@ -480,9 +625,20 @@ export interface RootRouteChildren {
   RecruiterProfileRoute: typeof RecruiterProfileRoute
   RecruiterTalentRoute: typeof RecruiterTalentRoute
   RecruiterVerificationRoute: typeof RecruiterVerificationRoute
+  StaffAccountsRoute: typeof StaffAccountsRoute
+  StaffAnalyticsRoute: typeof StaffAnalyticsRoute
+  StaffAuditLogsRoute: typeof StaffAuditLogsRoute
+  StaffCandidatesRoute: typeof StaffCandidatesRoute
+  StaffComplianceRoute: typeof StaffComplianceRoute
+  StaffJobsRoute: typeof StaffJobsRoute
+  StaffMonitoringRoute: typeof StaffMonitoringRoute
+  StaffReportsRoute: typeof StaffReportsRoute
+  StaffTasksRoute: typeof StaffTasksRoute
+  StaffVerificationsRoute: typeof StaffVerificationsRoute
   AdminIndexRoute: typeof AdminIndexRoute
   CandidateIndexRoute: typeof CandidateIndexRoute
   RecruiterIndexRoute: typeof RecruiterIndexRoute
+  StaffIndexRoute: typeof StaffIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -576,6 +732,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/$': {
+      id: '/admin/$'
+      path: '/admin/$'
+      fullPath: '/admin/$'
+      preLoaderRoute: typeof AdminSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/accounts': {
@@ -732,6 +895,83 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RecruiterVerificationRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/staff/': {
+      id: '/staff/'
+      path: '/staff'
+      fullPath: '/staff/'
+      preLoaderRoute: typeof StaffIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff/accounts': {
+      id: '/staff/accounts'
+      path: '/staff/accounts'
+      fullPath: '/staff/accounts'
+      preLoaderRoute: typeof StaffAccountsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff/analytics': {
+      id: '/staff/analytics'
+      path: '/staff/analytics'
+      fullPath: '/staff/analytics'
+      preLoaderRoute: typeof StaffAnalyticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff/audit-logs': {
+      id: '/staff/audit-logs'
+      path: '/staff/audit-logs'
+      fullPath: '/staff/audit-logs'
+      preLoaderRoute: typeof StaffAuditLogsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff/candidates': {
+      id: '/staff/candidates'
+      path: '/staff/candidates'
+      fullPath: '/staff/candidates'
+      preLoaderRoute: typeof StaffCandidatesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff/compliance': {
+      id: '/staff/compliance'
+      path: '/staff/compliance'
+      fullPath: '/staff/compliance'
+      preLoaderRoute: typeof StaffComplianceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff/jobs': {
+      id: '/staff/jobs'
+      path: '/staff/jobs'
+      fullPath: '/staff/jobs'
+      preLoaderRoute: typeof StaffJobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff/monitoring': {
+      id: '/staff/monitoring'
+      path: '/staff/monitoring'
+      fullPath: '/staff/monitoring'
+      preLoaderRoute: typeof StaffMonitoringRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff/reports': {
+      id: '/staff/reports'
+      path: '/staff/reports'
+      fullPath: '/staff/reports'
+      preLoaderRoute: typeof StaffReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff/tasks': {
+      id: '/staff/tasks'
+      path: '/staff/tasks'
+      fullPath: '/staff/tasks'
+      preLoaderRoute: typeof StaffTasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff/verifications': {
+      id: '/staff/verifications'
+      path: '/staff/verifications'
+      fullPath: '/staff/verifications'
+      preLoaderRoute: typeof StaffVerificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -748,6 +988,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   VnRoute: VnRoute,
+  AdminSplatRoute: AdminSplatRoute,
   AdminAccountsRoute: AdminAccountsRoute,
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminCandidatesRoute: AdminCandidatesRoute,
@@ -768,9 +1009,20 @@ const rootRouteChildren: RootRouteChildren = {
   RecruiterProfileRoute: RecruiterProfileRoute,
   RecruiterTalentRoute: RecruiterTalentRoute,
   RecruiterVerificationRoute: RecruiterVerificationRoute,
+  StaffAccountsRoute: StaffAccountsRoute,
+  StaffAnalyticsRoute: StaffAnalyticsRoute,
+  StaffAuditLogsRoute: StaffAuditLogsRoute,
+  StaffCandidatesRoute: StaffCandidatesRoute,
+  StaffComplianceRoute: StaffComplianceRoute,
+  StaffJobsRoute: StaffJobsRoute,
+  StaffMonitoringRoute: StaffMonitoringRoute,
+  StaffReportsRoute: StaffReportsRoute,
+  StaffTasksRoute: StaffTasksRoute,
+  StaffVerificationsRoute: StaffVerificationsRoute,
   AdminIndexRoute: AdminIndexRoute,
   CandidateIndexRoute: CandidateIndexRoute,
   RecruiterIndexRoute: RecruiterIndexRoute,
+  StaffIndexRoute: StaffIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

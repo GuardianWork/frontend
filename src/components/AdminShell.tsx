@@ -1,6 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { BriefcaseBusiness, ChevronDown, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
+import { StaffShell } from "./StaffShell";
 import { LogoutButton } from "./LogoutButton";
 import { RecruiterShell } from "./RecruiterShell";
 
@@ -88,6 +89,14 @@ export function AdminShell({
     } else {
       currentRole = "admin";
     }
+  }
+
+  if (currentRole === "admin" && pathname.startsWith("/staff")) {
+    return (
+      <StaffShell title={title} topNavExtras={topNavExtras}>
+        {children}
+      </StaffShell>
+    );
   }
 
   const navItems =

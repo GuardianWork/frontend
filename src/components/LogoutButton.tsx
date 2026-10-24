@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { LogOut } from "lucide-react";
+import { IS_STAFF_PORTAL } from "@/lib/portal";
 import { logoutAccount } from "@/services/auth";
 
 export function LogoutButton() {
@@ -12,7 +13,11 @@ export function LogoutButton() {
     const revocation = logoutAccount();
     void revocation.catch(() => {});
     try {
-      await navigate({ to: "/login", search: { role: "candidate" }, replace: true });
+      await navigate({
+        to: "/login",
+        search: IS_STAFF_PORTAL ? {} : { role: "candidate" },
+        replace: true,
+      });
     } finally {
       setLoading(false);
     }

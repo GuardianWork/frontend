@@ -26,7 +26,11 @@ export const test = base.extend<{ mockApiUrl: string }>({
 export { expect };
 
 export async function login(page: Page, username: string, recruiter = false) {
-  await page.goto(`/login?role=${recruiter ? "recruiter" : "candidate"}`, {
+  const loginUrl =
+    username === "admin_demo"
+      ? `${process.env.STAFF_UI_BASE_URL || "http://localhost:5138"}/login`
+      : `/login?role=${recruiter ? "recruiter" : "candidate"}`;
+  await page.goto(loginUrl, {
     waitUntil: "domcontentloaded",
   });
   await page.locator("#login-identifier").fill(username);

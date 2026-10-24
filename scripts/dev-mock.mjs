@@ -1,6 +1,12 @@
 import { spawn } from "node:child_process";
+import { loadEnv } from "vite";
 import { createMockApiServer, MOCK_ACCOUNTS, MOCK_PASSWORD } from "./mock-api.mjs";
 
+const staff = process.argv.includes("--staff");
+const mode = staff ? "staff-mock" : "mock";
+const localEnv = loadEnv(mode, process.cwd(), "");
+const portKey = staff ? "STAFF_FRONTEND_PORT" : "PUBLIC_FRONTEND_PORT";
+const frontendPort = process.env[portKey] || localEnv[portKey] || (staff ? "5138" : "5137");
 const api = createMockApiServer();
 api.on("error", (error) => {
   console.error("Không khởi động được API mock:", error.message);
@@ -17,7 +23,9 @@ api.listen(0, "127.0.0.1", () => {
       password: MOCK_PASSWORD,
     })),
   );
-  console.log("Frontend: http://localhost:5137 · Dữ liệu mẫu: README.md\n");
+  console.log(
+    `Frontend${staff ? " Platform staff" : ""}: http://localhost:${frontendPort} · Dữ liệu mẫu: README.md\n`,
+  );
   const vite = spawn(
     process.execPath,
     [
@@ -25,17 +33,17 @@ api.listen(0, "127.0.0.1", () => {
       "--host",
       "127.0.0.1",
       "--port",
-      "5137",
+      frontendPort,
       "--strictPort",
       "--mode",
-      "mock",
+      mode,
     ],
     {
       stdio: "inherit",
       env: {
         ...process.env,
         VITE_API_BASE_URL: "/api",
-        VITE_API_PROXY_TARGET: `http://127.0.0.1:${port}`,
+        API_PROXY_TARGET: `http://127.0.0.1:${port}`,
       },
     },
   );
