@@ -3,6 +3,7 @@ import { ArrowLeft, Check, ClipboardCheck, Info, RotateCcw, Eye, EyeOff, X } fro
 import { AdminShell } from "@/components/AdminShell";
 import { ListSearch } from "@/components/ListSearch";
 import { AdminPagination } from "@/components/admin/AdminPagination";
+import { StaffStatusBadge } from "./StaffStatusBadge";
 import { useListPagination } from "@/hooks/useListPagination";
 import { matchesSearch } from "@/lib/list-search";
 import {
@@ -46,11 +47,11 @@ const date = (value?: string) =>
 function StatusBadge({ job }: { job: CompanyJob }) {
   const status = displayStatus(job);
   return (
-    <span
-      className={`admin-record-status admin-record-status--${status === "approved" ? "verified" : status === "hidden" ? "rejected" : status}`}
+    <StaffStatusBadge
+      tone={status === "approved" ? "verified" : status === "hidden" ? "neutral" : status}
     >
       {labels[status]}
-    </span>
+    </StaffStatusBadge>
   );
 }
 export function AdminJobsPage() {

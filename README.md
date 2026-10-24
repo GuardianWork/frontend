@@ -6,15 +6,21 @@ Sao chép `.env.example` thành `.env` và chỉnh cấu hình thực tế trong
 
 `API_PROXY_TARGET`, `PUBLIC_FRONTEND_PORT` và `STAFF_FRONTEND_PORT` chỉ dùng phía server. Các biến bắt đầu bằng `VITE_` xuất hiện trong trình duyệt, vì vậy chỉ đặt API path và public origin vào đó; không đặt mật khẩu, token hay secret. Mỗi khi đổi port, cập nhật cả public origin tương ứng và khởi động lại hai server.
 
-## Platform staff chạy riêng
+## Chạy frontend và Platform staff
 
 Frontend chính: **http://localhost:5137**. Platform staff: **http://localhost:5138**.
 
 ```sh
-# Terminal 1 — frontend ứng viên / nhà tuyển dụng
+# Khởi động cả hai cổng trong cùng một terminal
 npm run dev
+```
 
-# Terminal 2 — frontend Platform staff
+Nhấn `Ctrl+C` để dừng cả hai server. Nếu một server lỗi hoặc dừng, server còn lại cũng được dừng. Dừng các server đang chạy riêng trước khi dùng lệnh này để tránh trùng cổng.
+
+Để chạy từng frontend riêng:
+
+```sh
+npm run dev:public
 npm run dev:staff
 ```
 

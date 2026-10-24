@@ -74,7 +74,7 @@ test("one job list opens full JD details with approval, rejection and hiding act
   await expect(page.getByRole("button", { name: "Ẩn tin đã đăng", exact: true })).toHaveCount(0);
   await page.getByRole("button", { name: "Đồng ý đăng tin", exact: true }).click();
   await page.getByRole("button", { name: "Xác nhận đồng ý đăng tin", exact: true }).click();
-  await expect(page.locator(".compliance-jd .compliance-visibility")).toHaveText("Đang công khai");
+  await expect(page.locator(".compliance-jd .admin-record-status")).toHaveText("Đang công khai");
   await page.getByRole("button", { name: "Ẩn tin đã đăng", exact: true }).click();
   await page.getByLabel("Lý do xử lý", { exact: false }).fill("   ");
   await page.getByRole("button", { name: "Xác nhận ẩn tin", exact: true }).click();
@@ -83,7 +83,7 @@ test("one job list opens full JD details with approval, rejection and hiding act
     .getByLabel("Lý do xử lý", { exact: false })
     .fill("Tạm ẩn để kiểm tra nội dung theo phản hồi.");
   await page.getByRole("button", { name: "Xác nhận ẩn tin", exact: true }).click();
-  await expect(page.locator(".compliance-jd .compliance-visibility")).toHaveText("Đã ẩn");
+  await expect(page.locator(".compliance-jd .admin-record-status")).toHaveText("Đã ẩn");
   await page.getByRole("button", { name: "Quay lại danh sách", exact: true }).click();
   await expect(status).toHaveValue("PENDING");
   await expect(page.locator(".compliance-table tbody tr")).toHaveCount(1);
@@ -99,7 +99,7 @@ test("one job list opens full JD details with approval, rejection and hiding act
     .fill("Cần bổ sung thông tin về quyền lợi và thời gian làm việc.");
   await page.screenshot({ path: info.outputPath("reject-job.png"), animations: "disabled" });
   await page.getByRole("button", { name: "Xác nhận từ chối đăng tin", exact: true }).click();
-  await expect(page.locator(".compliance-jd .compliance-visibility")).toHaveText("Đã từ chối");
+  await expect(page.locator(".compliance-jd .admin-record-status")).toHaveText("Đã từ chối");
   await expect(page.locator(".compliance-history")).toContainText(
     "Cần bổ sung thông tin về quyền lợi và thời gian làm việc.",
   );

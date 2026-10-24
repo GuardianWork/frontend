@@ -14,6 +14,11 @@
 .staff-account-fields dd { margin: 0; color: var(--color-ink); font-size: 14px; overflow-wrap: anywhere; }
 .staff-account-popover { width: min(360px, calc(100vw - 32px)); padding: 20px; background: var(--color-paper); color: var(--color-ink); }
 .staff-account-popover .staff-account-fields { grid-template-columns: 1fr; gap: 16px; margin-top: 20px; }
+.staff-dashboard-metrics .admin-dashboard-metric { grid-template-rows: auto auto 1fr; gap: 12px; }
+.staff-dashboard-metrics .admin-dashboard-metric > span { align-self: start; min-height: 0; }
+.staff-dashboard-metrics .admin-dashboard-metric > small { align-self: end; }
+.staff-dashboard-metrics .admin-dashboard-metric:hover { background: var(--color-paper-2); }
+.staff-dashboard-metrics .admin-dashboard-metric:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -4px; border-radius: 8px; }
 @media (max-width: 1100px) { .staff-account-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 640px) {
   .staff-account-summary { padding: 20px; gap: 20px; }
@@ -23,4 +28,7 @@
 @media (max-width: 1200px) {
   .staff-account-trigger { max-width: 56px; padding: 4px; }
   .staff-account-trigger-text, .staff-account-trigger > svg { display: none; }
+}
+@media (max-width: 1100px) {
+  .staff-dashboard-metrics .admin-dashboard-metric > span { min-height: 2.8em; }
 }

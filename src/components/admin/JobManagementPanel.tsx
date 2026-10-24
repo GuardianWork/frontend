@@ -302,7 +302,7 @@ export function JobManagementPanel() {
                       </span>
                     </td>
                     <td className="compliance-state-cell">
-                      <StaffStatusBadge className="compliance-visibility" tone={statusTone(job)}>
+                      <StaffStatusBadge tone={statusTone(job)}>
                         {STATUS_LABELS[job.visibility]}
                       </StaffStatusBadge>
                       <small>
@@ -358,7 +358,7 @@ export function JobManagementPanel() {
           <section className="admin-panel compliance-jd" aria-labelledby="published-jd-title">
             <div className="admin-panel-heading">
               <h2 id="published-jd-title">Nội dung JD</h2>
-              <StaffStatusBadge className="compliance-visibility" tone={statusTone(selected)}>
+              <StaffStatusBadge tone={statusTone(selected)}>
                 {STATUS_LABELS[selected.visibility]}
               </StaffStatusBadge>
             </div>
