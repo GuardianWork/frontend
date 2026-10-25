@@ -29,7 +29,10 @@ export function AuthGate({ children }: { children: ReactNode }) {
         const user = await loadCurrentUser();
         if ((area === "admin" || area === "staff") && !isStaffUser(user))
           throw new ApiError("Tài khoản hiện tại không có quyền truy cập Platform staff.", 403);
-        if (area === "recruiter" && user.activeMembership) await loadCompanyVerification();
+        if (area === "recruiter" && user.activeMembership) {
+          // Private company dossiers belong to the Owner; Recruiters cannot read them.
+          if (user.activeMembership.companyRole === "OWNER") await loadCompanyVerification();
+        }
         if (!cancelled) setState({ area, ready: true, error: "" });
       } catch (error) {
         if (cancelled) return;
