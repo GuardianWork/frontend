@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
   Link,
+  redirect,
   createRootRouteWithContext,
   useRouter,
   HeadContent,
@@ -10,6 +11,7 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
+import { IS_STAFF_PORTAL, staffPortalHref } from "../lib/portal";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
 function NotFoundComponent() {
@@ -73,6 +75,26 @@ function ErrorComponent({ error, reset }: { error: unknown; reset: () => void })
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  beforeLoad: ({ location }) => {
+    const path = location.pathname;
+    const staffPath = /^\/(staff|admin)(?:\/|$)/.test(path);
+    if (!IS_STAFF_PORTAL && staffPath) {
+      const destination = path.replace(/^\/admin(?=\/|$)/, "/staff");
+      throw redirect({
+        href: staffPortalHref(`${destination}${location.searchStr}`),
+        replace: true,
+      });
+    }
+    if (IS_STAFF_PORTAL && /^\/admin(?:\/|$)/.test(path)) {
+      throw redirect({
+        href: path.replace(/^\/admin(?=\/|$)/, "/staff") + location.searchStr,
+        replace: true,
+      });
+    }
+    if (IS_STAFF_PORTAL && path !== "/login" && !/^\/staff(?:\/|$)/.test(path)) {
+      throw redirect({ to: "/login", replace: true });
+    }
+  },
   head: () => ({
     meta: [
       { charSet: "utf-8" },

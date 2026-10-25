@@ -1,7 +1,11 @@
 import { ListSearch } from "@/components/ListSearch";
 import { matchesSearch } from "@/lib/list-search";
 import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
-import { canViewMemberData, createCompanyJob } from "@/services/companyMembers";
+import {
+  canViewMemberData,
+  createCompanyJob,
+  jobModerationStatus,
+} from "@/services/companyMembers";
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AdminShell, Icon } from "@/components/AdminShell";
@@ -32,6 +36,10 @@ type RecruiterJob = {
   status: "Active" | "Draft" | "Closed";
   compliance: "100% Audited" | "Điều 98 Verified";
   created: string;
+  moderationStatus?: "pending" | "approved" | "rejected";
+  rejectionReason?: string;
+  visibility?: "PUBLIC" | "HIDDEN";
+  visibilityReason?: string;
 };
 
 function RecruiterJobsPage() {
@@ -46,6 +54,7 @@ function RecruiterJobsPage() {
     )
     .map((job) => ({
       ...job,
+      moderationStatus: jobModerationStatus(job),
       applicants: canViewMemberData(workspace, job.authorId, "applications")
         ? workspace.applications.filter((a) => a.jobId === job.id).length
         : 0,
@@ -127,7 +136,15 @@ function RecruiterJobsPage() {
             Tin Đang Hoạt Động
           </span>
           <div className="font-semibold text-3xl text-charcoal-text font-mono">
-            {jobs.length} Vị trí
+            {
+              jobs.filter(
+                (job) =>
+                  job.status === "Active" &&
+                  job.moderationStatus === "approved" &&
+                  job.visibility !== "HIDDEN",
+              ).length
+            }{" "}
+            Vị trí
           </div>
           <div className="mt-2 text-xs text-green-700 flex items-center gap-1 font-medium">
             <Icon name="verified" className="!text-[15px]" /> 100% Đã cấp lá chắn pháp lý
@@ -229,9 +246,23 @@ function RecruiterJobsPage() {
                     </span>
                   </td>
                   <td className="py-4 px-6">
-                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-green-50 text-green-700 border border-green-200">
-                      {job.compliance}
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-surface-container text-charcoal-text border border-warm-border">
+                      {job.moderationStatus === "pending"
+                        ? "Chờ phê duyệt"
+                        : job.moderationStatus === "rejected"
+                          ? "Đã từ chối"
+                          : job.visibility === "HIDDEN"
+                            ? "Đã ẩn"
+                            : "Đang công khai"}
                     </span>
+                    {job.visibility === "HIDDEN" && job.visibilityReason && (
+                      <p className="mt-2 max-w-xs text-xs text-error">
+                        Lý do ẩn: {job.visibilityReason}
+                      </p>
+                    )}
+                    {job.rejectionReason && (
+                      <p className="mt-2 max-w-xs text-xs text-error">{job.rejectionReason}</p>
+                    )}
                   </td>
                   <td className="py-4 px-6 text-right">
                     <Link
@@ -332,7 +363,7 @@ function RecruiterJobsPage() {
                   type="submit"
                   className="px-5 py-2 bg-primary text-on-primary rounded-lg text-xs font-bold hover:opacity-90 transition-all shadow-sm"
                 >
-                  Xác nhận & Đăng tin
+                  Gửi tin để phê duyệt
                 </button>
               </div>
             </form>

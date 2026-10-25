@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AdminDraftPage } from "@/components/admin/AdminDraftPage";
+import { AdminJobsPage } from "@/components/admin/AdminJobsPage";
+
 export const Route = createFileRoute("/admin/jobs")({
-  head: () => ({ meta: [{ title: "Kiểm soát tin tuyển dụng — Quản trị GuardianWork" }] }),
-  component: () => <AdminDraftPage area="jobs" />,
+  head: () => ({ meta: [{ title: "Quản lý tin tuyển dụng — GuardianWork" }] }),
+  component: AdminJobsPage,
 });

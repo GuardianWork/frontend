@@ -33,7 +33,7 @@ export const MOCK_ACCOUNTS = [
     email: "admin@example.test",
     firstName: "Quản trị",
     lastName: "Nguyễn",
-    role: "ADMIN",
+    role: "STAFF",
   },
 ];
 
@@ -83,7 +83,7 @@ export function createMockApiServer() {
   }
   return createServer(async (req, res) => {
     const url = new URL(req.url, "http://localhost");
-    const path = url.pathname;
+    const path = url.pathname.replace(/^\/api\/staff\/companies(?=\/|$)/, "/api/admin/companies");
     const send = (status, message, data = null) => {
       res.writeHead(status, {
         "Content-Type": "application/json; charset=utf-8",
@@ -255,7 +255,7 @@ export function createMockApiServer() {
       return;
     }
     if (req.method === "GET" && path === "/api/admin/companies/verifications") {
-      if (user.role !== "ADMIN") {
+      if (user.role !== "STAFF") {
         send(403, "Admin required");
         return;
       }
@@ -279,7 +279,7 @@ export function createMockApiServer() {
     }
     const adminDecision = /^\/api\/admin\/companies\/(\d+)\/(verify|reject)$/.exec(path);
     if (req.method === "PUT" && adminDecision) {
-      if (user.role !== "ADMIN") {
+      if (user.role !== "STAFF") {
         send(403, "Admin required");
         return;
       }

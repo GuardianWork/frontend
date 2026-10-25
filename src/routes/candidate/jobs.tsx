@@ -1,6 +1,6 @@
 import { JOBS, type JobItem } from "@/lib/job-listings";
 import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
-import { submitCompanyApplication } from "@/services/companyMembers";
+import { jobModerationStatus, submitCompanyApplication } from "@/services/companyMembers";
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AdminShell, Icon } from "@/components/AdminShell";
@@ -38,7 +38,10 @@ function CandidateJobsPage() {
   const detailRef = useRef<HTMLDivElement>(null);
   const [showDetail, setShowDetail] = useState(false);
   const companyJobs: JobItem[] = workspace.jobs
-    .filter((j) => j.status === "Active")
+    .filter(
+      (j) =>
+        j.status === "Active" && jobModerationStatus(j) === "approved" && j.visibility !== "HIDDEN",
+    )
     .map((j) => ({
       id: j.id,
       title: j.title,

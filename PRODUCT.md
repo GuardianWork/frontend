@@ -26,7 +26,7 @@ The codebase provides Vietnamese and English language dictionaries, with Vietnam
 
 - Candidate surfaces include job browsing, saved jobs and applications, a profile, and a legal copilot.
 - Recruiter surfaces include an overview, jobs, applications, talent, company profile, company verification, and workspace members.
-- Administrator surfaces include verification, analytics, candidates, and compliance. Job moderation happens after publication: the compliance screen lists published JDs flagged by AI for administrator investigation. Administrators do not approve job posts before publication. Company verification remains a separate workflow.
+- Administrator surfaces include verification, analytics, candidates, and compliance. The compliance screen lists published JDs flagged by AI for administrator investigation. The unified job-management page reviews new browser-local recruiter submissions before candidate visibility and offers hide/restore actions for published postings. Existing published jobs retain their visibility. Company verification remains a separate workflow. Job management currently shares the browser-local company workspace; no job-moderation backend integration exists.
 - Authentication, company verification, and membership have service modules. Backend availability and end-to-end production readiness have not been confirmed.
 - Some existing interactions are simulations: the landing-page CV flow uses local timers, and the legal copilot uses preset and generic local responses. These do not establish functioning AI integrations.
 - Keep existing routes, role distinctions, content, and task flows during redesign. The implementation uses React, TanStack Start file-based routing, Vite, Tailwind CSS, and Radix UI primitives.
@@ -54,3 +54,7 @@ Preserve the GuardianWork product name and the product facts represented by the 
 ## Open Decisions
 
 Audience priority, measurable success criteria, production readiness, and product-specific accessibility requirements remain unspecified.
+
+## Staff portal
+
+Platform staff runs as a separate frontend surface on port 5138 (`staff` / `staff-mock` Vite modes), alongside the public app on 5137. It has a login-only entry with no registration or audience selector. The existing auth API and server-issued `STAFF` role remain authoritative. Tokens are scoped to each portal's origin; private routes restore `/auth/me` before rendering. Staff builds use `.output-staff`; public builds use `.output`.

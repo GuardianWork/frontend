@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { ApiError } from "@/services/api";
-import { hasAuthSession, loadCurrentUser } from "@/services/auth";
+import { hasAuthSession, isStaffUser, loadCurrentUser } from "@/services/auth";
 import { loadCompanyVerification } from "@/services/companyVerification";
 
 /** Restore identity from /me before showing an authenticated workspace. */
 export function AuthGate({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const area = /^\/(candidate|recruiter|admin)(?:\/|$)/.exec(pathname)?.[1] ?? "";
+  const area = /^\/(candidate|recruiter|admin|staff)(?:\/|$)/.exec(pathname)?.[1] ?? "";
   const navigate = useNavigate();
   const [state, setState] = useState<{ area: string; ready: boolean; error: string }>({
     area: "",
@@ -27,8 +27,8 @@ export function AuthGate({ children }: { children: ReactNode }) {
       try {
         if (!hasAuthSession()) throw new ApiError("Vui lòng đăng nhập để tiếp tục.", 401);
         const user = await loadCurrentUser();
-        if (area === "admin" && user.role !== "ADMIN")
-          throw new ApiError("Tài khoản hiện tại không có quyền quản trị.", 403);
+        if ((area === "admin" || area === "staff") && !isStaffUser(user))
+          throw new ApiError("Tài khoản hiện tại không có quyền truy cập Platform staff.", 403);
         if (area === "recruiter" && user.activeMembership) {
           // Private company dossiers belong to the Owner; Recruiters cannot read them.
           if (user.activeMembership.companyRole === "OWNER") await loadCompanyVerification();
@@ -39,7 +39,8 @@ export function AuthGate({ children }: { children: ReactNode }) {
         if ((error instanceof ApiError && error.status === 401) || !hasAuthSession()) {
           void navigate({
             to: "/login",
-            search: { role: area === "recruiter" ? "recruiter" : "candidate" },
+            search:
+              area === "staff" ? {} : { role: area === "recruiter" ? "recruiter" : "candidate" },
             replace: true,
           });
         } else
@@ -72,7 +73,9 @@ export function AuthGate({ children }: { children: ReactNode }) {
           </button>
           <Link
             to="/login"
-            search={{ role: area === "recruiter" ? "recruiter" : "candidate" }}
+            search={
+              area === "staff" ? {} : { role: area === "recruiter" ? "recruiter" : "candidate" }
+            }
             className="rounded-lg border border-warm-border px-4 py-3 text-sm"
           >
             Đăng nhập lại

@@ -1,36 +1,44 @@
-// @lovable.dev/vite-tanstack-config already includes the following — do NOT add them manually
-// or the app will break with duplicate plugins:
-//   - TanStack devtools (dev-only, first), tanstackStart, viteReact, tailwindcss, tsConfigPaths,
-//     nitro (build-only using cloudflare as a default target), VITE_* env injection, @ path alias,
-//     React/TanStack dedupe, error logger plugins, and sandbox detection (port/host/strictPort).
-// You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
+// The Lovable config owns React, TanStack Start, Tailwind, Nitro and env injection.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
-import type { ConfigEnv } from "vite";
+import { loadEnv, type ConfigEnv } from "vite";
 
-const createProjectConfig = defineConfig({
-  vite: {
-    preview: { port: 5137, strictPort: true },
-    server: {
-      port: 5137,
-      strictPort: true,
-      proxy: {
-        "/api": {
-          target: process.env.VITE_API_PROXY_TARGET || "http://localhost:8080",
-          changeOrigin: true,
+export default async function projectConfig(env: ConfigEnv) {
+  const staff = env.mode === "staff" || env.mode === "staff-mock";
+  const localEnv = loadEnv(env.mode, process.cwd(), "");
+  const portKey = staff ? "STAFF_FRONTEND_PORT" : "PUBLIC_FRONTEND_PORT";
+  const port = Number(process.env[portKey] || localEnv[portKey] || (staff ? 5138 : 5137));
+  if (!Number.isInteger(port) || port < 1 || port > 65535)
+    throw new Error(`${portKey} must be an integer between 1 and 65535.`);
+  const config = await defineConfig({
+    vite: {
+      preview: { port, strictPort: true },
+      server: {
+        port,
+        strictPort: true,
+        proxy: {
+          "/api": {
+            target:
+              process.env.API_PROXY_TARGET || localEnv.API_PROXY_TARGET || "http://localhost:8080",
+            changeOrigin: true,
+            // Server-owned routing context; a production gateway must overwrite this too.
+            // Backend authorization must still verify the signed token and STAFF role.
+            headers: { "X-Guardian-Portal": staff ? "staff" : "public" },
+          },
         },
       },
     },
-  },
-  tanstackStart: {
-    // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
-    // nitro/vite builds from this
-    server: { entry: "server" },
-  },
-});
-
-export default async function projectConfig(env: ConfigEnv) {
-  const config = await createProjectConfig(env);
-  // Dev, mock, and build must not replace another running server's optimized React files.
+    nitro: staff
+      ? {
+          output: {
+            dir: ".output-staff",
+            publicDir: ".output-staff/public",
+            serverDir: ".output-staff/server",
+          },
+        }
+      : undefined,
+    tanstackStart: { server: { entry: "server" } },
+  })(env);
+  // Separate optimizer caches keep both Vite processes from replacing each other's React files.
   config.cacheDir = `node_modules/.vite/guardianwork-${env.command}-${env.mode}`;
   return config;
 }

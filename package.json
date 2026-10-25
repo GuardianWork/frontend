@@ -4,7 +4,8 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "dev": "vite dev",
+    "dev": "node scripts/dev.mjs",
+    "dev:public": "vite dev",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
@@ -12,7 +13,11 @@
     "format": "prettier --write .",
     "dev:mock": "node scripts/dev-mock.mjs",
     "test": "node --experimental-strip-types --test src/services/*.test.mjs scripts/*.test.mjs",
-    "test:ui": "playwright test"
+    "test:ui": "playwright test",
+    "dev:staff": "vite dev --mode staff",
+    "dev:staff:mock": "node scripts/dev-mock.mjs --staff",
+    "build:staff": "vite build --mode staff",
+    "preview:staff": "vite preview --mode staff"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
