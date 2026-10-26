@@ -24,8 +24,9 @@ const ADMIN_JOB_NAV: NavItem[] = [
 
 const CANDIDATE_NAV: NavItem[] = [
   { to: "/candidate/jobs", label: "Tìm việc làm", icon: "work" },
-  { to: "/candidate/copilot", label: "Trợ lý pháp lý", icon: "gavel" },
+  { to: "/candidate/cvs", label: "Hồ sơ xin việc", icon: "description" },
   { to: "/candidate/profile", label: "Hồ sơ của tôi", icon: "badge" },
+  { to: "/candidate/copilot", label: "Trợ lý pháp lý", icon: "gavel" },
 ];
 
 const RECRUITER_NAV: NavItem[] = [

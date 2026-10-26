@@ -35,6 +35,7 @@ import { Route as AdminTasksRouteImport } from './routes/admin/tasks'
 import { Route as AdminVerificationsRouteImport } from './routes/admin/verifications'
 import { Route as CandidateIndexRouteImport } from './routes/candidate/index'
 import { Route as CandidateCopilotRouteImport } from './routes/candidate/copilot'
+import { Route as CandidateCvsRouteImport } from './routes/candidate/cvs'
 import { Route as CandidateJobsRouteImport } from './routes/candidate/jobs'
 import { Route as CandidateProfileRouteImport } from './routes/candidate/profile'
 import { Route as RecruiterIndexRouteImport } from './routes/recruiter/index'
@@ -187,6 +188,11 @@ const CandidateCopilotRoute = CandidateCopilotRouteImport.update({
   path: '/candidate/copilot',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CandidateCvsRoute = CandidateCvsRouteImport.update({
+  id: '/candidate/cvs',
+  path: '/candidate/cvs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CandidateJobsRoute = CandidateJobsRouteImport.update({
   id: '/candidate/jobs',
   path: '/candidate/jobs',
@@ -318,6 +324,7 @@ export interface FileRoutesByFullPath {
   '/admin/tasks': typeof AdminTasksRoute
   '/admin/verifications': typeof AdminVerificationsRoute
   '/candidate/copilot': typeof CandidateCopilotRoute
+  '/candidate/cvs': typeof CandidateCvsRoute
   '/candidate/jobs': typeof CandidateJobsRoute
   '/candidate/profile': typeof CandidateProfileRoute
   '/recruiter/applications': typeof RecruiterApplicationsRoute
@@ -367,6 +374,7 @@ export interface FileRoutesByTo {
   '/admin/tasks': typeof AdminTasksRoute
   '/admin/verifications': typeof AdminVerificationsRoute
   '/candidate/copilot': typeof CandidateCopilotRoute
+  '/candidate/cvs': typeof CandidateCvsRoute
   '/candidate/jobs': typeof CandidateJobsRoute
   '/candidate/profile': typeof CandidateProfileRoute
   '/recruiter/applications': typeof RecruiterApplicationsRoute
@@ -417,6 +425,7 @@ export interface FileRoutesById {
   '/admin/tasks': typeof AdminTasksRoute
   '/admin/verifications': typeof AdminVerificationsRoute
   '/candidate/copilot': typeof CandidateCopilotRoute
+  '/candidate/cvs': typeof CandidateCvsRoute
   '/candidate/jobs': typeof CandidateJobsRoute
   '/candidate/profile': typeof CandidateProfileRoute
   '/recruiter/applications': typeof RecruiterApplicationsRoute
@@ -468,6 +477,7 @@ export interface FileRouteTypes {
     | '/admin/tasks'
     | '/admin/verifications'
     | '/candidate/copilot'
+    | '/candidate/cvs'
     | '/candidate/jobs'
     | '/candidate/profile'
     | '/recruiter/applications'
@@ -517,6 +527,7 @@ export interface FileRouteTypes {
     | '/admin/tasks'
     | '/admin/verifications'
     | '/candidate/copilot'
+    | '/candidate/cvs'
     | '/candidate/jobs'
     | '/candidate/profile'
     | '/recruiter/applications'
@@ -566,6 +577,7 @@ export interface FileRouteTypes {
     | '/admin/tasks'
     | '/admin/verifications'
     | '/candidate/copilot'
+    | '/candidate/cvs'
     | '/candidate/jobs'
     | '/candidate/profile'
     | '/recruiter/applications'
@@ -616,6 +628,7 @@ export interface RootRouteChildren {
   AdminTasksRoute: typeof AdminTasksRoute
   AdminVerificationsRoute: typeof AdminVerificationsRoute
   CandidateCopilotRoute: typeof CandidateCopilotRoute
+  CandidateCvsRoute: typeof CandidateCvsRoute
   CandidateJobsRoute: typeof CandidateJobsRoute
   CandidateProfileRoute: typeof CandidateProfileRoute
   RecruiterApplicationsRoute: typeof RecruiterApplicationsRoute
@@ -825,6 +838,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CandidateCopilotRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/candidate/cvs': {
+      id: '/candidate/cvs'
+      path: '/candidate/cvs'
+      fullPath: '/candidate/cvs'
+      preLoaderRoute: typeof CandidateCvsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/candidate/jobs': {
       id: '/candidate/jobs'
       path: '/candidate/jobs'
@@ -1000,6 +1020,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminTasksRoute: AdminTasksRoute,
   AdminVerificationsRoute: AdminVerificationsRoute,
   CandidateCopilotRoute: CandidateCopilotRoute,
+  CandidateCvsRoute: CandidateCvsRoute,
   CandidateJobsRoute: CandidateJobsRoute,
   CandidateProfileRoute: CandidateProfileRoute,
   RecruiterApplicationsRoute: RecruiterApplicationsRoute,

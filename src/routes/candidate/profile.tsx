@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { AdminShell, Icon } from "@/components/AdminShell";
 import { FloatingPanel } from "@/components/FloatingPanel";
 import {
@@ -11,15 +11,18 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  MAX_CV_COUNT,
   useCandidate,
   type CandidateEducation,
   type CandidateExperience,
 } from "@/context/CandidateContext";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import {
+  ArrowRight,
   BriefcaseBusiness,
   Cake,
   Check,
+  FileText,
   Pencil,
   GraduationCap,
   Mail,
@@ -50,7 +53,8 @@ export const Route = createFileRoute("/candidate/profile")({
 
 function CandidateProfilePage() {
   const user = useAuthUser();
-  const { profileDetails: profile, setProfileDetails } = useCandidate();
+  const { profileDetails: profile, setProfileDetails, cvs } = useCandidate();
+  const defaultCv = cvs.find((cv) => cv.isDefault);
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(profile);
   const [skillsInput, setSkillsInput] = useState(profile.skills.join(", "));
@@ -299,6 +303,34 @@ function CandidateProfilePage() {
               <ContactItem icon={<MapPin size={18} />} value="Việt Nam" className="sm:col-span-2" />
             </div>
           </div>
+        </section>
+
+        <section className="mb-5 flex flex-col gap-3 rounded-[16px] border border-rule bg-paper px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div className="flex min-w-0 items-start gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-accent-subtle text-accent">
+              <FileText size={20} strokeWidth={2.2} aria-hidden="true" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-ink">
+                Hồ sơ xin việc · {cvs.length}/{MAX_CV_COUNT}
+              </p>
+              <p
+                className="mt-0.5 text-xs leading-5 text-ink-2"
+                style={{ overflowWrap: "anywhere" }}
+              >
+                {defaultCv
+                  ? `${defaultCv.fileName} đang là hồ sơ mặc định.`
+                  : "Chưa chọn hồ sơ mặc định."}
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/candidate/cvs"
+            className="inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-md border border-rule bg-paper px-4 text-xs font-bold text-accent transition-colors hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+          >
+            Quản lý hồ sơ
+            <ArrowRight size={15} aria-hidden="true" />
+          </Link>
         </section>
 
         <section className="mb-5 rounded-[16px] border border-rule bg-paper px-4 py-5 sm:px-6">

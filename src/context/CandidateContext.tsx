@@ -44,6 +44,33 @@ export interface CandidateProfileDetails {
   education: CandidateEducation[];
 }
 
+export const MAX_CV_COUNT = 5;
+export const MAX_CV_SIZE_BYTES = 10 * 1024 * 1024;
+
+export type CandidateCvFormat = "PDF" | "DOC" | "DOCX";
+
+export interface CandidateCv {
+  id: string;
+  fileName: string;
+  label: string;
+  format: CandidateCvFormat;
+  mimeType: string;
+  sizeBytes: number;
+  uploadedAt: string;
+  isDefault: boolean;
+  usedInApplications: number;
+  previewUrl?: string;
+}
+
+export interface CandidateCvInput {
+  fileName: string;
+  label: string;
+  format: CandidateCvFormat;
+  mimeType: string;
+  sizeBytes: number;
+  previewUrl?: string;
+}
+
 export type CandidateTab = "jobs" | "company" | "profile" | "copilot";
 
 interface CandidateContextType {
@@ -51,6 +78,11 @@ interface CandidateContextType {
   setProfile: React.Dispatch<React.SetStateAction<CandidateProfile>>;
   profileDetails: CandidateProfileDetails;
   setProfileDetails: React.Dispatch<React.SetStateAction<CandidateProfileDetails>>;
+  cvs: CandidateCv[];
+  addCv: (input: CandidateCvInput) => boolean;
+  removeCv: (id: string) => void;
+  renameCv: (id: string, label: string) => void;
+  setDefaultCv: (id: string) => "updated" | "already" | "missing";
   appliedJobs: string[];
   savedJobs: string[];
   applyJob: (jobId: string) => void;
@@ -128,11 +160,52 @@ const DEFAULT_PROFILE_DETAILS: CandidateProfileDetails = {
   ],
 };
 
+const DEFAULT_CVS: CandidateCv[] = [
+  {
+    id: "cv-backend-2026",
+    fileName: "Nguyen_Van_An_Backend_CV_2026.pdf",
+    label: "CV Backend · Tiếng Việt",
+    format: "PDF",
+    mimeType: "application/pdf",
+    sizeBytes: 862_208,
+    uploadedAt: "2026-10-12T09:24:00.000Z",
+    isDefault: true,
+    usedInApplications: 4,
+  },
+  {
+    id: "cv-fullstack-en-2026",
+    fileName: "Nguyen_Van_An_Fullstack_CV_EN.pdf",
+    label: "CV Full-stack · English",
+    format: "PDF",
+    mimeType: "application/pdf",
+    sizeBytes: 1_258_291,
+    uploadedAt: "2026-09-28T14:05:00.000Z",
+    isDefault: false,
+    usedInApplications: 2,
+  },
+  {
+    id: "cv-techlead-2026",
+    fileName: "Nguyen_Van_An_TechLead_CV.docx",
+    label: "CV Tech Lead",
+    format: "DOCX",
+    mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    sizeBytes: 655_360,
+    uploadedAt: "2026-08-16T08:40:00.000Z",
+    isDefault: false,
+    usedInApplications: 0,
+  },
+];
+
 const CandidateContext = createContext<CandidateContextType>({
   profile: DEFAULT_PROFILE,
   setProfile: () => {},
   profileDetails: DEFAULT_PROFILE_DETAILS,
   setProfileDetails: () => {},
+  cvs: [],
+  addCv: () => false,
+  removeCv: () => {},
+  renameCv: () => {},
+  setDefaultCv: () => "missing",
   appliedJobs: [],
   savedJobs: [],
   applyJob: () => {},
@@ -151,11 +224,50 @@ export function CandidateProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<CandidateProfile>(DEFAULT_PROFILE);
   const [profileDetails, setProfileDetails] =
     useState<CandidateProfileDetails>(DEFAULT_PROFILE_DETAILS);
+  const [cvs, setCvs] = useState<CandidateCv[]>(DEFAULT_CVS);
   const [appliedJobs, setAppliedJobs] = useState<string[]>([]);
   const [savedJobs, setSavedJobs] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<CandidateTab>("jobs");
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
+
+  const addCv = (input: CandidateCvInput) => {
+    if (cvs.length >= MAX_CV_COUNT) return false;
+
+    const nextCv: CandidateCv = {
+      ...input,
+      id:
+        globalThis.crypto?.randomUUID?.() ??
+        `cv-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      uploadedAt: new Date().toISOString(),
+      isDefault: cvs.length === 0,
+      usedInApplications: 0,
+    };
+
+    setCvs((prev) => [nextCv, ...prev]);
+    return true;
+  };
+
+  const removeCv = (id: string) => {
+    const target = cvs.find((cv) => cv.id === id);
+    if (target?.previewUrl) URL.revokeObjectURL(target.previewUrl);
+    setCvs((prev) => prev.filter((cv) => cv.id !== id));
+  };
+
+  const renameCv = (id: string, label: string) => {
+    const nextLabel = label.trim();
+    if (!nextLabel) return;
+    setCvs((prev) => prev.map((cv) => (cv.id === id ? { ...cv, label: nextLabel } : cv)));
+  };
+
+  const setDefaultCv = (id: string) => {
+    const target = cvs.find((cv) => cv.id === id);
+    if (!target) return "missing";
+    if (target.isDefault) return "already";
+
+    setCvs((prev) => prev.map((cv) => ({ ...cv, isDefault: cv.id === id })));
+    return "updated";
+  };
 
   const applyJob = (jobId: string) => {
     if (!appliedJobs.includes(jobId)) {
@@ -179,6 +291,11 @@ export function CandidateProvider({ children }: { children: ReactNode }) {
         setProfile,
         profileDetails,
         setProfileDetails,
+        cvs,
+        addCv,
+        removeCv,
+        renameCv,
+        setDefaultCv,
         appliedJobs,
         savedJobs,
         applyJob,
