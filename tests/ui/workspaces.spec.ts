@@ -25,7 +25,8 @@ test("candidate pages accept search and profile edits", async ({ page }, info) =
   await page.getByRole("button", { name: "Chỉnh sửa hồ sơ" }).click();
   const title = page.locator("main input").first();
   await title.fill("Chuyên viên kế toán");
-  await page.getByRole("button", { name: "Đóng chỉnh sửa" }).click();
+  await page.getByRole("button", { name: "Lưu thay đổi" }).click();
+  await expect(page.getByRole("status")).toContainText("Cập nhật thông tin cá nhân thành công");
   await expect(page.getByText("Chuyên viên kế toán", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Đăng xuất", exact: true }).click();
   await expect(page.locator("#login-identifier")).toBeEnabled();
