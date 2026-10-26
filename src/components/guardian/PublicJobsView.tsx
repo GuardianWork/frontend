@@ -1,8 +1,8 @@
 /* Hallmark · page: public job discovery · genre: modern-minimal
- * macrostructure: Workbench · tone: utilitarian · theme: GuardianWork (DESIGN.md locked)
+ * macrostructure: Catalogue · tone: utilitarian · theme: GuardianWork (DESIGN.md locked)
  * anchor hue: Guardian Blue · enrichment: none (typography + functional states)
  * states: default · hover · focus · active · disabled · loading · error · success
- * pre-emit critique: P5 H5 E5 S4 R5 V4
+ * pre-emit critique: P5 H5 E5 S5 R5 V4
  */
 
 import { useEffect, useState, type FormEvent } from "react";
@@ -24,7 +24,7 @@ import {
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { JOBS, type JobItem } from "@/lib/job-listings";
+import { JOBS, badgeLabel, isSampleListing, type JobItem } from "@/lib/job-listings";
 import { paginateItems } from "@/lib/pagination";
 import {
   EXPERIENCE_BANDS,
@@ -78,7 +78,13 @@ export function PublicJobsView({ search }: { search: JobSearchParams }) {
   useEffect(() => setDraftLocation(search.location ?? ""), [search.location]);
 
   const update = (patch: JobSearchParams) => {
-    void navigate({ to: "/jobs", search: jobSearch({ ...search, ...patch }), replace: true });
+    void navigate({
+      to: "/jobs",
+      search: jobSearch({ ...search, ...patch }),
+      replace: true,
+      // Keep the visitor where they are: filtering must not throw them back to the hero.
+      resetScroll: false,
+    });
   };
   const resetFilters = () =>
     update({ q: "", location: "", industry: "", salary: "", mode: "", experience: "", page: "" });
@@ -108,7 +114,7 @@ export function PublicJobsView({ search }: { search: JobSearchParams }) {
                 <div className="career-discovery__intro">
                   <div>
                     <h1>Tìm việc làm</h1>
-                    <p>
+                    <p className="career-discovery__lede">
                       Tìm theo vị trí, kỹ năng, công ty, ngành nghề và địa điểm trên toàn quốc. Xem
                       đầy đủ mô tả, mức lương và điều kiện làm việc trước khi quyết định ứng tuyển.
                     </p>
@@ -136,7 +142,7 @@ export function PublicJobsView({ search }: { search: JobSearchParams }) {
                       value={draftLocation}
                       onChange={(event) => setDraftLocation(event.target.value)}
                     >
-                      <option value="">Tất cả địa điểm</option>
+                      <option value="">Mọi địa điểm</option>
                       <option value="Hồ Chí Minh">TP. Hồ Chí Minh</option>
                       <option value="Hà Nội">Hà Nội</option>
                       <option value="Đà Nẵng">Đà Nẵng</option>
@@ -209,7 +215,7 @@ function Results({
             value={search.industry ?? ""}
             onChange={(event) => update({ industry: event.target.value, job: "", page: "" })}
           >
-            <option value="">Tất cả ngành nghề</option>
+            <option value="">Mọi ngành nghề</option>
             {INDUSTRIES.map((industry) => (
               <option key={industry} value={industry}>
                 {industry}
@@ -256,7 +262,7 @@ function Results({
             ))}
           </select>
         </label>
-        {filtersActive && (
+        {filtersActive && pagination.items.length > 0 && (
           <button type="button" className="career-filter__reset" onClick={resetFilters}>
             Xóa bộ lọc
             <X size={15} aria-hidden="true" />
@@ -264,10 +270,18 @@ function Results({
         )}
       </div>
 
-      <p className="career-results-count" aria-live="polite">
-        {pagination.totalItems} tin tuyển dụng
-        {filtersActive ? " phù hợp với bộ lọc" : " đang hoạt động"}
-      </p>
+      <div className="career-results-meta">
+        <p
+          className={pagination.totalItems > 0 ? "career-results-count" : "sr-only"}
+          aria-live="polite"
+        >
+          {pagination.totalItems} tin tuyển dụng
+          {filtersActive ? " phù hợp với bộ lọc" : " đang hoạt động"}
+        </p>
+        {pagination.totalItems > 0 && (
+          <p className="career-data-note">Huy hiệu kiểm định là dữ liệu minh họa.</p>
+        )}
+      </div>
 
       {pagination.items.length > 0 ? (
         <>
@@ -278,11 +292,12 @@ function Results({
                 to="/jobs"
                 search={jobSearch({ ...search, job: job.id })}
                 className="career-job career-job--interactive"
+                aria-label={`${job.title} — ${job.company}`}
               >
                 <div className="career-job__company">
                   <CompanyMark name={job.company} />
                   <span>{job.company}</span>
-                  <span className={badgeClass(job)}>{job.badge}</span>
+                  <span className={badgeClass(job)}>{badgeLabel(job.badge)}</span>
                   <ArrowRight size={18} className="career-job__arrow" aria-hidden="true" />
                 </div>
                 <h3>{job.title}</h3>
@@ -295,7 +310,7 @@ function Results({
                   <span>
                     {job.department} · {WORK_MODE_LABELS[workModeOf(job)]}
                   </span>
-                  <span>Xem chi tiết</span>
+                  <span aria-hidden="true">Xem chi tiết</span>
                 </div>
               </Link>
             ))}
@@ -305,10 +320,14 @@ function Results({
             <nav className="career-pagination" aria-label="Phân trang kết quả">
               <button
                 type="button"
+                aria-label="Trang trước"
                 disabled={pagination.page === 0}
                 onClick={() => update({ page: String(pagination.page - 1) })}
               >
-                Trang trước
+                <span className="career-pagination__full">Trang trước</span>
+                <span className="career-pagination__short" aria-hidden="true">
+                  Trước
+                </span>
               </button>
               <div className="career-pagination__pages">
                 {Array.from({ length: pagination.totalPages }, (_, index) => (
@@ -316,6 +335,7 @@ function Results({
                     key={index}
                     type="button"
                     aria-current={pagination.page === index ? "page" : undefined}
+                    aria-label={`Trang ${index + 1}`}
                     onClick={() => update({ page: String(index) })}
                   >
                     {index + 1}
@@ -324,10 +344,14 @@ function Results({
               </div>
               <button
                 type="button"
+                aria-label="Trang sau"
                 disabled={pagination.page >= pagination.totalPages - 1}
                 onClick={() => update({ page: String(pagination.page + 1) })}
               >
-                Trang sau
+                <span className="career-pagination__full">Trang sau</span>
+                <span className="career-pagination__short" aria-hidden="true">
+                  Sau
+                </span>
               </button>
             </nav>
           )}
@@ -348,7 +372,7 @@ function Results({
               <button
                 key={query}
                 type="button"
-                className="career-filter__reset"
+                className="career-chip"
                 onClick={() => update({ q: query, location: "", industry: "", page: "" })}
               >
                 {query}
@@ -389,7 +413,7 @@ function JobDetail({
           <CompanyMark name={job.company} />
           <div>
             <p>{job.company}</p>
-            <span className={badgeClass(job)}>{job.badge}</span>
+            <span className={badgeClass(job)}>{badgeLabel(job.badge)}</span>
           </div>
         </div>
         <h1>{job.title}</h1>
@@ -433,13 +457,9 @@ function JobDetail({
             )}
           </section>
 
-          <section aria-labelledby="detail-benefits">
-            <h2 id="detail-benefits">Quyền lợi &amp; điều kiện làm việc</h2>
+          <section aria-labelledby="detail-verification">
+            <h2 id="detail-verification">Ghi chú kiểm định</h2>
             <p>{job.statutoryNote}</p>
-          </section>
-
-          <section aria-labelledby="detail-terms">
-            <h2 id="detail-terms">Điều khoản nên xác nhận trước khi ứng tuyển</h2>
             <p>{job.suggestedRevision}</p>
           </section>
         </div>
@@ -519,6 +539,7 @@ function JobDetail({
               <Building2 size={16} aria-hidden="true" />
               <p>{job.statutoryBase}</p>
             </div>
+            <p className="career-data-note">Huy hiệu kiểm định là dữ liệu minh họa.</p>
           </div>
         </aside>
       </div>
@@ -532,6 +553,7 @@ function JobDetail({
               to="/jobs"
               search={jobSearch({ ...search, job: related.id })}
               className="career-job career-job--interactive"
+              aria-label={`${related.title} — ${related.company}`}
             >
               <div className="career-job__company">
                 <CompanyMark name={related.company} />
@@ -546,7 +568,7 @@ function JobDetail({
               </p>
               <div className="career-job__bottom">
                 <span>{related.department}</span>
-                <span>Xem chi tiết</span>
+                <span aria-hidden="true">Xem chi tiết</span>
               </div>
             </Link>
           ))}
@@ -557,7 +579,7 @@ function JobDetail({
 }
 
 function MissingJob({ search }: { search: JobSearchParams }) {
-  const suggestions = JOBS.slice(0, 3);
+  const suggestions = JOBS.filter((job) => !isSampleListing(job)).slice(0, 3);
   return (
     <section className="career-container career-detail">
       <Link
@@ -585,7 +607,7 @@ function MissingJob({ search }: { search: JobSearchParams }) {
         </div>
       </div>
       <section className="career-similar" aria-labelledby="missing-similar-title">
-        <h2 id="missing-similar-title">Việc làm tương tự</h2>
+        <h2 id="missing-similar-title">Việc làm khác</h2>
         <div className="career-job-grid">
           {suggestions.map((job) => (
             <Link
@@ -593,6 +615,7 @@ function MissingJob({ search }: { search: JobSearchParams }) {
               to="/jobs"
               search={jobSearch({ ...search, job: job.id })}
               className="career-job career-job--interactive"
+              aria-label={`${job.title} — ${job.company}`}
             >
               <div className="career-job__company">
                 <CompanyMark name={job.company} />

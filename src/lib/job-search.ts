@@ -1,4 +1,4 @@
-import type { JobItem } from "./job-listings";
+import { isSampleListing, type JobItem } from "./job-listings";
 
 /** URL-backed search state for the public job browser (UC-CAN-07 / UC-CAN-08). */
 export interface JobSearchParams {
@@ -153,7 +153,10 @@ export function jobMatchesSearch(job: JobItem, search: JobSearchParams): boolean
 }
 
 export function filterJobs(jobs: readonly JobItem[], search: JobSearchParams): JobItem[] {
-  return jobs.filter((job) => jobMatchesSearch(job, search));
+  // Real listings lead; sample rows stay available but never dominate the first page.
+  return jobs
+    .filter((job) => jobMatchesSearch(job, search))
+    .sort((a, b) => Number(isSampleListing(a)) - Number(isSampleListing(b)));
 }
 
 export function hasActiveFilters(search: JobSearchParams): boolean {

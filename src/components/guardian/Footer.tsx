@@ -13,7 +13,7 @@ export function Footer() {
             <p className="footer-ft5__statement font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-ink leading-tight">
               {dict.footer.statement1}
               <br />
-              <em className="font-normal italic text-accent">{dict.footer.statement2}</em>
+              <span className="text-accent">{dict.footer.statement2}</span>
             </p>
           </div>
           <div className="landing-footer__cta-col shrink-0 flex flex-col items-start md:items-end">
@@ -23,7 +23,7 @@ export function Footer() {
             >
               {dict.footer.findJobs} →
             </Link>
-            <p className="font-mono text-xs text-ink-3 mt-2.5">{dict.footer.noSignUp}</p>
+            <p className="text-xs text-ink-3 mt-2.5">{dict.footer.noSignUp}</p>
           </div>
         </div>
 
@@ -60,7 +60,7 @@ export function Footer() {
               Admin Console
             </Link>
           </nav>
-          <p className="footer-ft5__meta text-ink-3 font-mono">{dict.footer.copyright}</p>
+          <p className="footer-ft5__meta text-ink-3">{dict.footer.copyright}</p>
         </div>
       </div>
     </footer>

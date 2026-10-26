@@ -257,3 +257,19 @@ export const JOBS: JobItem[] = [
   ...MULTI_INDUSTRY_JOBS,
   ...TECHNOLOGY_JOBS.map((job) => ({ ...job, industry: "Công nghệ thông tin" })),
 ];
+
+/** Vietnamese labels for badges that are authored in English (legacy seed data). */
+const BADGE_LABELS: Partial<Record<JobItem["badge"], string>> = {
+  "100% Audited": "Đã kiểm định 100%",
+  "Điều 98 Verified": "Điều 98 đã xác minh",
+  "High Salary": "Lương cao",
+};
+
+export function badgeLabel(badge: JobItem["badge"]): string {
+  return BADGE_LABELS[badge] ?? badge;
+}
+
+/** Sample rows are labeled honestly; keep them out of the way of real listings. */
+export function isSampleListing(job: JobItem): boolean {
+  return job.badge === "Tin minh họa";
+}
