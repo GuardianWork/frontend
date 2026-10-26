@@ -3,6 +3,7 @@ import { Link, useHydrated, useRouterState } from "@tanstack/react-router";
 import { Menu, X, Globe, ShieldCheck } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCandidate } from "@/context/CandidateContext";
+import { useAuthUser } from "@/hooks/useAuthUser";
 
 export function Header({
   variant = "standard",
@@ -11,9 +12,11 @@ export function Header({
 }) {
   const { locale, setLocale, dict } = useLanguage();
   const { appliedJobs, savedJobs } = useCandidate();
+  const user = useAuthUser();
   const [mobileOpen, setMobileOpen] = useState(false);
   const hydrated = useHydrated();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const currentHref = useRouterState({ select: (state) => state.location.href });
   const landing = variant === "landing";
   const en = locale === "en";
   useEffect(() => {
@@ -25,11 +28,18 @@ export function Header({
     window.addEventListener("keydown", close);
     return () => window.removeEventListener("keydown", close);
   }, []);
-  const links = [
-    { to: "/candidate/jobs", label: dict.navWorkbench.jobs },
-    { to: "/candidate/profile", label: dict.navWorkbench.profile },
-    { to: "/candidate/copilot", label: dict.navWorkbench.legalChat },
-  ];
+  // Guests get public discovery only; the candidate workspace links need a session.
+  const links = user
+    ? [
+        { to: "/candidate/jobs", label: dict.navWorkbench.jobs },
+        { to: "/candidate/profile", label: dict.navWorkbench.profile },
+        { to: "/candidate/copilot", label: dict.navWorkbench.legalChat },
+      ]
+    : [{ to: "/jobs", label: dict.nav.findJob }];
+  const loginSearch =
+    !user && currentHref && !currentHref.startsWith("/login")
+      ? { role: "candidate" as const, next: currentHref }
+      : { role: "candidate" as const };
   return (
     <header className="career-header">
       <div className="career-container career-header__row">
@@ -61,7 +71,7 @@ export function Header({
             <Globe size={17} />
             <span>{en ? "EN" : "VI"}</span>
           </button>
-          <Link className="career-header__login" to="/login">
+          <Link className="career-header__login" to="/login" search={loginSearch}>
             {dict.nav.logIn}
           </Link>
           {landing ? (
@@ -110,7 +120,7 @@ export function Header({
           <Link to="/compliance" onClick={() => setMobileOpen(false)}>
             Admin Console
           </Link>
-          <Link to="/login" onClick={() => setMobileOpen(false)}>
+          <Link to="/login" search={loginSearch} onClick={() => setMobileOpen(false)}>
             {dict.nav.logIn}
           </Link>
           <Link to="/register" search={{ role: "candidate" }} onClick={() => setMobileOpen(false)}>
@@ -118,7 +128,7 @@ export function Header({
           </Link>
         </nav>
       )}
-      {!landing && (
+      {!landing && user && (
         <div className="career-header__ledger">
           <span>
             {dict.ledger.applied}: {appliedJobs.length}
