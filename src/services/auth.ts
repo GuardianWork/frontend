@@ -34,8 +34,24 @@ type StoredSession = AuthSession & { expiresAt: number };
 export const AUTH_SESSION_KEY = "guardianwork_auth_session";
 export const AUTH_SESSION_EVENT = "guardianwork-auth-session";
 
-export function parseAccountPurpose(search: Record<string, unknown>): { role?: AccountPurpose } {
-  return { role: search.role === "recruiter" ? "recruiter" : "candidate" };
+export interface AccountPurposeSearch {
+  role?: AccountPurpose;
+  /** Same-origin path to return to after signing in (e.g. a public job detail). */
+  next?: string;
+}
+
+export function safeInternalPath(value: unknown): string | undefined {
+  if (typeof value !== "string" || !value.startsWith("/")) return undefined;
+  if (value.startsWith("//") || value.includes("\\")) return undefined;
+  return value.slice(0, 512);
+}
+
+export function parseAccountPurpose(search: Record<string, unknown>): AccountPurposeSearch {
+  const next = safeInternalPath(search.next);
+  return {
+    role: search.role === "recruiter" ? "recruiter" : "candidate",
+    ...(next ? { next } : {}),
+  };
 }
 function isAuthUser(value: unknown): value is AuthUser {
   if (!value || typeof value !== "object") return false;

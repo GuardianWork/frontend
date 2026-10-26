@@ -36,7 +36,7 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginPage() {
-  const { role = "candidate" } = Route.useSearch();
+  const { role = "candidate", next } = Route.useSearch();
   const navigate = Route.useNavigate();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
@@ -65,7 +65,8 @@ function LoginPage() {
         window.location.assign(staffPortalHref("/login"));
         return;
       }
-      await navigate({ to: getLoginDestination(user, role) });
+      if (next) await navigate({ href: next, replace: true });
+      else await navigate({ to: getLoginDestination(user, role) });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Không thể đăng nhập. Vui lòng thử lại.");
     } finally {
@@ -82,9 +83,9 @@ function LoginPage() {
       <AccountPurposeChoice
         value={role}
         disabled={loading || !ready}
-        onChange={(next) => {
+        onChange={(choice) => {
           setError("");
-          void navigate({ search: { role: next }, replace: true });
+          void navigate({ search: (previous) => ({ ...previous, role: choice }), replace: true });
         }}
       />
       <form onSubmit={handleSubmit} className="space-y-5" aria-busy={loading}>
@@ -153,7 +154,7 @@ function LoginPage() {
         Bạn chưa có tài khoản?{" "}
         <Link
           to="/register"
-          search={{ role }}
+          search={next ? { role, next } : { role }}
           className="font-semibold text-primary underline-offset-4 hover:underline"
         >
           Đăng ký ngay
