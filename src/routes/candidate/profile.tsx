@@ -1,6 +1,6 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent, type KeyboardEvent } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { AdminShell, Icon } from "@/components/AdminShell";
+import { AdminShell } from "@/components/AdminShell";
 import { FloatingPanel } from "@/components/FloatingPanel";
 import {
   Dialog,
@@ -15,36 +15,46 @@ import {
   useCandidate,
   type CandidateEducation,
   type CandidateExperience,
+  type CandidateProfileDetails,
 } from "@/context/CandidateContext";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import {
   ArrowRight,
-  BriefcaseBusiness,
-  Cake,
+  BadgeCheck,
   Check,
+  CircleAlert,
+  Eye,
+  EyeOff,
   FileText,
-  Pencil,
-  GraduationCap,
   Mail,
   MapPin,
+  Pencil,
   Phone,
-  Sparkles,
+  Plus,
   Trash2,
-  UserRound,
+  X,
 } from "lucide-react";
 
 type ExperienceEntry = CandidateExperience;
 type EducationEntry = CandidateEducation;
 type EditSection = "all" | "basics" | "about" | "experience" | "education" | "skills";
 
+const MAX_NAME_LENGTH = 150;
+const MAX_EMAIL_LENGTH = 50;
+const MAX_ABOUT_LENGTH = 1000;
+const MAX_SKILLS = 20;
+const MAX_SKILL_LENGTH = 30;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const PHONE_PATTERN = /^0\d{9}$/;
+
 export const Route = createFileRoute("/candidate/profile")({
   head: () => ({
     meta: [
-      { title: "My Talent Profile & Safeguards — GuardianWork" },
+      { title: "Hồ sơ năng lực & quyền lợi bảo vệ — GuardianWork" },
       {
         name: "description",
         content:
-          "Manage your verified developer profile, salary floor, skills, and statutory protections.",
+          "Cập nhật thông tin, kinh nghiệm, học vấn và kỹ năng trong hồ sơ ứng viên GuardianWork.",
       },
     ],
   }),
@@ -57,40 +67,53 @@ function CandidateProfilePage() {
   const defaultCv = cvs.find((cv) => cv.isDefault);
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(profile);
-  const [skillsInput, setSkillsInput] = useState(profile.skills.join(", "));
+  const [skillsDraft, setSkillsDraft] = useState<string[]>(profile.skills);
+  const [skillInput, setSkillInput] = useState("");
+  const [skillNotice, setSkillNotice] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [successMessage, setSuccessMessage] = useState("");
   const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false);
   const [editSection, setEditSection] = useState<EditSection>("all");
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const currentRole = profile.experiences[0]?.title || "Chưa cập nhật chức danh";
+  const contactEmail = profile.email.trim() || user?.email || "";
+  const errorCount = Object.keys(fieldErrors).length;
 
   useEffect(() => {
     if (isEditing) return;
     setDraft(profile);
-    setSkillsInput(profile.skills.join(", "));
+    setSkillsDraft(profile.skills);
+    setSkillInput("");
+    setSkillNotice("");
   }, [isEditing, profile]);
 
   const openEditForm = (section: EditSection = "all", index: number | null = null) => {
     setDraft(profile);
-    setSkillsInput(profile.skills.join(", "));
+    setSkillsDraft(profile.skills);
+    setSkillInput("");
+    setSkillNotice("");
     setFieldErrors({});
     setSuccessMessage("");
     setIsSuccessDialogOpen(false);
     setEditSection(section);
     setEditIndex(index);
-    setIsEditing((open) => (open && editSection === section && editIndex === index ? false : true));
+    setIsEditing(true);
   };
 
   const closeEditForm = () => setIsEditing(false);
 
-  const updateDraft = (field: keyof typeof draft, value: string) => {
-    setDraft((current) => ({ ...current, [field]: value }));
+  const clearFieldError = (key: string) => {
     setFieldErrors((current) => {
+      if (!current[key]) return current;
       const next = { ...current };
-      delete next[field];
+      delete next[key];
       return next;
     });
+  };
+
+  const updateDraft = (field: keyof typeof draft, value: string) => {
+    setDraft((current) => ({ ...current, [field]: value }));
+    clearFieldError(field);
   };
 
   const updateExperience = (index: number, field: keyof ExperienceEntry, value: string) => {
@@ -100,11 +123,7 @@ function CandidateProfilePage() {
         entryIndex === index ? { ...entry, [field]: value } : entry,
       ),
     }));
-    setFieldErrors((current) => {
-      const next = { ...current };
-      delete next[`experiences.${index}.${field}`];
-      return next;
-    });
+    clearFieldError(`experiences.${index}.${field}`);
   };
 
   const updateEducation = (index: number, field: keyof EducationEntry, value: string) => {
@@ -114,11 +133,7 @@ function CandidateProfilePage() {
         entryIndex === index ? { ...entry, [field]: value } : entry,
       ),
     }));
-    setFieldErrors((current) => {
-      const next = { ...current };
-      delete next[`education.${index}.${field}`];
-      return next;
-    });
+    clearFieldError(`education.${index}.${field}`);
   };
 
   const addExperience = () => {
@@ -166,487 +181,674 @@ function CandidateProfilePage() {
     });
   };
 
+  const addSkill = (raw: string) => {
+    const value = raw.replace(/\s+/g, " ").trim();
+    if (!value) return;
+    if (value.length > MAX_SKILL_LENGTH) {
+      setSkillNotice(`Mỗi kỹ năng tối đa ${MAX_SKILL_LENGTH} ký tự.`);
+      return;
+    }
+    if (skillsDraft.length >= MAX_SKILLS) {
+      setSkillNotice(`Đã đạt tối đa ${MAX_SKILLS} kỹ năng. Xóa bớt để thêm kỹ năng mới.`);
+      return;
+    }
+    if (skillsDraft.some((skill) => skill.toLowerCase() === value.toLowerCase())) {
+      setSkillNotice("Kỹ năng này đã có trong danh sách.");
+      return;
+    }
+    setSkillsDraft((current) => [...current, value]);
+    setSkillInput("");
+    setSkillNotice("");
+    clearFieldError("skills");
+  };
+
+  const removeSkill = (skill: string) => {
+    setSkillsDraft((current) => current.filter((item) => item !== skill));
+    setSkillNotice("");
+  };
+
+  const handleSkillKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter" || event.key === ",") {
+      event.preventDefault();
+      addSkill(skillInput);
+      return;
+    }
+    if (event.key === "Backspace" && !skillInput && skillsDraft.length > 0) {
+      setSkillsDraft((current) => current.slice(0, -1));
+    }
+  };
+
   const handleSave = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const skills = skillsInput
-      .split(",")
-      .map((skill) => skill.trim())
-      .filter(Boolean);
 
-    const errors: typeof fieldErrors = {};
-    if (!draft.fullName.trim() || draft.fullName.trim().length > 150)
-      errors.fullName = "Họ tên không được để trống và tối đa 150 ký tự.";
-    if (draft.phone && !/^0\d{9}$/.test(draft.phone)) {
-      errors.phone = "Nhập đúng 10 chữ số, bắt đầu bằng 0.";
-    }
-    if (skills.length > 20 || skills.some((skill) => skill.length < 1 || skill.length > 30)) {
-      errors.skills = "Tối đa 20 kỹ năng, mỗi kỹ năng dài từ 1 đến 30 ký tự.";
-    }
-    draft.experiences.forEach((entry, index) => {
-      if (!entry.title.trim()) errors[`experiences.${index}.title`] = "Nhập chức danh.";
-      if (!entry.company.trim()) errors[`experiences.${index}.company`] = "Nhập công ty.";
-      (["title", "company", "from", "to", "description"] as const).forEach((field) => {
-        const maxLength =
-          field === "description" ? 1000 : field === "company" || field === "title" ? 100 : 256;
-        if (entry[field].length > maxLength) {
-          errors[`experiences.${index}.${field}`] =
-            `Nội dung không được vượt quá ${maxLength} ký tự.`;
-        }
-      });
-      if (!entry.from) errors[`experiences.${index}.from`] = "Chọn ngày bắt đầu.";
-      if (entry.to && entry.from && entry.to < entry.from) {
-        errors[`experiences.${index}.to`] = "Ngày kết thúc phải sau ngày bắt đầu.";
-      }
-    });
-    draft.education.forEach((education, index) => {
-      const hasEducation = Object.values(education).some((value) => value.trim());
-      if (hasEducation) {
-        (["degree", "school", "from", "to"] as const).forEach((field) => {
-          const maxLength = field === "school" ? 150 : field === "degree" ? 100 : 256;
-          if (education[field].length > maxLength) {
-            errors[`education.${index}.${field}`] =
-              `Nội dung không được vượt quá ${maxLength} ký tự.`;
-          }
-        });
-        if (!education.degree.trim()) errors[`education.${index}.degree`] = "Nhập bằng cấp.";
-        if (!education.school.trim())
-          errors[`education.${index}.school`] = "Nhập trường hoặc cơ sở đào tạo.";
-        if (!education.from) errors[`education.${index}.from`] = "Chọn ngày bắt đầu.";
-        if (education.to && education.from && education.to < education.from) {
-          errors[`education.${index}.to`] = "Ngày kết thúc phải sau ngày bắt đầu.";
-        }
-      }
-    });
+    const pendingSkill = skillInput.replace(/\s+/g, " ").trim();
+    const skillsForSave =
+      pendingSkill &&
+      !skillsDraft.some((skill) => skill.toLowerCase() === pendingSkill.toLowerCase())
+        ? [...skillsDraft, pendingSkill]
+        : skillsDraft;
+
+    const errors = validateDraft(draft, skillsForSave, editSection, editIndex);
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       setSuccessMessage("");
+      const firstKey = Object.keys(errors)[0];
+      window.requestAnimationFrame(() => {
+        document.getElementById(fieldIdFromError(firstKey))?.focus();
+      });
       return;
     }
 
-    const nextProfile = {
-      ...draft,
-      fullName: draft.fullName.trim(),
-      phone: draft.phone.trim(),
-      skills,
-      experience: editSection === "about" ? draft.experience.trim() : profile.experience,
-      experiences: draft.experiences.map((entry) => ({
-        ...entry,
-        title: entry.title.trim(),
-        company: entry.company.trim(),
-        description: entry.description.trim(),
-      })),
-      education: draft.education,
-    };
-    nextProfile.education = draft.education.map((education) => ({
-      ...education,
-      degree: education.degree.trim(),
-      school: education.school.trim(),
+    const touches = (target: EditSection) => editSection === "all" || editSection === target;
+    const normalizedName = draft.fullName.replace(/\s+/g, " ").trim();
+    const cleanExperiences = draft.experiences.map((entry) => ({
+      ...entry,
+      title: entry.title.trim(),
+      company: entry.company.trim(),
+      description: entry.description.trim(),
     }));
+    const cleanEducation = draft.education.map((entry) => ({
+      ...entry,
+      degree: entry.degree.trim(),
+      school: entry.school.trim(),
+    }));
+
+    // Each edit mode writes back only the group it owns; everything else stays untouched.
+    const experiences =
+      touches("experience") && editSection === "experience" && editIndex !== null
+        ? profile.experiences.map((entry, index) =>
+            index === editIndex ? cleanExperiences[editIndex] : entry,
+          )
+        : touches("experience")
+          ? cleanExperiences
+          : profile.experiences;
+    const education =
+      touches("education") && editSection === "education" && editIndex !== null
+        ? profile.education.map((entry, index) =>
+            index === editIndex ? cleanEducation[editIndex] : entry,
+          )
+        : touches("education")
+          ? cleanEducation
+          : profile.education;
+
+    const nextProfile: CandidateProfileDetails = {
+      ...profile,
+      fullName: touches("basics") ? normalizedName : profile.fullName,
+      email: touches("basics") ? draft.email.trim() : profile.email,
+      phone: touches("basics") ? draft.phone.replace(/\D/g, "") : profile.phone,
+      experience: touches("about") ? draft.experience.trim() : profile.experience,
+      skills: touches("skills") ? skillsForSave : profile.skills,
+      experiences,
+      education,
+    };
+
     setProfileDetails(nextProfile);
     setDraft(nextProfile);
+    setSkillsDraft(nextProfile.skills);
+    setSkillInput("");
+    setSkillNotice("");
     setFieldErrors({});
     setSuccessMessage(getSuccessMessage(editSection));
     setIsSuccessDialogOpen(true);
     setIsEditing(false);
   };
 
+  const readinessItems = [
+    {
+      label: "Thông tin cá nhân",
+      done: Boolean(
+        profile.fullName.trim() &&
+        EMAIL_PATTERN.test(contactEmail) &&
+        PHONE_PATTERN.test(profile.phone),
+      ),
+    },
+    { label: "Giới thiệu", done: Boolean(profile.experience.trim()) },
+    { label: "Kinh nghiệm", done: profile.experiences.length > 0 },
+    { label: "Học vấn", done: profile.education.length > 0 },
+    { label: "Kỹ năng", done: profile.skills.length > 0 },
+    { label: "Hồ sơ xin việc", done: cvs.length > 0 },
+  ];
+  const completedCount = readinessItems.filter((item) => item.done).length;
+  const missingLabels = readinessItems.filter((item) => !item.done).map((item) => item.label);
+  const initial = user?.firstName?.slice(0, 1) || profile.fullName.slice(0, 1) || "U";
+
   return (
-    <AdminShell title="My Talent Profile" role="candidate">
-      <div className="mx-auto max-w-6xl rounded-lg bg-surface p-1 sm:p-3 lg:p-5">
-        <header className="mb-4 flex items-center justify-between gap-4 px-3 py-2 sm:px-1">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-3">
-              Hồ sơ ứng viên
-            </p>
-            <h1 className="mt-1 text-2xl font-extrabold tracking-[-0.03em] text-ink md:text-3xl">
+    <AdminShell title="Hồ sơ của tôi" role="candidate">
+      <div className="mx-auto max-w-6xl caret-accent selection:bg-accent selection:text-accent-ink">
+        <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="text-[clamp(32px,3.8vw,52px)] font-extrabold leading-[1.2] tracking-[-0.035em] text-ink">
               Hồ sơ năng lực & quyền lợi bảo vệ
             </h1>
+            <p className="mt-1.5 max-w-[62ch] text-sm leading-6 text-ink-2">
+              Thông tin hiển thị với nhà tuyển dụng và trạng thái hồ sơ của bạn.
+            </p>
           </div>
+          <button
+            type="button"
+            onClick={() => openEditForm("all")}
+            className="btn min-h-11 shrink-0 px-5 text-sm"
+          >
+            <Pencil size={16} strokeWidth={2.2} aria-hidden="true" />
+            Chỉnh sửa hồ sơ
+          </button>
         </header>
 
-        <section
-          aria-labelledby="profile-summary-title"
-          className="mb-5 overflow-hidden rounded-[16px] border border-rule bg-paper"
-        >
-          <div className="p-4 sm:p-6">
-            <div className="flex min-w-0 items-start gap-4">
-              <div className="flex h-16 w-16 sm:h-20 sm:w-20 shrink-0 items-center justify-center rounded-full bg-avatar-bg text-2xl font-extrabold text-ink ring-4 ring-avatar-ring">
-                {user?.firstName?.slice(0, 1) || profile.fullName.slice(0, 1) || "U"}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-start justify-between gap-3">
+        {isEditing && (
+          <FloatingPanel isOpen={true} onClose={closeEditForm} labelledBy="edit-profile-title">
+            <form onSubmit={handleSave} noValidate className="flex min-h-0 flex-1 flex-col">
+              <div className="shrink-0 border-b border-rule px-5 py-5 sm:px-7">
+                <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <h2
-                      id="profile-summary-title"
-                      className="truncate text-[25px] font-extrabold leading-tight tracking-[-0.035em] text-ink sm:text-3xl"
+                      id="edit-profile-title"
+                      className="text-lg font-bold leading-[1.45] tracking-[-0.02em] text-ink"
                     >
-                      {profile.fullName}
+                      {getEditorTitle(editSection)}
                     </h2>
-                    <p className="mt-1 text-[15px] font-bold text-ink-2">{currentRole}</p>
+                    <p className="mt-1 text-sm leading-6 text-ink-2">
+                      {getEditorDescription(editSection)}
+                    </p>
+                    <p className="mt-2 text-xs leading-4 font-medium text-ink-3">
+                      Trường đánh dấu <span className="font-bold text-error">*</span> là bắt buộc.
+                      Các thông tin khác trong hồ sơ được giữ nguyên.
+                    </p>
                   </div>
                   <button
                     type="button"
-                    onClick={() => openEditForm("basics")}
-                    aria-label="Chỉnh sửa thông tin cá nhân"
-                    className="mt-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-accent transition-colors hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                    onClick={closeEditForm}
+                    aria-label="Đóng"
+                    className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink-3 transition-colors hover:bg-paper-2 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
                   >
-                    <Pencil size={17} strokeWidth={2.2} />
+                    <X size={18} aria-hidden="true" />
                   </button>
                 </div>
               </div>
-            </div>
-            <div className="mt-5 grid grid-cols-1 gap-x-8 gap-y-4 border-t border-rule pt-4 text-sm sm:grid-cols-2">
-              <ContactItem icon={<Mail size={18} />} value={profile.email || user?.email || "—"} />
-              <ContactItem icon={<Phone size={18} />} value={profile.phone || "—"} />
-              <ContactItem icon={<Cake size={18} />} value="Hồ sơ đã xác minh" />
-              <ContactItem icon={<UserRound size={18} />} value="Ứng viên đang hoạt động" />
-              <ContactItem icon={<MapPin size={18} />} value="Việt Nam" className="sm:col-span-2" />
-            </div>
-          </div>
-        </section>
 
-        <section className="mb-5 flex flex-col gap-3 rounded-[16px] border border-rule bg-paper px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <div className="flex min-w-0 items-start gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-accent-subtle text-accent">
-              <FileText size={20} strokeWidth={2.2} aria-hidden="true" />
-            </span>
-            <div className="min-w-0">
-              <p className="text-sm font-bold text-ink">
-                Hồ sơ xin việc · {cvs.length}/{MAX_CV_COUNT}
-              </p>
-              <p
-                className="mt-0.5 text-xs leading-5 text-ink-2"
-                style={{ overflowWrap: "anywhere" }}
-              >
-                {defaultCv
-                  ? `${defaultCv.fileName} đang là hồ sơ mặc định.`
-                  : "Chưa chọn hồ sơ mặc định."}
-              </p>
-            </div>
-          </div>
-          <Link
-            to="/candidate/cvs"
-            className="inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-md border border-rule bg-paper px-4 text-xs font-bold text-accent transition-colors hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
-          >
-            Quản lý hồ sơ
-            <ArrowRight size={15} aria-hidden="true" />
-          </Link>
-        </section>
-
-        <section className="mb-5 rounded-[16px] border border-rule bg-paper px-4 py-5 sm:px-6">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <h2 className="text-[22px] font-extrabold tracking-[-0.03em] text-ink">
-                Giới thiệu bản thân
-              </h2>
-            </div>
-            <button
-              type="button"
-              onClick={() => openEditForm("about")}
-              aria-label="Cập nhật giới thiệu bản thân"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full text-accent transition-colors hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
-            >
-              <Pencil size={17} strokeWidth={2.2} />
-            </button>
-          </div>
-          <p className="mt-2 text-sm text-ink-3">
-            {profile.experience || "Giới thiệu điểm mạnh và số năm kinh nghiệm của bạn"}
-          </p>
-        </section>
-
-        {isEditing && (
-          <FloatingPanel isOpen={true} onClose={closeEditForm}>
-            <form
-              onSubmit={handleSave}
-              noValidate
-              aria-labelledby="edit-profile-title"
-              className="mb-5 rounded-[16px] border border-rule bg-paper p-5 md:p-6"
-            >
-              <div className="mb-4">
-                <h2 id="edit-profile-title" className="text-base font-bold text-ink">
-                  {editSection === "all"
-                    ? "Chỉnh sửa thông tin hồ sơ"
-                    : editSection === "about"
-                      ? "Chỉnh sửa giới thiệu bản thân"
-                      : editSection === "experience"
-                        ? "Chỉnh sửa kinh nghiệm làm việc"
-                        : editSection === "education"
-                          ? "Chỉnh sửa học vấn"
-                          : editSection === "skills"
-                            ? "Chỉnh sửa kỹ năng"
-                            : "Chỉnh sửa thông tin cá nhân"}
-                </h2>
-                <p className="mt-1 text-sm text-ink-2">{getEditorDescription(editSection)}</p>
-              </div>
-              <div className="grid gap-4 md:grid-cols-2">
-                {editSection === "about" && (
-                  <label className="text-xs font-semibold uppercase tracking-wide text-ink-3 md:col-span-2">
-                    Giới thiệu bản thân
-                    <textarea
-                      rows={5}
-                      value={draft.experience}
-                      onChange={(event) => updateDraft("experience", event.target.value)}
-                      className="mt-2 w-full resize-y rounded-md border border-rule bg-paper px-3 py-2.5 text-sm font-normal text-ink outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/20"
+              <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-7">
+                {errorCount > 0 && (
+                  <div
+                    role="alert"
+                    className="mb-5 flex items-start gap-3 rounded-xl border border-error/25 bg-error-container px-4 py-3"
+                  >
+                    <CircleAlert
+                      size={18}
+                      className="mt-0.5 shrink-0 text-on-error-container"
+                      aria-hidden="true"
                     />
-                  </label>
-                )}
-                {(editSection === "all" || editSection === "basics") && (
-                  <>
-                    <label className="text-xs font-semibold uppercase tracking-wide text-ink-3">
-                      Họ tên
-                      <input
-                        maxLength={150}
-                        type="text"
-                        value={draft.fullName}
-                        onChange={(event) => updateDraft("fullName", event.target.value)}
-                        aria-invalid={Boolean(fieldErrors.fullName)}
-                        aria-describedby={fieldErrors.fullName ? "full-name-error" : undefined}
-                        className={`mt-2 w-full rounded-md border bg-paper px-3 py-2.5 text-sm font-normal text-ink outline-none transition-colors focus:ring-2 focus:ring-accent/20 ${
-                          fieldErrors.fullName ? "border-error" : "border-rule focus:border-accent"
-                        }`}
-                      />
-                      <FieldError id="full-name-error" message={fieldErrors.fullName} />
-                    </label>
-                    <label className="text-xs font-semibold uppercase tracking-wide text-ink-3">
-                      Số điện thoại
-                      <input
-                        inputMode="numeric"
-                        maxLength={10}
-                        type="tel"
-                        value={draft.phone}
-                        onChange={(event) => updateDraft("phone", event.target.value)}
-                        aria-invalid={Boolean(fieldErrors.phone)}
-                        aria-describedby={fieldErrors.phone ? "phone-error" : undefined}
-                        className={`mt-2 w-full rounded-md border bg-paper px-3 py-2.5 text-sm font-normal text-ink outline-none transition-colors focus:ring-2 focus:ring-accent/20 ${
-                          fieldErrors.phone ? "border-error" : "border-rule focus:border-accent"
-                        }`}
-                      />
-                      <FieldError id="phone-error" message={fieldErrors.phone} />
-                    </label>
-                  </>
-                )}
-                {(editSection === "all" || editSection === "skills") && (
-                  <label className="text-xs font-semibold uppercase tracking-wide text-ink-3 md:col-span-2">
-                    Kỹ năng chuyên môn
-                    <input
-                      type="text"
-                      value={skillsInput}
-                      onChange={(event) => setSkillsInput(event.target.value)}
-                      placeholder="Phân tách bằng dấu phẩy"
-                      aria-invalid={Boolean(fieldErrors.skills)}
-                      aria-describedby={fieldErrors.skills ? "skills-error" : undefined}
-                      className={`mt-2 w-full rounded-md border bg-paper px-3 py-2.5 text-sm font-normal text-ink outline-none transition-colors placeholder:text-ink-3 focus:ring-2 focus:ring-accent/20 ${
-                        fieldErrors.skills ? "border-error" : "border-rule focus:border-accent"
-                      }`}
-                    />
-                    <span className="mt-1 block text-[11px] font-normal normal-case text-ink-3">
-                      Tối đa 20 kỹ năng, mỗi kỹ năng từ 1 đến 30 ký tự.
-                    </span>
-                    <FieldError id="skills-error" message={fieldErrors.skills} />
-                  </label>
-                )}
-                {(editSection === "all" || editSection === "experience") && (
-                  <div className="md:col-span-2">
-                    <FormSectionLabel title="Kinh nghiệm làm việc" />
-                    <div className="space-y-4">
-                      {draft.experiences.map((entry, index) =>
-                        editIndex === null || editIndex === index ? (
-                          <div key={index} className="rounded-lg border border-rule bg-paper-2 p-4">
-                            <div className="mb-3 flex items-center justify-between gap-3">
-                              <p className="text-xs font-bold uppercase tracking-wide text-accent">
-                                Kinh nghiệm {index + 1}
-                              </p>
-                              <button
-                                type="button"
-                                onClick={() => removeExperience(index)}
-                                className="inline-flex min-h-8 items-center gap-1 rounded-md px-2 text-xs font-semibold text-error transition-colors hover:bg-error-container"
-                              >
-                                <Icon name="delete" className="!text-base" />
-                                Xóa
-                              </button>
-                            </div>
-                            <div className="grid gap-3 md:grid-cols-2">
-                              {(
-                                [
-                                  ["title", "Chức danh"],
-                                  ["company", "Công ty / Địa điểm"],
-                                ] as const
-                              ).map(([field, label]) => (
-                                <label
-                                  key={field}
-                                  className="text-xs font-semibold uppercase tracking-wide text-ink-3"
-                                >
-                                  {label}
-                                  <input
-                                    type="text"
-                                    value={entry[field]}
-                                    onChange={(event) =>
-                                      updateExperience(index, field, event.target.value)
-                                    }
-                                    aria-invalid={Boolean(
-                                      fieldErrors[`experiences.${index}.${field}`],
-                                    )}
-                                    className={`mt-2 w-full rounded-md border bg-paper px-3 py-2.5 text-sm font-normal text-ink outline-none focus:ring-2 focus:ring-accent/20 ${
-                                      fieldErrors[`experiences.${index}.${field}`]
-                                        ? "border-error"
-                                        : "border-rule focus:border-accent"
-                                    }`}
-                                  />
-                                  <FieldError
-                                    id={`experience-${index}-${field}-error`}
-                                    message={fieldErrors[`experiences.${index}.${field}`]}
-                                  />
-                                </label>
-                              ))}
-                              <DateRangeFields
-                                from={entry.from}
-                                to={entry.to}
-                                fromError={fieldErrors[`experiences.${index}.from`]}
-                                toError={fieldErrors[`experiences.${index}.to`]}
-                                onChange={(field, value) => updateExperience(index, field, value)}
-                              />
-                              <label className="text-xs font-semibold uppercase tracking-wide text-ink-3 md:col-span-2">
-                                Mô tả công việc
-                                <textarea
-                                  rows={3}
-                                  value={entry.description}
-                                  onChange={(event) =>
-                                    updateExperience(index, "description", event.target.value)
-                                  }
-                                  className={`mt-2 w-full resize-y rounded-md border bg-paper px-3 py-2.5 text-sm font-normal text-ink outline-none focus:ring-2 focus:ring-accent/20 ${
-                                    fieldErrors[`experiences.${index}.description`]
-                                      ? "border-error"
-                                      : "border-rule focus:border-accent"
-                                  }`}
-                                />
-                                <FieldError
-                                  id={`experience-${index}-description-error`}
-                                  message={fieldErrors[`experiences.${index}.description`]}
-                                />
-                              </label>
-                            </div>
-                          </div>
-                        ) : null,
-                      )}
-
-                      {editIndex === null && (
-                        <button
-                          type="button"
-                          onClick={addExperience}
-                          className="inline-flex min-h-10 items-center gap-2 rounded-md border border-accent/30 bg-accent-subtle px-4 text-sm font-semibold text-accent transition-colors hover:border-accent"
-                        >
-                          <Icon name="add" className="!text-base" />
-                          Thêm kinh nghiệm làm việc
-                        </button>
-                      )}
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-on-error-container">
+                        Chưa lưu được thay đổi
+                      </p>
+                      <p className="mt-0.5 text-xs leading-5 text-on-error-container">
+                        {errorCount} trường chưa hợp lệ. Kiểm tra các ô được đánh dấu rồi lưu lại.
+                      </p>
                     </div>
                   </div>
                 )}
-                {(editSection === "all" || editSection === "education") && (
-                  <div className="md:col-span-2">
-                    <FormSectionLabel title="Trình độ học vấn" />
-                    <div className="rounded-lg border border-rule bg-paper-2 p-4">
-                      <div className="grid gap-3 md:grid-cols-2">
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  {(editSection === "all" || editSection === "basics") && (
+                    <>
+                      {editSection === "all" && (
+                        <div className="md:col-span-2">
+                          <FormSectionLabel title="Thông tin cá nhân" />
+                        </div>
+                      )}
+                      <div className="md:col-span-2">
+                        <FieldHeader
+                          htmlFor="profile-full-name"
+                          label="Họ tên"
+                          required
+                          counter={`${draft.fullName.length}/${MAX_NAME_LENGTH}`}
+                        />
+                        <input
+                          id="profile-full-name"
+                          maxLength={MAX_NAME_LENGTH}
+                          type="text"
+                          autoComplete="name"
+                          value={draft.fullName}
+                          onChange={(event) => updateDraft("fullName", event.target.value)}
+                          onBlur={(event) =>
+                            updateDraft(
+                              "fullName",
+                              event.target.value.replace(/\s+/g, " ").trimStart(),
+                            )
+                          }
+                          aria-required="true"
+                          aria-invalid={Boolean(fieldErrors.fullName)}
+                          aria-describedby={
+                            fieldErrors.fullName
+                              ? "profile-full-name-error profile-full-name-hint"
+                              : "profile-full-name-hint"
+                          }
+                          className={fieldClass(fieldErrors.fullName)}
+                        />
+                        <p
+                          id="profile-full-name-hint"
+                          className="mt-1 text-xs leading-4 font-normal text-ink-3"
+                        >
+                          Tên hiển thị với nhà tuyển dụng, tối đa {MAX_NAME_LENGTH} ký tự.
+                        </p>
+                        <FieldError id="profile-full-name-error" message={fieldErrors.fullName} />
+                      </div>
+                      <div>
+                        <FieldHeader
+                          htmlFor="profile-email"
+                          label="Email liên hệ"
+                          required
+                          counter={`${draft.email.length}/${MAX_EMAIL_LENGTH}`}
+                        />
+                        <input
+                          id="profile-email"
+                          maxLength={MAX_EMAIL_LENGTH}
+                          type="email"
+                          autoComplete="email"
+                          value={draft.email}
+                          onChange={(event) => updateDraft("email", event.target.value)}
+                          aria-required="true"
+                          aria-invalid={Boolean(fieldErrors.email)}
+                          aria-describedby={
+                            fieldErrors.email ? "profile-email-error" : "profile-email-hint"
+                          }
+                          className={fieldClass(fieldErrors.email)}
+                        />
+                        <p
+                          id="profile-email-hint"
+                          className="mt-1 text-xs leading-4 font-normal text-ink-3"
+                        >
+                          Nhà tuyển dụng dùng email này để phản hồi hồ sơ.
+                        </p>
+                        <FieldError id="profile-email-error" message={fieldErrors.email} />
+                      </div>
+                      <div>
+                        <FieldHeader
+                          htmlFor="profile-phone"
+                          label="Số điện thoại"
+                          required
+                          counter={`${draft.phone.length}/10`}
+                        />
+                        <input
+                          id="profile-phone"
+                          inputMode="numeric"
+                          maxLength={10}
+                          type="tel"
+                          autoComplete="tel"
+                          value={draft.phone}
+                          onChange={(event) =>
+                            updateDraft("phone", event.target.value.replace(/\D/g, ""))
+                          }
+                          aria-required="true"
+                          aria-invalid={Boolean(fieldErrors.phone)}
+                          aria-describedby={
+                            fieldErrors.phone ? "profile-phone-error" : "profile-phone-hint"
+                          }
+                          className={fieldClass(fieldErrors.phone)}
+                        />
+                        <p
+                          id="profile-phone-hint"
+                          className="mt-1 text-xs leading-4 font-normal text-ink-3"
+                        >
+                          10 chữ số, bắt đầu bằng 0. Ví dụ 0987654321.
+                        </p>
+                        <FieldError id="profile-phone-error" message={fieldErrors.phone} />
+                      </div>
+                    </>
+                  )}
+
+                  {(editSection === "all" || editSection === "about") && (
+                    <div className="md:col-span-2">
+                      <FieldHeader
+                        htmlFor="profile-about"
+                        label="Giới thiệu bản thân"
+                        counter={`${draft.experience.length}/${MAX_ABOUT_LENGTH}`}
+                      />
+                      <textarea
+                        id="profile-about"
+                        rows={5}
+                        maxLength={MAX_ABOUT_LENGTH}
+                        value={draft.experience}
+                        onChange={(event) => updateDraft("experience", event.target.value)}
+                        aria-invalid={Boolean(fieldErrors.experience)}
+                        aria-describedby={
+                          fieldErrors.experience ? "profile-about-error" : undefined
+                        }
+                        className={fieldClass(fieldErrors.experience)}
+                      />
+                      <FieldError id="profile-about-error" message={fieldErrors.experience} />
+                    </div>
+                  )}
+
+                  {(editSection === "all" || editSection === "skills") && (
+                    <div className="md:col-span-2">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <label
+                          htmlFor="profile-skill-input"
+                          className="text-sm font-semibold text-ink-2"
+                        >
+                          Kỹ năng chuyên môn
+                        </label>
+                        <span className="text-xs font-medium tabular-nums text-ink-3">
+                          {skillsDraft.length}/{MAX_SKILLS}
+                        </span>
+                      </div>
+                      <div
+                        onClick={(event) => {
+                          if (event.target === event.currentTarget) {
+                            document.getElementById("profile-skill-input")?.focus();
+                          }
+                        }}
+                        className={`mt-1.5 flex min-h-11 w-full flex-wrap items-center gap-1.5 rounded-lg border bg-paper px-2 py-1.5 transition-colors focus-within:ring-2 focus-within:ring-accent/20 ${
+                          fieldErrors.skills
+                            ? "border-error"
+                            : "border-rule focus-within:border-accent"
+                        }`}
+                      >
+                        {skillsDraft.map((skill) => (
+                          <span
+                            key={skill}
+                            className="inline-flex items-center gap-1 rounded-md border border-rule bg-paper-2 py-1 pl-2 pr-1 text-xs font-semibold text-ink-2"
+                          >
+                            {skill}
+                            <button
+                              type="button"
+                              onClick={() => removeSkill(skill)}
+                              aria-label={`Xóa kỹ năng ${skill}`}
+                              className="inline-flex h-5 w-5 items-center justify-center rounded text-ink-3 transition-colors hover:bg-paper-3 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                            >
+                              <X size={12} aria-hidden="true" />
+                            </button>
+                          </span>
+                        ))}
+                        <input
+                          id="profile-skill-input"
+                          type="text"
+                          value={skillInput}
+                          onChange={(event) => {
+                            setSkillInput(event.target.value);
+                            setSkillNotice("");
+                          }}
+                          onKeyDown={handleSkillKeyDown}
+                          onBlur={() => {
+                            if (skillInput.trim()) addSkill(skillInput);
+                          }}
+                          placeholder={
+                            skillsDraft.length >= MAX_SKILLS
+                              ? "Đã đạt tối đa 20 kỹ năng"
+                              : "Nhập kỹ năng rồi nhấn Enter"
+                          }
+                          disabled={skillsDraft.length >= MAX_SKILLS}
+                          aria-invalid={Boolean(fieldErrors.skills)}
+                          aria-describedby={
+                            fieldErrors.skills ? "profile-skill-error" : "profile-skill-hint"
+                          }
+                          className="min-w-[10rem] flex-1 bg-transparent px-1.5 py-1 text-sm font-normal text-ink outline-none placeholder:text-ink-3 disabled:cursor-not-allowed"
+                        />
+                      </div>
+                      <p
+                        id="profile-skill-hint"
+                        className="mt-1 text-xs leading-4 font-normal text-ink-3"
+                      >
+                        Nhấn Enter hoặc dấu phẩy để thêm. Tối đa {MAX_SKILLS} kỹ năng, mỗi kỹ năng
+                        từ 1 đến {MAX_SKILL_LENGTH} ký tự.
+                      </p>
+                      {skillNotice ? (
+                        <p role="status" className="mt-1 text-xs font-medium text-ink-3">
+                          {skillNotice}
+                        </p>
+                      ) : null}
+                      <FieldError id="profile-skill-error" message={fieldErrors.skills} />
+                    </div>
+                  )}
+
+                  {(editSection === "all" || editSection === "experience") && (
+                    <div className="md:col-span-2">
+                      {editIndex === null && <FormSectionLabel title="Kinh nghiệm làm việc" />}
+                      <div className="space-y-5">
+                        {draft.experiences.map((entry, index) =>
+                          editIndex === null || editIndex === index ? (
+                            <div
+                              key={index}
+                              className="border-t border-rule pt-4 first:border-t-0 first:pt-0"
+                            >
+                              <div className="mb-3 flex items-center justify-between gap-3">
+                                <p className="text-xs font-bold text-accent-deep">
+                                  Kinh nghiệm {index + 1}
+                                </p>
+                                <button
+                                  type="button"
+                                  onClick={() => removeExperience(index)}
+                                  className="inline-flex min-h-8 items-center gap-1.5 rounded-md px-2 text-xs font-semibold text-error transition-colors hover:bg-error-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error focus-visible:ring-offset-2"
+                                >
+                                  <Trash2 size={14} aria-hidden="true" />
+                                  Xóa
+                                </button>
+                              </div>
+                              <div className="grid gap-3 md:grid-cols-2">
+                                {(
+                                  [
+                                    ["title", "Chức danh", "Nhập chức danh."],
+                                    ["company", "Công ty / Địa điểm", "Nhập công ty."],
+                                  ] as const
+                                ).map(([field, label, requiredMessage]) => (
+                                  <div key={field}>
+                                    <FieldHeader
+                                      htmlFor={`experience-${index}-${field}`}
+                                      label={label}
+                                      required
+                                    />
+                                    <input
+                                      id={`experience-${index}-${field}`}
+                                      type="text"
+                                      maxLength={100}
+                                      value={entry[field]}
+                                      placeholder={requiredMessage}
+                                      onChange={(event) =>
+                                        updateExperience(index, field, event.target.value)
+                                      }
+                                      aria-required="true"
+                                      aria-invalid={Boolean(
+                                        fieldErrors[`experiences.${index}.${field}`],
+                                      )}
+                                      aria-describedby={
+                                        fieldErrors[`experiences.${index}.${field}`]
+                                          ? `experience-${index}-${field}-error`
+                                          : undefined
+                                      }
+                                      className={fieldClass(
+                                        fieldErrors[`experiences.${index}.${field}`],
+                                      )}
+                                    />
+                                    <FieldError
+                                      id={`experience-${index}-${field}-error`}
+                                      message={fieldErrors[`experiences.${index}.${field}`]}
+                                    />
+                                  </div>
+                                ))}
+                                <DateRangeFields
+                                  from={entry.from}
+                                  to={entry.to}
+                                  fromError={fieldErrors[`experiences.${index}.from`]}
+                                  toError={fieldErrors[`experiences.${index}.to`]}
+                                  onChange={(field, value) => updateExperience(index, field, value)}
+                                  idPrefix={`experience-${index}`}
+                                />
+                                <div className="md:col-span-2">
+                                  <FieldHeader
+                                    htmlFor={`experience-${index}-description`}
+                                    label="Mô tả công việc"
+                                    required
+                                    counter={`${entry.description.length}/1000`}
+                                  />
+                                  <textarea
+                                    id={`experience-${index}-description`}
+                                    rows={3}
+                                    maxLength={1000}
+                                    value={entry.description}
+                                    onChange={(event) =>
+                                      updateExperience(index, "description", event.target.value)
+                                    }
+                                    aria-required="true"
+                                    aria-invalid={Boolean(
+                                      fieldErrors[`experiences.${index}.description`],
+                                    )}
+                                    aria-describedby={
+                                      fieldErrors[`experiences.${index}.description`]
+                                        ? `experience-${index}-description-error`
+                                        : undefined
+                                    }
+                                    className={fieldClass(
+                                      fieldErrors[`experiences.${index}.description`],
+                                    )}
+                                  />
+                                  <FieldError
+                                    id={`experience-${index}-description-error`}
+                                    message={fieldErrors[`experiences.${index}.description`]}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          ) : null,
+                        )}
+
+                        {editIndex === null && (
+                          <button
+                            type="button"
+                            onClick={addExperience}
+                            className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-rule bg-paper px-4 text-sm font-semibold text-accent transition-colors hover:border-accent/40 hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                          >
+                            <Plus size={16} aria-hidden="true" />
+                            Thêm kinh nghiệm làm việc
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {(editSection === "all" || editSection === "education") && (
+                    <div className="md:col-span-2">
+                      {editIndex === null && <FormSectionLabel title="Trình độ học vấn" />}
+                      <div className="space-y-5">
                         {draft.education.map((education, index) =>
                           editIndex === null || editIndex === index ? (
-                            <div key={index} className="contents">
-                              <div className="flex items-center justify-between gap-3 md:col-span-2">
-                                <p className="text-xs font-bold uppercase tracking-wide text-accent">
+                            <div
+                              key={index}
+                              className="border-t border-rule pt-4 first:border-t-0 first:pt-0"
+                            >
+                              <div className="mb-3 flex items-center justify-between gap-3">
+                                <p className="text-xs font-bold text-accent-deep">
                                   Học vấn {index + 1}
                                 </p>
                                 <button
                                   type="button"
                                   onClick={() => removeEducation(index)}
-                                  className="inline-flex min-h-8 items-center gap-1 rounded-md px-2 text-xs font-semibold text-error transition-colors hover:bg-error-container"
+                                  className="inline-flex min-h-8 items-center gap-1.5 rounded-md px-2 text-xs font-semibold text-error transition-colors hover:bg-error-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error focus-visible:ring-offset-2"
                                 >
-                                  <Icon name="delete" className="!text-base" />
+                                  <Trash2 size={14} aria-hidden="true" />
                                   Xóa
                                 </button>
                               </div>
-                              {(
-                                [
-                                  ["degree", "Bằng cấp"],
-                                  ["school", "Trường / Cơ sở đào tạo"],
-                                ] as const
-                              ).map(([field, label]) => (
-                                <label
-                                  key={field}
-                                  className="text-xs font-semibold uppercase tracking-wide text-ink-3"
-                                >
-                                  {label}
-                                  <input
-                                    type="text"
-                                    value={education[field]}
-                                    onChange={(event) =>
-                                      updateEducation(index, field, event.target.value)
-                                    }
-                                    aria-invalid={Boolean(
-                                      fieldErrors[`education.${index}.${field}`],
-                                    )}
-                                    className={`mt-2 w-full rounded-md border bg-paper px-3 py-2.5 text-sm font-normal text-ink outline-none focus:ring-2 focus:ring-accent/20 ${
-                                      fieldErrors[`education.${index}.${field}`]
-                                        ? "border-error"
-                                        : "border-rule focus:border-accent"
-                                    }`}
-                                  />
-                                  <FieldError
-                                    id={`education-${index}-${field}-error`}
-                                    message={fieldErrors[`education.${index}.${field}`]}
-                                  />
-                                </label>
-                              ))}
-                              <DateRangeFields
-                                from={education.from}
-                                to={education.to}
-                                fromError={fieldErrors[`education.${index}.from`]}
-                                toError={fieldErrors[`education.${index}.to`]}
-                                onChange={(field, value) => updateEducation(index, field, value)}
-                              />
+                              <div className="grid gap-3 md:grid-cols-2">
+                                {(
+                                  [
+                                    ["degree", "Bằng cấp"],
+                                    ["school", "Trường / Cơ sở đào tạo"],
+                                  ] as const
+                                ).map(([field, label]) => (
+                                  <div key={field}>
+                                    <FieldHeader
+                                      htmlFor={`education-${index}-${field}`}
+                                      label={label}
+                                      required
+                                    />
+                                    <input
+                                      id={`education-${index}-${field}`}
+                                      type="text"
+                                      maxLength={field === "school" ? 150 : 100}
+                                      value={education[field]}
+                                      onChange={(event) =>
+                                        updateEducation(index, field, event.target.value)
+                                      }
+                                      aria-required="true"
+                                      aria-invalid={Boolean(
+                                        fieldErrors[`education.${index}.${field}`],
+                                      )}
+                                      aria-describedby={
+                                        fieldErrors[`education.${index}.${field}`]
+                                          ? `education-${index}-${field}-error`
+                                          : undefined
+                                      }
+                                      className={fieldClass(
+                                        fieldErrors[`education.${index}.${field}`],
+                                      )}
+                                    />
+                                    <FieldError
+                                      id={`education-${index}-${field}-error`}
+                                      message={fieldErrors[`education.${index}.${field}`]}
+                                    />
+                                  </div>
+                                ))}
+                                <DateRangeFields
+                                  from={education.from}
+                                  to={education.to}
+                                  fromError={fieldErrors[`education.${index}.from`]}
+                                  toError={fieldErrors[`education.${index}.to`]}
+                                  onChange={(field, value) => updateEducation(index, field, value)}
+                                  idPrefix={`education-${index}`}
+                                  toHint="Bỏ trống nếu bạn vẫn đang theo học."
+                                />
+                              </div>
                             </div>
                           ) : null,
                         )}
                       </div>
+                      {editIndex === null && (
+                        <button
+                          type="button"
+                          onClick={addEducation}
+                          className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-lg border border-rule bg-paper px-4 text-sm font-semibold text-accent transition-colors hover:border-accent/40 hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                        >
+                          <Plus size={16} aria-hidden="true" />
+                          Thêm trình độ học vấn
+                        </button>
+                      )}
                     </div>
-                    {editIndex === null && (
-                      <button
-                        type="button"
-                        onClick={addEducation}
-                        className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-md border border-accent/30 bg-accent-subtle px-4 text-sm font-semibold text-accent transition-colors hover:border-accent"
-                      >
-                        <Icon name="add" className="!text-base" />
-                        Thêm trình độ học vấn
-                      </button>
-                    )}
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-              <div className="mt-5 flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={closeEditForm}
-                  className="min-h-10 rounded-md border border-rule px-4 text-sm font-semibold text-ink transition-colors hover:bg-paper-3"
-                >
-                  Hủy
-                </button>
-                <button type="submit" className="btn min-h-10 px-5 text-sm">
-                  Lưu thay đổi
-                </button>
+
+              <div className="flex shrink-0 flex-col-reverse gap-3 border-t border-rule bg-paper px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-7">
+                <p className="text-xs leading-4 text-ink-3">
+                  Hồ sơ cập nhật sẽ hiển thị ngay với nhà tuyển dụng.
+                </p>
+                <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                  <button
+                    type="button"
+                    onClick={closeEditForm}
+                    className="btn btn--secondary min-h-11 px-4 text-sm"
+                  >
+                    Hủy
+                  </button>
+                  <button type="submit" className="btn min-h-11 px-5 text-sm">
+                    Lưu thay đổi
+                  </button>
+                </div>
               </div>
             </form>
           </FloatingPanel>
         )}
 
         <Dialog open={isSuccessDialogOpen} onOpenChange={setIsSuccessDialogOpen}>
-          <DialogContent className="max-w-md border-rule bg-paper p-0">
+          <DialogContent hideClose className="max-w-md border-rule bg-paper p-0">
             <DialogHeader className="gap-4 border-b border-rule px-6 pb-5 pt-6 text-left">
               <div className="flex items-start gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-subtle text-mint">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-mint/10 text-mint">
                   <Check size={20} strokeWidth={2.5} aria-hidden="true" />
                 </span>
                 <div className="min-w-0">
                   <DialogTitle className="text-lg font-bold text-ink">Đã lưu thay đổi</DialogTitle>
                   <DialogDescription className="mt-1 text-sm leading-6 text-ink-2">
-                    {successMessage}
+                    {successMessage} Các thông tin còn lại trong hồ sơ được giữ nguyên.
                   </DialogDescription>
                 </div>
               </div>
@@ -663,194 +865,530 @@ function CandidateProfilePage() {
           </DialogContent>
         </Dialog>
 
-        <main className="grid min-w-0 gap-5 lg:grid-cols-2">
-          <section
-            aria-labelledby="education-title"
-            className="rounded-[16px] border border-rule bg-paper px-4 py-5 sm:px-6 lg:col-span-2"
-          >
-            <SectionTitle
-              icon={<GraduationCap size={23} />}
-              title="Học vấn"
-              id="education-title"
-              action={
-                <button
-                  type="button"
-                  onClick={() => openEditForm("education")}
-                  aria-label="Chỉnh sửa học vấn"
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full text-accent transition-colors hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+        <div className="grid overflow-hidden rounded-2xl border border-rule bg-paper lg:grid-cols-[minmax(17rem,0.85fr)_minmax(0,2fr)]">
+          <aside className="border-b border-rule bg-paper-2 px-5 py-6 sm:px-6 lg:border-b-0 lg:border-r lg:px-7 lg:py-8">
+            <div>
+              <div className="relative w-fit">
+                <div
+                  aria-hidden="true"
+                  className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-accent text-2xl font-extrabold text-accent-ink sm:h-20 sm:w-20 sm:text-3xl"
                 >
-                  <Pencil size={17} strokeWidth={2.2} />
-                </button>
-              }
-            />
-            <div className="mt-4 border-t border-rule">
-              {profile.education.map((education, index) => (
-                <ResumeEntry
-                  key={`${education.school}-${education.from}-${index}`}
-                  title={education.school}
-                  meta={education.degree}
-                  period={formatPeriod(education.from, education.to)}
-                  onEdit={() => openEditForm("education", index)}
-                  showDivider={index < profile.education.length - 1}
-                />
-              ))}
-            </div>
-          </section>
-
-          <section
-            aria-labelledby="experience-title"
-            className="rounded-[16px] border border-rule bg-paper px-4 py-5 sm:px-6 lg:col-span-2"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <h2
-                  id="experience-title"
-                  className="text-[22px] font-extrabold tracking-[-0.03em] text-ink"
-                >
-                  Kinh nghiệm làm việc
-                </h2>
-              </div>
-              <button
-                type="button"
-                onClick={() => openEditForm("experience")}
-                aria-label="Chỉnh sửa kinh nghiệm làm việc"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full text-accent transition-colors hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
-              >
-                <Pencil size={17} strokeWidth={2.2} />
-              </button>
-            </div>
-            <p className="mt-2 text-sm text-ink-3">
-              Thể hiện những thông tin chi tiết về quá trình làm việc
-            </p>
-            <div className="mt-4 space-y-5 border-t border-rule pt-1">
-              {profile.experiences.map((entry, index) => (
-                <Experience
-                  key={`${entry.title}-${entry.from}`}
-                  {...entry}
-                  onEdit={() => openEditForm("experience", index)}
-                />
-              ))}
-            </div>
-          </section>
-
-          <section
-            aria-labelledby="skills-title"
-            className="rounded-[16px] border border-rule bg-paper px-4 py-5 sm:px-6"
-          >
-            <SectionTitle
-              icon={<Sparkles size={22} />}
-              title="Kỹ năng"
-              id="skills-title"
-              action={
-                <button
-                  type="button"
-                  onClick={() => openEditForm("skills")}
-                  aria-label="Chỉnh sửa kỹ năng"
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full text-accent transition-colors hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
-                >
-                  <Pencil size={17} strokeWidth={2.2} />
-                </button>
-              }
-            />
-            <div className="mt-4 border-t border-rule pt-4">
-              <div className="mb-4 flex items-center gap-2 rounded-md bg-accent-subtle px-4 py-3 text-sm text-ink-2">
-                <Check size={18} className="shrink-0 text-accent" />
-                <span>
-                  <strong className="text-accent">Cập nhật nhanh</strong> số năm kinh nghiệm cho kỹ
-                  năng
+                  {initial}
+                </div>
+                <span className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-paper-2 bg-paper text-mint">
+                  <BadgeCheck size={18} strokeWidth={2.4} aria-hidden="true" />
                 </span>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {profile.skills.map((skill) => (
-                  <span
-                    key={skill}
-                    className="rounded-full bg-paper-3 px-3 py-1.5 text-xs font-semibold text-ink-2"
-                  >
-                    {skill}
-                  </span>
-                ))}
-              </div>
+              <h2 className="mt-4 text-2xl font-extrabold leading-tight tracking-[-0.03em] text-ink text-pretty">
+                {profile.fullName}
+              </h2>
+              <p className="mt-1 text-sm font-semibold leading-5 text-ink-2">
+                <span className="text-xs font-medium text-ink-3">Vị trí hiện tại: </span>
+                {currentRole}
+              </p>
+              <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-ink-3">
+                <MapPin size={14} aria-hidden="true" />
+                Việt Nam
+              </p>
             </div>
-          </section>
 
-          <section
-            aria-labelledby="contact-title"
-            className="rounded-[16px] border border-rule bg-paper px-4 py-5 sm:px-6"
-          >
-            <SectionTitle
-              icon={<BriefcaseBusiness size={22} />}
-              title="Thông tin thêm"
-              id="contact-title"
-            />
-            <dl className="mt-4 divide-y divide-rule border-t border-rule">
-              <Detail label="Email" value={profile.email || user?.email || "—"} />
-              <Detail label="Điện thoại" value={profile.phone || "—"} />
-              <Detail label="Trạng thái" value={profile.isPublic ? "Đang hiển thị" : "Riêng tư"} />
-            </dl>
-          </section>
-        </main>
+            <div className="mt-5 flex flex-wrap gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-md border border-mint/20 bg-mint/10 px-2.5 py-1 text-xs font-semibold text-mint">
+                <BadgeCheck size={14} aria-hidden="true" />
+                Hồ sơ đã xác minh
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-md border border-accent/15 bg-accent-subtle px-2.5 py-1 text-xs font-semibold text-accent-deep">
+                <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-accent" />
+                Ứng viên đang hoạt động
+              </span>
+            </div>
+
+            <section className="mt-6 border-t border-rule pt-5" aria-labelledby="contact-title">
+              <div className="flex items-center justify-between gap-3">
+                <h2 id="contact-title" className="text-base font-bold text-ink">
+                  Liên hệ
+                </h2>
+                <EditButton
+                  label="Chỉnh sửa thông tin cá nhân"
+                  onClick={() => openEditForm("basics")}
+                  muted
+                />
+              </div>
+              <div className="mt-1 space-y-3">
+                <a
+                  href={contactEmail ? `mailto:${contactEmail}` : undefined}
+                  className="flex items-start gap-2.5 text-sm text-ink-2 transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                >
+                  <Mail size={16} className="mt-0.5 shrink-0 text-ink-3" aria-hidden="true" />
+                  <span className={`min-w-0 break-all ${contactEmail ? "" : "text-ink-3"}`}>
+                    {contactEmail || "Chưa cập nhật email."}
+                  </span>
+                </a>
+                <a
+                  href={profile.phone ? `tel:${profile.phone}` : undefined}
+                  className="flex items-center gap-2.5 text-sm text-ink-2 transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                >
+                  <Phone size={16} className="shrink-0 text-ink-3" aria-hidden="true" />
+                  <span className={profile.phone ? "" : "text-ink-3"}>
+                    {profile.phone || "Chưa cập nhật số điện thoại."}
+                  </span>
+                </a>
+              </div>
+            </section>
+
+            <section className="mt-6 border-t border-rule pt-5" aria-labelledby="cv-title">
+              <div className="flex items-center justify-between gap-3">
+                <h2 id="cv-title" className="flex items-center gap-2 text-base font-bold text-ink">
+                  <FileText size={16} className="text-accent" aria-hidden="true" />
+                  Hồ sơ xin việc
+                </h2>
+                <span className="rounded-md border border-rule bg-paper px-2 py-0.5 text-xs font-bold tabular-nums text-ink-2">
+                  {cvs.length}/{MAX_CV_COUNT}
+                </span>
+              </div>
+              <p className="mt-2 text-xs leading-5 text-ink-2" style={{ overflowWrap: "anywhere" }}>
+                {defaultCv ? defaultCv.fileName : "Chưa chọn hồ sơ mặc định."}
+              </p>
+              {defaultCv ? (
+                <p className="mt-1 text-xs text-ink-3">Đang là hồ sơ mặc định.</p>
+              ) : null}
+              <Link
+                to="/candidate/cvs"
+                className="mt-2.5 inline-flex min-h-10 items-center gap-1 text-xs font-bold text-accent underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+              >
+                Quản lý hồ sơ
+                <ArrowRight size={14} aria-hidden="true" />
+              </Link>
+            </section>
+
+            <section className="mt-6 border-t border-rule pt-5" aria-labelledby="readiness-title">
+              <div className="flex items-center justify-between gap-3">
+                <h2 id="readiness-title" className="text-base font-bold text-ink">
+                  Mức độ hoàn thiện
+                </h2>
+                <span className="text-xs font-bold tabular-nums text-ink-2">
+                  {completedCount}/{readinessItems.length}
+                </span>
+              </div>
+              <p className="mt-1 text-xs leading-5 text-ink-3">
+                {completedCount === readinessItems.length
+                  ? "Hồ sơ đã có đủ thông tin."
+                  : `Còn thiếu: ${missingLabels.join(", ")}.`}
+              </p>
+            </section>
+
+            <div className="mt-6 flex items-center justify-between gap-3 border-t border-rule pt-5">
+              <span className="flex items-center gap-2 text-sm font-medium text-ink-2">
+                {profile.isPublic ? (
+                  <Eye size={16} className="text-ink-3" aria-hidden="true" />
+                ) : (
+                  <EyeOff size={16} className="text-ink-3" aria-hidden="true" />
+                )}
+                Hiển thị hồ sơ
+              </span>
+              <span className="text-base font-bold text-ink">
+                {profile.isPublic ? "Đang hiển thị" : "Riêng tư"}
+              </span>
+            </div>
+          </aside>
+
+          <div className="min-w-0 divide-y divide-rule">
+            <section aria-labelledby="about-title" className="px-5 py-6 sm:px-7 sm:py-7">
+              <SectionHeader
+                id="about-title"
+                title="Giới thiệu bản thân"
+                action={
+                  <EditButton
+                    label="Cập nhật giới thiệu bản thân"
+                    onClick={() => openEditForm("about")}
+                  />
+                }
+              />
+              <p
+                className={`mt-3 max-w-[68ch] text-base leading-7 ${
+                  profile.experience ? "text-ink-2" : "text-ink-3"
+                }`}
+              >
+                {profile.experience || "Giới thiệu điểm mạnh và số năm kinh nghiệm của bạn."}
+              </p>
+            </section>
+
+            <section aria-labelledby="experience-title" className="px-5 py-6 sm:px-7 sm:py-7">
+              <SectionHeader
+                id="experience-title"
+                title="Kinh nghiệm làm việc"
+                action={
+                  <EditButton
+                    label="Chỉnh sửa kinh nghiệm làm việc"
+                    onClick={() => openEditForm("experience")}
+                  />
+                }
+              />
+              {profile.experiences.length > 0 ? (
+                <div className="mt-5 space-y-6">
+                  {profile.experiences.map((entry, index) => (
+                    <RecordEntry
+                      key={`${entry.title}-${entry.from}-${index}`}
+                      title={entry.title}
+                      meta={entry.company}
+                      period={formatPeriod(entry.from, entry.to)}
+                      description={entry.description}
+                      editLabel={`Chỉnh sửa ${entry.title}`}
+                      onEdit={() => openEditForm("experience", index)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  text="Chưa có kinh nghiệm làm việc."
+                  actionLabel="Thêm kinh nghiệm"
+                  onClick={() => openEditForm("experience")}
+                />
+              )}
+            </section>
+
+            <section aria-labelledby="education-title" className="px-5 py-6 sm:px-7 sm:py-7">
+              <SectionHeader
+                id="education-title"
+                title="Học vấn"
+                action={
+                  <EditButton label="Chỉnh sửa học vấn" onClick={() => openEditForm("education")} />
+                }
+              />
+              {profile.education.length > 0 ? (
+                <div className="mt-5 space-y-6">
+                  {profile.education.map((education, index) => (
+                    <RecordEntry
+                      key={`${education.school}-${education.from}-${index}`}
+                      title={education.degree}
+                      meta={education.school}
+                      period={formatPeriod(education.from, education.to)}
+                      editLabel={`Chỉnh sửa ${education.degree || "học vấn"}`}
+                      onEdit={() => openEditForm("education", index)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  text="Chưa có thông tin học vấn."
+                  actionLabel="Thêm học vấn"
+                  onClick={() => openEditForm("education")}
+                />
+              )}
+            </section>
+
+            <section aria-labelledby="skills-title" className="px-5 py-6 sm:px-7 sm:py-7">
+              <SectionHeader
+                id="skills-title"
+                title="Kỹ năng"
+                action={
+                  <EditButton label="Chỉnh sửa kỹ năng" onClick={() => openEditForm("skills")} />
+                }
+              />
+              {profile.skills.length > 0 ? (
+                <ul className="mt-4 flex flex-wrap gap-2">
+                  {profile.skills.map((skill) => (
+                    <li
+                      key={skill}
+                      className="rounded-md border border-rule bg-paper-2 px-2.5 py-1.5 text-xs font-semibold text-ink-2"
+                    >
+                      {skill}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <EmptyState
+                  text="Chưa cập nhật kỹ năng."
+                  actionLabel="Cập nhật kỹ năng"
+                  onClick={() => openEditForm("skills")}
+                />
+              )}
+            </section>
+          </div>
+        </div>
       </div>
     </AdminShell>
   );
 }
 
-function ContactItem({
-  icon,
-  value,
-  className = "",
+function validateDraft(
+  draft: CandidateProfileDetails,
+  skills: string[],
+  section: EditSection,
+  editIndex: number | null,
+) {
+  const errors: Record<string, string> = {};
+  const touches = (target: EditSection) => section === "all" || section === target;
+
+  if (touches("basics")) {
+    const name = draft.fullName.replace(/\s+/g, " ").trim();
+    if (!name) errors.fullName = "Nhập họ tên của bạn.";
+    else if (name.length > MAX_NAME_LENGTH) {
+      errors.fullName = `Họ tên tối đa ${MAX_NAME_LENGTH} ký tự.`;
+    }
+
+    const email = draft.email.trim();
+    if (!email) errors.email = "Nhập email liên hệ.";
+    else if (email.length > MAX_EMAIL_LENGTH) {
+      errors.email = `Email tối đa ${MAX_EMAIL_LENGTH} ký tự.`;
+    } else if (!EMAIL_PATTERN.test(email)) {
+      errors.email = "Email chưa đúng định dạng, ví dụ ten@congty.vn.";
+    }
+
+    const phone = draft.phone.replace(/\D/g, "");
+    if (!phone) errors.phone = "Nhập số điện thoại.";
+    else if (!PHONE_PATTERN.test(phone)) {
+      errors.phone = "Số điện thoại gồm 10 chữ số và bắt đầu bằng 0.";
+    }
+  }
+
+  if (touches("about") && draft.experience.length > MAX_ABOUT_LENGTH) {
+    errors.experience = `Phần giới thiệu tối đa ${MAX_ABOUT_LENGTH} ký tự.`;
+  }
+
+  if (touches("skills")) {
+    if (skills.length > MAX_SKILLS) {
+      errors.skills = `Chỉ lưu tối đa ${MAX_SKILLS} kỹ năng. Xóa bớt trước khi lưu.`;
+    } else if (skills.some((skill) => skill.length < 1 || skill.length > MAX_SKILL_LENGTH)) {
+      errors.skills = `Mỗi kỹ năng phải dài từ 1 đến ${MAX_SKILL_LENGTH} ký tự.`;
+    }
+  }
+
+  if (touches("experience")) {
+    const indices =
+      section === "experience" && editIndex !== null
+        ? [editIndex]
+        : draft.experiences.map((_, index) => index);
+
+    indices.forEach((index) => {
+      const entry = draft.experiences[index];
+      if (!entry) return;
+      if (!entry.title.trim()) errors[`experiences.${index}.title`] = "Nhập chức danh.";
+      if (!entry.company.trim()) errors[`experiences.${index}.company`] = "Nhập công ty.";
+      if (!entry.from) errors[`experiences.${index}.from`] = "Chọn ngày bắt đầu.";
+      if (!entry.description.trim()) {
+        errors[`experiences.${index}.description`] = "Mô tả ngắn công việc bạn đã làm.";
+      }
+      if (entry.description.length > 1000) {
+        errors[`experiences.${index}.description`] = "Mô tả công việc tối đa 1.000 ký tự.";
+      }
+      if (entry.from && entry.to && entry.to < entry.from) {
+        errors[`experiences.${index}.to`] = "Ngày kết thúc phải sau ngày bắt đầu.";
+      }
+    });
+  }
+
+  if (touches("education")) {
+    const indices =
+      section === "education" && editIndex !== null
+        ? [editIndex]
+        : draft.education.map((_, index) => index);
+
+    indices.forEach((index) => {
+      const education = draft.education[index];
+      if (!education) return;
+      if (!education.degree.trim()) errors[`education.${index}.degree`] = "Nhập bằng cấp.";
+      if (!education.school.trim()) {
+        errors[`education.${index}.school`] = "Nhập trường hoặc cơ sở đào tạo.";
+      }
+      if (!education.from) errors[`education.${index}.from`] = "Chọn ngày bắt đầu.";
+      if (education.from && education.to && education.to < education.from) {
+        errors[`education.${index}.to`] = "Ngày kết thúc phải sau ngày bắt đầu.";
+      }
+    });
+  }
+
+  return errors;
+}
+
+function fieldIdFromError(key: string) {
+  switch (key) {
+    case "fullName":
+      return "profile-full-name";
+    case "email":
+      return "profile-email";
+    case "phone":
+      return "profile-phone";
+    case "skills":
+      return "profile-skill-input";
+    case "experience":
+      return "profile-about";
+    default: {
+      const [group, index, field] = key.split(".");
+      return `${group === "experiences" ? "experience" : "education"}-${index}-${field}`;
+    }
+  }
+}
+
+function fieldClass(hasError?: string) {
+  return `mt-1.5 min-h-11 w-full rounded-lg border bg-paper px-3.5 py-2.5 text-sm font-normal text-ink outline-none transition-colors placeholder:text-ink-3 focus:ring-2 focus:ring-accent/20 ${
+    hasError ? "border-error" : "border-rule focus:border-accent"
+  }`;
+}
+
+function FieldHeader({
+  htmlFor,
+  label,
+  required = false,
+  counter,
 }: {
-  icon: React.ReactNode;
-  value: string;
-  className?: string;
+  htmlFor: string;
+  label: string;
+  required?: boolean;
+  counter?: string;
 }) {
   return (
-    <div className={`flex min-w-0 items-center gap-2.5 text-ink-2 ${className}`}>
-      <span className="shrink-0 text-ink-3">{icon}</span>
-      <span className="truncate">{value}</span>
+    <div className="flex items-baseline justify-between gap-3">
+      <label htmlFor={htmlFor} className="text-sm font-semibold text-ink-2">
+        {label}
+        {required ? (
+          <span className="ml-0.5 text-error" aria-hidden="true">
+            *
+          </span>
+        ) : null}
+      </label>
+      {counter ? (
+        <span className="text-xs font-medium tabular-nums text-ink-3">{counter}</span>
+      ) : null}
     </div>
   );
 }
 
-function SectionTitle({
-  icon,
-  title,
+function SectionHeader({
   id,
+  title,
   action,
 }: {
-  icon: React.ReactNode;
-  title: string;
   id: string;
+  title: string;
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3">
-      <div className="flex items-center gap-2">
-        <h2 id={id} className="text-[22px] font-extrabold tracking-[-0.03em] text-ink">
-          {title}
-        </h2>
-        <span className="hidden text-ink-3 sm:inline-flex">{icon}</span>
-      </div>
+    <div className="flex items-start justify-between gap-3">
+      <h2 id={id} className="text-lg font-bold leading-[1.45] tracking-[-0.02em] text-ink">
+        {title}
+      </h2>
       {action}
     </div>
   );
 }
 
+function EditButton({
+  label,
+  onClick,
+  muted = false,
+  className = "",
+}: {
+  label: string;
+  onClick: () => void;
+  muted?: boolean;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
+        muted ? "text-ink-3 hover:text-accent" : "text-accent"
+      } ${className}`}
+    >
+      <Pencil size={16} strokeWidth={2.2} aria-hidden="true" />
+    </button>
+  );
+}
+
+function RecordEntry({
+  title,
+  meta,
+  period,
+  description,
+  editLabel,
+  onEdit,
+}: {
+  title: string;
+  meta: string;
+  period: string;
+  description?: string;
+  editLabel: string;
+  onEdit: () => void;
+}) {
+  return (
+    <article>
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <h3 className="text-base font-bold leading-6 text-ink">{title}</h3>
+            <span className="text-xs font-semibold tabular-nums text-ink-3">{period}</span>
+          </div>
+          <p className="mt-1 text-sm font-medium text-ink-2">{meta}</p>
+          {description ? (
+            <p className="mt-2 max-w-[64ch] text-sm leading-6 text-ink-2">{description}</p>
+          ) : null}
+        </div>
+        <EditButton label={editLabel} onClick={onEdit} muted />
+      </div>
+    </article>
+  );
+}
+
+function EmptyState({
+  text,
+  actionLabel,
+  onClick,
+}: {
+  text: string;
+  actionLabel: string;
+  onClick: () => void;
+}) {
+  return (
+    <div className="mt-4 flex flex-col items-start gap-3 rounded-xl border border-dashed border-rule bg-paper-2/60 px-4 py-5 sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-sm text-ink-3">{text}</p>
+      <button
+        type="button"
+        onClick={onClick}
+        className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-rule bg-paper px-3.5 text-xs font-bold text-accent transition-colors hover:border-accent/40 hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+      >
+        <Plus size={14} aria-hidden="true" />
+        {actionLabel}
+      </button>
+    </div>
+  );
+}
+
 function FormSectionLabel({ title }: { title: string }) {
-  return <h3 className="mb-3 text-sm font-bold text-ink">{title}</h3>;
+  return <h3 className="mb-3 text-base font-bold text-ink">{title}</h3>;
+}
+
+function getEditorTitle(section: EditSection) {
+  switch (section) {
+    case "basics":
+      return "Chỉnh sửa thông tin cá nhân";
+    case "about":
+      return "Chỉnh sửa giới thiệu bản thân";
+    case "experience":
+      return "Chỉnh sửa kinh nghiệm làm việc";
+    case "education":
+      return "Chỉnh sửa học vấn";
+    case "skills":
+      return "Chỉnh sửa kỹ năng";
+    default:
+      return "Chỉnh sửa thông tin hồ sơ";
+  }
 }
 
 function getEditorDescription(section: EditSection) {
   switch (section) {
     case "basics":
-      return "Cập nhật tên hiển thị và số điện thoại trên hồ sơ của bạn.";
+      return "Cập nhật họ tên, email và số điện thoại nhà tuyển dụng dùng để liên hệ.";
     case "about":
       return "Viết phần giới thiệu ngắn gọn để nhà tuyển dụng hiểu điểm mạnh của bạn.";
     case "experience":
-      return "Cập nhật các vị trí, công ty và mốc thời gian trong hành trình làm việc.";
+      return "Cập nhật vị trí, công ty, thời gian và mô tả công việc đã làm.";
     case "education":
       return "Bổ sung bằng cấp, cơ sở đào tạo và thời gian học tập của bạn.";
     case "skills":
-      return "Liệt kê những kỹ năng chuyên môn bạn muốn nhà tuyển dụng nhìn thấy.";
+      return "Thêm hoặc bớt kỹ năng chuyên môn bạn muốn nhà tuyển dụng nhìn thấy.";
     default:
       return "Cập nhật các thông tin được hiển thị nổi bật với nhà tuyển dụng.";
   }
@@ -877,7 +1415,7 @@ function FieldError({ id, message }: { id: string; message?: string }) {
   if (!message) return null;
 
   return (
-    <span id={id} role="alert" className="mt-1 block text-xs font-medium text-error">
+    <span id={id} role="alert" className="mt-1 block text-sm font-medium text-error">
       {message}
     </span>
   );
@@ -889,45 +1427,51 @@ function DateRangeFields({
   fromError,
   toError,
   onChange,
+  idPrefix,
+  toHint = "Bỏ trống nếu đang làm việc tại đây.",
 }: {
   from: string;
   to: string;
   fromError?: string;
   toError?: string;
   onChange: (field: "from" | "to", value: string) => void;
+  idPrefix: string;
+  toHint?: string;
 }) {
   return (
     <>
-      <label className="text-xs font-semibold uppercase tracking-wide text-ink-3">
-        Từ ngày
+      <div>
+        <FieldHeader htmlFor={`${idPrefix}-from`} label="Từ ngày" required />
         <input
+          id={`${idPrefix}-from`}
           type="month"
+          lang="vi"
           value={from}
           onChange={(event) => onChange("from", event.target.value)}
+          aria-required="true"
           aria-invalid={Boolean(fromError)}
-          className={`mt-2 w-full rounded-md border bg-paper px-3 py-2.5 text-sm font-normal text-ink outline-none focus:ring-2 focus:ring-accent/20 ${
-            fromError ? "border-error" : "border-rule focus:border-accent"
-          }`}
+          aria-describedby={fromError ? `${idPrefix}-from-error` : undefined}
+          className={fieldClass(fromError)}
         />
-        <FieldError id="from-date-error" message={fromError} />
-      </label>
-      <label className="text-xs font-semibold uppercase tracking-wide text-ink-3">
-        Đến ngày
+        <FieldError id={`${idPrefix}-from-error`} message={fromError} />
+      </div>
+      <div>
+        <FieldHeader htmlFor={`${idPrefix}-to`} label="Đến ngày" />
         <input
+          id={`${idPrefix}-to`}
           type="month"
+          lang="vi"
           value={to}
           onChange={(event) => onChange("to", event.target.value)}
           aria-invalid={Boolean(toError)}
-          placeholder="Để trống nếu đang tiếp tục"
-          className={`mt-2 w-full rounded-md border bg-paper px-3 py-2.5 text-sm font-normal text-ink outline-none focus:ring-2 focus:ring-accent/20 ${
-            toError ? "border-error" : "border-rule focus:border-accent"
-          }`}
+          aria-describedby={toError ? `${idPrefix}-to-error` : `${idPrefix}-to-hint`}
+          className={fieldClass(toError)}
         />
-        <FieldError id="to-date-error" message={toError} />
-        <span className="mt-1 block text-[11px] font-normal normal-case text-ink-3">
-          Để trống nếu đang tiếp tục
+        <FieldError id={`${idPrefix}-to-error`} message={toError} />
+        <span id={`${idPrefix}-to-hint`} className="mt-1 block text-xs font-normal text-ink-3">
+          {toHint}
         </span>
-      </label>
+      </div>
     </>
   );
 }
@@ -939,116 +1483,4 @@ function formatPeriod(from: string, to: string) {
     return month ? `${month}/${year}` : year;
   };
   return `${format(from)} – ${to ? format(to) : "Hiện tại"}`;
-}
-
-function Detail({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
-  return (
-    <div className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0">
-      <dt className="shrink-0 text-xs font-semibold uppercase tracking-wide text-ink-3">{label}</dt>
-      <dd
-        className={`max-w-[62%] text-right text-sm font-medium text-ink ${
-          mono ? "font-mono text-xs" : ""
-        }`}
-      >
-        {value}
-      </dd>
-    </div>
-  );
-}
-
-function ResumeEntry({
-  title,
-  meta,
-  period,
-  detail,
-  onEdit,
-  showDivider = true,
-}: {
-  title: string;
-  meta: string;
-  period: string;
-  detail?: string;
-  onEdit: () => void;
-  showDivider?: boolean;
-}) {
-  return (
-    <article
-      className={`group relative py-5 first:pt-5 last:pb-1 ${
-        showDivider ? "border-b border-rule" : ""
-      }`}
-    >
-      <div className="flex items-start gap-4">
-        <div className="min-w-0 flex-1">
-          <h3 className="text-base font-extrabold leading-6 text-ink">{title}</h3>
-          <p className="mt-1 text-sm font-medium text-ink">{meta}</p>
-          <p className="mt-1 text-sm font-medium uppercase tracking-[0.04em] text-ink-2">
-            {period}
-          </p>
-          {detail && <p className="mt-3 max-w-3xl text-sm leading-6 text-ink-2">{detail}</p>}
-        </div>
-        <div className="flex shrink-0 items-center gap-1 opacity-100 transition-opacity md:opacity-60 md:group-hover:opacity-100">
-          <button
-            type="button"
-            onClick={onEdit}
-            aria-label={`Chỉnh sửa ${title}`}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-accent transition-colors hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
-          >
-            <Pencil size={17} strokeWidth={2.2} />
-          </button>
-          <button
-            type="button"
-            disabled
-            aria-label={`Xóa ${title}`}
-            title="Tính năng xóa sẽ được bổ sung"
-            className="inline-flex h-9 w-9 cursor-not-allowed items-center justify-center rounded-full text-ink-3 opacity-70"
-          >
-            <Trash2 size={18} strokeWidth={2} />
-          </button>
-        </div>
-      </div>
-    </article>
-  );
-}
-
-function Experience({
-  title,
-  company,
-  from,
-  to,
-  description,
-  onEdit,
-}: {
-  title: string;
-  company: string;
-  from: string;
-  to: string;
-  description: string;
-  onEdit: () => void;
-}) {
-  return (
-    <article className="relative">
-      <span
-        aria-hidden="true"
-        className="absolute -left-[26px] top-1.5 h-2.5 w-2.5 rounded-full border-2 border-paper bg-accent ring-1 ring-accent/40 md:-left-[31px]"
-      />
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="text-base font-extrabold text-ink">{title}</h3>
-          <p className="mt-1 text-xs font-medium text-ink-2">{company}</p>
-        </div>
-        <div className="flex shrink-0 items-start gap-2">
-          <span className="pt-2 text-xs font-semibold text-ink-2">{formatPeriod(from, to)}</span>
-          <button
-            type="button"
-            onClick={onEdit}
-            aria-label={`Chỉnh sửa ${title}`}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-accent transition-colors hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
-          >
-            <Pencil size={17} strokeWidth={2.2} />
-          </button>
-        </div>
-      </div>
-      <p className="mt-2 max-w-3xl text-sm leading-6 text-ink-2">{description}</p>
-    </article>
-  );
 }

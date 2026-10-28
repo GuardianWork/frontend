@@ -168,6 +168,10 @@
 .btn:active {
   background: var(--color-accent-deep);
 }
+.btn:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 3px;
+}
 
 .btn--secondary {
   --btn-face: var(--color-paper-2);
