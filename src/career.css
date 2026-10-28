@@ -1935,6 +1935,15 @@ body {
   justify-content: flex-start;
   margin-top: 16px;
 }
+/* Candidate job search reuses the public discovery search and filter assembly. */
+.candidate-search-band .career-search {
+  margin: 0 auto;
+}
+.candidate-search-band .career-popular {
+  justify-content: flex-start;
+  max-width: 1030px;
+  margin: 16px auto 0;
+}
 /* The field is transparent inside the assembly: ring the segment, not a hard rectangle. */
 .career-search :is(input, select):focus-visible {
   outline: none;

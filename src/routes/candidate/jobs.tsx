@@ -1,15 +1,23 @@
 import { JOBS, badgeLabel, type JobItem } from "@/lib/job-listings";
-import { filterJobs, normalizeSearchText, workModeOf } from "@/lib/job-search";
+import {
+  EXPERIENCE_BANDS,
+  SALARY_BANDS,
+  WORK_MODES,
+  filterJobs,
+  hasActiveFilters,
+  industryOptions,
+  normalizeSearchText,
+  workModeOf,
+} from "@/lib/job-search";
 import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
 import { jobModerationStatus, submitCompanyApplication } from "@/services/companyMembers";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   BadgeCheck,
   Check,
   CheckCircle2,
   FileText,
-  Layers,
   ListChecks,
   MapPin,
   Scale,
@@ -17,17 +25,19 @@ import {
   SearchX,
   Send,
   ShieldCheck,
+  SlidersHorizontal,
+  X,
 } from "lucide-react";
 import { AdminShell } from "@/components/AdminShell";
-
-type CandidateJobScope = "all" | "high" | "remote";
 
 interface CandidateJobSearch {
   q?: string;
   location?: string;
   industry?: string;
+  salary?: string;
+  mode?: string;
+  experience?: string;
   job?: string;
-  scope?: CandidateJobScope;
 }
 
 const WORK_MODE_LABELS: Record<ReturnType<typeof workModeOf>, string> = {
@@ -36,19 +46,19 @@ const WORK_MODE_LABELS: Record<ReturnType<typeof workModeOf>, string> = {
   remote: "Từ xa",
 };
 
+const POPULAR_QUERIES = ["Kinh doanh", "Kế toán", "Tiếp thị", "Nhân sự"];
+
 /** Empty filters are dropped so a bare /candidate/jobs stays canonical. */
 function cleanCandidateJobSearch(values: CandidateJobSearch): CandidateJobSearch {
   const next: CandidateJobSearch = {};
   if (values.q) next.q = values.q;
   if (values.location) next.location = values.location;
   if (values.industry) next.industry = values.industry;
+  if (values.salary) next.salary = values.salary;
+  if (values.mode) next.mode = values.mode;
+  if (values.experience) next.experience = values.experience;
   if (values.job) next.job = values.job;
-  if (values.scope && values.scope !== "all") next.scope = values.scope;
   return next;
-}
-
-function readScope(value: unknown): CandidateJobScope {
-  return value === "high" || value === "remote" ? value : "all";
 }
 
 function companyInitial(name: string) {
@@ -71,8 +81,10 @@ export const Route = createFileRoute("/candidate/jobs")({
       q: typeof search.q === "string" ? search.q : "",
       location: typeof search.location === "string" ? search.location : "",
       industry: typeof search.industry === "string" ? search.industry : "",
+      salary: typeof search.salary === "string" ? search.salary : "",
+      mode: typeof search.mode === "string" ? search.mode : "",
+      experience: typeof search.experience === "string" ? search.experience : "",
       job: typeof search.job === "string" ? search.job : "",
-      scope: readScope(search.scope),
     }),
   head: () => ({
     meta: [
@@ -118,52 +130,57 @@ function CandidateJobsPage() {
     }));
   const jobs = [...companyJobs, ...JOBS];
 
-  const [query, setQuery] = useState(search.q ?? "");
-  const [location, setLocation] = useState(search.location ?? "");
-  const [industry, setIndustry] = useState(search.industry ?? "");
-  const [scope, setScope] = useState<CandidateJobScope>(search.scope ?? "all");
-  const [selectedId, setSelectedId] = useState(search.job ?? "");
+  const [draftQuery, setDraftQuery] = useState(search.q ?? "");
+  const [draftLocation, setDraftLocation] = useState(search.location ?? "");
   const [appliedList, setAppliedList] = useState<string[]>([]);
 
-  // The URL is the durable record: a filtered list or an open job survives refresh and sharing.
+  // The URL is the durable record; the two search fields submit explicitly, like the public page.
   useEffect(() => {
-    const next = cleanCandidateJobSearch({ q: query, location, industry, scope, job: selectedId });
-    const current = cleanCandidateJobSearch(search);
-    if (JSON.stringify(next) === JSON.stringify(current)) return;
-    const timer = setTimeout(() => {
-      void navigate({ to: "/candidate/jobs", search: next, replace: true, resetScroll: false });
-    }, 250);
-    return () => clearTimeout(timer);
-  }, [query, location, industry, scope, selectedId, search, navigate]);
+    setDraftQuery(search.q ?? "");
+    setDraftLocation(search.location ?? "");
+  }, [search.q, search.location]);
 
-  // Back/forward and incoming links win over whatever the page was showing.
-  useEffect(() => {
-    setQuery(search.q ?? "");
-    setLocation(search.location ?? "");
-    setIndustry(search.industry ?? "");
-    setScope(search.scope ?? "all");
-    setSelectedId(search.job ?? "");
-  }, [search.q, search.location, search.industry, search.scope, search.job]);
+  const update = (patch: CandidateJobSearch) => {
+    void navigate({
+      to: "/candidate/jobs",
+      search: cleanCandidateJobSearch({ ...search, ...patch }),
+      replace: true,
+      resetScroll: false,
+    });
+  };
+
+  const submitSearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    update({ q: draftQuery.trim(), location: draftLocation, job: "" });
+  };
+
+  const resetFilters = () => {
+    setDraftQuery("");
+    setDraftLocation("");
+    update({ q: "", location: "", industry: "", salary: "", mode: "", experience: "", job: "" });
+  };
 
   useEffect(() => {
-    if (!selectedId || !window.matchMedia("(max-width: 1023px)").matches) return;
+    if (!search.job || !window.matchMedia("(max-width: 1023px)").matches) return;
     detailRef.current?.scrollIntoView({ block: "start" });
-  }, [selectedId]);
+  }, [search.job]);
 
-  const filteredJobs = filterJobs(jobs, { q: query, location }).filter((job) => {
-    if (
-      industry &&
-      !normalizeSearchText(`${job.industry ?? ""} ${job.department}`).includes(
-        normalizeSearchText(industry),
-      )
-    )
-      return false;
-    if (scope === "high") return job.matchScore >= 95;
-    if (scope === "remote") return workModeOf(job) !== "onsite";
-    return true;
+  const filteredJobs = filterJobs(jobs, {
+    q: search.q,
+    location: search.location,
+    salary: search.salary,
+    mode: search.mode,
+    experience: search.experience,
+  }).filter((job) => {
+    if (!search.industry) return true;
+    return normalizeSearchText(`${job.industry ?? ""} ${job.department}`).includes(
+      normalizeSearchText(search.industry),
+    );
   });
 
-  const activeJob = filteredJobs.find((job) => job.id === selectedId) ?? filteredJobs[0];
+  const activeJob = filteredJobs.find((job) => job.id === search.job) ?? filteredJobs[0];
+  const filtersActive = hasActiveFilters(search);
+  const industries = industryOptions(jobs);
   // "Chưa đánh giá…" must read as unverified, never as a passed legal audit.
   const isVerified = activeJob ? !/^chưa/i.test(activeJob.statutoryBase) : false;
   const hasApplied = (id: string) =>
@@ -188,13 +205,14 @@ function CandidateJobsPage() {
 
   /** Arrow keys walk the stack without leaving the keyboard on the first card. */
   const moveSelection = (delta: number) => {
-    if (filteredJobs.length === 0) return;
+    if (filteredJobs.length === 0) return false;
     const currentIndex = filteredJobs.findIndex((job) => job.id === activeJob?.id);
     const nextIndex = Math.min(Math.max(currentIndex + delta, 0), filteredJobs.length - 1);
     const next = filteredJobs[nextIndex];
-    if (!next || next.id === activeJob?.id) return;
-    setSelectedId(next.id);
+    if (!next || next.id === activeJob?.id) return false;
+    update({ job: next.id });
     requestAnimationFrame(() => document.getElementById(`job-option-${next.id}`)?.focus());
+    return true;
   };
 
   return (
@@ -229,109 +247,129 @@ function CandidateJobsPage() {
           </p>
         )}
 
-        <form
-          role="search"
-          onSubmit={(event) => event.preventDefault()}
-          className="overflow-hidden rounded-xl border border-rule bg-paper"
-        >
-          <div className="grid divide-y divide-rule md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)] md:divide-x md:divide-y-0">
-            <label className="flex min-h-13 items-center gap-2.5 px-4">
-              <Search
-                size={17}
-                strokeWidth={1.75}
-                className="shrink-0 text-ink-3"
-                aria-hidden="true"
-              />
+        <div className="candidate-search-band rounded-2xl border border-rule bg-accent-subtle px-4 py-6 md:px-6 md:py-7">
+          <form className="career-search" role="search" onSubmit={submitSearch}>
+            <label className="career-search__keyword">
+              <Search size={23} aria-hidden="true" />
               <span className="sr-only">Vị trí, kỹ năng hoặc công ty</span>
               <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
+                value={draftQuery}
+                onChange={(event) => setDraftQuery(event.target.value)}
                 placeholder="Vị trí, kỹ năng hoặc công ty"
-                className="min-w-0 flex-1 bg-transparent py-3 text-sm text-ink outline-none placeholder:text-ink-3"
               />
             </label>
-            <label className="flex min-h-13 items-center gap-2.5 px-4">
-              <MapPin
-                size={17}
-                strokeWidth={1.75}
-                className="shrink-0 text-ink-3"
-                aria-hidden="true"
-              />
+            <label className="career-search__location">
+              <MapPin size={22} aria-hidden="true" />
               <span className="sr-only">Địa điểm làm việc</span>
               <select
-                value={location}
-                onChange={(event) => setLocation(event.target.value)}
-                className="min-w-0 flex-1 bg-transparent py-3 text-sm text-ink outline-none"
+                value={draftLocation}
+                onChange={(event) => setDraftLocation(event.target.value)}
               >
                 <option value="">Mọi địa điểm</option>
                 <option value="Hồ Chí Minh">TP. Hồ Chí Minh</option>
                 <option value="Hà Nội">Hà Nội</option>
                 <option value="Đà Nẵng">Đà Nẵng</option>
+                <option value="Bình Dương">Bình Dương</option>
                 <option value="Từ xa">Làm việc từ xa</option>
               </select>
             </label>
-            <label className="flex min-h-13 items-center gap-2.5 px-4">
-              <Layers
-                size={17}
-                strokeWidth={1.75}
-                className="shrink-0 text-ink-3"
-                aria-hidden="true"
-              />
-              <span className="sr-only">Ngành nghề</span>
-              <select
-                value={industry}
-                onChange={(event) => setIndustry(event.target.value)}
-                className="min-w-0 flex-1 bg-transparent py-3 text-sm text-ink outline-none"
-              >
-                <option value="">Mọi ngành nghề</option>
-                {[
-                  "Kinh doanh",
-                  "Tiếp thị",
-                  "Kế toán",
-                  "Nhân sự",
-                  "Vận hành",
-                  "Công nghệ thông tin",
-                ].map((value) => (
-                  <option key={value} value={value}>
-                    {value}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-        </form>
+            <button className="career-button" type="submit">
+              <Search size={19} aria-hidden="true" />
+              Tìm việc ngay
+            </button>
+          </form>
 
-        <div className="mt-4 mb-5 flex flex-wrap items-center justify-between gap-3">
-          <div
-            role="group"
-            aria-label="Phạm vi việc làm"
-            className="inline-flex rounded-lg border border-rule bg-paper-2 p-1"
-          >
-            {(
-              [
-                { value: "all", label: `Tất cả (${jobs.length})` },
-                { value: "high", label: "Phù hợp ≥95%" },
-                { value: "remote", label: "Từ xa / Hybrid" },
-              ] as const
-            ).map((option) => (
+          <div className="career-popular">
+            <span>Tìm kiếm phổ biến:</span>
+            {POPULAR_QUERIES.map((query) => (
               <button
-                key={option.value}
+                key={query}
                 type="button"
-                aria-pressed={scope === option.value}
-                onClick={() => setScope(option.value)}
-                className={`min-h-9 whitespace-nowrap rounded-md px-3 text-xs font-semibold transition-colors ${
-                  scope === option.value
-                    ? "bg-paper text-ink shadow-[0_1px_2px_rgba(23,45,73,0.08)]"
-                    : "text-ink-2 hover:text-ink"
-                }`}
+                onClick={() => {
+                  setDraftQuery(query);
+                  update({ q: query, job: "" });
+                }}
               >
-                {option.label}
+                {query}
               </button>
             ))}
           </div>
-          <p aria-live="polite" className="text-xs tabular-nums text-ink-3">
-            {filteredJobs.length} kết quả
+        </div>
+
+        <div className="career-discovery__filters" role="group" aria-label="Bộ lọc việc làm">
+          <span className="career-discovery__filters-label">
+            <SlidersHorizontal size={16} aria-hidden="true" />
+            Lọc
+          </span>
+          <label className="career-filter">
+            <span>Ngành nghề</span>
+            <select
+              value={search.industry ?? ""}
+              onChange={(event) => update({ industry: event.target.value, job: "" })}
+            >
+              <option value="">Mọi ngành nghề</option>
+              {industries.map((industry) => (
+                <option key={industry} value={industry}>
+                  {industry}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="career-filter">
+            <span>Mức lương</span>
+            <select
+              value={search.salary ?? ""}
+              onChange={(event) => update({ salary: event.target.value, job: "" })}
+            >
+              {SALARY_BANDS.map((band) => (
+                <option key={band.value} value={band.value}>
+                  {band.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="career-filter">
+            <span>Hình thức</span>
+            <select
+              value={search.mode ?? ""}
+              onChange={(event) => update({ mode: event.target.value, job: "" })}
+            >
+              {WORK_MODES.map((mode) => (
+                <option key={mode.value} value={mode.value}>
+                  {mode.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="career-filter">
+            <span>Kinh nghiệm</span>
+            <select
+              value={search.experience ?? ""}
+              onChange={(event) => update({ experience: event.target.value, job: "" })}
+            >
+              {EXPERIENCE_BANDS.map((band) => (
+                <option key={band.value} value={band.value}>
+                  {band.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          {filtersActive && filteredJobs.length > 0 && (
+            <button type="button" className="career-filter__reset" onClick={resetFilters}>
+              Xóa bộ lọc
+              <X size={15} aria-hidden="true" />
+            </button>
+          )}
+        </div>
+
+        <div className="career-results-meta">
+          <p className="career-results-count" aria-live="polite">
+            {filteredJobs.length} tin tuyển dụng
+            {filtersActive ? " phù hợp với bộ lọc" : " đang hoạt động"}
           </p>
+          {filteredJobs.length > 0 && (
+            <p className="career-data-note">Huy hiệu kiểm định là dữ liệu minh họa.</p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
@@ -341,8 +379,7 @@ function CandidateJobsPage() {
               aria-label="Danh sách việc làm"
               onKeyDown={(event) => {
                 if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
-                event.preventDefault();
-                moveSelection(event.key === "ArrowDown" ? 1 : -1);
+                if (moveSelection(event.key === "ArrowDown" ? 1 : -1)) event.preventDefault();
               }}
               className="flex flex-col gap-3 lg:col-span-5"
             >
@@ -615,16 +652,7 @@ function CandidateJobsPage() {
               <p className="mt-1 max-w-[46ch] text-sm leading-6 text-ink-2">
                 Thử từ khóa khác, mở rộng địa điểm hoặc bỏ bộ lọc ngành nghề.
               </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setQuery("");
-                  setLocation("");
-                  setIndustry("");
-                  setScope("all");
-                }}
-                className="btn btn--secondary mt-4"
-              >
+              <button type="button" onClick={resetFilters} className="btn btn--secondary mt-4">
                 Xóa bộ lọc
               </button>
             </div>
