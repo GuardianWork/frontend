@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useState, type ReactNode } from "react";
+import React, { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 export interface CandidateProfile {
   name: string;
@@ -45,6 +45,26 @@ export interface CandidateProfileDetails {
 }
 
 export const MAX_CV_COUNT = 5;
+
+const APPLIED_JOBS_KEY = "guardianwork_candidate_applied_jobs";
+
+function readStoredApplications(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const parsed: unknown = JSON.parse(window.localStorage.getItem(APPLIED_JOBS_KEY) ?? "[]");
+    return Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function persistApplications(ids: string[]) {
+  try {
+    window.localStorage.setItem(APPLIED_JOBS_KEY, JSON.stringify(ids));
+  } catch {
+    // Storage can be unavailable; the in-memory list still covers this session.
+  }
+}
 export const MAX_CV_SIZE_BYTES = 10 * 1024 * 1024;
 
 export type CandidateCvFormat = "PDF" | "DOC" | "DOCX";
@@ -79,7 +99,7 @@ interface CandidateContextType {
   profileDetails: CandidateProfileDetails;
   setProfileDetails: React.Dispatch<React.SetStateAction<CandidateProfileDetails>>;
   cvs: CandidateCv[];
-  addCv: (input: CandidateCvInput) => boolean;
+  addCv: (input: CandidateCvInput) => CandidateCv | null;
   removeCv: (id: string) => void;
   renameCv: (id: string, label: string) => void;
   setDefaultCv: (id: string) => "updated" | "already" | "missing";
@@ -202,7 +222,7 @@ const CandidateContext = createContext<CandidateContextType>({
   profileDetails: DEFAULT_PROFILE_DETAILS,
   setProfileDetails: () => {},
   cvs: [],
-  addCv: () => false,
+  addCv: () => null,
   removeCv: () => {},
   renameCv: () => {},
   setDefaultCv: () => "missing",
@@ -231,8 +251,19 @@ export function CandidateProvider({ children }: { children: ReactNode }) {
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
 
+  // Applications to the sample listings outlive the tab, so the listing stack and
+  // the application screen agree on what was already sent (UC-CAN-11, 8a).
+  useEffect(() => {
+    setAppliedJobs(readStoredApplications());
+    const sync = (event: StorageEvent) => {
+      if (event.key === APPLIED_JOBS_KEY) setAppliedJobs(readStoredApplications());
+    };
+    window.addEventListener("storage", sync);
+    return () => window.removeEventListener("storage", sync);
+  }, []);
+
   const addCv = (input: CandidateCvInput) => {
-    if (cvs.length >= MAX_CV_COUNT) return false;
+    if (cvs.length >= MAX_CV_COUNT) return null;
 
     const nextCv: CandidateCv = {
       ...input,
@@ -245,7 +276,7 @@ export function CandidateProvider({ children }: { children: ReactNode }) {
     };
 
     setCvs((prev) => [nextCv, ...prev]);
-    return true;
+    return nextCv;
   };
 
   const removeCv = (id: string) => {
@@ -270,9 +301,12 @@ export function CandidateProvider({ children }: { children: ReactNode }) {
   };
 
   const applyJob = (jobId: string) => {
-    if (!appliedJobs.includes(jobId)) {
-      setAppliedJobs((prev) => [...prev, jobId]);
-    }
+    setAppliedJobs((prev) => {
+      if (prev.includes(jobId)) return prev;
+      const next = [...prev, jobId];
+      persistApplications(next);
+      return next;
+    });
   };
 
   const saveJob = (jobId: string) => {

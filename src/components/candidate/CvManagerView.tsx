@@ -33,67 +33,22 @@ import {
 } from "@/components/ui/dialog";
 import {
   MAX_CV_COUNT,
-  MAX_CV_SIZE_BYTES,
   useCandidate,
   type CandidateCv,
-  type CandidateCvFormat,
 } from "@/context/CandidateContext";
-
-const MIME_BY_FORMAT: Record<CandidateCvFormat, string> = {
-  PDF: "application/pdf",
-  DOC: "application/msword",
-  DOCX: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-};
-
-const SIGNATURES: Record<CandidateCvFormat, number[]> = {
-  PDF: [0x25, 0x50, 0x44, 0x46, 0x2d],
-  DOC: [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1],
-  DOCX: [0x50, 0x4b, 0x03, 0x04],
-};
-
-const ALLOWED_MIME = new Set([...Object.values(MIME_BY_FORMAT), "application/octet-stream"]);
+import {
+  CV_ACCEPT_ATTRIBUTE,
+  CV_MIME_BY_FORMAT,
+  deriveCvLabel,
+  detectCvFormat,
+  formatCvDate,
+  formatFileSize,
+  validateCvFile,
+} from "@/lib/cv-file";
 
 type NoticeTone = "success" | "info" | "error";
 
 type UploadState = "idle" | "uploading";
-
-function detectFormat(fileName: string): CandidateCvFormat | null {
-  const extension = fileName.split(".").pop()?.toLowerCase();
-  if (extension === "pdf") return "PDF";
-  if (extension === "doc") return "DOC";
-  if (extension === "docx") return "DOCX";
-  return null;
-}
-
-async function matchesSignature(file: File, format: CandidateCvFormat) {
-  const bytes = new Uint8Array(await file.slice(0, 8).arrayBuffer());
-  return SIGNATURES[format].every((byte, index) => bytes[index] === byte);
-}
-
-function formatBytes(bytes: number) {
-  if (bytes >= 1024 * 1024) {
-    const megabytes = bytes / (1024 * 1024);
-    return `${megabytes.toLocaleString("vi-VN", { maximumFractionDigits: 1 })} MB`;
-  }
-  return `${Math.max(1, Math.round(bytes / 1024))} KB`;
-}
-
-function formatDate(isoDate: string) {
-  return new Intl.DateTimeFormat("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(new Date(isoDate));
-}
-
-function deriveLabel(fileName: string) {
-  const label = fileName
-    .replace(/\.[^.]+$/, "")
-    .replace(/[_-]+/g, " ")
-    .trim()
-    .slice(0, 60);
-  return label || "Hồ sơ chưa đặt tên";
-}
 
 const focusRing =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2";
@@ -162,39 +117,16 @@ export function CvManagerView() {
     setFileError("");
     setSelectedFile(null);
 
-    const format = detectFormat(file.name);
-    if (!format) {
-      setFileError("Chỉ nhận tệp PDF, DOC hoặc DOCX. Hãy chọn tệp khác.");
-      return;
-    }
-    if (file.size > MAX_CV_SIZE_BYTES) {
-      setFileError(
-        `Tệp vượt quá 10 MB (${formatBytes(file.size)}). Hãy chọn tệp nhỏ hơn hoặc nén lại.`,
-      );
-      return;
-    }
-    if (file.type && !ALLOWED_MIME.has(file.type)) {
-      setFileError("Kiểu tệp không hợp lệ. Hệ thống chỉ nhận PDF, DOC hoặc DOCX.");
-      return;
-    }
-
     setIsChecking(true);
-    try {
-      const signatureMatches = await matchesSignature(file, format);
-      if (currentValidation !== validationId.current) return;
-      if (!signatureMatches) {
-        setFileError(
-          `Nội dung tệp không khớp định dạng .${format.toLowerCase()}. Hãy chọn đúng tệp gốc thay vì đổi phần mở rộng.`,
-        );
-        return;
-      }
-      setSelectedFile(file);
-    } catch {
-      if (currentValidation !== validationId.current) return;
-      setFileError("Không thể đọc tệp này. Hãy thử chọn lại tệp.");
-    } finally {
-      if (currentValidation === validationId.current) setIsChecking(false);
+    const check = await validateCvFile(file);
+    if (currentValidation !== validationId.current) return;
+    setIsChecking(false);
+
+    if (!check.ok) {
+      setFileError(check.message);
+      return;
     }
+    setSelectedFile(file);
   };
 
   const handleFilePick = (event: ChangeEvent<HTMLInputElement>) => {
@@ -213,7 +145,7 @@ export function CvManagerView() {
 
   const finishUpload = () => {
     if (!selectedFile) return;
-    const format = detectFormat(selectedFile.name);
+    const format = detectCvFormat(selectedFile.name);
     if (!format) {
       setFileError("Chỉ nhận tệp PDF, DOC hoặc DOCX.");
       return;
@@ -221,9 +153,9 @@ export function CvManagerView() {
 
     const added = addCv({
       fileName: selectedFile.name,
-      label: deriveLabel(selectedFile.name),
+      label: deriveCvLabel(selectedFile.name),
       format,
-      mimeType: selectedFile.type || MIME_BY_FORMAT[format],
+      mimeType: selectedFile.type || CV_MIME_BY_FORMAT[format],
       sizeBytes: selectedFile.size,
       previewUrl: URL.createObjectURL(selectedFile),
     });
@@ -491,9 +423,9 @@ export function CvManagerView() {
                               {cv.fileName}
                             </p>
                             <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-3">
-                              <span>{formatBytes(cv.sizeBytes)}</span>
+                              <span>{formatFileSize(cv.sizeBytes)}</span>
                               <span aria-hidden="true">·</span>
-                              <span>Tải lên {formatDate(cv.uploadedAt)}</span>
+                              <span>Tải lên {formatCvDate(cv.uploadedAt)}</span>
                               {cv.usedInApplications > 0 && (
                                 <>
                                   <span aria-hidden="true">·</span>
@@ -687,7 +619,7 @@ export function CvManagerView() {
                 ref={fileInputRef}
                 id="cv-file-input"
                 type="file"
-                accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                accept={CV_ACCEPT_ATTRIBUTE}
                 onChange={handleFilePick}
                 disabled={uploadState === "uploading" || isChecking}
                 className="sr-only"
@@ -705,7 +637,7 @@ export function CvManagerView() {
                     {selectedFile.name}
                   </p>
                   <p className="mt-0.5 text-xs text-ink-3">
-                    {formatBytes(selectedFile.size)} · {detectFormat(selectedFile.name)}
+                    {formatFileSize(selectedFile.size)} · {detectCvFormat(selectedFile.name)}
                   </p>
                 </div>
                 {uploadState !== "uploading" && (

@@ -1,4 +1,4 @@
-import { JOBS, badgeLabel, type JobItem } from "@/lib/job-listings";
+import { badgeLabel, type JobItem } from "@/lib/job-listings";
 import {
   EXPERIENCE_BANDS,
   SALARY_BANDS,
@@ -10,7 +10,8 @@ import {
   workModeOf,
 } from "@/lib/job-search";
 import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
-import { jobModerationStatus, submitCompanyApplication } from "@/services/companyMembers";
+import { useCandidate } from "@/context/CandidateContext";
+import { buildCandidateJobs } from "@/lib/candidate-jobs";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
@@ -101,38 +102,14 @@ export const Route = createFileRoute("/candidate/jobs")({
 
 function CandidateJobsPage() {
   const { workspace, company, user } = useCompanyWorkspace();
+  const { isApplied } = useCandidate();
   const navigate = useNavigate();
   const search = Route.useSearch();
-  const [applicationError, setApplicationError] = useState("");
   const detailRef = useRef<HTMLDivElement>(null);
-  const companyJobs: JobItem[] = workspace.jobs
-    .filter(
-      (j) =>
-        j.status === "Active" && jobModerationStatus(j) === "approved" && j.visibility !== "HIDDEN",
-    )
-    .map((j) => ({
-      id: j.id,
-      title: j.title,
-      company: company?.name || "",
-      location: j.location,
-      salaryRange: j.salary,
-      badge: "Công ty đã xác thực",
-      badgeTone: "primary",
-      time: new Date(j.created).toLocaleDateString("vi-VN"),
-      department: j.department,
-      matchScore: 0,
-      description: `Vị trí ${j.title} thuộc phòng ban ${j.department}.`,
-      requirements: [],
-      statutoryBase: "Chưa đánh giá tin tuyển dụng",
-      statutoryNote:
-        "Công ty đã xác thực thông tin doanh nghiệp. Vui lòng liên hệ nhà tuyển dụng để nhận mô tả công việc chi tiết.",
-      suggestedRevision: "Trao đổi trực tiếp với nhà tuyển dụng về điều kiện làm việc.",
-    }));
-  const jobs = [...companyJobs, ...JOBS];
+  const { jobs } = buildCandidateJobs(workspace, company);
 
   const [draftQuery, setDraftQuery] = useState(search.q ?? "");
   const [draftLocation, setDraftLocation] = useState(search.location ?? "");
-  const [appliedList, setAppliedList] = useState<string[]>([]);
 
   // The URL is the durable record; the two search fields submit explicitly, like the public page.
   useEffect(() => {
@@ -184,24 +161,9 @@ function CandidateJobsPage() {
   // "Chưa đánh giá…" must read as unverified, never as a passed legal audit.
   const isVerified = activeJob ? !/^chưa/i.test(activeJob.statutoryBase) : false;
   const hasApplied = (id: string) =>
-    appliedList.includes(id) ||
+    isApplied(id) ||
     workspace.applications.some((a) => a.jobId === id && a.email === user?.email.toLowerCase());
-  const isApplied = activeJob ? hasApplied(activeJob.id) : false;
-
-  const handleApply = (id: string) => {
-    setApplicationError("");
-    if (companyJobs.some((j) => j.id === id)) {
-      try {
-        submitCompanyApplication(id);
-      } catch (e) {
-        setApplicationError(e instanceof Error ? e.message : "Không thể nộp đơn.");
-      }
-      return;
-    }
-    if (!appliedList.includes(id)) {
-      setAppliedList((prev) => [...prev, id]);
-    }
-  };
+  const activeJobApplied = activeJob ? hasApplied(activeJob.id) : false;
 
   /** Arrow keys walk the stack without leaving the keyboard on the first card. */
   const moveSelection = (delta: number) => {
@@ -237,15 +199,6 @@ function CandidateJobsPage() {
             <span>Trợ lý pháp lý</span>
           </Link>
         </header>
-
-        {applicationError && (
-          <p
-            role="alert"
-            className="mb-4 rounded-lg border border-error/25 bg-error-container px-4 py-3 text-sm font-medium text-on-error-container"
-          >
-            {applicationError}
-          </p>
-        )}
 
         <div className="candidate-search-band rounded-2xl border border-rule bg-accent-subtle px-4 py-6 md:px-6 md:py-7">
           <form className="career-search" role="search" onSubmit={submitSearch}>
@@ -508,20 +461,20 @@ function CandidateJobsPage() {
                   </div>
 
                   <div className="mt-4 flex flex-wrap items-center gap-2">
-                    {isApplied ? (
+                    {activeJobApplied ? (
                       <span className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-mint/25 bg-mint/10 px-4 text-sm font-bold text-mint">
                         <CheckCircle2 size={16} strokeWidth={1.75} aria-hidden="true" />
                         Đã nộp hồ sơ
                       </span>
                     ) : (
-                      <button
-                        type="button"
-                        onClick={() => handleApply(activeJob.id)}
+                      <Link
+                        to="/candidate/jobs/apply"
+                        search={{ job: activeJob.id }}
                         className="btn whitespace-nowrap"
                       >
                         <Send size={16} strokeWidth={1.75} aria-hidden="true" />
                         Ứng tuyển
-                      </button>
+                      </Link>
                     )}
                     <Link to="/candidate/copilot" className="btn btn--secondary whitespace-nowrap">
                       <Scale size={16} strokeWidth={1.75} aria-hidden="true" />

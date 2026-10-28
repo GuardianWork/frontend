@@ -1952,6 +1952,10 @@ body {
   border-radius: 10px;
   box-shadow: inset 0 0 0 3px var(--color-accent);
 }
+/* Apply-form fields already draw their own border + ring on focus. */
+.apply-form :where(input:not([type="radio"]):not([type="checkbox"]), select, textarea):focus-visible {
+  outline: none;
+}
 .career-discovery {
   padding-block: 26px 52px;
 }
