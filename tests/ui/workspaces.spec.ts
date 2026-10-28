@@ -26,11 +26,7 @@ test("guests can search and read job listings without an account", async ({ page
 test("candidate pages accept search and profile edits", async ({ page }, info) => {
   test.setTimeout(60000);
   await login(page, "candidate_demo");
-  const report = await auditInputs(page, [
-    "/jobs",
-    "/candidate/profile",
-    "/candidate/copilot",
-  ]);
+  const report = await auditInputs(page, ["/jobs", "/candidate/profile", "/candidate/copilot"]);
   await page.goto("/candidate/profile", { waitUntil: "domcontentloaded" });
   await page.getByRole("button", { name: "Chỉnh sửa hồ sơ" }).click();
   const editor = page.getByRole("dialog");

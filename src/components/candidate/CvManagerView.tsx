@@ -31,11 +31,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  MAX_CV_COUNT,
-  useCandidate,
-  type CandidateCv,
-} from "@/context/CandidateContext";
+import { MAX_CV_COUNT, useCandidate, type CandidateCv } from "@/context/CandidateContext";
 import {
   CV_ACCEPT_ATTRIBUTE,
   CV_MIME_BY_FORMAT,
