@@ -145,7 +145,7 @@ export function RecruiterShell({
           <Link to="/vn" className="block hover:text-primary">
             Trang chủ GuardianWork ↗
           </Link>
-          <Link to="/candidate/jobs" className="block hover:text-primary">
+          <Link to="/jobs" className="block hover:text-primary">
             Dành cho ứng viên ↗
           </Link>
           <Link to="/admin" className="block hover:text-primary">

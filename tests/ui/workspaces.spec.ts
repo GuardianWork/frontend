@@ -27,7 +27,7 @@ test("candidate pages accept search and profile edits", async ({ page }, info) =
   test.setTimeout(60000);
   await login(page, "candidate_demo");
   const report = await auditInputs(page, [
-    "/candidate/jobs",
+    "/jobs",
     "/candidate/profile",
     "/candidate/copilot",
   ]);

@@ -163,7 +163,7 @@ export function getLoginDestination(user: AuthUser, purpose: AccountPurpose) {
     ? user.activeMembership
       ? ("/recruiter" as const)
       : ("/recruiter/verification" as const)
-    : ("/candidate/jobs" as const);
+    : ("/jobs" as const);
 }
 
 let refreshing: { token: string; promise: Promise<AuthSession> } | null = null;

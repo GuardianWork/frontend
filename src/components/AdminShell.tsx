@@ -23,7 +23,7 @@ const ADMIN_JOB_NAV: NavItem[] = [
 ];
 
 const CANDIDATE_NAV: NavItem[] = [
-  { to: "/candidate/jobs", label: "Tìm việc làm", icon: "work" },
+  { to: "/jobs", label: "Tìm việc làm", icon: "work" },
   { to: "/candidate/cvs", label: "Hồ sơ xin việc", icon: "description" },
   { to: "/candidate/profile", label: "Hồ sơ của tôi", icon: "badge" },
   { to: "/candidate/copilot", label: "Trợ lý pháp lý", icon: "gavel" },
@@ -114,7 +114,7 @@ export function AdminShell({
           sub: "Talent Safeguard & Jobs",
           icon: "person",
           cta: "Tìm việc chuẩn Luật",
-          ctaTo: "/candidate/jobs",
+          ctaTo: "/jobs",
         }
       : currentRole === "recruiter"
         ? {
@@ -317,14 +317,6 @@ export function AdminShell({
 
           {/* Top Right Extras & Actions */}
           <div className="flex items-center gap-3 md:gap-5">
-            <Link
-              to="/vn"
-              className="hidden sm:flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-surface-container border border-warm-border text-charcoal-text hover:bg-surface-container-high transition-colors"
-            >
-              <Icon name="public" className="!text-sm text-primary" />
-              <span>Trang chủ</span>
-            </Link>
-
             {currentRole === "recruiter" && (
               <Link
                 to="/recruiter/verification"

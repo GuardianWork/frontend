@@ -74,7 +74,7 @@ test("an unavailable API or invalid success response never signs a user in", asy
 });
 
 test("portal selection is an onboarding intent; admin destination requires the server role", () => {
-  assert.equal(getLoginDestination(user, "candidate"), "/candidate/jobs");
+  assert.equal(getLoginDestination(user, "candidate"), "/jobs");
   assert.equal(getLoginDestination(user, "recruiter"), "/recruiter/verification");
   assert.equal(getLoginDestination({ ...user, role: "ADMIN" }, "candidate"), "/admin");
   assert.equal(getLoginDestination({ ...user, role: "STAFF" }, "candidate"), "/staff");

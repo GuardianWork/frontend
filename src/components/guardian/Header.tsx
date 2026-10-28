@@ -23,8 +23,7 @@ export function Header({
   const initials = user
     ? `${user.lastName.charAt(0)}${user.firstName.charAt(0)}`.toUpperCase()
     : "";
-  const isActive = (to: string) =>
-    pathname === to || (to === "/candidate/jobs" && pathname === "/jobs");
+  const isActive = (to: string) => pathname === to;
   useEffect(() => {
     const close = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -37,7 +36,7 @@ export function Header({
   // Guests get public discovery only; the candidate workspace links need a session.
   const links = user
     ? [
-        { to: "/candidate/jobs", label: dict.navWorkbench.jobs },
+        { to: "/jobs", label: dict.navWorkbench.jobs },
         { to: "/candidate/profile", label: dict.navWorkbench.profile },
         { to: "/candidate/copilot", label: dict.navWorkbench.legalChat },
       ]

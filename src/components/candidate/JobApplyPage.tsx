@@ -129,7 +129,7 @@ function BackBar({ jobId }: { jobId?: string }) {
     <header className="sticky top-0 z-30 bg-paper-inverse text-paper">
       <div className="mx-auto grid h-14 max-w-[880px] grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 sm:px-6">
         <Link
-          to="/candidate/jobs"
+          to="/jobs"
           search={jobId ? { job: jobId } : {}}
           className={`inline-flex min-w-0 items-center gap-1.5 justify-self-start rounded-md py-1 text-sm font-semibold text-paper/85 transition-colors hover:text-paper ${focusRing} focus-visible:ring-paper focus-visible:ring-offset-paper-inverse`}
         >
@@ -139,7 +139,7 @@ function BackBar({ jobId }: { jobId?: string }) {
           </span>
         </Link>
         <Link
-          to="/candidate/jobs"
+          to="/jobs"
           aria-label="GuardianWork — danh sách việc làm"
           className={`inline-flex items-center gap-2 justify-self-center rounded-md ${focusRing} focus-visible:ring-paper focus-visible:ring-offset-paper-inverse`}
         >
@@ -483,7 +483,7 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
             </p>
             <div className="mt-4 flex flex-col gap-2 sm:flex-row">
               <Link
-                to="/candidate/jobs"
+                to="/jobs"
                 className={`inline-flex min-h-11 items-center justify-center rounded-lg bg-accent px-5 text-sm font-bold text-accent-ink transition-colors hover:bg-accent-hover active:bg-accent-deep ${focusRing}`}
               >
                 Tìm việc làm khác
@@ -528,7 +528,7 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
             sách việc làm đang tuyển.
           </p>
           <Link
-            to="/candidate/jobs"
+            to="/jobs"
             className={`mt-5 inline-flex min-h-11 items-center justify-center rounded-lg bg-accent px-5 text-sm font-bold text-accent-ink transition-colors hover:bg-accent-hover ${focusRing}`}
           >
             Xem việc làm đang tuyển
@@ -578,7 +578,7 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
           </dl>
           <div className="mt-5 flex flex-col justify-center gap-2 sm:flex-row">
             <Link
-              to="/candidate/jobs"
+              to="/jobs"
               className={`inline-flex min-h-11 items-center justify-center rounded-lg bg-accent px-5 text-sm font-bold text-accent-ink transition-colors hover:bg-accent-hover ${focusRing}`}
             >
               Về danh sách việc làm

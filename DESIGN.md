@@ -152,7 +152,9 @@ Authentication headlines and workspace headings retain local responsive type sca
 
 The public container has a maximum width (1248px), automatic horizontal margins, and side padding (24px), reduced on phones (20px). The desktop header is sticky, bordered, and spacious (80px minimum height); it compresses through tablet (72px) to phone (68px).
 
-Job listings form three columns with an inter-card gap (18px), then two columns below the tablet breakpoint, then one column with a smaller gap (12px) on phones. Search fields and button share a horizontal surface on desktop and stack on phones. Supporting content follows the same progression: desktop columns become a readable vertical sequence.
+Job listings form three columns with an inter-card gap (18px), then two columns below the tablet breakpoint, then one column with a smaller gap (12px) on phones. The same listing card serves the catalogue and the keyword-led two-column view. Search fields and button share a horizontal surface on desktop and stack on phones. Supporting content follows the same progression: desktop columns become a readable vertical sequence. Submitting a keyword switches the catalogue to a two-column reading layout: listing cards stack on the left and the selected listing detail, including its apply action, fills a sticky right pane. The filter panel belongs to that keyword view; without a keyword the catalogue stays a single grid.
+
+A full listing keeps the public container and becomes one job sheet: a header carrying the company mark, verification badge, title, salary, location, mode, and recency joins the description, requirements, and a tinted verification note into a single left column. The apply card and general facts form a sticky right rail aligned with the top of that sheet. Below the tablet breakpoint the sheet separates back into cards and the apply action moves ahead of the description, with the facts panel closing the job content. Similar jobs reuse the listing grid.
 
 Observed public breakpoints are width ceilings (1100px, 950px, 640px). Workspace and authentication components also use Tailwind responsive utilities; these are separate local layout thresholds, not replacements for the public breakpoints. Workspaces use side navigation and compact bordered content; mobile navigation is explicitly opened by a menu control. Authentication forms stack below their introduction on small screens.
 
@@ -194,7 +196,7 @@ Public navigation uses a white sticky band, thin bottom rule, and medium-weight 
 
 ### Search Assembly
 
-Keyword, location, and action share a gently rounded, softly elevated white surface. This is the recurring public-to-workspace discovery pattern. The landing search transfers its filters into the candidate job browser; card selection opens the exact selected listing. A keyword or location field must remain independently focusable on every device.
+Keyword, location, and action share a gently rounded, softly elevated white surface. This is the recurring public-to-workspace discovery pattern. Guests and signed-in candidates share one public job browser: the guest catalogue is the default, a keyword reveals the two-column list and detail layout, and the filter panel appears with that keyword view. Job titles link to the full listing page, while selecting a card updates the detail pane in place. A keyword or location field must remain independently focusable on every device.
 
 Short color and border transitions support state changes. Reduced-motion preference suppresses animation and transition duration. No new motion system is implied by the remaining legacy effects.
 

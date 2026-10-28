@@ -5,7 +5,7 @@
  * pre-emit critique: P5 H5 E5 S5 R5 V4
  */
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
   ArrowLeft,
@@ -14,6 +14,7 @@ import {
   BriefcaseBusiness,
   Building2,
   CalendarClock,
+  CheckCircle2,
   MapPin,
   Search,
   SearchX,
@@ -24,6 +25,9 @@ import {
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
+import { useCandidate } from "@/context/CandidateContext";
+import { buildCandidateJobs } from "@/lib/candidate-jobs";
 import { JOBS, badgeLabel, isSampleListing, type JobItem } from "@/lib/job-listings";
 import { paginateItems } from "@/lib/pagination";
 import {
@@ -41,7 +45,6 @@ import {
 } from "@/lib/job-search";
 
 const PAGE_SIZE = 6;
-const INDUSTRIES = industryOptions(JOBS);
 
 const POPULAR_QUERIES = ["Kinh doanh", "Kế toán", "Tiếp thị", "Nhân sự"];
 
@@ -66,10 +69,20 @@ function badgeClass(job: JobItem) {
   return "career-badge";
 }
 
-/** Public, unauthenticated job discovery (UC-CAN-07, UC-CAN-08, UC-CAN-09). */
+/**
+ * Public, unauthenticated job discovery (UC-CAN-07, UC-CAN-08, UC-CAN-09).
+ * This is the single job search for guests and candidates: the guest catalogue is
+ * the default, and entering a keyword reveals the two-column reading layout.
+ */
 export function PublicJobsView({ search }: { search: JobSearchParams }) {
   const navigate = useNavigate({ from: "/jobs" });
   const user = useAuthUser();
+  const { isApplied } = useCandidate();
+  const { workspace, company } = useCompanyWorkspace();
+  const { jobs: candidateJobs } = buildCandidateJobs(workspace, company);
+  // Signed-in candidates also see published company jobs; guests keep the public set.
+  const jobs = user ? candidateJobs : JOBS;
+
   const [draftQuery, setDraftQuery] = useState(search.q ?? "");
   const [draftLocation, setDraftLocation] = useState(search.location ?? "");
 
@@ -93,8 +106,14 @@ export function PublicJobsView({ search }: { search: JobSearchParams }) {
     update({ q: draftQuery.trim(), location: draftLocation, page: "" });
   };
 
-  const activeJob = search.job ? JOBS.find((job) => job.id === search.job) : undefined;
+  const activeJob = search.job ? jobs.find((job) => job.id === search.job) : undefined;
   const jobMissing = Boolean(search.job) && !activeJob;
+  const appliedFor = (jobId: string) =>
+    isApplied(jobId) ||
+    workspace.applications.some(
+      (application) =>
+        application.jobId === jobId && application.email === user?.email.toLowerCase(),
+    );
 
   return (
     <div className="career-site">
@@ -104,9 +123,15 @@ export function PublicJobsView({ search }: { search: JobSearchParams }) {
       <Header variant="landing" />
       <main id="main-content">
         {activeJob ? (
-          <JobDetail job={activeJob} search={search} signedIn={Boolean(user)} />
+          <JobDetail
+            job={activeJob}
+            search={search}
+            signedIn={Boolean(user)}
+            applied={appliedFor(activeJob.id)}
+            jobs={jobs}
+          />
         ) : jobMissing ? (
-          <MissingJob search={search} />
+          <MissingJob search={search} jobs={jobs} />
         ) : (
           <>
             <section className="career-discovery__head">
@@ -119,10 +144,6 @@ export function PublicJobsView({ search }: { search: JobSearchParams }) {
                       đầy đủ mô tả, mức lương và điều kiện làm việc trước khi quyết định ứng tuyển.
                     </p>
                   </div>
-                  <p className="career-discovery__note">
-                    <ShieldCheck size={17} />
-                    Không cần đăng ký để xem tin tuyển dụng.
-                  </p>
                 </div>
 
                 <form className="career-search" role="search" onSubmit={submitSearch}>
@@ -171,7 +192,14 @@ export function PublicJobsView({ search }: { search: JobSearchParams }) {
               </div>
             </section>
 
-            <Results search={search} update={update} resetFilters={resetFilters} />
+            <Results
+              search={search}
+              update={update}
+              resetFilters={resetFilters}
+              jobs={jobs}
+              signedIn={Boolean(user)}
+              applied={appliedFor}
+            />
           </>
         )}
       </main>
@@ -180,16 +208,75 @@ export function PublicJobsView({ search }: { search: JobSearchParams }) {
   );
 }
 
+/**
+ * One listing item, shared by the guest catalogue and the two-column layout so the
+ * job card reads identically in both. The title always opens the full detail page.
+ */
+function JobCard({
+  job,
+  search,
+  active,
+  onSelect,
+}: {
+  job: JobItem;
+  search: JobSearchParams;
+  active?: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <article
+      className={`career-job career-job--interactive${active ? " is-active" : ""}`}
+      aria-current={active ? "true" : undefined}
+      onClick={onSelect}
+    >
+      <div className="career-job__company">
+        <CompanyMark name={job.company} />
+        <span>{job.company}</span>
+        <span className={badgeClass(job)}>{badgeLabel(job.badge)}</span>
+        <ArrowRight size={18} className="career-job__arrow" aria-hidden="true" />
+      </div>
+      <h3>
+        <Link
+          to="/jobs"
+          search={jobSearch({ ...search, job: job.id })}
+          className="career-job__link"
+          aria-label={`${job.title} — ${job.company}`}
+          onClick={(event) => event.stopPropagation()}
+        >
+          {job.title}
+        </Link>
+      </h3>
+      <p className="career-job__salary">{job.salaryRange}</p>
+      <p className="career-job__location">
+        <MapPin size={15} aria-hidden="true" />
+        {job.location}
+      </p>
+      <div className="career-job__bottom">
+        <span>
+          {job.department} · {WORK_MODE_LABELS[workModeOf(job)]}
+        </span>
+        <span aria-hidden="true">Xem chi tiết</span>
+      </div>
+    </article>
+  );
+}
+
 function Results({
   search,
   update,
   resetFilters,
+  jobs,
+  signedIn,
+  applied,
 }: {
   search: JobSearchParams;
   update: (patch: JobSearchParams) => void;
   resetFilters: () => void;
+  jobs: JobItem[];
+  signedIn: boolean;
+  applied: (jobId: string) => boolean;
 }) {
-  const filtered = filterJobs(JOBS, search);
+  const filtered = filterJobs(jobs, search);
   const requestedPage = Number.parseInt(search.page ?? "0", 10);
   const pagination = paginateItems(
     filtered,
@@ -197,6 +284,28 @@ function Results({
     PAGE_SIZE,
   );
   const filtersActive = hasActiveFilters(search);
+  const panelFiltersActive = Boolean(
+    search.industry || search.salary || search.mode || search.experience,
+  );
+  const industries = industryOptions(jobs);
+  // The guest catalogue is the default; a keyword opens the list + detail layout,
+  // and the filter panel only joins once there is a keyword to refine.
+  const splitView = Boolean(search.q?.trim());
+  const showFilters = splitView || panelFiltersActive;
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const detailRef = useRef<HTMLDivElement>(null);
+  const activeJob = splitView
+    ? (pagination.items.find((job) => job.id === selectedId) ?? pagination.items[0])
+    : undefined;
+
+  const selectJob = (jobId: string) => {
+    setSelectedId(jobId);
+    if (!window.matchMedia("(max-width: 950px)").matches) return;
+    const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      ? "auto"
+      : "smooth";
+    requestAnimationFrame(() => detailRef.current?.scrollIntoView({ block: "start", behavior }));
+  };
 
   return (
     <section className="career-container career-discovery" aria-labelledby="results-title">
@@ -204,71 +313,73 @@ function Results({
         Kết quả tìm kiếm việc làm
       </h2>
 
-      <div className="career-discovery__filters" role="group" aria-label="Bộ lọc việc làm">
-        <span className="career-discovery__filters-label">
-          <SlidersHorizontal size={16} aria-hidden="true" />
-          Lọc
-        </span>
-        <label className="career-filter">
-          <span>Ngành nghề</span>
-          <select
-            value={search.industry ?? ""}
-            onChange={(event) => update({ industry: event.target.value, job: "", page: "" })}
-          >
-            <option value="">Mọi ngành nghề</option>
-            {INDUSTRIES.map((industry) => (
-              <option key={industry} value={industry}>
-                {industry}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="career-filter">
-          <span>Mức lương</span>
-          <select
-            value={search.salary ?? ""}
-            onChange={(event) => update({ salary: event.target.value, job: "", page: "" })}
-          >
-            {SALARY_BANDS.map((band) => (
-              <option key={band.value} value={band.value}>
-                {band.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="career-filter">
-          <span>Hình thức</span>
-          <select
-            value={search.mode ?? ""}
-            onChange={(event) => update({ mode: event.target.value, job: "", page: "" })}
-          >
-            {WORK_MODES.map((mode) => (
-              <option key={mode.value} value={mode.value}>
-                {mode.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="career-filter">
-          <span>Kinh nghiệm</span>
-          <select
-            value={search.experience ?? ""}
-            onChange={(event) => update({ experience: event.target.value, job: "", page: "" })}
-          >
-            {EXPERIENCE_BANDS.map((band) => (
-              <option key={band.value} value={band.value}>
-                {band.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        {filtersActive && pagination.items.length > 0 && (
-          <button type="button" className="career-filter__reset" onClick={resetFilters}>
-            Xóa bộ lọc
-            <X size={15} aria-hidden="true" />
-          </button>
-        )}
-      </div>
+      {showFilters && (
+        <div className="career-discovery__filters" role="group" aria-label="Bộ lọc việc làm">
+          <span className="career-discovery__filters-label">
+            <SlidersHorizontal size={16} aria-hidden="true" />
+            Lọc
+          </span>
+          <label className="career-filter">
+            <span>Ngành nghề</span>
+            <select
+              value={search.industry ?? ""}
+              onChange={(event) => update({ industry: event.target.value, job: "", page: "" })}
+            >
+              <option value="">Mọi ngành nghề</option>
+              {industries.map((industry) => (
+                <option key={industry} value={industry}>
+                  {industry}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="career-filter">
+            <span>Mức lương</span>
+            <select
+              value={search.salary ?? ""}
+              onChange={(event) => update({ salary: event.target.value, job: "", page: "" })}
+            >
+              {SALARY_BANDS.map((band) => (
+                <option key={band.value} value={band.value}>
+                  {band.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="career-filter">
+            <span>Hình thức</span>
+            <select
+              value={search.mode ?? ""}
+              onChange={(event) => update({ mode: event.target.value, job: "", page: "" })}
+            >
+              {WORK_MODES.map((mode) => (
+                <option key={mode.value} value={mode.value}>
+                  {mode.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="career-filter">
+            <span>Kinh nghiệm</span>
+            <select
+              value={search.experience ?? ""}
+              onChange={(event) => update({ experience: event.target.value, job: "", page: "" })}
+            >
+              {EXPERIENCE_BANDS.map((band) => (
+                <option key={band.value} value={band.value}>
+                  {band.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          {filtersActive && pagination.items.length > 0 && (
+            <button type="button" className="career-filter__reset" onClick={resetFilters}>
+              Xóa bộ lọc
+              <X size={15} aria-hidden="true" />
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="career-results-meta">
         <p
@@ -285,36 +396,46 @@ function Results({
 
       {pagination.items.length > 0 ? (
         <>
-          <div className="career-job-grid">
-            {pagination.items.map((job) => (
-              <Link
-                key={job.id}
-                to="/jobs"
-                search={jobSearch({ ...search, job: job.id })}
-                className="career-job career-job--interactive"
-                aria-label={`${job.title} — ${job.company}`}
-              >
-                <div className="career-job__company">
-                  <CompanyMark name={job.company} />
-                  <span>{job.company}</span>
-                  <span className={badgeClass(job)}>{badgeLabel(job.badge)}</span>
-                  <ArrowRight size={18} className="career-job__arrow" aria-hidden="true" />
+          {splitView ? (
+            <div className="career-split">
+              <ul className="career-split__stack" aria-label="Danh sách việc làm">
+                {pagination.items.map((job) => (
+                  <li key={job.id}>
+                    <JobCard
+                      job={job}
+                      search={search}
+                      active={job.id === activeJob?.id}
+                      onSelect={() => selectJob(job.id)}
+                    />
+                  </li>
+                ))}
+              </ul>
+
+              {activeJob && (
+                <div ref={detailRef} className="career-split__detail">
+                  <JobDetail
+                    job={activeJob}
+                    search={search}
+                    signedIn={signedIn}
+                    applied={applied(activeJob.id)}
+                    jobs={jobs}
+                    embedded
+                  />
                 </div>
-                <h3>{job.title}</h3>
-                <p className="career-job__salary">{job.salaryRange}</p>
-                <p className="career-job__location">
-                  <MapPin size={15} aria-hidden="true" />
-                  {job.location}
-                </p>
-                <div className="career-job__bottom">
-                  <span>
-                    {job.department} · {WORK_MODE_LABELS[workModeOf(job)]}
-                  </span>
-                  <span aria-hidden="true">Xem chi tiết</span>
-                </div>
-              </Link>
-            ))}
-          </div>
+              )}
+            </div>
+          ) : (
+            <div className="career-job-grid">
+              {pagination.items.map((job) => (
+                <JobCard
+                  key={job.id}
+                  job={job}
+                  search={search}
+                  onSelect={() => update({ job: job.id })}
+                />
+              ))}
+            </div>
+          )}
 
           {pagination.totalPages > 1 && (
             <nav className="career-pagination" aria-label="Phân trang kết quả">
@@ -389,96 +510,124 @@ function JobDetail({
   job,
   search,
   signedIn,
+  applied,
+  jobs,
+  embedded = false,
 }: {
   job: JobItem;
   search: JobSearchParams;
   signedIn: boolean;
+  applied: boolean;
+  jobs: JobItem[];
+  embedded?: boolean;
 }) {
-  const similar = similarJobs(JOBS, job);
-  const applyHref = `/candidate/jobs?job=${encodeURIComponent(job.id)}`;
+  const navigate = useNavigate({ from: "/jobs" });
+  const similar = embedded ? [] : similarJobs(jobs, job);
+  const applyHref = `/candidate/jobs/apply?job=${encodeURIComponent(job.id)}`;
 
   return (
-    <article className="career-container career-detail">
-      <Link
-        to="/jobs"
-        search={jobSearch({ ...search, job: "", page: search.page ?? "" })}
-        className="career-text-link career-back"
-      >
-        <ArrowLeft size={17} aria-hidden="true" />
-        Danh sách việc làm
-      </Link>
-
-      <header className="career-detail__header">
-        <div className="career-detail__company">
-          <CompanyMark name={job.company} />
-          <div>
-            <p>{job.company}</p>
-            <span className={badgeClass(job)}>{badgeLabel(job.badge)}</span>
-          </div>
-        </div>
-        <h1>{job.title}</h1>
-        <ul className="career-detail__meta">
-          <li>
-            <Banknote size={17} aria-hidden="true" />
-            <strong>{job.salaryRange}</strong>
-          </li>
-          <li>
-            <MapPin size={17} aria-hidden="true" />
-            {job.location}
-          </li>
-          <li>
-            <BriefcaseBusiness size={17} aria-hidden="true" />
-            {job.department}
-          </li>
-          <li>
-            <CalendarClock size={17} aria-hidden="true" />
-            {job.time}
-          </li>
-        </ul>
-      </header>
+    <article
+      className={embedded ? "career-detail career-detail--pane" : "career-container career-detail"}
+    >
+      {!embedded && (
+        <Link
+          to="/jobs"
+          search={jobSearch({ ...search, job: "", page: search.page ?? "" })}
+          className="career-text-link career-back"
+        >
+          <ArrowLeft size={17} aria-hidden="true" />
+          Danh sách việc làm
+        </Link>
+      )}
 
       <div className="career-detail__layout">
-        <div className="career-detail__main">
-          <section aria-labelledby="detail-description">
-            <h2 id="detail-description">Mô tả công việc</h2>
-            <p>{job.description}</p>
-          </section>
+        <div className="career-detail__sheet">
+          <header className="career-detail__header">
+            <div className="career-detail__company">
+              <CompanyMark name={job.company} />
+              <div>
+                <p>{job.company}</p>
+                <span className={badgeClass(job)}>{badgeLabel(job.badge)}</span>
+              </div>
+            </div>
+            <h1>{job.title}</h1>
+            <ul className="career-detail__meta">
+              <li>
+                <Banknote size={17} aria-hidden="true" />
+                <strong>{job.salaryRange}</strong>
+              </li>
+              <li>
+                <MapPin size={17} aria-hidden="true" />
+                {job.location}
+              </li>
+              <li>
+                <BriefcaseBusiness size={17} aria-hidden="true" />
+                {job.department}
+              </li>
+              <li>
+                <CalendarClock size={17} aria-hidden="true" />
+                {job.time}
+              </li>
+            </ul>
+          </header>
 
-          <section aria-labelledby="detail-requirements">
-            <h2 id="detail-requirements">Yêu cầu ứng viên</h2>
-            {job.requirements.length ? (
-              <ul>
-                {job.requirements.map((requirement) => (
-                  <li key={requirement}>{requirement}</li>
-                ))}
-              </ul>
-            ) : (
-              <p>Nhà tuyển dụng chưa công bố yêu cầu chi tiết cho vị trí này.</p>
-            )}
-          </section>
+          <div className="career-detail__main">
+            <section aria-labelledby="detail-description">
+              <h2 id="detail-description">Mô tả công việc</h2>
+              <p>{job.description}</p>
+            </section>
 
-          <section aria-labelledby="detail-verification">
-            <h2 id="detail-verification">Ghi chú kiểm định</h2>
-            <p>{job.statutoryNote}</p>
-            <p>{job.suggestedRevision}</p>
-          </section>
+            <section aria-labelledby="detail-requirements">
+              <h2 id="detail-requirements">Yêu cầu ứng viên</h2>
+              {job.requirements.length ? (
+                <ul>
+                  {job.requirements.map((requirement) => (
+                    <li key={requirement}>{requirement}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p>Nhà tuyển dụng chưa công bố yêu cầu chi tiết cho vị trí này.</p>
+              )}
+            </section>
+
+            <section aria-labelledby="detail-verification">
+              <h2 id="detail-verification" className="career-detail__note-title">
+                <ShieldCheck size={17} aria-hidden="true" />
+                Ghi chú kiểm định
+              </h2>
+              <div className="career-detail__note">
+                <p>{job.statutoryNote}</p>
+                <p>{job.suggestedRevision}</p>
+              </div>
+            </section>
+          </div>
         </div>
 
         <aside className="career-detail__aside">
           <div className="career-apply-card">
             <h2>Ứng tuyển vị trí này</h2>
             {signedIn ? (
-              <>
-                <p>Mở hồ sơ ứng viên để chọn CV và gửi đơn cho vị trí này.</p>
-                <Link
-                  to="/candidate/jobs"
-                  search={{ q: "", location: "", job: job.id }}
-                  className="career-button"
-                >
-                  Mở hồ sơ ứng tuyển
-                  <ArrowRight size={18} aria-hidden="true" />
-                </Link>
-              </>
+              applied ? (
+                <>
+                  <p>Hồ sơ của bạn đã được gửi tới nhà tuyển dụng cho vị trí này.</p>
+                  <span className="career-applied-state">
+                    <CheckCircle2 size={18} aria-hidden="true" />
+                    Đã nộp hồ sơ
+                  </span>
+                </>
+              ) : (
+                <>
+                  <p>Mở hồ sơ ứng viên để chọn CV và gửi đơn cho vị trí này.</p>
+                  <Link
+                    to="/candidate/jobs/apply"
+                    search={{ job: job.id }}
+                    className="career-button"
+                  >
+                    Ứng tuyển ngay
+                    <ArrowRight size={18} aria-hidden="true" />
+                  </Link>
+                </>
+              )
             ) : (
               <>
                 <p>
@@ -503,7 +652,9 @@ function JobDetail({
             )}
             <p className="career-apply-card__note">
               <ShieldCheck size={16} aria-hidden="true" />
-              Nộp hồ sơ chỉ dành cho ứng viên đã đăng nhập.
+              {signedIn
+                ? "Đơn ứng tuyển được gửi trực tiếp tới nhà tuyển dụng."
+                : "Nộp hồ sơ chỉ dành cho ứng viên đã đăng nhập."}
             </p>
           </div>
 
@@ -544,42 +695,34 @@ function JobDetail({
         </aside>
       </div>
 
-      <section className="career-similar" aria-labelledby="similar-title">
-        <h2 id="similar-title">Việc làm tương tự</h2>
-        <div className="career-job-grid">
-          {similar.map((related) => (
-            <Link
-              key={related.id}
-              to="/jobs"
-              search={jobSearch({ ...search, job: related.id })}
-              className="career-job career-job--interactive"
-              aria-label={`${related.title} — ${related.company}`}
-            >
-              <div className="career-job__company">
-                <CompanyMark name={related.company} />
-                <span>{related.company}</span>
-                <ArrowRight size={18} className="career-job__arrow" aria-hidden="true" />
-              </div>
-              <h3>{related.title}</h3>
-              <p className="career-job__salary">{related.salaryRange}</p>
-              <p className="career-job__location">
-                <MapPin size={15} aria-hidden="true" />
-                {related.location}
-              </p>
-              <div className="career-job__bottom">
-                <span>{related.department}</span>
-                <span aria-hidden="true">Xem chi tiết</span>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
+      {!embedded && similar.length > 0 && (
+        <section className="career-similar" aria-labelledby="similar-title">
+          <h2 id="similar-title">Việc làm tương tự</h2>
+          <div className="career-job-grid">
+            {similar.map((related) => (
+              <JobCard
+                key={related.id}
+                job={related}
+                search={search}
+                onSelect={() =>
+                  void navigate({
+                    to: "/jobs",
+                    search: jobSearch({ ...search, job: related.id }),
+                    resetScroll: false,
+                  })
+                }
+              />
+            ))}
+          </div>
+        </section>
+      )}
     </article>
   );
 }
 
-function MissingJob({ search }: { search: JobSearchParams }) {
-  const suggestions = JOBS.filter((job) => !isSampleListing(job)).slice(0, 3);
+function MissingJob({ search, jobs }: { search: JobSearchParams; jobs: JobItem[] }) {
+  const navigate = useNavigate({ from: "/jobs" });
+  const suggestions = jobs.filter((job) => !isSampleListing(job)).slice(0, 3);
   return (
     <section className="career-container career-detail">
       <Link
@@ -606,32 +749,27 @@ function MissingJob({ search }: { search: JobSearchParams }) {
           </Link>
         </div>
       </div>
-      <section className="career-similar" aria-labelledby="missing-similar-title">
-        <h2 id="missing-similar-title">Việc làm khác</h2>
-        <div className="career-job-grid">
-          {suggestions.map((job) => (
-            <Link
-              key={job.id}
-              to="/jobs"
-              search={jobSearch({ ...search, job: job.id })}
-              className="career-job career-job--interactive"
-              aria-label={`${job.title} — ${job.company}`}
-            >
-              <div className="career-job__company">
-                <CompanyMark name={job.company} />
-                <span>{job.company}</span>
-                <ArrowRight size={18} className="career-job__arrow" aria-hidden="true" />
-              </div>
-              <h3>{job.title}</h3>
-              <p className="career-job__salary">{job.salaryRange}</p>
-              <p className="career-job__location">
-                <MapPin size={15} aria-hidden="true" />
-                {job.location}
-              </p>
-            </Link>
-          ))}
-        </div>
-      </section>
+      {suggestions.length > 0 && (
+        <section className="career-similar" aria-labelledby="missing-similar-title">
+          <h2 id="missing-similar-title">Việc làm khác</h2>
+          <div className="career-job-grid">
+            {suggestions.map((job) => (
+              <JobCard
+                key={job.id}
+                job={job}
+                search={search}
+                onSelect={() =>
+                  void navigate({
+                    to: "/jobs",
+                    search: jobSearch({ ...search, job: job.id }),
+                    resetScroll: false,
+                  })
+                }
+              />
+            ))}
+          </div>
+        </section>
+      )}
     </section>
   );
 }

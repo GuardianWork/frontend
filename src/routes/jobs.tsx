@@ -14,7 +14,7 @@ export const Route = createFileRoute("/jobs")({
       {
         name: "description",
         content:
-          "Tìm việc làm theo vị trí, kỹ năng, ngành nghề, địa điểm và mức lương tại Việt Nam. Xem tin tuyển dụng không cần đăng ký.",
+          "Tìm việc làm theo vị trí, kỹ năng, ngành nghề, địa điểm và mức lương tại Việt Nam",
       },
     ],
   }),

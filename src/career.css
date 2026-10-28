@@ -487,6 +487,36 @@ body {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 18px;
 }
+/* Keyword search: scan the stack on the left, read the selected listing on the right. */
+.career-split {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  align-items: start;
+  gap: 24px;
+}
+.career-split__stack {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.career-split__detail {
+  min-width: 0;
+}
+@media (min-width: 951px) {
+  .career-split__detail {
+    position: sticky;
+    top: 96px;
+    max-height: calc(100dvh - 112px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-rule-2) transparent;
+  }
+}
 .career-job {
   display: flex;
   flex-direction: column;
@@ -562,6 +592,17 @@ body {
 .career-job__bottom span:last-child {
   color: var(--color-accent);
   white-space: nowrap;
+}
+.career-job__link {
+  color: inherit;
+}
+.career-job__link:hover {
+  color: var(--color-accent);
+}
+.career-job__link:focus-visible {
+  border-radius: 4px;
+  outline: 3px solid var(--color-accent);
+  outline-offset: 3px;
 }
 .career-fields {
   background: var(--color-paper-2);
@@ -2222,6 +2263,11 @@ body {
 }
 .career-job--interactive {
   min-width: 0;
+  cursor: pointer;
+}
+.career-job--interactive.is-active {
+  border-color: var(--color-accent);
+  background: var(--color-accent-subtle);
 }
 .career-job--interactive .career-job__company {
   min-width: 0;
@@ -2346,19 +2392,38 @@ body {
   margin-top: 6px;
 }
 .career-detail {
-  padding-block: 26px 56px;
+  padding-block: 28px 56px;
 }
 .career-back {
-  margin-bottom: 20px;
+  margin-bottom: 18px;
   font-size: 14px;
+}
+.career-detail__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+  align-items: start;
+  column-gap: 24px;
+}
+.career-detail__sheet {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 .career-detail__header {
   display: grid;
-  gap: 14px;
-  padding: 26px;
+  gap: 15px;
+  min-width: 0;
+  padding: 28px;
   border: 1px solid var(--color-rule);
-  border-radius: 16px;
+  border-bottom: 0;
+  border-radius: 16px 16px 0 0;
   background: var(--color-paper);
+}
+.career-detail__header .career-company-mark {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  font-size: 18px;
 }
 .career-detail__company {
   display: flex;
@@ -2375,7 +2440,7 @@ body {
   display: inline-block;
 }
 .career-detail h1 {
-  font-size: clamp(26px, 3vw, 36px);
+  font-size: clamp(26px, 2.6vw, 36px);
   font-weight: 800;
   letter-spacing: -0.03em;
   line-height: 1.24;
@@ -2405,20 +2470,13 @@ body {
   color: var(--color-accent);
   font-weight: 700;
 }
-.career-detail__layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
-  align-items: start;
-  gap: 24px;
-  margin-top: 24px;
-}
 .career-detail__main {
   display: grid;
-  gap: 22px;
+  gap: 26px;
   min-width: 0;
   padding: 28px;
   border: 1px solid var(--color-rule);
-  border-radius: 16px;
+  border-radius: 0 0 16px 16px;
   background: var(--color-paper);
 }
 .career-detail__main h2 {
@@ -2448,12 +2506,36 @@ body {
 .career-detail__main li::marker {
   color: var(--color-accent);
 }
+.career-detail__note-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.career-detail__note-title svg {
+  flex-shrink: 0;
+  color: var(--color-accent);
+}
+.career-detail__note {
+  display: grid;
+  gap: 10px;
+  padding: 16px 18px;
+  border-radius: 12px;
+  background: var(--color-paper-2);
+}
+.career-detail__note p {
+  font-size: 14px;
+  line-height: 1.7;
+}
+.career-detail__main .career-detail__note p + p {
+  margin-top: 0;
+}
 .career-detail__aside {
   position: sticky;
   top: 96px;
   display: grid;
   gap: 18px;
   min-width: 0;
+  align-self: start;
 }
 .career-apply-card {
   display: grid;
@@ -2544,6 +2626,56 @@ body {
   margin-top: 2px;
   color: var(--color-accent);
 }
+/* The same listing detail, compacted into the two-column reading pane. */
+.career-detail--pane {
+  padding-block: 0;
+}
+.career-detail--pane .career-detail__layout {
+  grid-template-columns: minmax(0, 1fr);
+  column-gap: 0;
+  row-gap: 16px;
+}
+.career-detail--pane .career-detail__sheet {
+  display: contents;
+}
+.career-detail--pane .career-detail__header {
+  order: 1;
+  padding: 22px;
+  border-bottom: 1px solid var(--color-rule);
+  border-radius: 16px;
+}
+.career-detail--pane h1 {
+  font-size: 24px;
+}
+.career-detail--pane .career-detail__aside {
+  display: contents;
+}
+.career-detail--pane .career-apply-card {
+  order: 2;
+}
+.career-detail--pane .career-detail__main {
+  order: 3;
+  gap: 22px;
+  padding: 22px;
+  border-radius: 16px;
+}
+.career-detail--pane .career-facts {
+  order: 4;
+}
+.career-applied-state {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border: 1px solid color-mix(in oklab, var(--color-mint) 30%, var(--color-paper));
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--color-mint) 12%, var(--color-paper));
+  color: var(--color-mint);
+  font-size: 14px;
+  font-weight: 700;
+}
 .career-similar {
   margin-top: 40px;
 }
@@ -2566,11 +2698,41 @@ body {
   .career-discovery__note {
     white-space: normal;
   }
+  .career-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .career-split__detail {
+    position: static;
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+  }
   .career-detail__layout {
     grid-template-columns: minmax(0, 1fr);
+    column-gap: 0;
+    row-gap: 16px;
+  }
+  .career-detail__sheet {
+    display: contents;
+  }
+  .career-detail__header {
+    order: 1;
+    border-bottom: 1px solid var(--color-rule);
+    border-radius: 16px;
   }
   .career-detail__aside {
     position: static;
+    display: contents;
+  }
+  .career-apply-card {
+    order: 2;
+  }
+  .career-detail__main {
+    order: 3;
+    border-radius: 16px;
+  }
+  .career-facts {
+    order: 4;
   }
 }
 @media (max-width: 640px) {
@@ -2634,11 +2796,6 @@ body {
 @media (max-width: 950px) {
   /* The card arrow is decorative once the whole card is a tap target. */
   .career-job--interactive .career-job__arrow { display: none; }
-  /* The apply card leads, the description follows, the facts panel closes the column. */
-  .career-detail__aside { display: contents; }
-  .career-apply-card { order: 1; }
-  .career-detail__main { order: 2; }
-  .career-facts { order: 3; }
 }
 @media (max-width: 640px) {
   .career-discovery__lede { display: none; }
