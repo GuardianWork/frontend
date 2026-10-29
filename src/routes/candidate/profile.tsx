@@ -50,7 +50,7 @@ const PHONE_PATTERN = /^0\d{9}$/;
 export const Route = createFileRoute("/candidate/profile")({
   head: () => ({
     meta: [
-      { title: "Hồ sơ năng lực & quyền lợi bảo vệ — GuardianWork" },
+      { title: "Hồ sơ cá nhân — GuardianWork" },
       {
         name: "description",
         content:
@@ -318,7 +318,7 @@ function CandidateProfilePage() {
         <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0">
             <h1 className="text-[clamp(32px,3.8vw,52px)] font-extrabold leading-[1.2] tracking-[-0.035em] text-ink">
-              Hồ sơ năng lực & quyền lợi bảo vệ
+              Hồ sơ cá nhân
             </h1>
             <p className="mt-1.5 max-w-[62ch] text-sm leading-6 text-ink-2">
               Thông tin hiển thị với nhà tuyển dụng và trạng thái hồ sơ của bạn.
