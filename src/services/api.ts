@@ -13,7 +13,7 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiRequest(path: string, init: RequestInit = {}): Promise<unknown> {
+export async function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
   let response: Response;
   try {
     response = await fetch(`${getApiBaseUrl()}${path}`, {
@@ -30,6 +30,10 @@ export async function apiRequest(path: string, init: RequestInit = {}): Promise<
   } catch {
     throw new ApiError("Không thể kết nối dịch vụ. Vui lòng kiểm tra kết nối và thử lại.");
   }
+  return response;
+}
+
+export async function parseApiResponse(response: Response): Promise<unknown> {
   let body: { status?: number; message?: string; data?: unknown } | null = null;
   try {
     body = await response.json();
@@ -50,4 +54,8 @@ export async function apiRequest(path: string, init: RequestInit = {}): Promise<
     throw new ApiError("Phản hồi từ dịch vụ không hợp lệ. Vui lòng thử lại sau.");
   }
   return body.data;
+}
+
+export async function apiRequest(path: string, init: RequestInit = {}): Promise<unknown> {
+  return parseApiResponse(await apiFetch(path, init));
 }

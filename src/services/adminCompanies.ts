@@ -1,6 +1,6 @@
-import { getAccessToken, getCurrentUser, isStaffUser } from "./auth";
-import { getApiBaseUrl } from "./api";
-import { DEFAULT_PAGE_SIZE } from "../lib/pagination.ts";
+import { authenticatedRequest, getCurrentUser, isStaffUser } from "./auth.ts";
+import { ApiError } from "./api.ts";
+export const VERIFICATION_PAGE_SIZE = 20;
 
 export type VerificationStatus = "REGISTERED" | "PENDING" | "VERIFIED" | "REJECTED";
 export type VerificationFilter = "PENDING" | "VERIFIED" | "REJECTED" | "ALL";
@@ -16,6 +16,8 @@ export interface AdminCompany {
   verifiedAt: string | null;
   version: number;
   createdAt: string | null;
+  processingStatus?: "PENDING" | "CHECKED";
+  reviewOutcome?: "VERIFIED" | "REJECTED" | null;
 }
 export interface VerificationPage {
   content: AdminCompany[];
@@ -27,90 +29,62 @@ export interface VerificationPage {
   last: boolean;
 }
 export class AdminApiError extends Error {
-  constructor(
-    message: string,
-    public status = 0,
-    public conflict = false,
-  ) {
+  status: number;
+  conflict: boolean;
+  constructor(message: string, status = 0, conflict = false) {
     super(message);
+    this.status = status;
+    this.conflict = conflict;
   }
 }
-async function authorization() {
-  try {
-    const token = await getAccessToken();
-    if (!isStaffUser(getCurrentUser()))
-      throw new AdminApiError("Tài khoản hiện tại không có quyền quản trị.", 403);
-    return { Authorization: `Bearer ${token}` };
-  } catch (error) {
-    if (error instanceof AdminApiError) throw error;
-    throw new AdminApiError("Không đọc được phiên đăng nhập. Vui lòng đăng nhập lại.", 401);
-  }
-}
-async function request(path: string, init: RequestInit = {}): Promise<unknown> {
-  const baseUrl = getApiBaseUrl();
-  const headers = {
-    ...(await authorization()),
-    Accept: "application/json",
-    ...(init.body ? { "Content-Type": "application/json" } : {}),
-  };
-  let response: Response;
-  try {
-    response = await fetch(`${baseUrl}/staff/companies${path}`, {
-      ...init,
-      headers,
-      signal: init.signal || AbortSignal.timeout(20000),
-    });
-  } catch (error) {
-    if (init.signal?.aborted) throw error;
-    throw new AdminApiError("Không kết nối được dịch vụ xác minh. Kiểm tra kết nối và thử lại.");
-  }
-  let payload: { data?: unknown; message?: string; status?: number } | null = null;
-  try {
-    payload = await response.json();
-  } catch {
-    /* The server may return an HTML error. */
-  }
-  const status = !response.ok
-    ? response.status
-    : payload?.status && payload.status >= 400
-      ? payload.status
-      : 200;
-  if (status !== 200) {
-    const message = payload?.message || "";
-    if (status === 409 || message.includes("CONCURRENT_MODIFICATION"))
-      throw new AdminApiError(
-        "Hồ sơ đã được thay đổi bởi người khác. Tải lại danh sách và mở lại hồ sơ trước khi quyết định.",
-        status,
-        true,
-      );
-    if (status === 401)
-      throw new AdminApiError("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.", status);
-    if (status === 403)
-      throw new AdminApiError("Bạn không có quyền xem hoặc xét duyệt hồ sơ này.", status);
-    if (message.includes("COMPANY_NOT_PENDING"))
-      throw new AdminApiError(
-        "Hồ sơ không còn ở trạng thái chờ duyệt. Vui lòng tải lại danh sách.",
-        status,
-        true,
-      );
-    if (message.includes("INVALID_REJECTION_REASON"))
-      throw new AdminApiError(
-        "Lý do từ chối phải dài từ 10 đến 1.000 ký tự sau khi bỏ khoảng trắng đầu và cuối.",
-        status,
-      );
-    if (status === 404)
-      throw new AdminApiError(
-        "Không tìm thấy dữ liệu yêu cầu. Vui lòng tải lại danh sách hoặc thử lại sau.",
-        status,
-      );
-    throw new AdminApiError(
-      "Không thể hoàn tất yêu cầu. Dữ liệu chưa được thay đổi; vui lòng thử lại.",
+export function staffError(error: unknown): AdminApiError {
+  if (error instanceof AdminApiError) return error;
+  const status = error instanceof ApiError ? error.status : 0;
+  const message = error instanceof Error ? error.message : "";
+  if (status === 401)
+    return new AdminApiError("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.", status);
+  if (status === 403)
+    return new AdminApiError(
+      "Bạn không có quyền truy cập. Kiểm tra tài khoản Staff và cấu hình cổng truy cập.",
       status,
     );
+  if (status === 409 || message.includes("CONCURRENT_MODIFICATION"))
+    return new AdminApiError(
+      "Hồ sơ đã được thay đổi bởi người khác. Tải lại danh sách và mở lại hồ sơ trước khi quyết định.",
+      status,
+      true,
+    );
+  if (message.includes("COMPANY_NOT_PENDING"))
+    return new AdminApiError("Hồ sơ đã được xét duyệt. Vui lòng tải lại danh sách.", status, true);
+  if (message.includes("INVALID_REJECTION_REASON"))
+    return new AdminApiError("Lý do từ chối phải dài từ 10 đến 1.000 ký tự.", status);
+  if (message.includes("DOCUMENT_UNAVAILABLE"))
+    return new AdminApiError("Tài liệu xác minh không còn khả dụng.", status);
+  if (status === 404)
+    return new AdminApiError(
+      "Công ty hoặc dữ liệu không còn khả dụng. Vui lòng tải lại danh sách.",
+      status,
+      true,
+    );
+  if (status === 400)
+    return new AdminApiError(
+      "Dữ liệu yêu cầu không hợp lệ. Kiểm tra lý do, phiên bản và bộ lọc.",
+      status,
+    );
+  return new AdminApiError(
+    "Không thể hoàn tất yêu cầu. Vui lòng tải lại dữ liệu và thử lại.",
+    status,
+  );
+}
+async function request(path: string, init: RequestInit = {}): Promise<unknown> {
+  try {
+    if (!isStaffUser(getCurrentUser()) && getCurrentUser())
+      throw new AdminApiError("Tài khoản hiện tại không có quyền truy cập Staff.", 403);
+    return await authenticatedRequest(`/staff/companies${path}`, init);
+  } catch (error) {
+    if (init.signal?.aborted) throw error;
+    throw staffError(error);
   }
-  if (!payload || payload.data == null)
-    throw new AdminApiError("Dịch vụ trả về dữ liệu không hợp lệ. Vui lòng thử lại.");
-  return payload.data;
 }
 function isCompany(value: unknown): value is AdminCompany {
   if (!value || typeof value !== "object") return false;
@@ -129,7 +103,7 @@ export async function getAdminVerifications(
   signal?: AbortSignal,
 ): Promise<VerificationPage> {
   const data = await request(
-    `/verifications?${new URLSearchParams({ status, page: String(page), size: String(DEFAULT_PAGE_SIZE) })}`,
+    `/verifications?${new URLSearchParams({ status, page: String(page), size: String(VERIFICATION_PAGE_SIZE) })}`,
     { signal },
   );
   const result = data as VerificationPage;
@@ -156,14 +130,22 @@ export async function decideAdminVerification(
   const trimmedReason = reason.trim();
   if (decision === "REJECTED" && (trimmedReason.length < 10 || trimmedReason.length > 1000))
     throw new AdminApiError("Lý do từ chối phải dài từ 10 đến 1.000 ký tự.");
-  const result = await request(`/${company.id}/${decision === "VERIFIED" ? "verify" : "reject"}`, {
-    method: "PUT",
-    body: JSON.stringify({
-      status: decision,
-      expectedVersion: company.version,
-      ...(decision === "REJECTED" ? { rejectionReason: trimmedReason } : {}),
-    }),
-  });
+  let result: unknown;
+  try {
+    result = await request(`/${company.id}/verify`, {
+      method: "PUT",
+      body: JSON.stringify({
+        status: decision,
+        expectedVersion: company.version,
+        ...(decision === "REJECTED" ? { rejectionReason: trimmedReason } : {}),
+      }),
+    });
+  } catch (error) {
+    const mapped = staffError(error);
+    // A lost response may follow a committed decision. Require fresh state before retry.
+    if (mapped.status === 0 || mapped.status >= 500) mapped.conflict = true;
+    throw mapped;
+  }
   if (!isCompany(result) || result.id !== company.id || result.verificationStatus !== decision)
     throw new AdminApiError(
       "Chưa xác nhận được kết quả xét duyệt. Vui lòng tải lại danh sách trước khi tiếp tục.",

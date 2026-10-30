@@ -202,7 +202,7 @@ test("a server 401 refreshes and retries once; revoked refresh tokens clear both
   browserSession({ ...tokenPair, expiresAt: 0 });
   globalThis.fetch = async () =>
     Response.json({ status: 401, message: "Revoked", data: null }, { status: 401 });
-  await assert.rejects(authenticatedRequest("/protected"), /Revoked/);
+  await assert.rejects(authenticatedRequest("/protected"), /đăng nhập lại/);
   assert.equal(sessionStorage.getItem(AUTH_SESSION_KEY), null);
   assert.ok(values.size);
   delete globalThis.sessionStorage;
@@ -222,7 +222,7 @@ test("logging out during token refresh never restores the signed-out session", a
   const refresh = refreshAuthSession();
   await logoutAccount();
   finish(Response.json({ status: 200, data: { ...tokenPair, accessToken: "rotated" } }));
-  await assert.rejects(refresh, /đã thay đổi/);
+  await assert.rejects(refresh, /đăng nhập lại/);
   assert.equal(sessionStorage.getItem(AUTH_SESSION_KEY), null);
   delete globalThis.sessionStorage;
 });

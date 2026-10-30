@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { ApiError } from "@/services/api";
-import { hasAuthSession, isStaffUser, loadCurrentUser } from "@/services/auth";
+import { AUTH_SESSION_EVENT, hasAuthSession, isStaffUser, loadCurrentUser } from "@/services/auth";
 import {
   EmployerOnboardingProvider,
   useEmployerOnboarding,
@@ -44,6 +44,13 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const [onboarding, setOnboarding] = useState<EmployerOnboarding | null>(null);
   const [retry, setRetry] = useState(0);
   const reload = useCallback(() => setRetry((value) => value + 1), []);
+  useEffect(() => {
+    const sessionChanged = () => {
+      if (!hasAuthSession()) reload();
+    };
+    window.addEventListener(AUTH_SESSION_EVENT, sessionChanged);
+    return () => window.removeEventListener(AUTH_SESSION_EVENT, sessionChanged);
+  }, [reload]);
   useEffect(() => {
     if (
       (getMemberEmailSecret() || getInvitationSecret()) &&

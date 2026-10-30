@@ -132,3 +132,13 @@ UI_BASE_URL=http://localhost:5137 npm run test:ui
 ```
 
 Vite dùng cache riêng theo lệnh và chế độ chạy để `dev`, `dev:mock` và `build` không ghi đè các module React của nhau. Nếu tab đã mở trước khi đổi cấu hình, tải lại trang.
+
+## Staff company verification
+
+Staff dùng `/api/staff/companies/verifications`, lịch sử `/api/staff/companies/{id}/verification-history` và quyết định `PUT /api/staff/companies/{id}/verify`. Cả phê duyệt và từ chối gửi `expectedVersion`; sau xung đột hoặc mất phản hồi, tải lại danh sách và mở lại hồ sơ trước khi quyết định tiếp. Lịch sử rỗng vẫn cho phép xét duyệt hồ sơ cũ. Tải tài liệu nội bộ qua authenticated fetch; URL ngoài không nhận bearer token.
+
+Với backend thật và local demo seed, đăng nhập `demo_staff` / `GuardWork123!`. Mock vẫn dùng tài khoản và mật khẩu mock được liệt kê ở trên.
+
+Khi triển khai Staff, dùng API cùng origin (`VITE_API_BASE_URL=/api`) và cấu hình gateway theo [`deploy/staff-gateway.conf`](deploy/staff-gateway.conf). Include snippet trong HTTPS server block Staff, thay backend upstream cho đúng môi trường và kiểm tra `nginx -t` trước khi reload. Gateway giữ nguyên `/api` và **ghi đè** `X-Guardian-Portal: staff`, kể cả khi client tự gửi header khác. Gateway của public portal phải ghi đè thành `public`. Header chỉ cung cấp ngữ cảnh; backend vẫn phải kiểm tra Platform role `STAFF` trong token. Không trỏ trình duyệt trực tiếp đến backend để thay thế gateway này.
+
+Hợp đồng backend được cung cấp cho lần tích hợp này tham chiếu `docs/software-requirements/auth/portal-routing-contract.md`; file đó không có trong repository frontend. Việc triển khai gateway và smoke test với backend/demo seed thật cần được thực hiện trong môi trường triển khai tương ứng.

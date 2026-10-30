@@ -433,11 +433,11 @@ export function createMockApiServer({ deliverMemberEmail = () => true } = {}) {
         send(403, "Admin required");
         return;
       }
-      const status = url.searchParams.get("status");
-      const content = companies.filter(
-        (company) => !status || status === "ALL" || company.verificationStatus === status,
-      );
-      const pageSize = Math.max(1, Math.min(100, Number(url.searchParams.get("size")) || 10));
+      const status = url.searchParams.get("status") || "PENDING";
+      const content = companies
+        .filter((company) => status === "ALL" || company.verificationStatus === status)
+        .sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id - b.id);
+      const pageSize = Math.max(1, Math.min(100, Number(url.searchParams.get("size")) || 20));
       const pageNumber = Math.max(0, Number(url.searchParams.get("page")) || 0);
       const totalPages = Math.ceil(content.length / pageSize);
       send(200, "ok", {
@@ -449,6 +449,19 @@ export function createMockApiServer({ deliverMemberEmail = () => true } = {}) {
         first: pageNumber === 0,
         last: pageNumber >= totalPages - 1,
       });
+      return;
+    }
+    const historyMatch = /^\/api\/admin\/companies\/(\d+)\/verification-history$/.exec(path);
+    if (req.method === "GET" && historyMatch) {
+      if (user.role !== "STAFF") {
+        send(403, "Staff required");
+        return;
+      }
+      if (!companies.some((company) => company.id === Number(historyMatch[1]))) {
+        send(404, "COMPANY_NOT_FOUND");
+        return;
+      }
+      send(200, "ok", []);
       return;
     }
     const adminDecision = /^\/api\/admin\/companies\/(\d+)\/(verify|reject)$/.exec(path);
@@ -467,7 +480,7 @@ export function createMockApiServer({ deliverMemberEmail = () => true } = {}) {
         return;
       }
       if (
-        adminDecision[2] === "reject" &&
+        (adminDecision[2] === "reject" || body.status === "REJECTED") &&
         (typeof body.rejectionReason !== "string" ||
           body.rejectionReason.trim().length < 10 ||
           body.rejectionReason.trim().length > 1000)
@@ -476,8 +489,12 @@ export function createMockApiServer({ deliverMemberEmail = () => true } = {}) {
         return;
       }
       Object.assign(company, {
-        verificationStatus: adminDecision[2] === "verify" ? "VERIFIED" : "REJECTED",
-        rejectionReason: adminDecision[2] === "reject" ? body.rejectionReason.trim() : null,
+        verificationStatus:
+          adminDecision[2] === "reject" || body.status === "REJECTED" ? "REJECTED" : "VERIFIED",
+        rejectionReason:
+          adminDecision[2] === "reject" || body.status === "REJECTED"
+            ? body.rejectionReason.trim()
+            : null,
         version: company.version + 1,
         verifiedBy: user.id,
         verifiedAt: new Date().toISOString(),

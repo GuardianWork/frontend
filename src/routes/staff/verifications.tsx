@@ -1,3 +1,5 @@
+import { dossierDate as date } from "@/lib/dossier-date";
+import { DossierHistory, LegacyEvidence } from "@/components/staff/DossierHistory";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { AlertCircle, ArrowLeft, ArrowRight, Database, RotateCcw } from "lucide-react";
@@ -10,6 +12,7 @@ import { useListPagination } from "@/hooks/useListPagination";
 import { matchesSearch } from "@/lib/list-search";
 import {
   AdminApiError,
+  VERIFICATION_PAGE_SIZE,
   decideAdminVerification,
   getAdminVerifications,
   type AdminCompany,
@@ -50,17 +53,6 @@ const STATUS_OPTIONS: { id: VerificationFilter; label: string }[] = [
   { id: "REJECTED", label: "Đã từ chối" },
   { id: "ALL", label: "Tất cả" },
 ];
-function date(value: string | null) {
-  if (!value) return "Chưa có thông tin";
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime())
-    ? "Chưa có thông tin"
-    : new Intl.DateTimeFormat("vi-VN", {
-        dateStyle: "medium",
-        timeStyle: "short",
-        timeZone: "Asia/Ho_Chi_Minh",
-      }).format(parsed);
-}
 function AdminVerificationsPage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
@@ -190,7 +182,14 @@ function AdminVerificationsPage() {
     setDialogOpen(true);
   };
   const submitDecision = async () => {
-    if (!selected || selected.verificationStatus !== "PENDING" || mockMode) return;
+    if (
+      !selected ||
+      selected.verificationStatus !== "PENDING" ||
+      mockMode ||
+      saving ||
+      decisionError?.conflict
+    )
+      return;
     setSaving(true);
     setDecisionError(null);
     try {
@@ -216,18 +215,14 @@ function AdminVerificationsPage() {
     }
   };
   const reloadAfterConflict = () => {
+    setRows([]);
+    setLoading(true);
     setSelected(null);
+    setDialogOpen(false);
     setDecisionError(null);
     setNotice("Danh sách đang được tải lại để lấy trạng thái mới nhất.");
     retry();
   };
-  const certificateValue = selected?.registrationCertificateUrl;
-  const certificateHref =
-    certificateValue &&
-    (/^https?:\/\//i.test(certificateValue) ||
-      (certificateValue.startsWith("/") && !certificateValue.startsWith("//")))
-      ? certificateValue
-      : null;
   return (
     <AdminShell title="Hồ sơ xác minh công ty" role="admin">
       {!selected ? (
@@ -385,6 +380,7 @@ function AdminVerificationsPage() {
               onPageChange={
                 mockMode ? mockPagination.onPageChange : (page) => updateSearch({ page })
               }
+              pageSize={mockMode ? undefined : VERIFICATION_PAGE_SIZE}
               itemLabel="hồ sơ"
               label="Phân trang hồ sơ xác minh"
               standalone
@@ -397,6 +393,11 @@ function AdminVerificationsPage() {
             type="button"
             className="admin-text-link mb-5"
             onClick={() => {
+              if (decisionError?.conflict) {
+                setRows([]);
+                setLoading(true);
+                retry();
+              }
               setSelected(null);
               setNotice(null);
             }}
@@ -476,18 +477,7 @@ function AdminVerificationsPage() {
               <div className="admin-company-fields-wide">
                 <dt>Giấy đăng ký công ty</dt>
                 <dd>
-                  {certificateHref ? (
-                    <a
-                      href={certificateHref}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="admin-text-link"
-                    >
-                      Mở đường dẫn giấy đăng ký <ArrowRight size={16} />
-                    </a>
-                  ) : (
-                    "Chưa có đường dẫn tài liệu trong hồ sơ."
-                  )}
+                  <LegacyEvidence value={selected.registrationCertificateUrl} />
                 </dd>
               </div>
               {selected.verificationStatus === "REJECTED" && (
@@ -498,6 +488,9 @@ function AdminVerificationsPage() {
               )}
             </dl>
           </section>
+          {!mockMode && (
+            <DossierHistory key={selected.id} companyId={selected.id} revision={reload} />
+          )}
           {selected.verificationStatus === "PENDING" && !mockMode && (
             <div className="admin-decision-actions">
               <p>Chỉ hồ sơ đang chờ duyệt mới có thể được quyết định.</p>
@@ -505,6 +498,7 @@ function AdminVerificationsPage() {
                 <button
                   type="button"
                   className="admin-secondary-action"
+                  disabled={saving || decisionError?.conflict}
                   onClick={() => openDecision("REJECTED")}
                 >
                   Từ chối hồ sơ
@@ -512,6 +506,7 @@ function AdminVerificationsPage() {
                 <button
                   type="button"
                   className="admin-primary-action"
+                  disabled={saving || decisionError?.conflict}
                   onClick={() => openDecision("VERIFIED")}
                 >
                   Phê duyệt <ArrowRight size={16} />
@@ -576,6 +571,7 @@ function AdminVerificationsPage() {
                     className="admin-primary-action"
                     disabled={
                       saving ||
+                      decisionError?.conflict ||
                       (decision === "REJECTED" &&
                         (reason.trim().length < 10 || reason.trim().length > 1000))
                     }
