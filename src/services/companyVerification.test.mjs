@@ -11,8 +11,13 @@ const originalFetch = globalThis.fetch;
 const request = {
   name: " Alpha ",
   taxCode: "0100000001",
-  email: " HR@Example.test ",
-  registrationCertificateUrl: "https://example.test/license.pdf",
+  legal: {
+    workAddress: " Address ",
+    submitterPosition: " Owner ",
+    representation: "LEGAL_REPRESENTATIVE",
+    declarationAccepted: true,
+  },
+  file: new File(["%PDF-1.4 test"], "license.pdf", { type: "application/pdf" }),
 };
 const user = {
   id: 1,
@@ -56,16 +61,23 @@ test("company creation sends exactly the supported fields with Bearer auth and u
   globalThis.fetch = async (url, init) => {
     assert.equal(url, "/api/companies/verification-request");
     assert.equal(init.headers.Authorization, "Bearer access");
-    assert.deepEqual(JSON.parse(init.body), {
+    assert.ok(init.body instanceof FormData);
+    assert.equal(init.headers["Content-Type"], undefined);
+    assert.equal(init.body.get("file").name, "license.pdf");
+    assert.deepEqual(JSON.parse(await init.body.get("dossier").text()), {
       name: "Alpha",
       taxCode: request.taxCode,
-      email: "hr@example.test",
-      registrationCertificateUrl: request.registrationCertificateUrl,
+      legal: { ...request.legal, workAddress: "Address", submitterPosition: "Owner" },
     });
     return Response.json(
       {
         status: 200,
-        data: { ...JSON.parse(init.body), id: 987, verificationStatus: "PENDING", version: 3 },
+        data: {
+          ...JSON.parse(await init.body.get("dossier").text()),
+          id: 987,
+          verificationStatus: "PENDING",
+          version: 3,
+        },
       },
       { status: 201 },
     );
@@ -112,7 +124,9 @@ test("owner verification reloads server state and resubmission uses companyId an
   globalThis.fetch = async (url, init) => {
     if (init.method === "PUT") {
       assert.equal(url, "/api/companies/12/resubmit");
-      assert.equal(JSON.parse(init.body).expectedVersion, 4);
+      const dossier = JSON.parse(await init.body.get("dossier").text());
+      assert.equal(dossier.expectedVersion, 4);
+      assert.equal(dossier.taxCode, undefined);
       return Response.json({
         status: 200,
         data: { ...request, companyId: 12, verificationStatus: "PENDING", version: 5 },
@@ -147,9 +161,9 @@ test("missing sessions and browser-only documents never send company creation re
   await assert.rejects(
     submitVerification({
       ...request,
-      registrationCertificateUrl: "data:application/pdf;base64,aaa",
+      file: new File([], "empty.pdf", { type: "application/pdf" }),
     }),
-    /URL/,
+    /10 MiB/,
   );
   sessionStorage.removeItem(AUTH_SESSION_KEY);
   await assert.rejects(submitVerification(request), /đăng nhập/);

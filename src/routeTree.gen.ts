@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as CandidatesRouteImport } from './routes/candidates'
+import { Route as CompanyInvitationsRouteImport } from './routes/company-invitations'
 import { Route as ComplianceRouteImport } from './routes/compliance'
 import { Route as CopilotRouteImport } from './routes/copilot'
 import { Route as JobsRouteImport } from './routes/jobs'
@@ -72,6 +73,11 @@ const AnalyticsRoute = AnalyticsRouteImport.update({
 const CandidatesRoute = CandidatesRouteImport.update({
   id: '/candidates',
   path: '/candidates',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompanyInvitationsRoute = CompanyInvitationsRouteImport.update({
+  id: '/company-invitations',
+  path: '/company-invitations',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ComplianceRoute = ComplianceRouteImport.update({
@@ -309,6 +315,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
   '/candidates': typeof CandidatesRoute
+  '/company-invitations': typeof CompanyInvitationsRoute
   '/compliance': typeof ComplianceRoute
   '/copilot': typeof CopilotRoute
   '/jobs': typeof JobsRoute
@@ -360,6 +367,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
   '/candidates': typeof CandidatesRoute
+  '/company-invitations': typeof CompanyInvitationsRoute
   '/compliance': typeof ComplianceRoute
   '/copilot': typeof CopilotRoute
   '/jobs': typeof JobsRoute
@@ -412,6 +420,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
   '/candidates': typeof CandidatesRoute
+  '/company-invitations': typeof CompanyInvitationsRoute
   '/compliance': typeof ComplianceRoute
   '/copilot': typeof CopilotRoute
   '/jobs': typeof JobsRoute
@@ -465,6 +474,7 @@ export interface FileRouteTypes {
     | '/'
     | '/analytics'
     | '/candidates'
+    | '/company-invitations'
     | '/compliance'
     | '/copilot'
     | '/jobs'
@@ -516,6 +526,7 @@ export interface FileRouteTypes {
     | '/'
     | '/analytics'
     | '/candidates'
+    | '/company-invitations'
     | '/compliance'
     | '/copilot'
     | '/jobs'
@@ -567,6 +578,7 @@ export interface FileRouteTypes {
     | '/'
     | '/analytics'
     | '/candidates'
+    | '/company-invitations'
     | '/compliance'
     | '/copilot'
     | '/jobs'
@@ -619,6 +631,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnalyticsRoute: typeof AnalyticsRoute
   CandidatesRoute: typeof CandidatesRoute
+  CompanyInvitationsRoute: typeof CompanyInvitationsRoute
   ComplianceRoute: typeof ComplianceRoute
   CopilotRoute: typeof CopilotRoute
   JobsRoute: typeof JobsRoute
@@ -688,6 +701,13 @@ declare module '@tanstack/react-router' {
       path: '/candidates'
       fullPath: '/candidates'
       preLoaderRoute: typeof CandidatesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/company-invitations': {
+      id: '/company-invitations'
+      path: '/company-invitations'
+      fullPath: '/company-invitations'
+      preLoaderRoute: typeof CompanyInvitationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/compliance': {
@@ -1019,6 +1039,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnalyticsRoute: AnalyticsRoute,
   CandidatesRoute: CandidatesRoute,
+  CompanyInvitationsRoute: CompanyInvitationsRoute,
   ComplianceRoute: ComplianceRoute,
   CopilotRoute: CopilotRoute,
   JobsRoute: JobsRoute,

@@ -39,7 +39,11 @@ export const MOCK_ACCOUNTS = [
 
 /** In-memory fixtures, available only through npm run dev:mock. */
 export function createMockApiServer() {
-  const users = MOCK_ACCOUNTS.map((user) => ({ ...user, password: MOCK_PASSWORD }));
+  const users = MOCK_ACCOUNTS.map((user) => ({
+    ...user,
+    emailVerified: true,
+    password: MOCK_PASSWORD,
+  }));
   const accessTokens = new Map();
   const refreshTokens = new Map();
   const companies = [
@@ -120,12 +124,18 @@ export function createMockApiServer() {
       let raw = "";
       for await (const chunk of req) {
         raw += chunk;
-        if (raw.length > 32768) {
+        if (raw.length > 11 * 1024 * 1024) {
           send(413, "Request too large");
           return;
         }
       }
-      if (raw) body = JSON.parse(raw);
+      if (raw && req.headers["content-type"]?.startsWith("multipart/form-data")) {
+        const form = await new Response(raw, {
+          headers: { "Content-Type": req.headers["content-type"] },
+        }).formData();
+        body = JSON.parse(await form.get("dossier").text());
+        body.file = form.get("file");
+      } else if (raw) body = JSON.parse(raw);
     } catch {
       send(400, "Invalid JSON");
       return;
@@ -162,6 +172,7 @@ export function createMockApiServer() {
         email: body.email.toLowerCase(),
         password: body.password,
         role: "USER",
+        emailVerified: false,
       };
       users.push(user);
       send(201, "User registered successfully", userDto(user));
@@ -208,10 +219,29 @@ export function createMockApiServer() {
       send(200, "Current user retrieved successfully", {
         ...userDto(user),
         activeMembership: membership(user),
+        emailVerified: user.emailVerified,
+        recruitingEmailEligible: user.emailVerified,
+      });
+      return;
+    }
+    if (req.method === "POST" && path === "/api/me/email-verification/request") {
+      send(200, "Mock delivery unavailable", {
+        deliveryAccepted: false,
+        alreadyVerified: user.emailVerified,
+        nextRequestAt: new Date(Date.now() + 60000).toISOString(),
+        expiresAt: new Date(Date.now() + 600000).toISOString(),
       });
       return;
     }
     if (req.method === "POST" && path === "/api/companies/verification-request") {
+      if (!body.file) {
+        send(410, "41030 ONBOARDING_RETIRED");
+        return;
+      }
+      if (!user.emailVerified) {
+        send(403, "40335 EMAIL_VERIFICATION_REQUIRED");
+        return;
+      }
       if (membership(user)) {
         send(409, "Tài khoản đã là thành viên công ty.");
         return;
@@ -219,18 +249,15 @@ export function createMockApiServer() {
       if (
         !body.name?.trim() ||
         !body.taxCode?.trim() ||
-        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email || "") ||
-        !/^https?:\/\//.test(body.registrationCertificateUrl || "")
+        !body.legal?.workAddress?.trim() ||
+        !body.legal?.submitterPosition?.trim() ||
+        !body.legal?.declarationAccepted ||
+        !body.file?.size
       ) {
         send(400, "Thông tin công ty chưa hợp lệ.");
         return;
       }
-      if (
-        companies.some(
-          (company) =>
-            company.taxCode === body.taxCode || company.email === body.email.toLowerCase(),
-        )
-      ) {
+      if (companies.some((company) => company.taxCode === body.taxCode)) {
         send(409, "Mã số thuế hoặc email công ty đã được đăng ký.");
         return;
       }
@@ -240,8 +267,8 @@ export function createMockApiServer() {
         ownerId: user.id,
         name: body.name,
         taxCode: body.taxCode,
-        email: body.email.toLowerCase(),
-        registrationCertificateUrl: body.registrationCertificateUrl,
+        email: user.email,
+        registrationCertificateUrl: "http://localhost:5137/api/mock/certificate.pdf",
         verificationStatus: "PENDING",
         rejectionReason: null,
         version: 0,
@@ -335,14 +362,21 @@ export function createMockApiServer() {
         return;
       }
       if (req.method === "PUT" && companyRoute[2]) {
+        if (!body.file) {
+          send(410, "41030 ONBOARDING_RETIRED");
+          return;
+        }
+        if (!user.emailVerified) {
+          send(403, "40335 EMAIL_VERIFICATION_REQUIRED");
+          return;
+        }
         if (company.verificationStatus !== "REJECTED" || company.version !== body.expectedVersion) {
           send(409, "CONCURRENT_MODIFICATION");
           return;
         }
         Object.assign(company, {
           name: body.name,
-          email: body.email,
-          registrationCertificateUrl: body.registrationCertificateUrl,
+          email: user.email,
           verificationStatus: "PENDING",
           rejectionReason: null,
           version: company.version + 1,

@@ -40,51 +40,27 @@ export interface CompanyVerificationRecord {
   createdAt: string;
   updatedAt: string;
   ticketId: string;
+  companySuspended?: boolean;
   ocrConfidence?: number;
   tamperingRiskScore?: number;
 }
 
+export interface CompanyLegalDossier {
+  workAddress: string;
+  submitterPosition: string;
+  representation: "LEGAL_REPRESENTATIVE" | "AUTHORIZED_REPRESENTATIVE";
+  declarationAccepted: boolean;
+}
 export interface CompanyRegistrationRequest {
   name: string;
-  englishName?: string;
   taxCode: string;
-  email: string;
-  website?: string;
-  phone?: string;
-  registeredAddress?: string;
-  city?: string;
-  district?: string;
-  legalRepresentative?: string;
-  representativeTitle?: string;
-  submitterRole?: SubmitterRole;
-  contactPerson?: string;
-  contactTitle?: string;
-  registrationCertificateUrl: string;
-  certificateNumber?: string;
-  issueDate?: string;
-  issuingAuthority?: string;
-  powerOfAttorneyUrl?: string;
+  legal: CompanyLegalDossier;
+  file: File;
 }
-
 export interface CompanyResubmissionRequest {
   name: string;
-  englishName?: string;
-  email: string;
-  website?: string;
-  phone?: string;
-  registeredAddress?: string;
-  city?: string;
-  district?: string;
-  legalRepresentative?: string;
-  representativeTitle?: string;
-  submitterRole?: SubmitterRole;
-  contactPerson?: string;
-  contactTitle?: string;
-  registrationCertificateUrl: string;
-  certificateNumber?: string;
-  issueDate?: string;
-  issuingAuthority?: string;
-  powerOfAttorneyUrl?: string;
+  legal: CompanyLegalDossier;
+  file: File;
   expectedVersion: number;
 }
 
@@ -301,14 +277,29 @@ export async function loadCompanyVerification(): Promise<CompanyVerificationReco
   return record;
 }
 
-function companyPayload(req: CompanyRegistrationRequest | CompanyResubmissionRequest) {
-  if (!/^https?:\/\//i.test(req.registrationCertificateUrl.trim()))
-    throw new Error("Vui lòng nhập URL http hoặc https của giấy đăng ký doanh nghiệp.");
-  return {
+function companyPayload(
+  req: CompanyRegistrationRequest | CompanyResubmissionRequest,
+  correction = false,
+) {
+  if (!req.file || req.file.size === 0 || req.file.size > 10 * 1024 * 1024)
+    throw new Error("Chọn tài liệu PDF, JPEG hoặc PNG không rỗng, tối đa 10 MiB.");
+  if (!["application/pdf", "image/jpeg", "image/png"].includes(req.file.type))
+    throw new Error("Tài liệu phải là PDF, JPEG hoặc PNG.");
+  const form = new FormData();
+  const dossier = {
     name: req.name.trim(),
-    email: req.email.trim().toLowerCase(),
-    registrationCertificateUrl: req.registrationCertificateUrl.trim(),
+    ...(correction
+      ? { expectedVersion: (req as CompanyResubmissionRequest).expectedVersion }
+      : { taxCode: (req as CompanyRegistrationRequest).taxCode.trim() }),
+    legal: {
+      ...req.legal,
+      workAddress: req.legal.workAddress.trim(),
+      submitterPosition: req.legal.submitterPosition.trim(),
+    },
   };
+  form.append("dossier", new Blob([JSON.stringify(dossier)], { type: "application/json" }));
+  form.append("file", req.file);
+  return form;
 }
 
 export async function submitVerification(
@@ -316,7 +307,7 @@ export async function submitVerification(
 ): Promise<CompanyVerificationRecord> {
   const result = await authenticatedRequest("/companies/verification-request", {
     method: "POST",
-    body: JSON.stringify({ ...companyPayload(req), taxCode: req.taxCode.trim() }),
+    body: companyPayload(req),
   });
   const record = companyRecord(result, { submittedBy: getCurrentUser() ?? undefined });
   saveStoredVerificationRecord(record);
@@ -329,7 +320,7 @@ export async function resubmitVerification(
 ): Promise<CompanyVerificationRecord> {
   const result = await authenticatedRequest(`/companies/${companyId}/resubmit`, {
     method: "PUT",
-    body: JSON.stringify({ ...companyPayload(req), expectedVersion: req.expectedVersion }),
+    body: companyPayload(req, true),
   });
   const record = companyRecord(result, { submittedBy: getCurrentUser() ?? undefined });
   saveStoredVerificationRecord(record);
