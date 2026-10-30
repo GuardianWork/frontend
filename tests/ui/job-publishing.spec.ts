@@ -61,7 +61,7 @@ function paged<T>(content: T[], page = 0, size = 20) {
   };
 }
 async function mockJobs(page: Page, initial: Job[] = [makeJob()]) {
-  let jobs = structuredClone(initial);
+  const jobs = structuredClone(initial);
   let conflict = false;
   const writes: { path: string; method: string; body: Record<string, unknown> | null }[] = [];
   const histories = new Map<number, RevisionHistory[]>();
