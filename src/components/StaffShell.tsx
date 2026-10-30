@@ -9,6 +9,7 @@ import {
   ViolationReportIcon,
   RecruitmentOverviewIcon,
   CandidateProfileIcon,
+  SubmissionHistoryIcon,
 } from "@/components/icons";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
@@ -24,6 +25,7 @@ const NAVIGATION = [
   { to: "/staff/jobs", label: "Quản lý tin tuyển dụng", icon: JobIcon },
   { to: "/staff/reports", label: "Báo cáo vi phạm", icon: ViolationReportIcon },
   { to: "/staff/accounts", label: "Quản lý tài khoản", icon: CandidateProfileIcon },
+  { to: "/staff/audit-logs", label: "Nhật ký hoạt động", icon: SubmissionHistoryIcon },
 ];
 
 export function StaffShell({

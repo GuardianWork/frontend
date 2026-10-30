@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AdminDraftPage } from "@/components/admin/AdminDraftPage";
+import { StaffAccountsPage } from "@/components/admin/StaffAccountsPage";
 export const Route = createFileRoute("/staff/accounts")({
   head: () => ({
     meta: [
@@ -7,5 +7,5 @@ export const Route = createFileRoute("/staff/accounts")({
       { title: "Quản lý tài khoản — Platform staff GuardianWork" },
     ],
   }),
-  component: () => <AdminDraftPage area="accounts" />,
+  component: StaffAccountsPage,
 });

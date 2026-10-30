@@ -1,0 +1,147 @@
+.staff-accounts {
+  min-width: 0;
+}
+.accounts-heading-icon {
+  color: var(--primary);
+  flex-shrink: 0;
+}
+.accounts-tabs {
+  display: flex;
+  gap: 24px;
+  border-bottom: 1px solid var(--color-rule);
+  margin-bottom: 24px;
+}
+.accounts-tabs button {
+  min-height: 48px;
+  padding: 8px 0;
+  color: var(--color-ink-2);
+  border-bottom: 2px solid transparent;
+  font-weight: 600;
+}
+.accounts-tabs button[aria-selected="true"] {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+.accounts-tabs button:hover {
+  color: var(--primary);
+}
+.accounts-search {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 24px;
+  max-width: 620px;
+}
+.accounts-search label {
+  font-size: 14px;
+  font-weight: 600;
+}
+.accounts-search > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+  border: 1px solid var(--color-rule);
+  border-radius: 8px;
+  background: var(--color-paper);
+}
+.accounts-search input {
+  min-height: 44px;
+  width: 100%;
+  min-width: 0;
+  background: transparent;
+  outline: none;
+}
+.accounts-search > div:focus-within {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.accounts-search > span,
+.accounts-secondary {
+  font-size: 13px;
+  color: var(--color-ink-2);
+}
+.accounts-secondary {
+  display: block;
+  margin-top: 4px;
+}
+.accounts-back {
+  margin-bottom: 24px;
+  min-height: 44px;
+}
+.accounts-enforcement {
+  margin-top: 24px;
+}
+.accounts-enforcement .admin-panel-heading > span {
+  font-size: 13px;
+  color: var(--color-ink-2);
+}
+.accounts-note {
+  padding: 20px 24px;
+  color: var(--color-ink-2);
+}
+.accounts-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px 24px;
+  border-top: 1px solid var(--color-rule);
+}
+.accounts-danger {
+  color: var(--error);
+}
+.accounts-danger-submit {
+  background: var(--error) !important;
+  color: var(--on-primary);
+}
+.accounts-form {
+  display: grid;
+  gap: 12px;
+}
+.accounts-form label {
+  font-size: 14px;
+  font-weight: 600;
+}
+.accounts-form input,
+.accounts-form select {
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-rule);
+  border-radius: 8px;
+  width: 100%;
+  background: var(--color-paper);
+}
+.accounts-form textarea {
+  width: 100%;
+}
+.accounts-consequence {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--color-ink-2);
+  margin-bottom: 8px;
+}
+.staff-accounts dd {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.staff-accounts table {
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 640px) {
+  .accounts-tabs {
+    gap: 20px;
+  }
+  .accounts-tabs button {
+    font-size: 14px;
+  }
+  .accounts-actions {
+    flex-direction: column;
+  }
+  .accounts-actions button {
+    width: 100%;
+  }
+  .accounts-enforcement .admin-panel-heading {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
