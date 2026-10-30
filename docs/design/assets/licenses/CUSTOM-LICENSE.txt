@@ -1,0 +1,1 @@
+GuardianWork custom SVG icon geometries created for this deliverable. No third-party Radix artwork is reproduced in these files.

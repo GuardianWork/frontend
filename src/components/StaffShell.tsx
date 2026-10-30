@@ -1,27 +1,28 @@
+import "./workspace.css";
+import {
+  GlobeIcon,
+  MenuIcon,
+  CloseIcon,
+  JobIcon,
+  VerificationDossierIcon,
+  ViolationReportIcon,
+  RecruitmentOverviewIcon,
+  CandidateProfileIcon,
+} from "@/components/icons";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import {
-  BriefcaseBusiness,
-  Building2,
-  Flag,
-  Globe,
-  LayoutDashboard,
-  Menu,
-  ShieldCheck,
-  Users,
-  X,
-} from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { LogoutButton } from "./LogoutButton";
 import { StaffAccount } from "./admin/StaffAccount";
 import { publicPortalHref } from "@/lib/portal";
 import "./admin/sidebar.css";
 
 const NAVIGATION = [
-  { to: "/staff", label: "Tổng quan", icon: LayoutDashboard },
-  { to: "/staff/verifications", label: "Xác minh công ty", icon: Building2 },
-  { to: "/staff/jobs", label: "Quản lý tin tuyển dụng", icon: BriefcaseBusiness },
-  { to: "/staff/reports", label: "Báo cáo vi phạm", icon: Flag },
-  { to: "/staff/accounts", label: "Quản lý tài khoản", icon: Users },
+  { to: "/staff", label: "Tổng quan", icon: RecruitmentOverviewIcon },
+  { to: "/staff/verifications", label: "Xác minh công ty", icon: VerificationDossierIcon },
+  { to: "/staff/jobs", label: "Quản lý tin tuyển dụng", icon: JobIcon },
+  { to: "/staff/reports", label: "Báo cáo vi phạm", icon: ViolationReportIcon },
+  { to: "/staff/accounts", label: "Quản lý tài khoản", icon: CandidateProfileIcon },
 ];
 
 export function StaffShell({
@@ -74,15 +75,19 @@ export function StaffShell({
             aria-label="Đóng điều hướng"
             onClick={() => setOpen(false)}
           >
-            <X size={20} aria-hidden="true" />
+            <CloseIcon size={20} aria-hidden="true" />
           </button>
         </div>
-        <nav aria-label="Điều hướng chính" className="flex flex-1 flex-col overflow-y-auto">
+        <nav
+          aria-label="Điều hướng chính"
+          className="workspace-navigation flex flex-1 flex-col overflow-y-auto"
+        >
           {NAVIGATION.map(({ to, label, icon: Icon }) => (
             <Link
               key={to}
               to={to}
-              className="staff-nav-link"
+              className="workspace-nav-link staff-nav-link"
+              activeOptions={{ exact: to === "/staff" }}
               aria-current={
                 (
                   to === "/staff"
@@ -94,16 +99,16 @@ export function StaffShell({
               }
               onClick={() => setOpen(false)}
             >
-              <span className="staff-nav-icon">
-                <Icon size={20} strokeWidth={1.8} aria-hidden="true" />
+              <span className="workspace-nav-icon">
+                <Icon size={20} aria-hidden="true" />
               </span>
-              <span className="staff-nav-label">{label}</span>
+              <span className="workspace-nav-label">{label}</span>
             </Link>
           ))}
         </nav>
-        <div className="border-t border-warm-border">
-          <a href={publicPortalHref()} className="flex items-center text-sm">
-            <Globe size={18} aria-hidden="true" />
+        <div className="workspace-sidebar-footer border-t border-warm-border">
+          <a href={publicPortalHref()} className="workspace-footer-link">
+            <GlobeIcon size={18} aria-hidden="true" />
             <span>Trang chủ GuardianWork</span>
           </a>
         </div>
@@ -119,7 +124,7 @@ export function StaffShell({
               aria-expanded={open}
               onClick={() => setOpen(!open)}
             >
-              <Menu size={22} aria-hidden="true" />
+              <MenuIcon size={22} aria-hidden="true" />
             </button>
             <p className="workspace-page-title min-w-0">{title}</p>
           </div>
@@ -130,7 +135,7 @@ export function StaffShell({
           </div>
         </header>
         <main className="min-h-0 flex-1 overflow-y-auto p-4 md:p-8">
-          <div className="mx-auto max-w-7xl">{children}</div>
+          <div className="workspace-page mx-auto max-w-7xl">{children}</div>
         </main>
       </div>
     </div>

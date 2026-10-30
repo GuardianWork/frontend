@@ -1,13 +1,8 @@
+import { ArrowLeftIcon, CheckIcon } from "@/components/icons";
+import { GuardianIllustration } from "@/components/GuardianIllustration";
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import {
-  ArrowLeft,
-  ArrowUpRight,
-  BriefcaseBusiness,
-  Check,
-  ShieldCheck,
-  Users,
-} from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import type { AccountPurpose } from "@/services/auth";
 
 export function AuthLayout({
@@ -48,7 +43,7 @@ export function AuthLayout({
             to="/vn"
             className="mb-8 inline-flex items-center gap-2 text-xs font-medium text-charcoal-83 hover:text-primary"
           >
-            <ArrowLeft size={14} />
+            <ArrowLeftIcon size={14} />
             Về trang chủ
           </Link>
           <h1 className="max-w-lg text-3xl font-bold leading-tight tracking-tight sm:text-4xl lg:text-[46px]">
@@ -71,7 +66,12 @@ export function AuthLayout({
               ? "Xây dựng hồ sơ doanh nghiệp, đăng tin tuyển dụng và kết nối với những ứng viên phù hợp trên GuardianWork."
               : "Khám phá công việc phù hợp, xây dựng hồ sơ nổi bật và chủ động kết nối với nhà tuyển dụng trên GuardianWork."}
           </p>
-          <div className="mt-8 hidden space-y-4 lg:block">
+          <GuardianIllustration
+            name={purpose === "recruiter" ? "onboarding" : "discovery"}
+            className="guardian-art--auth"
+            desktopOnly
+          />
+          <div className="mt-6 hidden space-y-4 lg:block">
             {(purpose === "recruiter"
               ? [
                   "Quản lý tin tuyển dụng trong một không gian",
@@ -86,27 +86,11 @@ export function AuthLayout({
             ).map((text) => (
               <p key={text} className="flex items-center gap-3 text-sm">
                 <span className="rounded-full border border-warm-border bg-paper-white p-1">
-                  <Check size={13} />
+                  <CheckIcon size={13} />
                 </span>
                 {text}
               </p>
             ))}
-          </div>
-          <div className="mt-10 hidden max-w-md rounded-2xl border border-warm-border bg-paper-white p-5 lg:block">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-surface-container p-3">
-                  {purpose === "recruiter" ? <Users size={23} /> : <BriefcaseBusiness size={23} />}
-                </div>
-                <div>
-                  <p className="text-sm font-semibold">Một nền tảng. Hai hành trình.</p>
-                  <p className="mt-1 text-xs text-charcoal-83">
-                    Cơ hội mới cho bạn và đội ngũ của bạn.
-                  </p>
-                </div>
-              </div>
-              <ArrowUpRight size={18} className="text-charcoal-40" />
-            </div>
           </div>
         </section>
         <section

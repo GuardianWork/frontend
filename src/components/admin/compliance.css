@@ -25,7 +25,7 @@
   padding: 14px 16px;
   background: var(--color-paper-2);
   color: var(--color-ink-3);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
 }
 .compliance-table th:nth-child(1) {
@@ -79,7 +79,7 @@
   display: block;
   margin-top: 7px;
   color: var(--color-ink-3);
-  font-size: 12px;
+  font-size: 13px;
 }
 .compliance-findings-cell ul {
   display: grid;
@@ -111,7 +111,7 @@
   border-radius: 5px;
   background: var(--color-paper-2);
   color: var(--color-ink-2);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   line-height: 1.4;
 }
@@ -125,7 +125,7 @@
 .compliance-visibility {
   display: inline-flex;
   color: var(--color-mint);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   line-height: 1.5;
 }
@@ -136,14 +136,14 @@
   display: block;
   margin-top: 6px;
   color: var(--color-ink-3);
-  font-size: 12px;
+  font-size: 13px;
 }
 .compliance-time {
   color: var(--color-ink-3);
   font-variant-numeric: tabular-nums;
 }
 .compliance-time time {
-  font-size: 12px;
+  font-size: 13px;
 }
 .compliance-mobile-label {
   display: none;
@@ -160,7 +160,7 @@
   padding: 16px 24px;
   border-top: 1px solid var(--color-rule);
   color: var(--color-ink-3);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.6;
 }
 .compliance-empty {
@@ -215,7 +215,7 @@
 }
 .compliance-job-meta dt {
   color: var(--color-ink-3);
-  font-size: 12px;
+  font-size: 13px;
 }
 .compliance-job-meta dd {
   margin: 5px 0 0;
@@ -324,7 +324,7 @@
   display: block;
   margin-top: 4px;
   color: var(--color-ink-3);
-  font-size: 12px;
+  font-size: 13px;
 }
 .compliance-history li p {
   margin: 8px 0 0;
@@ -454,7 +454,7 @@
   .compliance-mobile-label {
     display: inline;
     margin-right: 8px;
-    font-size: 12px;
+    font-size: 13px;
   }
   .compliance-findings-cell ul {
     display: flex;

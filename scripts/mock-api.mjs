@@ -38,11 +38,9 @@ export const MOCK_ACCOUNTS = [
 ];
 
 /** In-memory fixtures, available only through npm run dev:mock. */
-export function createMockApiServer({ deliverMemberEmail = () => true } = {}) {
-  const users = MOCK_ACCOUNTS.map((user) => ({ ...user, password: MOCK_PASSWORD }));
+export function createMockApiServer() {
+  const users = MOCK_ACCOUNTS.map((user) => ({ ...user, emailVerified: true, password: MOCK_PASSWORD }));
   const candidateProfiles = new Map();
-  const emailSecrets = new Map();
-  const lastEmailSent = new Map();
   const accessTokens = new Map();
   const refreshTokens = new Map();
   const companies = [
@@ -139,70 +137,8 @@ export function createMockApiServer({ deliverMemberEmail = () => true } = {}) {
       send(400, "Invalid JSON");
       return;
     }
-    if (
-      req.method === "POST" &&
-      (/^\/api\/employer-registrations\/[^/]+\/email\/(resend|verify)$/.test(path) ||
-        /^\/api\/me\/employer-onboarding\/phone\/(send|verify)$/.test(path))
-    ) {
-      send(410, "Luồng đăng ký cũ đã ngừng sử dụng. Hãy đăng nhập hoặc đăng ký tài khoản mới.");
-      return;
-    }
-    function deliverEmail(account) {
-      const secret = randomUUID();
-      emailSecrets.set(account.id, { secret, expiresAt: Date.now() + 86400000 });
-      lastEmailSent.set(account.id, Date.now());
-      return Boolean(deliverMemberEmail({ email: account.email, secret }));
-    }
-    if (req.method === "POST" && path === "/api/employer-registrations") {
-      if (
-        ![
-          "fullName",
-          "phone",
-          "companyName",
-          "gender",
-          "workAddress",
-          "email",
-          "password",
-          "passwordConfirmation",
-        ].every((key) => typeof body[key] === "string" && body[key].trim()) ||
-        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email) ||
-        !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,128}$/.test(body.password) ||
-        body.password !== body.passwordConfirmation
-      ) {
-        send(400, "Thông tin đăng ký không hợp lệ.");
-        return;
-      }
-      const phone = body.phone.replace(/[\s.-]/g, "").replace(/^0/, "+84");
-      if (!/^\+84\d{9,10}$/.test(phone)) {
-        send(400, "Số điện thoại không hợp lệ.");
-        return;
-      }
-      if (
-        users.some(
-          (account) => account.email === body.email.trim().toLowerCase() || account.phone === phone,
-        )
-      ) {
-        send(409, "Email hoặc số điện thoại đã được sử dụng.");
-        return;
-      }
-      const account = {
-        id: users.length + 1,
-        username: body.email.trim().toLowerCase(),
-        email: body.email.trim().toLowerCase(),
-        firstName: body.fullName.trim(),
-        lastName: "",
-        password: body.password,
-        role: "USER",
-        phone,
-        emailVerified: false,
-      };
-      users.push(account);
-      send(201, "Account created; verify your email", {
-        userId: account.id,
-        emailVerified: false,
-        stage: "EMAIL_REQUIRED",
-        deliveryAccepted: deliverEmail(account),
-      });
+    if (path === "/api/employer-registrations" || path.startsWith("/api/me/employer-onboarding")) {
+      send(410, "41030 ONBOARDING_RETIRED: Use shared registration and Company setup.");
       return;
     }
     if (req.method === "POST" && path === "/api/auth/register") {
@@ -335,49 +271,6 @@ export function createMockApiServer({ deliverMemberEmail = () => true } = {}) {
         candidateProfiles.set(user.id, previous);
       }
       send(200, "Candidate profile", { ...previous, phoneNumber: user.phone || null });
-      return;
-    }
-    if (req.method === "GET" && path === "/api/me/employer-onboarding") {
-      const company = companies.find((company) => company.ownerId === user.id);
-      send(200, "Employer onboarding", {
-        phone: user.phone || null,
-        stage:
-          user.emailVerified === false
-            ? "EMAIL_REQUIRED"
-            : company?.verificationStatus || "COMPANY_ACTION_REQUIRED",
-      });
-      return;
-    }
-    if (req.method === "POST" && path === "/api/me/employer-onboarding/email/send") {
-      if (user.emailVerified !== false) {
-        send(403, "Email đã được xác thực.");
-        return;
-      }
-      if (Date.now() - (lastEmailSent.get(user.id) || 0) < 60000) {
-        send(429, "Vui lòng chờ 60 giây.");
-        return;
-      }
-      send(200, "Email delivery requested", { deliveryAccepted: deliverEmail(user) });
-      return;
-    }
-    if (req.method === "POST" && path === "/api/me/employer-onboarding/email/verify") {
-      const pending = emailSecrets.get(user.id);
-      if (
-        !pending ||
-        typeof body.emailSecret !== "string" ||
-        pending.secret !== body.emailSecret ||
-        pending.expiresAt <= Date.now()
-      ) {
-        send(400, "Liên kết không hợp lệ hoặc hết hạn.");
-        return;
-      }
-      emailSecrets.delete(user.id);
-      user.emailVerified = true;
-      send(200, "Email verified", { emailVerified: true });
-      return;
-    }
-    if (path.startsWith("/api/companies/") && user.emailVerified === false) {
-      send(403, "Vui lòng xác thực email trước.");
       return;
     }
     if (req.method === "POST" && path === "/api/companies/verification-request") {

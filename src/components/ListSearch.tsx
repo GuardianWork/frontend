@@ -1,4 +1,4 @@
-import { Search, X } from "lucide-react";
+import { SearchIcon, CloseIcon } from "@/components/icons";
 
 export function ListSearch({
   value,
@@ -14,7 +14,7 @@ export function ListSearch({
   return (
     <div className="list-search-row">
       <label className="list-search-field">
-        <Search size={18} aria-hidden="true" />
+        <SearchIcon size={18} aria-hidden="true" />
         <span className="sr-only">{label}</span>
         <input
           type="search"
@@ -30,7 +30,7 @@ export function ListSearch({
           onClick={() => onChange("")}
           aria-label="Xóa từ khóa tìm kiếm"
         >
-          <X size={17} aria-hidden="true" />
+          <CloseIcon size={17} aria-hidden="true" />
         </button>
       )}
       {count !== undefined && (

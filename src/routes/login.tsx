@@ -1,4 +1,8 @@
-import { getMemberEmailSecret, getInvitationSecret } from "@/lib/member-email-secret";
+import {
+  clearMemberEmailSecret,
+  getMemberEmailSecret,
+  getInvitationSecret,
+} from "@/lib/member-email-secret";
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, LoaderCircle } from "lucide-react";
@@ -68,13 +72,15 @@ function LoginPage() {
         window.location.assign(staffPortalHref("/login"));
         return;
       }
+      const legacySetupLink = getMemberEmailSecret();
       await navigate({
-        to: getMemberEmailSecret()
+        to: legacySetupLink
           ? "/recruiter/verification"
           : getInvitationSecret()
             ? "/recruiter/members"
             : getLoginDestination(user, role),
       });
+      if (legacySetupLink) clearMemberEmailSecret();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Không thể đăng nhập. Vui lòng thử lại.");
     } finally {
@@ -93,8 +99,8 @@ function LoginPage() {
           role="status"
           className="mb-5 rounded-lg border border-warm-border bg-surface-container-low p-4 text-sm leading-6"
         >
-          Đăng nhập đúng tài khoản nhận email để xác thực. Liên kết đã được đọc an toàn; không cần
-          nhập lại mật khẩu đăng ký.
+          Liên kết thiết lập tuyển dụng cũ không còn được dùng. Đăng nhập để tiếp tục với hồ sơ công
+          ty.
         </p>
       )}
       <AccountPurposeChoice

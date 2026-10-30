@@ -1,5 +1,5 @@
-// Memory only: never persist the secret in storage, router state, logs or analytics.
-let pendingSecret: string | null = null;
+// Legacy setup secrets are discarded after routing; invitation secrets stay memory-only.
+let legacySetupLink = false;
 let invitationSecret: string | null = null;
 export function captureMemberEmailSecret() {
   if (typeof window === "undefined") return;
@@ -11,7 +11,7 @@ export function captureMemberEmailSecret() {
   }
   const secret = fragment.get("memberEmailSecret");
   if (secret !== null) {
-    pendingSecret = secret;
+    legacySetupLink = true;
     fragment.delete("memberEmailSecret");
   }
   if (secret !== null || invitation !== null) {
@@ -24,10 +24,10 @@ export function captureMemberEmailSecret() {
   }
 }
 export function getMemberEmailSecret() {
-  return pendingSecret;
+  return legacySetupLink;
 }
 export function clearMemberEmailSecret() {
-  pendingSecret = null;
+  legacySetupLink = false;
 }
 
 let legacyRegistrationLink = false;

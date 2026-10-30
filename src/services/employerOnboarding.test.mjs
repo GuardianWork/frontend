@@ -1,107 +1,97 @@
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, test } from "node:test";
 import { AUTH_SESSION_KEY } from "./auth.ts";
-import {
-  registerEmployer,
-  loadEmployerOnboarding,
-  sendEmployerEmail,
-  verifyEmployerEmail,
-  employerError,
-} from "./employerOnboarding.ts";
-import { ApiError } from "./api.ts";
+import { loadEmployerOnboarding } from "./employerOnboarding.ts";
+
 const originalFetch = globalThis.fetch;
-const input = {
-  fullName: " An Nguyễn ",
-  phone: "0901234567",
-  companyName: " Alpha ",
-  gender: "OTHER",
-  workAddress: " Hà Nội ",
-  email: " An@Example.test ",
-  password: "Guardian123!",
-  passwordConfirmation: "Guardian123!",
+const user = {
+  id: 1,
+  firstName: "An",
+  lastName: "Nguyễn",
+  username: "an",
+  email: "an@example.test",
+  role: "USER",
+  activeMembership: null,
 };
 beforeEach(() => {
+  const values = new Map();
   globalThis.sessionStorage = {
-    getItem: (key) =>
-      key === AUTH_SESSION_KEY
-        ? JSON.stringify({
-            accessToken: "access",
-            refreshToken: "refresh",
-            expiresAt: Date.now() + 60000,
-          })
-        : null,
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, value),
+    removeItem: (key) => values.delete(key),
+  };
+  sessionStorage.setItem(
+    AUTH_SESSION_KEY,
+    JSON.stringify({
+      accessToken: "access",
+      refreshToken: "refresh",
+      expiresAt: Date.now() + 60000,
+      user,
+    }),
+  );
+  globalThis.localStorage = {
+    getItem: () => null,
+    setItem() {},
+    removeItem() {},
   };
 });
 afterEach(() => {
   globalThis.fetch = originalFetch;
   delete globalThis.sessionStorage;
+  delete globalThis.localStorage;
 });
-test("registration sends exactly eight fields and treats failed delivery as account creation", async () => {
-  globalThis.fetch = async (url, init) => {
-    assert.equal(url, "/api/employer-registrations");
-    assert.equal(init.headers.Authorization, undefined);
-    assert.deepEqual(JSON.parse(init.body), {
-      ...input,
-      fullName: "An Nguyễn",
-      companyName: "Alpha",
-      workAddress: "Hà Nội",
-      email: "an@example.test",
-    });
-    return Response.json(
-      {
-        status: 201,
-        data: {
-          userId: 123,
-          emailVerified: false,
-          stage: "EMAIL_REQUIRED",
-          deliveryAccepted: false,
-        },
-      },
-      { status: 201 },
-    );
+
+test("a shared account without a Company membership is directed to Company setup without a retired request", async () => {
+  globalThis.fetch = async () => {
+    throw new Error("No Company lookup should run without a membership");
   };
-  assert.equal((await registerEmployer(input)).deliveryAccepted, false);
+  assert.deepEqual(await loadEmployerOnboarding(), { stage: "COMPANY_ACTION_REQUIRED" });
 });
-test("onboarding rejects removed and unknown stages rather than opening recruitment", async () => {
-  for (const stage of [
-    "EMAIL_REQUIRED",
-    "COMPANY_ACTION_REQUIRED",
-    "PENDING",
-    "REJECTED",
-    "VERIFIED",
-    "PHONE_REQUIRED",
-    "LEGAL_REQUIRED",
-    "unknown",
+
+test("Company verification status controls recruiter access for an existing owner", async () => {
+  const session = JSON.parse(sessionStorage.getItem(AUTH_SESSION_KEY));
+  session.user.activeMembership = {
+    companyId: 12,
+    companyName: "Alpha",
+    companyRole: "OWNER",
+    joinedAt: "2026-10-19T00:00:00Z",
+  };
+  sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+  for (const [status, stage] of [
+    ["PENDING", "PENDING"],
+    ["REJECTED", "REJECTED"],
+    ["VERIFIED", "VERIFIED"],
   ]) {
-    globalThis.fetch = async (_url, init) => {
+    globalThis.fetch = async (url, init) => {
+      assert.equal(url, "/api/companies/me/verification");
       assert.equal(init.headers.Authorization, "Bearer access");
-      return Response.json({ status: 200, data: { stage } });
+      return Response.json({
+        status: 200,
+        data: {
+          id: 12,
+          name: "Alpha",
+          taxCode: "0100000001",
+          verificationStatus: status,
+          version: 0,
+        },
+      });
     };
-    if (["PHONE_REQUIRED", "LEGAL_REQUIRED", "unknown"].includes(stage))
-      await assert.rejects(loadEmployerOnboarding());
-    else assert.equal((await loadEmployerOnboarding()).stage, stage);
+    assert.deepEqual(await loadEmployerOnboarding(), { stage });
   }
 });
-test("resend uses Bearer with no body and verify sends only the fragment secret", async () => {
-  globalThis.fetch = async (url, init) => {
-    assert.equal(init.headers.Authorization, "Bearer access");
-    assert.equal(init.method, "POST");
-    if (url.endsWith("/send")) {
-      assert.equal(init.body, undefined);
-      return Response.json({ status: 200, data: { deliveryAccepted: false } });
-    }
-    assert.equal(url, "/api/me/employer-onboarding/email/verify");
-    assert.equal(init.headers["Content-Type"], "application/json");
-    assert.deepEqual(JSON.parse(init.body), { emailSecret: "private-test-secret" });
-    return Response.json({ status: 200, data: null });
+
+test("a company lookup failure is retryable and does not unlock recruiter features", async () => {
+  const session = JSON.parse(sessionStorage.getItem(AUTH_SESSION_KEY));
+  session.user.activeMembership = {
+    companyId: 12,
+    companyName: "Alpha",
+    companyRole: "OWNER",
+    joinedAt: "2026-10-19T00:00:00Z",
   };
-  assert.equal((await sendEmployerEmail()).deliveryAccepted, false);
-  await verifyEmployerEmail("private-test-secret");
-});
-test("actionable errors never expose the backend response or secret", () => {
-  for (const status of [400, 403, 409, 429, 500]) {
-    const message = employerError(new ApiError("private-test-secret", status));
-    assert.ok(message.length > 20);
-    assert.ok(!message.includes("private-test-secret"));
-  }
+  sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+  globalThis.fetch = async (url) => {
+    assert.equal(url, "/api/companies/me/verification");
+    return Response.json({ status: 503, message: "Company service unavailable" }, { status: 503 });
+  };
+  await assert.rejects(loadEmployerOnboarding());
 });

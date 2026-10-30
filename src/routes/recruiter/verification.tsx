@@ -31,9 +31,8 @@ function CompanyVerificationPage() {
   const user = useAuthUser();
   const onboarding = useEmployerOnboarding();
   const stage = onboarding?.onboarding.stage;
-  const draftCompanyName = onboarding?.onboarding.companyName || "";
   const [record, setRecord] = useState(getStoredVerificationRecord);
-  const [name, setName] = useState(record.name || onboarding?.onboarding.companyName || "");
+  const [name, setName] = useState(record.name);
   const [taxCode, setTaxCode] = useState(record.taxCode);
   const [file, setFile] = useState<File | null>(null);
   const [workAddress, setWorkAddress] = useState("");
@@ -49,11 +48,9 @@ function CompanyVerificationPage() {
   useEffect(() => {
     const next = getStoredVerificationRecord();
     setRecord(next);
-    setName(next.name || draftCompanyName);
+    setName(next.name);
     setTaxCode(next.taxCode);
-    setEmail(next.email);
-    setCertificateUrl(next.registrationCertificateUrl);
-  }, [stage, draftCompanyName]);
+  }, [stage]);
   const hasCompany = Boolean(user?.activeMembership);
   const canEdit =
     (stage === "COMPANY_ACTION_REQUIRED" &&
@@ -164,8 +161,7 @@ function CompanyVerificationPage() {
           </p>
         )}
         <p className="mb-5 break-words text-sm leading-6 text-charcoal-83">
-          Liên hệ tài khoản: {user?.email} ·{" "}
-          {onboarding?.onboarding.phone || "Chưa có số điện thoại"}
+          Tài khoản phụ trách hồ sơ: {user?.email}
         </p>
         {notice && (
           <p
@@ -298,7 +294,7 @@ function CompanyVerificationPage() {
                 />
                 <span
                   id="certificate-hint"
-                  className="mt-2 block text-xs font-normal leading-5 text-charcoal-83"
+                  className="mt-2 block text-sm font-normal leading-5 text-charcoal-83"
                 >
                   PDF, JPEG hoặc PNG, tối đa 10 MiB. Hồ sơ bổ sung cần tải lên tài liệu mới. Email
                   liên hệ được lấy từ tài khoản của bạn.

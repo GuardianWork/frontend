@@ -1,4 +1,5 @@
-import { BriefcaseBusiness, Check, UserRound } from "lucide-react";
+import { CheckIcon, JobPostingsIcon, CandidateProfileIcon } from "@/components/icons";
+
 import type { AccountPurpose } from "@/services/auth";
 
 export function AccountPurposeChoice({
@@ -20,13 +21,13 @@ export function AccountPurposeChoice({
               value: "candidate",
               title: "Tôi muốn tìm việc",
               description: "Khám phá cơ hội mới",
-              icon: UserRound,
+              icon: CandidateProfileIcon,
             },
             {
               value: "recruiter",
               title: "Tôi muốn tuyển dụng",
               description: "Bắt đầu tuyển dụng",
-              icon: BriefcaseBusiness,
+              icon: JobPostingsIcon,
             },
           ] as const
         ).map(({ value: option, title, description, icon: Icon }) => (
@@ -46,7 +47,7 @@ export function AccountPurposeChoice({
             <Icon size={22} className="mb-3" />
             <span className="block text-xs font-semibold sm:text-sm">{title}</span>
             <span className="mt-1 block text-xs leading-5 text-charcoal-83">{description}</span>
-            {value === option && <Check size={14} className="absolute right-3 top-3" />}
+            {value === option && <CheckIcon size={14} className="absolute right-3 top-3" />}
           </label>
         ))}
       </div>

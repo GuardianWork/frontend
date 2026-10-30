@@ -12,7 +12,7 @@ export const Route = createFileRoute("/recruiter/applications")({
 });
 function ApplicationsPage() {
   const [query, setQuery] = useState("");
-  const { workspace, member, company, error } = useCompanyWorkspace();
+  const { workspace, member, company, error, refresh } = useCompanyWorkspace();
   const applications = workspace.applications.filter((a) => {
     const job = workspace.jobs.find((j) => j.id === a.jobId);
     return (
@@ -33,8 +33,14 @@ function ApplicationsPage() {
         label="Tìm ứng viên, thư điện tử hoặc vị trí ứng tuyển"
         count={applications.length}
       />
-      {error && <p role="alert">{error}</p>}
-      {!member || company?.verificationStatus !== "VERIFIED" ? (
+      {error ? (
+        <div className="workspace-inline-note" role="alert">
+          <p>{error}</p>
+          <button className="admin-text-link" onClick={refresh}>
+            Thử tải lại
+          </button>
+        </div>
+      ) : !member || company?.verificationStatus !== "VERIFIED" ? (
         <div className="rounded-xl border border-warm-border bg-paper-white p-6">
           <p className="mb-3">Bạn cần là thành viên công ty đã xác thực để xem đơn ứng tuyển.</p>
           <Link to="/recruiter/members" className="text-primary">
@@ -42,31 +48,59 @@ function ApplicationsPage() {
           </Link>
         </div>
       ) : (
-        <div className="space-y-3">
-          {applications.length ? (
-            applications.map((a) => {
-              const job = workspace.jobs.find((j) => j.id === a.jobId)!;
-              return (
-                <article
-                  key={a.id}
-                  className="rounded-xl border border-warm-border bg-paper-white p-5"
-                >
-                  <h2 className="font-semibold">{a.name}</h2>
-                  <p className="mt-2 text-sm">{a.email}</p>
-                  <p className="mt-1 text-sm">Ứng tuyển: {job.title}</p>
-                  <p className="mt-1 text-xs text-charcoal-83">
-                    {new Date(a.submittedAt).toLocaleString("vi-VN")}
-                  </p>
-                </article>
-              );
-            })
-          ) : (
-            <p className="rounded-xl border border-warm-border bg-paper-white p-8 text-sm text-charcoal-83">
-              {query
-                ? "Không tìm thấy đơn phù hợp. Hãy thử từ khóa khác."
-                : "Chưa có đơn ứng tuyển trong phạm vi quyền xem của bạn."}
-            </p>
-          )}
+        <div
+          className="workspace-table-scroll"
+          role="region"
+          aria-label="Danh sách đơn ứng tuyển"
+          tabIndex={0}
+        >
+          <table className="workspace-data-table min-w-[640px]">
+            <caption className="sr-only">Danh sách đơn ứng tuyển trong phạm vi quyền xem</caption>
+            <thead>
+              <tr>
+                <th scope="col">Ứng viên</th>
+                <th scope="col">Vị trí ứng tuyển</th>
+                <th scope="col">Thời điểm gửi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {applications.map((application) => {
+                const job = workspace.jobs.find((job) => job.id === application.jobId)!;
+                return (
+                  <tr key={application.id}>
+                    <td>
+                      <strong className="font-semibold">{application.name}</strong>
+                      <p className="mt-1 text-sm text-charcoal-83">{application.email}</p>
+                    </td>
+                    <td>{job.title}</td>
+                    <td>
+                      <time dateTime={application.submittedAt}>
+                        {new Date(application.submittedAt).toLocaleString("vi-VN", {
+                          timeZone: "Asia/Ho_Chi_Minh",
+                        })}
+                      </time>
+                    </td>
+                  </tr>
+                );
+              })}
+              {!applications.length && (
+                <tr>
+                  <td colSpan={3} className="py-10">
+                    <p>
+                      {query
+                        ? "Không tìm thấy đơn phù hợp. Hãy thử từ khóa khác."
+                        : "Chưa có đơn ứng tuyển trong phạm vi quyền xem của bạn."}
+                    </p>
+                    {!query && (
+                      <Link to="/recruiter/jobs" className="admin-text-link mt-3">
+                        Xem tin tuyển dụng
+                      </Link>
+                    )}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       )}
     </RecruiterShell>

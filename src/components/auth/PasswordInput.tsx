@@ -1,8 +1,8 @@
+import { VisibleIcon, HiddenIcon } from "@/components/icons";
 import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
 
 export const authInputClass =
-  "w-full rounded-lg border border-warm-border bg-paper-white px-3.5 py-3 text-sm text-charcoal-text placeholder:text-charcoal-40 focus:outline-2 focus:outline-offset-2 focus:outline-primary disabled:opacity-60";
+  "w-full rounded-lg border border-warm-border bg-paper-white px-3.5 py-3 text-[15px] text-charcoal-text placeholder:text-charcoal-40 focus:outline-2 focus:outline-offset-2 focus:outline-primary disabled:opacity-60";
 
 export function PasswordInput({
   id,
@@ -49,7 +49,7 @@ export function PasswordInput({
           onClick={() => setVisible(!visible)}
           className="absolute inset-y-0 right-0 flex items-center px-3 text-charcoal-83 hover:text-primary"
         >
-          {visible ? <EyeOff size={18} /> : <Eye size={18} />}
+          {visible ? <HiddenIcon size={18} /> : <VisibleIcon size={18} />}
         </button>
       </div>
       {hint && (

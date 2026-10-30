@@ -17,7 +17,7 @@ OWN-WORLD: White and cool blue-gray grounds, deep blue actions, restrained orang
 
 STORY: Understand GuardianWork, search existing jobs by skill and location, inspect the selected job, and continue the existing application flow. Recruiters enter posting and company-verification flows directly.
 
-FIRST VIEWPORT: A white navigation band, centered product headline, concise existing description, and a large working keyword/location search. Popular skill links sit beneath it; the next section starts with actual existing job listings. Signature interaction: submitting the landing search transfers its filters to the candidate workspace and opening a preview selects that exact listing. Motion uses short color transitions with visible content and reduced-motion support.
+FIRST VIEWPORT: A white navigation band, product headline and concise existing description on the left beside compact multi-industry artwork on wide screens, and a full-width working keyword/location search beneath. Below 1100px the artwork is absent and the established centered introduction remains. Popular skill links sit beneath it; the next section starts with actual existing job listings. Signature interaction: submitting the landing search transfers its filters to the candidate workspace and opening a preview selects that exact listing. Motion uses short color transitions with visible content and reduced-motion support.
 
 FORM: User-selected category standard, reference VietnamWorks; selected sketch `.impeccable/mocks/decision/canon.html`; seed:299ce1db6bceb58e. Preserve content and role boundaries. Direct reference access returned 403, so no pixel-for-pixel fidelity claim is made.
 

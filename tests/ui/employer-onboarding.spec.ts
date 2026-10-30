@@ -4,25 +4,31 @@ function envelope(data: unknown, status = 200) {
   return { status, contentType: "application/json", body: JSON.stringify({ status, data }) };
 }
 
-test("employer registration creates an account without logging in even when email delivery fails", async ({
+test("recruiter registration uses shared account registration before Company setup", async ({
   page,
 }, info) => {
   let payload: Record<string, unknown> = {};
-  await page.route("**/api/employer-registrations", async (route) => {
+  await page.route("**/api/auth/register", async (route) => {
     payload = route.request().postDataJSON();
     await route.fulfill(
       envelope(
-        { userId: 123, emailVerified: false, stage: "EMAIL_REQUIRED", deliveryAccepted: false },
+        {
+          id: 20,
+          firstName: "An",
+          lastName: "Nguyễn",
+          username: "nguyen_an",
+          email: "an@example.test",
+          role: "USER",
+        },
         201,
       ),
     );
   });
   await page.goto("/register?role=recruiter");
-  await page.locator("#register-fullName").fill("Nguyễn An");
-  await page.locator("#register-phone").fill("0901234567");
-  await page.locator("#register-companyName").fill("Công ty Alpha");
-  await page.locator("#register-workAddress").fill("Hà Nội");
-  await page.locator("#register-gender").selectOption("OTHER");
+  await expect(page.getByText(/thiết lập hồ sơ công ty/)).toBeVisible();
+  await page.locator("#register-last-name").fill("Nguyễn");
+  await page.locator("#register-first-name").fill("An");
+  await page.locator("#register-username").fill("nguyen_an");
   await page.locator("#register-email").fill("an@example.test");
   await page.locator("#register-password").fill("Guardian123!");
   await page.locator("#register-confirmation").fill("Guardian123!");
@@ -32,108 +38,56 @@ test("employer registration creates an account without logging in even when emai
   });
   await page.getByRole("button", { name: "Đăng ký tuyển dụng", exact: true }).click();
   await expect(page.getByText("Tạo tài khoản thành công!")).toBeVisible();
-  await expect(page.getByText(/bạn không cần đăng ký lại/)).toBeVisible();
-  expect(Object.keys(payload).sort()).toEqual(
-    [
-      "fullName",
-      "phone",
-      "companyName",
-      "gender",
-      "workAddress",
-      "email",
-      "password",
-      "passwordConfirmation",
-    ].sort(),
-  );
+  await expect(page.getByText(/thiết lập hồ sơ công ty hoặc chấp nhận lời mời/)).toBeVisible();
+  expect(payload).toEqual({
+    firstName: "An",
+    lastName: "Nguyễn",
+    username: "nguyen_an",
+    email: "an@example.test",
+    password: "Guardian123!",
+  });
   expect(await page.evaluate(() => sessionStorage.getItem("guardianwork_auth_session"))).toBeNull();
 });
 
-test("email stage blocks direct company/jobs/invitation routes and resend preserves account with cooldown", async ({
+test("a shared account without membership can open Company setup and never calls retired onboarding", async ({
   page,
-}, info) => {
-  await page.route("**/api/me/employer-onboarding", (route) =>
-    route.fulfill(envelope({ stage: "EMAIL_REQUIRED" })),
-  );
-  let sent = 0;
-  await page.route("**/api/me/employer-onboarding/email/send", async (route) => {
-    expect(route.request().headers().authorization).toMatch(/^Bearer /);
-    expect(route.request().postData()).toBeNull();
-    sent++;
-    await route.fulfill(envelope({ deliveryAccepted: false }));
+}) => {
+  const retiredRequests: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/api/me/employer-onboarding")) retiredRequests.push(request.url());
   });
   await login(page, "recruiter_demo", true);
-  for (const path of [
-    "/recruiter/jobs?create=true",
-    "/recruiter/verification",
-    "/recruiter/members",
-  ]) {
-    await page.goto(path);
-    await expect(page.getByRole("heading", { name: "Xác thực email của bạn" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Đăng tin tuyển dụng", exact: true })).toHaveCount(
-      0,
-    );
-    await expect(page.locator('input[name="companyName"]')).toHaveCount(0);
-  }
-  await page.getByRole("button", { name: "Gửi lại email xác thực", exact: true }).click();
-  await expect(page.getByRole("button", { name: /Gửi lại sau/ })).toBeDisabled();
-  await expect(page.getByText(/Tài khoản vẫn tồn tại/)).toBeVisible();
-  expect(sent).toBe(1);
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await page.screenshot({ path: `/tmp/employer-email-${info.project.name}.png`, fullPage: true });
+  await page.goto("/recruiter/verification", { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("heading", { name: "Đăng ký công ty", exact: true })).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Tên công ty" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Xem lời mời công ty" })).toBeVisible();
+  await page.goto("/recruiter/jobs?create=true", { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("heading", { name: "Kết nối với công ty của bạn" })).toBeVisible();
+  expect(retiredRequests).toEqual([]);
 });
 
-test("fragment is removed before login and verified with the current account before reloading onboarding", async ({
-  page,
-}) => {
-  let verified = false;
-  await page.route("**/api/me/employer-onboarding", (route) =>
-    route.fulfill(envelope({ stage: verified ? "COMPANY_ACTION_REQUIRED" : "EMAIL_REQUIRED" })),
+test("Company verification status alone gates recruiter features", async ({ page }) => {
+  let status = "PENDING";
+  await page.route("**/api/companies/me/verification", (route) =>
+    route.fulfill(
+      envelope({
+        id: 101,
+        name: "Công ty TNHH Giải Pháp Alpha",
+        taxCode: "0101234567",
+        verificationStatus: status,
+        version: 0,
+      }),
+    ),
   );
-  await page.route("**/api/me/employer-onboarding/email/verify", async (route) => {
-    expect(route.request().headers().authorization).toMatch(/^Bearer /);
-    expect(route.request().postDataJSON()).toEqual({ emailSecret: "one-time-test-secret" });
-    verified = true;
-    await route.fulfill(envelope(null));
-  });
-  await page.goto("/login?role=recruiter#memberEmailSecret=one-time-test-secret");
-  await expect(page).not.toHaveURL(/memberEmailSecret/);
-  await expect(page.getByText(/Đăng nhập đúng tài khoản nhận email/)).toBeVisible();
-  await page.locator("#login-identifier").fill("recruiter_demo");
-  await page.locator("#login-password").fill("Guardian123!");
-  await page.getByRole("button", { name: "Đăng nhập", exact: true }).click();
-  await page.getByRole("button", { name: "Xác thực email cho tài khoản này" }).click();
-  await expect(
-    page.getByRole("heading", { name: "Kết nối với công ty của bạn", exact: true }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("link", { name: "Chuẩn bị hồ sơ công ty", exact: true }),
-  ).toBeVisible();
-  await expect(page.getByRole("link", { name: "Xem lời mời công ty", exact: true })).toBeVisible();
-  expect(verified).toBe(true);
-  const stored = await page.evaluate(() => JSON.stringify({ ...sessionStorage, ...localStorage }));
-  expect(stored).not.toContain("one-time-test-secret");
-});
-
-test("server onboarding overrides membership and unknown states never unlock recruitment", async ({
-  page,
-}) => {
-  let stage = "PENDING";
-  await page.route("**/api/me/employer-onboarding", (route) => route.fulfill(envelope({ stage })));
   await login(page, "owner_demo", true);
   await page.goto("/recruiter/jobs?create=true");
   await expect(page.getByRole("heading", { name: "Hồ sơ công ty đang chờ duyệt" })).toBeVisible();
-  stage = "REJECTED";
+  status = "REJECTED";
   await page.getByRole("button", { name: "Tải lại trạng thái" }).click();
   await expect(page.getByRole("heading", { name: "Hồ sơ công ty cần bổ sung" })).toBeVisible();
-  stage = "VERIFIED";
+  status = "VERIFIED";
   await page.getByRole("button", { name: "Tải lại trạng thái" }).click();
   await expect(page.getByRole("link", { name: "Đăng tin tuyển dụng", exact: true })).toBeVisible();
-  stage = "PHONE_REQUIRED";
-  await page.reload();
-  await expect(
-    page.getByText("Không thể đọc trạng thái tuyển dụng. Vui lòng tải lại."),
-  ).toBeVisible();
-  await expect(page.getByRole("link", { name: "Đăng tin tuyển dụng", exact: true })).toHaveCount(0);
 });
 
 test("old registration links explain recovery without calling retired APIs", async ({ page }) => {
@@ -142,25 +96,50 @@ test("old registration links explain recovery without calling retired APIs", asy
   await expect(page).not.toHaveURL(/continuationToken|registrationId/);
 });
 
-test("invitation acceptance requires server preview and confirmation and reloads server membership", async ({
+test("legacy recruiter setup fragments are removed and continue through Company setup", async ({
   page,
-  mockApiUrl,
+}) => {
+  await page.goto("/login?role=recruiter#memberEmailSecret=legacy-secret", {
+    waitUntil: "domcontentloaded",
+  });
+  await expect(page).not.toHaveURL(/memberEmailSecret/);
+  await expect(
+    page.getByText(/Liên kết thiết lập tuyển dụng cũ không còn được dùng/),
+  ).toBeVisible();
+  await page.locator("#login-identifier").fill("recruiter_demo");
+  await page.locator("#login-password").fill("Guardian123!");
+  await page.getByRole("button", { name: "Đăng nhập", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Đăng ký công ty", exact: true })).toBeVisible();
+  const stored = await page.evaluate(() => JSON.stringify({ ...sessionStorage, ...localStorage }));
+  expect(stored).not.toContain("legacy-secret");
+});
+
+test("invitation acceptance confirms through the Company API and reloads membership", async ({
+  page,
 }, info) => {
   let accepted = false;
-  await page.route("**/api/me/employer-onboarding", (route) =>
-    route.fulfill(envelope({ stage: accepted ? "VERIFIED" : "COMPANY_ACTION_REQUIRED" })),
-  );
   await page.route("**/api/auth/me", async (route) => {
-    const response = await route.fetch({ url: `${mockApiUrl}/api/auth/me` });
-    const body = await response.json();
-    if (accepted)
-      body.data.activeMembership = {
-        companyId: 101,
-        companyName: "Công ty được mời",
-        companyRole: "RECRUITER",
-        joinedAt: new Date().toISOString(),
-      };
-    await route.fulfill({ json: body });
+    await route.fulfill({
+      json: {
+        status: 200,
+        data: {
+          id: 2,
+          firstName: "Linh",
+          lastName: "Trần",
+          username: "recruiter_demo",
+          email: "recruiter@example.test",
+          role: "USER",
+          activeMembership: accepted
+            ? {
+                companyId: 101,
+                companyName: "Công ty được mời",
+                companyRole: "RECRUITER",
+                joinedAt: new Date().toISOString(),
+              }
+            : null,
+        },
+      },
+    });
   });
   await page.route("**/api/companies/101", (route) =>
     route.fulfill(
@@ -195,7 +174,9 @@ test("invitation acceptance requires server preview and confirmation and reloads
       envelope({ membershipId: 21, companyRole: "RECRUITER", membershipStatus: "ACTIVE" }, 201),
     );
   });
-  await page.goto("/login?role=recruiter#secret=invitation-test-secret");
+  await page.goto("/login?role=recruiter#secret=invitation-test-secret", {
+    waitUntil: "domcontentloaded",
+  });
   await expect(page).not.toHaveURL(/#secret/);
   await page.locator("#login-identifier").fill("recruiter_demo");
   await page.locator("#login-password").fill("Guardian123!");
@@ -212,7 +193,7 @@ test("invitation acceptance requires server preview and confirmation and reloads
   expect(accepted).toBe(true);
 });
 
-test("candidate phone is normalized and clearing it updates the shared account contact", async ({
+test("candidate phone is read from the shared profile API and can be cleared", async ({
   page,
 }, info) => {
   await login(page, "candidate_demo");
@@ -231,17 +212,17 @@ test("candidate phone is normalized and clearing it updates the shared account c
   await expect(
     page.getByText("Đã xóa số điện thoại chung của tài khoản.", { exact: true }),
   ).toBeVisible();
-  const shared = await page.evaluate(
+  const phone = await page.evaluate(
     async () =>
       (
         await (
-          await fetch("/api/me/employer-onboarding", {
+          await fetch("/api/v1/candidates/profile", {
             headers: {
               Authorization: `Bearer ${JSON.parse(sessionStorage.getItem("guardianwork_auth_session")!).accessToken}`,
             },
           })
         ).json()
-      ).data.phone,
+      ).data.phoneNumber,
   );
-  expect(shared).toBeNull();
+  expect(phone).toBeNull();
 });

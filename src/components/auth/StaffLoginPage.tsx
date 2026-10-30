@@ -1,6 +1,7 @@
+import { ArrowRightIcon } from "@/components/icons";
 import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowRight, LoaderCircle, ShieldCheck } from "lucide-react";
+import { LoaderCircle, ShieldCheck } from "lucide-react";
 import { PasswordInput, authInputClass } from "./PasswordInput";
 import {
   hasAuthSession,
@@ -123,7 +124,7 @@ export function StaffLoginPage() {
                 </>
               ) : (
                 <>
-                  Đăng nhập <ArrowRight size={18} aria-hidden="true" />
+                  Đăng nhập <ArrowRightIcon size={18} aria-hidden="true" />
                 </>
               )}
             </button>

@@ -1,8 +1,10 @@
+import { ErrorIcon, ArrowLeftIcon, ArrowRightIcon, RefreshIcon } from "@/components/icons";
+import { GuardianIllustration } from "@/components/GuardianIllustration";
 import { dossierDate as date } from "@/lib/dossier-date";
 import { DossierHistory, LegacyEvidence } from "@/components/staff/DossierHistory";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { AlertCircle, ArrowLeft, ArrowRight, Database, RotateCcw } from "lucide-react";
+import { Database } from "lucide-react";
 import { StaffStatusBadge } from "@/components/admin/StaffStatusBadge";
 import { AdminShell } from "@/components/AdminShell";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -288,11 +290,11 @@ function AdminVerificationsPage() {
           </div>
           {!mockMode && error ? (
             <div className="admin-list-state" role="alert">
-              <AlertCircle aria-hidden="true" />
+              <ErrorIcon aria-hidden="true" />
               <h2>Không tải được hồ sơ</h2>
               <p>{error}</p>
               <button type="button" className="admin-secondary-action" onClick={retry}>
-                <RotateCcw size={16} />
+                <RefreshIcon size={16} />
                 Thử tải lại
               </button>
             </div>
@@ -347,7 +349,7 @@ function AdminVerificationsPage() {
                           className="admin-text-link"
                           onClick={() => choose(item)}
                         >
-                          Mở hồ sơ <ArrowRight size={16} aria-hidden="true" />
+                          Mở hồ sơ <ArrowRightIcon size={16} aria-hidden="true" />
                         </button>
                       </td>
                     </tr>
@@ -356,11 +358,17 @@ function AdminVerificationsPage() {
               </table>
               {visibleRows.length === 0 && (
                 <div className="admin-list-empty">
+                  {!rows.length &&
+                    !query.trim() &&
+                    search.page === 0 &&
+                    search.status === "PENDING" && (
+                      <GuardianIllustration name="review" className="guardian-art--empty" />
+                    )}
                   <h2>
-                    {rows.length ? "Không tìm thấy hồ sơ phù hợp" : "Không có hồ sơ trong mục này"}
+                    {query.trim() ? "Không tìm thấy hồ sơ phù hợp" : "Không có hồ sơ trong mục này"}
                   </h2>
                   <p>
-                    {rows.length
+                    {query.trim()
                       ? "Thử từ khóa khác trong trang hiện tại."
                       : "Khi có hồ sơ phù hợp với bộ lọc, hồ sơ sẽ xuất hiện tại đây."}
                   </p>
@@ -402,7 +410,7 @@ function AdminVerificationsPage() {
               setNotice(null);
             }}
           >
-            <ArrowLeft size={16} />
+            <ArrowLeftIcon size={16} />
             Quay lại danh sách
           </button>
           <div className="admin-page-heading">
@@ -430,12 +438,12 @@ function AdminVerificationsPage() {
           )}
           {decisionError && (
             <div className="admin-inline-error" role="alert">
-              <AlertCircle size={18} />
+              <ErrorIcon size={18} />
               <div>
                 <p>{decisionError.message}</p>
                 {decisionError.conflict && (
                   <button type="button" className="admin-text-link" onClick={reloadAfterConflict}>
-                    Tải lại danh sách <RotateCcw size={15} />
+                    Tải lại danh sách <RefreshIcon size={15} />
                   </button>
                 )}
               </div>
@@ -509,7 +517,7 @@ function AdminVerificationsPage() {
                   disabled={saving || decisionError?.conflict}
                   onClick={() => openDecision("VERIFIED")}
                 >
-                  Phê duyệt <ArrowRight size={16} />
+                  Phê duyệt <ArrowRightIcon size={16} />
                 </button>
               </div>
             </div>

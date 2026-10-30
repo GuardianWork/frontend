@@ -1,0 +1,1 @@
+Radix Icons: https://github.com/radix-ui/icons (MIT licensed). This package only references official React exports; it does not redistribute upstream SVG geometry. Obtain authoritative copyright and license text from the installed @radix-ui/react-icons package.

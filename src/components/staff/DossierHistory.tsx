@@ -1,3 +1,13 @@
+import {
+  DownloadIcon,
+  UnavailableEvidenceIcon,
+  SubmissionHistoryIcon,
+  ExternalLinkIcon,
+  RefreshIcon,
+  PendingIcon,
+  CompanyIcon,
+  RejectedIcon,
+} from "@/components/icons";
 import { useEffect, useState } from "react";
 import {
   certificateTarget,
@@ -32,6 +42,7 @@ export function EvidenceDownload({ documentId }: { documentId: string }) {
           }
         }}
       >
+        {unavailable ? <UnavailableEvidenceIcon size={16} /> : <DownloadIcon size={16} />}
         {busy
           ? "Đang tải tài liệu…"
           : unavailable
@@ -49,7 +60,7 @@ export function LegacyEvidence({ value }: { value: string | null }) {
   if (target.href)
     return (
       <a className="admin-text-link" href={target.href} target="_blank" rel="noreferrer">
-        Mở đường dẫn giấy đăng ký
+        <ExternalLinkIcon size={16} /> Mở đường dẫn giấy đăng ký
       </a>
     );
   return <>Chưa có đường dẫn tài liệu trong hồ sơ.</>;
@@ -79,7 +90,9 @@ export function DossierHistory({ companyId, revision }: { companyId: number; rev
   return (
     <section className="admin-panel mt-6" aria-labelledby="history-title">
       <div className="admin-panel-heading">
-        <h2 id="history-title">Lịch sử gửi hồ sơ</h2>
+        <h2 id="history-title" className="flex items-center gap-2">
+          <SubmissionHistoryIcon size={20} /> Lịch sử gửi hồ sơ
+        </h2>
       </div>
       {loading ? (
         <p className="p-6" role="status">
@@ -89,7 +102,7 @@ export function DossierHistory({ companyId, revision }: { companyId: number; rev
         <div className="p-6" role="alert">
           <p>{error}</p>
           <button className="admin-text-link" onClick={() => setRetry((value) => value + 1)}>
-            Thử tải lại lịch sử
+            <RefreshIcon size={16} /> Thử tải lại lịch sử
           </button>
         </div>
       ) : !attempts.length ? (
@@ -143,11 +156,20 @@ export function DossierHistory({ companyId, revision }: { companyId: number; rev
                 <div>
                   <dt>Kết quả</dt>
                   <dd>
-                    {attempt.outcome === "VERIFIED"
-                      ? "Đã xác minh"
-                      : attempt.outcome === "REJECTED"
-                        ? "Đã từ chối"
-                        : "Chờ duyệt"}
+                    <span className="inline-flex items-center gap-2">
+                      {attempt.outcome === "VERIFIED" ? (
+                        <CompanyIcon size={16} />
+                      ) : attempt.outcome === "REJECTED" ? (
+                        <RejectedIcon size={16} />
+                      ) : (
+                        <PendingIcon size={16} />
+                      )}
+                      {attempt.outcome === "VERIFIED"
+                        ? "Đã xác minh"
+                        : attempt.outcome === "REJECTED"
+                          ? "Đã từ chối"
+                          : "Chờ duyệt"}
+                    </span>
                   </dd>
                 </div>
                 <div>

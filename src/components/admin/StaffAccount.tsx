@@ -1,4 +1,4 @@
-import { ChevronDown, UserRound } from "lucide-react";
+import { ChevronDownIcon, CandidateProfileIcon } from "@/components/icons";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import "./staff.css";
@@ -33,7 +33,7 @@ export function StaffAccount({ summary = false }: { summary?: boolean }) {
       <section className="staff-account-summary" aria-label="Thông tin staff đang đăng nhập">
         <div className="staff-account-heading">
           <span className="staff-account-avatar" aria-hidden="true">
-            <UserRound size={22} />
+            <CandidateProfileIcon size={22} />
           </span>
           <div>
             <h2>{name}</h2>
@@ -52,13 +52,13 @@ export function StaffAccount({ summary = false }: { summary?: boolean }) {
           aria-label={`Thông tin tài khoản ${name}`}
         >
           <span className="staff-account-avatar" aria-hidden="true">
-            <UserRound size={19} />
+            <CandidateProfileIcon size={19} />
           </span>
           <span className="staff-account-trigger-text">
             <strong>{name}</strong>
             <span>{user.email}</span>
           </span>
-          <ChevronDown size={15} aria-hidden="true" />
+          <ChevronDownIcon size={15} aria-hidden="true" />
         </button>
       </PopoverTrigger>
       <PopoverContent

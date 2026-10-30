@@ -1,5 +1,16 @@
+import * as SemanticIcons from "@/components/icons";
+import "./workspace.css";
+import {
+  JobIcon,
+  LegalReferenceIcon,
+  CandidateProfileIcon,
+  MenuIcon,
+  CloseIcon,
+  LockIcon,
+  GlobeIcon,
+} from "@/components/icons";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { BriefcaseBusiness, ChevronDown, X } from "lucide-react";
+import { BriefcaseBusiness, ChevronDown, X, ShieldCheck } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { StaffShell } from "./StaffShell";
 import { LogoutButton } from "./LogoutButton";
@@ -36,8 +47,53 @@ const RECRUITER_NAV: NavItem[] = [
   { to: "/recruiter/jobs", label: "Manage Jobs", icon: "work" },
 ];
 
+// Transitional aliases for routed legacy JSX; unresolved consumers retain Material Symbols.
+const semanticSymbols = {
+  work: SemanticIcons.JobIcon,
+  badge: SemanticIcons.CandidateProfileIcon,
+  gavel: SemanticIcons.LegalReferenceIcon,
+  policy: SemanticIcons.LegalReferenceIcon,
+  shield: SemanticIcons.LegalReferenceIcon,
+  verified_user: SemanticIcons.LegalReferenceIcon,
+  smart_toy: SemanticIcons.LegalReferenceIcon,
+  description: SemanticIcons.CvIcon,
+  download: SemanticIcons.DownloadIcon,
+  upload: SemanticIcons.UploadIcon,
+  person_search: SemanticIcons.TalentSearchIcon,
+  group: SemanticIcons.CompanyMembersIcon,
+  history_edu: SemanticIcons.SubmissionHistoryIcon,
+  content_copy: SemanticIcons.CopyIcon,
+  open_in_new: SemanticIcons.ExternalLinkIcon,
+  arrow_forward: SemanticIcons.ArrowRightIcon,
+  info: SemanticIcons.InformationIcon,
+  help: SemanticIcons.InformationIcon,
+  contact_support: SemanticIcons.InformationIcon,
+  check: SemanticIcons.CheckIcon,
+  check_circle: SemanticIcons.CheckIcon,
+  verified: SemanticIcons.VerifiedIcon,
+  add: SemanticIcons.AddIcon,
+  close: SemanticIcons.CloseIcon,
+  edit: SemanticIcons.EditIcon,
+  mail: SemanticIcons.EmailIcon,
+  mark_email_read: SemanticIcons.InvitationIcon,
+  account_box: SemanticIcons.CandidateProfileIcon,
+  search: SemanticIcons.SearchIcon,
+  location_on: SemanticIcons.LocationIcon,
+  filter_list: SemanticIcons.FilterIcon,
+  translate: SemanticIcons.GlobeIcon,
+  link: SemanticIcons.LinkIcon,
+  hub: SemanticIcons.RecruitmentOverviewIcon,
+  send: SemanticIcons.ArrowRightIcon,
+  auto_awesome: SemanticIcons.InformationIcon,
+  lock: SemanticIcons.LockIcon,
+  public: SemanticIcons.GlobeIcon,
+  menu: SemanticIcons.MenuIcon,
+};
 function Icon({ name, className = "" }: { name: string; className?: string }) {
-  return (
+  const Symbol = semanticSymbols[name as keyof typeof semanticSymbols];
+  return Symbol ? (
+    <Symbol size="1em" className={className} />
+  ) : (
     <span aria-hidden="true" className={`material-symbols-outlined ${className}`}>
       {name}
     </span>
@@ -147,13 +203,32 @@ export function AdminShell({
         aria-current={active ? "page" : undefined}
         onClick={() => setMenuOpen(false)}
         className={
-          active
-            ? "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-semibold bg-surface-container text-charcoal-text"
-            : "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-charcoal-40 hover:text-charcoal-text hover:bg-charcoal-04 transition-colors"
+          currentRole === "candidate"
+            ? "workspace-nav-link"
+            : active
+              ? "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-semibold bg-surface-container text-charcoal-text"
+              : "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-charcoal-40 hover:text-charcoal-text hover:bg-charcoal-04 transition-colors"
         }
       >
-        <Icon name={item.icon} className="!text-xl" />
-        {item.label}
+        {currentRole === "candidate" ? (
+          <>
+            <span className="workspace-nav-icon">
+              {item.icon === "work" ? (
+                <JobIcon size={20} />
+              ) : item.icon === "gavel" ? (
+                <LegalReferenceIcon size={20} />
+              ) : (
+                <CandidateProfileIcon size={20} />
+              )}
+            </span>
+            <span className="workspace-nav-label">{item.label}</span>
+          </>
+        ) : (
+          <>
+            <Icon name={item.icon} className="!text-xl" />
+            {item.label}
+          </>
+        )}
       </Link>
     );
   };
@@ -169,7 +244,7 @@ export function AdminShell({
 
   return (
     <div
-      className={`${currentRole === "admin" ? "admin-workspace " : ""}workspace-shell flex h-screen w-full overflow-hidden bg-background text-charcoal-text`}
+      className={`${currentRole === "admin" ? "admin-workspace " : "candidate-workspace "}workspace-shell flex h-screen w-full overflow-hidden bg-background text-charcoal-text`}
     >
       {menuOpen && (
         <button
@@ -186,7 +261,11 @@ export function AdminShell({
         <div className="workspace-brand p-5 border-b border-warm-border">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-md bg-primary text-on-primary flex items-center justify-center">
-              <Icon name={roleMeta.icon} className="!text-2xl" />
+              {currentRole === "candidate" ? (
+                <ShieldCheck size={24} aria-hidden="true" />
+              ) : (
+                <Icon name={roleMeta.icon} className="!text-2xl" />
+              )}
             </div>
             <div>
               <h2 className="font-semibold text-lg tracking-tight leading-tight text-primary">
@@ -197,14 +276,14 @@ export function AdminShell({
               </p>
             </div>
           </div>
-          {currentRole === "admin" && (
+          {(currentRole === "admin" || currentRole === "candidate") && (
             <button
               type="button"
               className="admin-navigation-close md:hidden"
               aria-label="Đóng điều hướng"
               onClick={() => setMenuOpen(false)}
             >
-              <X size={20} aria-hidden="true" />
+              <CloseIcon size={20} />
             </button>
           )}
         </div>
@@ -212,13 +291,8 @@ export function AdminShell({
         {/* Nav Items */}
         <nav
           aria-label="Điều hướng chính"
-          className="flex-1 flex flex-col gap-1 p-3 overflow-y-auto"
+          className={`${currentRole === "candidate" ? "workspace-navigation " : ""}flex-1 flex flex-col gap-1 p-3 overflow-y-auto`}
         >
-          {currentRole !== "admin" && (
-            <div className="text-[10px] font-bold text-charcoal-40 uppercase tracking-wider mb-1 px-2 pt-2">
-              Điều hướng {roleMeta.title}
-            </div>
-          )}
           {currentRole === "admin" ? (
             <>
               {ADMIN_NAV.slice(0, 2).map(renderNavItem)}
@@ -261,29 +335,23 @@ export function AdminShell({
         </nav>
 
         {/* Bottom CTA & Links */}
-        <div className="p-4 border-t border-warm-border flex flex-col gap-3">
+        <div className="workspace-sidebar-footer p-4 border-t border-warm-border flex flex-col gap-3">
           {currentRole !== "admin" && (
             <Link
               to={roleMeta.ctaTo}
-              className="w-full py-2.5 px-4 bg-primary text-on-primary font-medium rounded-md hover:bg-charcoal-83 transition-colors flex items-center justify-center gap-2 text-xs shadow-sm"
+              className="workspace-footer-cta w-full py-2.5 px-4 bg-primary text-on-primary font-medium rounded-md hover:bg-primary-hover transition-colors flex items-center justify-center gap-2 text-xs"
             >
-              <Icon name="add" className="!text-base" />
+              <JobIcon size={16} />
               {roleMeta.cta}
             </Link>
           )}
           <div className="flex flex-col gap-1">
-            <Link
-              to="/login"
-              className="flex items-center gap-2.5 px-3 py-1.5 rounded-md text-xs font-medium text-charcoal-40 hover:text-charcoal-text hover:bg-charcoal-04 transition-colors"
-            >
-              <Icon name="lock" className="!text-base" />
+            <Link to="/login" className="workspace-footer-link">
+              <LockIcon size={18} />
               Xác thực định danh
             </Link>
-            <Link
-              to="/vn"
-              className="flex items-center gap-2.5 px-3 py-1.5 rounded-md text-xs font-medium text-charcoal-40 hover:text-charcoal-text hover:bg-charcoal-04 transition-colors"
-            >
-              <Icon name="public" className="!text-base" />
+            <Link to="/vn" className="workspace-footer-link">
+              <GlobeIcon size={18} />
               Trang chủ GuardianWork
             </Link>
           </div>
@@ -301,17 +369,12 @@ export function AdminShell({
               onClick={() => setMenuOpen(!menuOpen)}
               className="md:hidden p-2 rounded-md border border-warm-border text-charcoal-83"
             >
-              <Icon name="menu" />
+              <MenuIcon size={22} />
             </button>
             <div className="min-w-0">
               <p className="workspace-page-title font-bold text-sm md:text-xl text-charcoal-text tracking-tight">
                 {title}
               </p>
-              {currentRole !== "admin" && (
-                <p className="hidden md:block text-[11px] font-mono text-charcoal-40">
-                  Phân hệ: <strong className="text-primary">{roleMeta.title}</strong>
-                </p>
-              )}
             </div>
           </div>
 
@@ -330,23 +393,13 @@ export function AdminShell({
             {topNavExtras}
 
             <div className="flex items-center gap-2">
-              {currentRole !== "admin" && (
-                <span
-                  role="img"
-                  aria-label="Thông báo"
-                  className="hidden sm:flex w-9 h-9 rounded-md border border-warm-border bg-surface items-center justify-center text-charcoal-40 relative"
-                >
-                  <Icon name="notifications" className="!text-xl" />
-                  <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-error border border-paper-white" />
-                </span>
-              )}
               <LogoutButton />
             </div>
           </div>
         </header>
 
         <main className="flex-1 overflow-y-auto p-4 md:p-8">
-          <div className="max-w-7xl mx-auto">{children}</div>
+          <div className="workspace-page max-w-7xl mx-auto">{children}</div>
         </main>
       </div>
     </div>

@@ -10,7 +10,6 @@ import { EmployerOnboardingPanel } from "@/components/EmployerOnboardingPanel";
 import { RecruiterShell } from "@/components/RecruiterShell";
 import { loadEmployerOnboarding, type EmployerOnboarding } from "@/services/employerOnboarding";
 import { getMemberEmailSecret, getInvitationSecret } from "@/lib/member-email-secret";
-import { loadCompanyVerification } from "@/services/companyVerification";
 
 function RecruiterAccess({ children }: { children: ReactNode }) {
   const context = useEmployerOnboarding();
@@ -22,7 +21,7 @@ function RecruiterAccess({ children }: { children: ReactNode }) {
     stage === "VERIFIED" ||
     (stage === "COMPANY_ACTION_REQUIRED" && (companyPage || invitationsPage)) ||
     ((stage === "PENDING" || stage === "REJECTED") && companyPage);
-  if (!allowed || getMemberEmailSecret())
+  if (!allowed)
     return (
       <RecruiterShell title="Thiết lập tuyển dụng">
         <EmployerOnboardingPanel />
@@ -85,13 +84,6 @@ export function AuthGate({ children }: { children: ReactNode }) {
           const next = await loadEmployerOnboarding();
           if (cancelled) return;
           setOnboarding(next);
-          if (
-            user.activeMembership &&
-            (user.activeMembership.companyRole === "OWNER"
-              ? next.stage !== "EMAIL_REQUIRED"
-              : next.stage === "VERIFIED")
-          )
-            await loadCompanyVerification();
         }
         if (!cancelled) setState({ area, ready: true, error: "" });
       } catch (error) {
@@ -134,7 +126,10 @@ export function AuthGate({ children }: { children: ReactNode }) {
   }
   return (
     <main className="mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center gap-4 px-6 text-center">
-      <p role={state.error ? "alert" : "status"} className="text-sm leading-6">
+      {state.error && (
+        <h1 className="text-2xl font-semibold tracking-tight">Chưa thể mở không gian làm việc</h1>
+      )}
+      <p role={state.error ? "alert" : "status"} className="text-[15px] leading-7 text-ink-2">
         {state.error || "Đang tải thông tin tài khoản…"}
       </p>
       {state.error && (
