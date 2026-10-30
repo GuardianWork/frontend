@@ -8,6 +8,7 @@ import { AdminShell, Icon } from "@/components/AdminShell";
 export const Route = createFileRoute("/recruiter/")({
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex, nofollow" },
       { title: "Recruiter Hub & Sourcing — GuardianWork" },
       {
         name: "description",
@@ -143,7 +144,7 @@ function RecruiterIndexPage() {
         interviews={candidates.filter((c) => c.stage === "Interview").length}
         offers={candidates.filter((c) => c.stage === "Offer").length}
       />
-      <details className="workspace-data-note">
+      <details open className="workspace-data-note">
         <summary>Ứng viên minh họa · hồ sơ công ty từ API</summary>
         <p>
           Danh sách ứng viên và tiến độ dưới đây là dữ liệu minh họa. Cập nhật tiến độ chỉ áp dụng
@@ -285,10 +286,10 @@ function RecruiterIndexPage() {
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   onClick={() => setPitchSent(true)}
-                  className="px-4 py-2 bg-primary text-on-primary text-sm font-bold rounded-lg hover:opacity-90 transition-all flex items-center gap-1.5 shadow-sm"
+                  className="px-4 py-2 bg-primary text-on-primary text-sm font-bold rounded-lg hover:opacity-90 transition-colors flex items-center gap-1.5 shadow-sm"
                 >
                   <Icon name="send" className="!text-base" />
-                  <span>{pitchSent ? "Đã gửi Pitch ✓" : "Gửi Outreach Pitch"}</span>
+                  <span>{pitchSent ? "Đã gửi Pitch " : "Gửi Outreach Pitch"}</span>
                 </button>
               </div>
             </div>
@@ -305,7 +306,7 @@ function RecruiterIndexPage() {
                     <button
                       key={st}
                       onClick={() => handleUpdateStage(st)}
-                      className={`py-2 rounded-lg text-sm font-semibold transition-all ${
+                      className={`py-2 rounded-lg text-sm font-semibold transition-colors ${
                         activeCandidate.stage === st
                           ? "bg-primary text-on-primary shadow-sm"
                           : "bg-paper-white border border-warm-border text-charcoal-83 hover:bg-surface-container"

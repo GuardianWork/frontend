@@ -1,4 +1,4 @@
-import { useEmployerOnboarding } from "@/context/EmployerOnboardingContext";
+import { useEmployerOnboarding } from "@/hooks/useEmployerOnboarding";
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Building2, LoaderCircle, RefreshCw } from "lucide-react";
@@ -14,7 +14,12 @@ import {
 } from "@/services/companyVerification";
 
 export const Route = createFileRoute("/recruiter/verification")({
-  head: () => ({ meta: [{ title: "Đăng ký và xác minh công ty — GuardianWork" }] }),
+  head: () => ({
+    meta: [
+      { name: "robots", content: "noindex, nofollow" },
+      { title: "Đăng ký và xác minh công ty — GuardianWork" },
+    ],
+  }),
   component: CompanyVerificationPage,
 });
 

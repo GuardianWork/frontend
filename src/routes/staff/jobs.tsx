@@ -4,7 +4,12 @@ import { AdminShell } from "@/components/AdminShell";
 import { JobManagementPanel } from "@/components/admin/JobManagementPanel";
 
 export const Route = createFileRoute("/staff/jobs")({
-  head: () => ({ meta: [{ title: "Quản lý tin tuyển dụng — Platform staff GuardianWork" }] }),
+  head: () => ({
+    meta: [
+      { name: "robots", content: "noindex, nofollow" },
+      { title: "Quản lý tin tuyển dụng — Platform staff GuardianWork" },
+    ],
+  }),
   component: () => (
     <AdminShell title="Quản lý tin tuyển dụng" role="admin">
       <div className="admin-page-heading">

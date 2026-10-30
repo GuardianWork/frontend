@@ -11,6 +11,7 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
+import modernCss from "../modern.css?url";
 import { IS_STAFF_PORTAL, staffPortalHref } from "../lib/portal";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
@@ -75,9 +76,11 @@ function ErrorComponent({ error, reset }: { error: unknown; reset: () => void })
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   beforeLoad: ({ location }) => {
     const path = location.pathname;
+    const staffDestination =
+      path === "/admin/job-approvals" ? "/staff/jobs" : path.replace(/^\/admin(?=\/|$)/, "/staff");
     const staffPath = /^\/(staff|admin)(?:\/|$)/.test(path);
     if (!IS_STAFF_PORTAL && staffPath) {
-      const destination = path.replace(/^\/admin(?=\/|$)/, "/staff");
+      const destination = staffDestination;
       throw redirect({
         href: staffPortalHref(`${destination}${location.searchStr}`),
         replace: true,
@@ -85,7 +88,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     }
     if (IS_STAFF_PORTAL && /^\/admin(?:\/|$)/.test(path)) {
       throw redirect({
-        href: path.replace(/^\/admin(?=\/|$)/, "/staff") + location.searchStr,
+        href: staffDestination + location.searchStr,
         replace: true,
       });
     }
@@ -117,12 +120,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "stylesheet", href: modernCss },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap",
       },
       {
         rel: "stylesheet",

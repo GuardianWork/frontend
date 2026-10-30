@@ -5,18 +5,18 @@ import {
   CandidateProfileIcon,
   ArrowRightIcon,
 } from "@/components/icons";
-import { GuardianIllustration } from "@/components/GuardianIllustration";
+import { useCandidate } from "@/context/CandidateContext";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AdminShell, Icon } from "@/components/AdminShell";
 
 export const Route = createFileRoute("/candidate/")({
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex, nofollow" },
       { title: "Candidate Portal — GuardianWork" },
       {
         name: "description",
-        content:
-          "Candidate portal with verified tech jobs, AI legal copilot, and protected talent profile.",
+        content: "Không gian ứng viên để quản lý hồ sơ, CV và tham khảo thông tin lao động.",
       },
     ],
   }),
@@ -25,6 +25,7 @@ export const Route = createFileRoute("/candidate/")({
 
 function CandidateIndexPage() {
   const user = useAuthUser();
+  const { cvs, appliedJobs, savedJobs } = useCandidate();
   return (
     <AdminShell title="Candidate Portal" role="candidate">
       {/* Header */}
@@ -32,42 +33,55 @@ function CandidateIndexPage() {
         <div className="guardian-welcome__content">
           <div>
             <h1 className="text-3xl md:text-3xl font-bold text-charcoal-text tracking-tight mb-2">
-              Chào mừng bạn đến với Cổng ứng viên
+              Không gian ứng viên
             </h1>
             <p className="text-base text-charcoal-83 max-w-2xl">
-              Tìm việc làm đa ngành đã kiểm định 100% hợp đồng, tra cứu quyền lợi pháp lý với AI
-              Copilot và quản lý hồ sơ ẩn danh.
+              Chuẩn bị hồ sơ, tìm vị trí phù hợp và kiểm tra thông tin trước khi ứng tuyển.
             </p>
           </div>
 
           <div className="flex items-center gap-3">
             <Link
               to="/jobs"
-              className="px-5 py-2.5 bg-primary text-on-primary text-sm font-bold rounded-lg hover:opacity-90 transition-all flex items-center gap-2 shadow-sm"
+              className="px-5 py-2.5 bg-primary text-on-primary text-sm font-bold rounded-lg hover:opacity-90 transition-colors flex items-center gap-2 shadow-sm"
             >
               <JobIcon size={16} />
-              <span>Xem Việc Làm Đã Thẩm Định</span>
+              <span>Tìm việc làm</span>
             </Link>
           </div>
         </div>
-        <GuardianIllustration name="growth" className="guardian-art--welcome" desktopOnly />
       </div>
 
-      {/* 3 Quick Cards */}
+      <div className="workspace-summary" aria-label="Hồ sơ và hoạt động">
+        {[
+          ["CV trong phiên xem", cvs.length],
+          ["Đã ứng tuyển trên thiết bị", appliedJobs.length],
+          ["Việc đã lưu trong phiên", savedJobs.length],
+        ].map(([label, value]) => (
+          <div className="workspace-summary__item" key={label}>
+            <span>{label}</span>
+            <p className="text-2xl">{value}</p>
+          </div>
+        ))}
+      </div>
+      <p className="workspace-inline-note">
+        CV và thông tin hồ sơ mở rộng hiện lưu trong phiên xem. Thông tin liên hệ sử dụng dịch vụ hồ
+        sơ riêng.
+      </p>
+      {/* Working destinations */}
       <div className="workspace-shortcuts mb-8">
         <Link to="/jobs" className="group flex flex-col justify-between gap-4">
           <div>
             <div className="text-primary mb-3">
               <JobIcon size={24} />
             </div>
-            <h3 className="font-bold text-lg text-charcoal-text mb-2">Kho Việc Làm Đã Thẩm Định</h3>
+            <h3 className="font-bold text-lg text-charcoal-text mb-2">Tìm việc đa ngành</h3>
             <p className="text-sm text-charcoal-83 leading-relaxed mb-4">
-              Khám phá việc làm từ các công ty cam kết không vi phạm Điều 98 làm thêm giờ và trần
-              thử việc Điều 25.
+              So sánh vị trí, mức lương, địa điểm và yêu cầu tuyển dụng.
             </p>
           </div>
           <div className="text-sm font-bold text-primary flex items-center gap-1 group-hover:underline">
-            <span>Truy cập 6 vị trí đang mở</span>
+            <span>Khám phá vị trí đang tuyển</span>
             <ArrowRightIcon size={16} />
           </div>
         </Link>
@@ -79,8 +93,8 @@ function CandidateIndexPage() {
             </div>
             <h3 className="font-bold text-lg text-charcoal-text mb-2">AI Legal Copilot</h3>
             <p className="text-sm text-charcoal-83 leading-relaxed mb-4">
-              Tra cứu luật lao động tức thì: quy định thử việc 60 ngày, tiền lương làm thêm giờ
-              150%-300%, và cấm phạt tiền thay kỷ luật.
+              Đọc câu hỏi và câu trả lời tham khảo về lao động. Nội dung hiện là bản minh họa soạn
+              sẵn.
             </p>
           </div>
           <div className="text-sm font-bold text-primary flex items-center gap-1 group-hover:underline">
@@ -96,8 +110,7 @@ function CandidateIndexPage() {
             </div>
             <h3 className="font-bold text-lg text-charcoal-text mb-2">Hồ Sơ Năng Lực Của Bạn</h3>
             <p className="text-sm text-charcoal-83 leading-relaxed mb-4">
-              Cập nhật mức lương kỳ vọng, tệp CV đã xác thực chứng chỉ IELTS và bảo vệ quyền sở hữu
-              trí tuệ ngoài giờ.
+              Cập nhật thông tin liên hệ, kinh nghiệm, học vấn và CV phù hợp với vị trí.
             </p>
           </div>
           <div className="text-sm font-bold text-primary flex items-center gap-1 group-hover:underline">

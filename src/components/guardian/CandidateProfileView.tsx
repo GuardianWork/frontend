@@ -86,7 +86,7 @@ export function CandidateProfileView() {
               />
             </div>
             <div>
-              <div className="font-mono text-xs text-ink-3 font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
+              <div className="font-mono text-xs text-ink-3 font-bold   mb-2 flex items-center gap-2">
                 <span>Hồ sơ Ứng viên //</span>
                 <span className="text-emerald flex items-center gap-1 text-[11px]">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Đã kiểm định
@@ -95,7 +95,7 @@ export function CandidateProfileView() {
               <h1 className="font-display font-bold text-3xl sm:text-4xl text-ink tracking-tight">
                 {profile.name}
               </h1>
-              <div className="text-ink-2 mt-2 font-mono text-sm uppercase tracking-wider font-semibold">
+              <div className="text-ink-2 mt-2 font-mono text-sm   font-semibold">
                 {profile.role}
               </div>
             </div>
@@ -125,9 +125,7 @@ export function CandidateProfileView() {
             <h3 className="font-bold text-sm text-ink">Chỉnh sửa thông tin hồ sơ</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="font-mono text-xs text-ink-3 uppercase block mb-1">
-                  Chức danh
-                </label>
+                <label className="font-mono text-xs text-ink-3  block mb-1">Chức danh</label>
                 <input
                   type="text"
                   value={roleInput}
@@ -136,9 +134,7 @@ export function CandidateProfileView() {
                 />
               </div>
               <div>
-                <label className="font-mono text-xs text-ink-3 uppercase block mb-1">
-                  Lương mong muốn
-                </label>
+                <label className="font-mono text-xs text-ink-3  block mb-1">Lương mong muốn</label>
                 <input
                   type="text"
                   value={salaryInput}
@@ -170,45 +166,39 @@ export function CandidateProfileView() {
           <div className="lg:col-span-4 flex flex-col gap-10">
             {/* Personal Info */}
             <section>
-              <h2 className="font-mono text-xs uppercase tracking-widest text-ink flex items-center gap-2 font-bold mb-5 pb-2 border-b border-rule">
+              <h2 className="font-mono text-xs   text-ink flex items-center gap-2 font-bold mb-5 pb-2 border-b border-rule">
                 <Fingerprint className="w-4 h-4 text-accent" />
                 <span>Thông tin Cá nhân</span>
               </h2>
               <div className="flex flex-col gap-3 font-body text-xs">
                 <div className="border-b border-rule pb-2.5">
-                  <span className="text-ink-3 font-mono text-[10px] uppercase block">
-                    Lương Mong muốn
-                  </span>
+                  <span className="text-ink-3 font-mono text-[10px]  block">Lương Mong muốn</span>
                   <span className="text-ink font-semibold mt-0.5 block">
                     {profile.salaryExpectation}
                   </span>
                 </div>
                 <div className="border-b border-rule pb-2.5">
-                  <span className="text-ink-3 font-mono text-[10px] uppercase block">
-                    Kinh nghiệm
-                  </span>
+                  <span className="text-ink-3 font-mono text-[10px]  block">Kinh nghiệm</span>
                   <span className="text-ink font-semibold mt-0.5 block">
                     {profile.experienceYears} Năm
                   </span>
                 </div>
                 <div className="border-b border-rule pb-2.5">
-                  <span className="text-ink-3 font-mono text-[10px] uppercase block">Địa điểm</span>
+                  <span className="text-ink-3 font-mono text-[10px]  block">Địa điểm</span>
                   <span className="text-ink font-semibold mt-0.5 block">{profile.location}</span>
                 </div>
                 <div className="border-b border-rule pb-2.5">
-                  <span className="text-ink-3 font-mono text-[10px] uppercase block">Email</span>
+                  <span className="text-ink-3 font-mono text-[10px]  block">Email</span>
                   <span className="text-ink font-semibold mt-0.5 block break-all">
                     {profile.email}
                   </span>
                 </div>
                 <div className="border-b border-rule pb-2.5">
-                  <span className="text-ink-3 font-mono text-[10px] uppercase block">
-                    Số điện thoại
-                  </span>
+                  <span className="text-ink-3 font-mono text-[10px]  block">Số điện thoại</span>
                   <span className="text-ink font-semibold mt-0.5 block">{profile.phone}</span>
                 </div>
                 <div className="border-b border-rule pb-2.5">
-                  <span className="text-ink-3 font-mono text-[10px] uppercase block">
+                  <span className="text-ink-3 font-mono text-[10px]  block">
                     Giới tính / Ngày sinh
                   </span>
                   <span className="text-ink font-semibold mt-0.5 block">
@@ -220,29 +210,25 @@ export function CandidateProfileView() {
 
             {/* Languages */}
             <section>
-              <h2 className="font-mono text-xs uppercase tracking-widest text-ink flex items-center gap-2 font-bold mb-4 pb-2 border-b border-rule">
+              <h2 className="font-mono text-xs   text-ink flex items-center gap-2 font-bold mb-4 pb-2 border-b border-rule">
                 <Globe className="w-4 h-4 text-accent" />
                 <span>Ngoại ngữ</span>
               </h2>
               <div className="flex flex-col gap-2 font-body text-xs">
                 <div className="flex justify-between items-center p-3 border border-rule bg-paper-2 rounded-lg">
                   <span className="font-semibold text-ink">English</span>
-                  <span className="font-mono text-[10px] text-ink-3 uppercase font-bold">
-                    IELTS 7.5
-                  </span>
+                  <span className="font-mono text-[10px] text-ink-3  font-bold">IELTS 7.5</span>
                 </div>
                 <div className="flex justify-between items-center p-3 border border-rule bg-paper-2 rounded-lg">
                   <span className="font-semibold text-ink">Vietnamese</span>
-                  <span className="font-mono text-[10px] text-ink-3 uppercase font-bold">
-                    Native
-                  </span>
+                  <span className="font-mono text-[10px] text-ink-3  font-bold">Native</span>
                 </div>
               </div>
             </section>
 
             {/* Links */}
             <section>
-              <h2 className="font-mono text-xs uppercase tracking-widest text-ink flex items-center gap-2 font-bold mb-4 pb-2 border-b border-rule">
+              <h2 className="font-mono text-xs   text-ink flex items-center gap-2 font-bold mb-4 pb-2 border-b border-rule">
                 <Link2 className="w-4 h-4 text-accent" />
                 <span>Liên kết</span>
               </h2>
@@ -281,7 +267,7 @@ export function CandidateProfileView() {
 
             {/* Resume File */}
             <section>
-              <h2 className="font-mono text-xs uppercase tracking-widest text-ink flex items-center gap-2 font-bold mb-4 pb-2 border-b border-rule">
+              <h2 className="font-mono text-xs   text-ink flex items-center gap-2 font-bold mb-4 pb-2 border-b border-rule">
                 <FileText className="w-4 h-4 text-accent" />
                 <span>Hồ sơ đính kèm</span>
               </h2>
@@ -290,7 +276,7 @@ export function CandidateProfileView() {
                   <div className="font-mono text-xs font-bold text-ink truncate mr-2">
                     {profile.cvFileName}
                   </div>
-                  <span className="text-[10px] font-mono uppercase bg-paper border border-rule px-1.5 py-0.5 rounded font-bold">
+                  <span className="text-[10px] font-mono  bg-paper border border-rule px-1.5 py-0.5 rounded font-bold">
                     PDF
                   </span>
                 </div>
@@ -307,7 +293,7 @@ export function CandidateProfileView() {
           <div className="lg:col-span-8 flex flex-col gap-12">
             {/* Bio */}
             <section>
-              <h2 className="font-mono text-xs uppercase tracking-widest text-ink flex items-center gap-2 font-bold mb-4 pb-2 border-b border-rule">
+              <h2 className="font-mono text-xs   text-ink flex items-center gap-2 font-bold mb-4 pb-2 border-b border-rule">
                 <Quote className="w-4 h-4 text-accent" />
                 <span>Giới thiệu bản thân</span>
               </h2>
@@ -321,7 +307,7 @@ export function CandidateProfileView() {
 
             {/* Skills */}
             <section>
-              <h2 className="font-mono text-xs uppercase tracking-widest text-ink flex items-center gap-2 font-bold mb-4 pb-2 border-b border-rule">
+              <h2 className="font-mono text-xs   text-ink flex items-center gap-2 font-bold mb-4 pb-2 border-b border-rule">
                 <Code2 className="w-4 h-4 text-accent" />
                 <span>Kỹ năng Trọng tâm</span>
               </h2>
@@ -349,7 +335,7 @@ export function CandidateProfileView() {
 
             {/* Work Experience */}
             <section>
-              <h2 className="font-mono text-xs uppercase tracking-widest text-ink flex items-center gap-2 font-bold mb-4 pb-2 border-b border-rule">
+              <h2 className="font-mono text-xs   text-ink flex items-center gap-2 font-bold mb-4 pb-2 border-b border-rule">
                 <Briefcase className="w-4 h-4 text-accent" />
                 <span>Kinh nghiệm Làm việc</span>
               </h2>
@@ -414,7 +400,7 @@ export function CandidateProfileView() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
               {/* Education */}
               <section>
-                <h2 className="font-mono text-xs uppercase tracking-widest text-ink flex items-center gap-2 font-bold mb-4 pb-2 border-b border-rule">
+                <h2 className="font-mono text-xs   text-ink flex items-center gap-2 font-bold mb-4 pb-2 border-b border-rule">
                   <GraduationCap className="w-4 h-4 text-accent" />
                   <span>Học vấn</span>
                 </h2>
@@ -436,7 +422,7 @@ export function CandidateProfileView() {
 
               {/* Certifications */}
               <section>
-                <h2 className="font-mono text-xs uppercase tracking-widest text-ink flex items-center gap-2 font-bold mb-4 pb-2 border-b border-rule">
+                <h2 className="font-mono text-xs   text-ink flex items-center gap-2 font-bold mb-4 pb-2 border-b border-rule">
                   <Award className="w-4 h-4 text-accent" />
                   <span>Chứng chỉ Quốc tế</span>
                 </h2>

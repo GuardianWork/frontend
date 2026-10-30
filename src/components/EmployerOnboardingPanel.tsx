@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Building2, RefreshCw, ShieldCheck } from "lucide-react";
-import { useEmployerOnboarding } from "@/context/EmployerOnboardingContext";
+import { useEmployerOnboarding } from "@/hooks/useEmployerOnboarding";
 import { useAuthUser } from "@/hooks/useAuthUser";
 
 const copy = {

@@ -3,10 +3,9 @@ import {
   CompanyIcon,
   JobPostingsIcon,
   TalentSearchIcon,
-  CandidateProfileIcon,
   VerificationDossierIcon,
 } from "@/components/icons";
-import { GuardianIllustration } from "@/components/GuardianIllustration";
+
 import { useEffect, useState } from "react";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { Link } from "@tanstack/react-router";
@@ -47,11 +46,9 @@ export function RecruiterOverview({
       <div className="guardian-welcome">
         <div className="guardian-welcome__content">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-              Chào mừng bạn trở lại <span className="text-primary">!</span>
-            </h1>
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Tổng quan tuyển dụng</h1>
             <p className="mt-2 text-sm text-charcoal-83">
-              Kết nối đúng nhân tài. Xây dựng đội ngũ vững mạnh.
+              Theo dõi hồ sơ công ty, tin tuyển dụng và danh sách ứng viên.
             </p>
           </div>
           <Link to="/recruiter/jobs" search={{ create: true }} className="recruiter-primary">
@@ -59,13 +56,10 @@ export function RecruiterOverview({
             Đăng tin tuyển dụng
           </Link>
         </div>
-        <GuardianIllustration name="teamwork" className="guardian-art--welcome" desktopOnly />
       </div>
       <div className="flex flex-col justify-between gap-4 rounded-xl border border-warm-border bg-surface-container-low p-5 sm:flex-row sm:items-center">
         <div className="flex items-start gap-3">
-          <div className="rounded-lg bg-paper-white p-2.5 text-primary">
-            <VerificationDossierIcon size={25} />
-          </div>
+          <VerificationDossierIcon size={20} className="shrink-0 text-ink-2" />
           <div>
             <h3 className="text-sm font-semibold text-charcoal-text">
               {invitedRecruiter ? user?.activeMembership?.companyName : statusText}
@@ -95,6 +89,10 @@ export function RecruiterOverview({
           </Link>
         )}
       </div>
+      <p className="workspace-inline-note">
+        Các chỉ số ứng viên dưới đây được tính từ danh sách minh họa, không phải số liệu tuyển dụng
+        thực tế.
+      </p>
       <div className="workspace-summary">
         {[
           {

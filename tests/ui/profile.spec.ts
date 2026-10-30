@@ -7,9 +7,7 @@ test.describe("candidate profile", () => {
   });
 
   test("renders the seeded mock profile", async ({ page }) => {
-    await expect(
-      page.getByRole("heading", { name: "Hồ sơ năng lực & quyền lợi bảo vệ" }),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Hồ sơ cá nhân" })).toBeVisible();
     await expect(
       page.getByText("Senior Tech Lead & Systems Engineer", { exact: true }),
     ).toBeVisible();

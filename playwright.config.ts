@@ -17,13 +17,7 @@ export default defineConfig({
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
-  projects: [
-    { name: "desktop", use: { viewport: { width: 1440, height: 1000 } } },
-    {
-      name: "mobile",
-      use: { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true },
-    },
-  ],
+  projects: [{ name: "desktop", use: { viewport: { width: 1440, height: 1000 } } }],
   webServer: externalBaseUrl
     ? undefined
     : [

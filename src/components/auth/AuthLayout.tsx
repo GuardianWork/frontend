@@ -16,7 +16,7 @@ export function AuthLayout({
 }) {
   const registering = mode === "register";
   return (
-    <div className="min-h-screen bg-parchment-bg font-sans text-charcoal-text">
+    <div className="auth-layout min-h-screen bg-parchment-bg font-sans text-charcoal-text">
       <header className="border-b border-warm-border bg-paper-white">
         <div className="mx-auto flex min-h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-8">
           <Link to="/vn" className="flex items-center gap-2 text-xl font-extrabold tracking-tight">
@@ -46,21 +46,21 @@ export function AuthLayout({
             <ArrowLeftIcon size={14} />
             Về trang chủ
           </Link>
-          <h1 className="max-w-lg text-3xl font-bold leading-tight tracking-tight sm:text-4xl lg:text-[46px]">
+          <p className="auth-intro-title max-w-lg text-3xl font-bold leading-tight tracking-tight sm:text-4xl lg:text-[46px]">
             {purpose === "recruiter" ? (
               <>
-                Đội ngũ vững mạnh.
+                Tuyển dụng có căn cứ.
                 <br />
-                <span className="text-charcoal-40">Bắt đầu từ bạn.</span>
+                <span className="text-charcoal-40">Bắt đầu từ công ty bạn.</span>
               </>
             ) : (
               <>
-                Bước tiếp theo.
+                Công việc tiếp theo.
                 <br />
-                <span className="text-charcoal-40">Sự nghiệp của bạn.</span>
+                <span className="text-charcoal-40">Bắt đầu từ hồ sơ của bạn.</span>
               </>
             )}
-          </h1>
+          </p>
           <p className="mt-5 max-w-md text-sm leading-7 text-charcoal-83">
             {purpose === "recruiter"
               ? "Xây dựng hồ sơ doanh nghiệp, đăng tin tuyển dụng và kết nối với những ứng viên phù hợp trên GuardianWork."
@@ -95,7 +95,7 @@ export function AuthLayout({
         </section>
         <section
           aria-label={registering ? "Biểu mẫu đăng ký" : "Biểu mẫu đăng nhập"}
-          className="rounded-2xl border border-warm-border bg-paper-white p-5 sm:p-8"
+          className="auth-form-panel bg-paper-white p-5 sm:p-8"
         >
           {children}
         </section>

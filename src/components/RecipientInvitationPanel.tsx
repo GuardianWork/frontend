@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Mail, Users } from "lucide-react";
-import { useEmployerOnboarding } from "@/context/EmployerOnboardingContext";
+import { useEmployerOnboarding } from "@/hooks/useEmployerOnboarding";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { clearInvitationSecret, getInvitationSecret } from "@/lib/member-email-secret";
 import {

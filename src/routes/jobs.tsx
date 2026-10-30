@@ -1,3 +1,4 @@
+import { publicSeo } from "@/lib/public-seo";
 import { createFileRoute } from "@tanstack/react-router";
 import { PublicJobsView } from "@/components/guardian/PublicJobsView";
 import { parseJobSearch } from "@/lib/job-search";
@@ -8,8 +9,13 @@ import { parseJobSearch } from "@/lib/job-search";
  */
 export const Route = createFileRoute("/jobs")({
   validateSearch: parseJobSearch,
-  head: () => ({
+  head: ({ match }) => ({
+    links: publicSeo(
+      match.search.job ? `/jobs?job=${encodeURIComponent(match.search.job)}` : "/jobs",
+    ).links,
     meta: [
+      ...publicSeo(match.search.job ? `/jobs?job=${encodeURIComponent(match.search.job)}` : "/jobs")
+        .meta,
       { title: "Tìm việc làm đa ngành — GuardianWork" },
       {
         name: "description",

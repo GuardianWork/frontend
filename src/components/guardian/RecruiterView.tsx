@@ -169,7 +169,7 @@ export function RecruiterView() {
             {/* Hello Banner */}
             <div className="p-6 sm:p-8 rounded-3xl bg-paper-2 border border-rule shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
               <div>
-                <span className="font-mono text-xs font-bold text-accent uppercase tracking-widest">
+                <span className="font-mono text-xs font-bold text-accent  ">
                   Bảng điều khiển Nhà tuyển dụng
                 </span>
                 <h1 className="font-display text-2xl sm:text-3xl font-bold text-ink mt-1">
@@ -193,7 +193,7 @@ export function RecruiterView() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="p-5 rounded-2xl bg-paper border border-rule shadow-2xs">
                 <div className="flex items-center justify-between text-ink-3 mb-3">
-                  <span className="font-mono text-xs uppercase font-bold">Đơn ứng tuyển</span>
+                  <span className="font-mono text-xs  font-bold">Đơn ứng tuyển</span>
                   <Users className="w-4 h-4 text-accent" />
                 </div>
                 <div className="font-display text-3xl font-extrabold text-ink">48</div>
@@ -204,7 +204,7 @@ export function RecruiterView() {
 
               <div className="p-5 rounded-2xl bg-paper border border-rule shadow-2xs">
                 <div className="flex items-center justify-between text-ink-3 mb-3">
-                  <span className="font-mono text-xs uppercase font-bold">Lượt xem tìm nguồn</span>
+                  <span className="font-mono text-xs  font-bold">Lượt xem tìm nguồn</span>
                   <TrendingUp className="w-4 h-4 text-emerald" />
                 </div>
                 <div className="font-display text-3xl font-extrabold text-ink">1,240</div>
@@ -213,7 +213,7 @@ export function RecruiterView() {
 
               <div className="p-5 rounded-2xl bg-paper border border-rule shadow-2xs">
                 <div className="flex items-center justify-between text-ink-3 mb-3">
-                  <span className="font-mono text-xs uppercase font-bold">Đã chọn lọc</span>
+                  <span className="font-mono text-xs  font-bold">Đã chọn lọc</span>
                   <CheckCircle className="w-4 h-4 text-accent" />
                 </div>
                 <div className="font-display text-3xl font-extrabold text-ink">14</div>
@@ -224,7 +224,7 @@ export function RecruiterView() {
 
               <div className="p-5 rounded-2xl bg-paper border border-rule shadow-2xs">
                 <div className="flex items-center justify-between text-ink-3 mb-3">
-                  <span className="font-mono text-xs uppercase font-bold">Tạm hoãn</span>
+                  <span className="font-mono text-xs  font-bold">Tạm hoãn</span>
                   <Clock className="w-4 h-4 text-ink-3" />
                 </div>
                 <div className="font-display text-3xl font-extrabold text-ink">3</div>
@@ -249,7 +249,7 @@ export function RecruiterView() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs font-body">
                   <thead>
-                    <tr className="border-b border-rule font-mono text-[11px] uppercase text-ink-3">
+                    <tr className="border-b border-rule font-mono text-[11px]  text-ink-3">
                       <th className="pb-3 font-bold">Vị trí</th>
                       <th className="pb-3 font-bold">Địa điểm & Lương</th>
                       <th className="pb-3 font-bold">Tuân thủ VN</th>
@@ -278,7 +278,7 @@ export function RecruiterView() {
                         </td>
                         <td className="py-3.5 text-right font-mono text-[11px]">
                           <span
-                            className={`px-2 py-0.5 rounded font-bold uppercase ${
+                            className={`px-2 py-0.5 rounded font-bold  ${
                               job.status === "active"
                                 ? "bg-emerald/15 text-emerald"
                                 : "bg-paper-2 text-ink-3"
@@ -320,15 +320,15 @@ export function RecruiterView() {
               {jobs.map((job) => (
                 <div
                   key={job.id}
-                  className="p-5 rounded-2xl bg-paper border border-rule hover:border-rule-2 transition-all flex flex-col justify-between gap-4"
+                  className="p-5 rounded-2xl bg-paper border border-rule hover:border-rule-2 transition-colors flex flex-col justify-between gap-4"
                 >
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-mono text-[10px] uppercase font-bold text-accent">
+                      <span className="font-mono text-[10px]  font-bold text-accent">
                         {job.department}
                       </span>
                       <span
-                        className={`font-mono text-[10px] px-2 py-0.5 rounded uppercase font-bold ${
+                        className={`font-mono text-[10px] px-2 py-0.5 rounded  font-bold ${
                           job.status === "active"
                             ? "bg-emerald/15 text-emerald"
                             : "bg-paper-2 text-ink-3"
@@ -380,7 +380,7 @@ export function RecruiterView() {
               {candidates.map((cand) => (
                 <div
                   key={cand.id}
-                  className="p-5 rounded-2xl bg-paper border border-rule hover:border-rule-2 hover:shadow-md transition-all flex flex-col justify-between"
+                  className="p-5 rounded-2xl bg-paper border border-rule hover:border-rule-2 hover:shadow-md transition-colors flex flex-col justify-between"
                 >
                   <div className="flex flex-col gap-3">
                     <div className="flex items-start justify-between gap-2">
@@ -448,9 +448,7 @@ export function RecruiterView() {
                     className="p-4 rounded-2xl bg-paper-2 border border-rule flex flex-col gap-3 min-h-[360px]"
                   >
                     <div className="flex items-center justify-between pb-2 border-b border-rule">
-                      <h3 className="font-mono text-xs uppercase font-bold text-ink">
-                        {labels[stage]}
-                      </h3>
+                      <h3 className="font-mono text-xs  font-bold text-ink">{labels[stage]}</h3>
                       <span className="font-mono text-xs px-2 py-0.5 rounded-full bg-paper font-bold text-ink">
                         {stageCandidates.length}
                       </span>
@@ -460,7 +458,7 @@ export function RecruiterView() {
                       {stageCandidates.map((c) => (
                         <div
                           key={c.id}
-                          className="p-3 rounded-xl bg-paper border border-rule hover:border-ink transition-all shadow-2xs"
+                          className="p-3 rounded-xl bg-paper border border-rule hover:border-ink transition-colors shadow-2xs"
                         >
                           <div className="font-bold text-xs text-ink">{c.role}</div>
                           <div className="font-mono text-[10px] text-ink-3 mt-0.5">
@@ -511,7 +509,7 @@ export function RecruiterView() {
             </button>
 
             <div>
-              <span className="font-mono text-xs uppercase font-bold text-accent tracking-widest">
+              <span className="font-mono text-xs  font-bold text-accent ">
                 Đăng vị trí tuyển dụng mới
               </span>
               <h2 className="font-display text-2xl font-bold text-ink mt-1">
@@ -530,15 +528,15 @@ export function RecruiterView() {
               </div>
               <ul className="text-[11px] text-ink-2 space-y-1 font-mono">
                 <li className="flex items-center gap-1.5">
-                  <span className="text-emerald font-bold">✓</span>
+                  <span className="text-emerald font-bold"></span>
                   <span>Mức lương công khai minh bạch (không ghi thỏa thuận vô thời hạn)</span>
                 </li>
                 <li className="flex items-center gap-1.5">
-                  <span className="text-emerald font-bold">✓</span>
+                  <span className="text-emerald font-bold"></span>
                   <span>Cam kết trả lương làm thêm giờ theo Điều 98 (150% - 300%)</span>
                 </li>
                 <li className="flex items-center gap-1.5">
-                  <span className="text-emerald font-bold">✓</span>
+                  <span className="text-emerald font-bold"></span>
                   <span>Trần lương và thời hạn thử việc tối đa 60 ngày theo Điều 25</span>
                 </li>
               </ul>
@@ -546,7 +544,7 @@ export function RecruiterView() {
 
             <form onSubmit={handleCreateJob} className="flex flex-col gap-4">
               <div>
-                <label className="font-mono text-xs uppercase font-bold text-ink-2 block mb-1">
+                <label className="font-mono text-xs  font-bold text-ink-2 block mb-1">
                   Chức danh tuyển dụng *
                 </label>
                 <input
@@ -561,7 +559,7 @@ export function RecruiterView() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="font-mono text-xs uppercase font-bold text-ink-2 block mb-1">
+                  <label className="font-mono text-xs  font-bold text-ink-2 block mb-1">
                     Phòng ban
                   </label>
                   <input
@@ -573,7 +571,7 @@ export function RecruiterView() {
                   />
                 </div>
                 <div>
-                  <label className="font-mono text-xs uppercase font-bold text-ink-2 block mb-1">
+                  <label className="font-mono text-xs  font-bold text-ink-2 block mb-1">
                     Địa điểm
                   </label>
                   <input
@@ -586,7 +584,7 @@ export function RecruiterView() {
               </div>
 
               <div>
-                <label className="font-mono text-xs uppercase font-bold text-ink-2 block mb-1">
+                <label className="font-mono text-xs  font-bold text-ink-2 block mb-1">
                   Mức lương dự kiến (VND / tháng)
                 </label>
                 <input
@@ -598,7 +596,7 @@ export function RecruiterView() {
               </div>
 
               <div>
-                <label className="font-mono text-xs uppercase font-bold text-ink-2 block mb-1">
+                <label className="font-mono text-xs  font-bold text-ink-2 block mb-1">
                   Mô tả công việc & Yêu cầu
                 </label>
                 <textarea

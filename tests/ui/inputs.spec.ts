@@ -49,8 +49,8 @@ test("all registration fields retain input and password errors preserve the form
     .locator("label")
     .filter({ has: page.getByRole("radio", { name: /Tôi muốn tuyển dụng/ }) })
     .click();
-  await expect(page.locator("#register-fullName")).toBeVisible();
-  await expect(page.locator("#register-username")).toHaveCount(0);
+  await expect(page.locator("#register-first-name")).toHaveValue("An");
+  await expect(page.locator("#register-username")).toHaveValue("nguyen_van_an");
   await page
     .locator("label")
     .filter({ has: page.getByRole("radio", { name: /Tôi muốn tìm việc/ }) })

@@ -1,3 +1,4 @@
+import { useNavigationFocus } from "@/hooks/useNavigationFocus";
 import * as SemanticIcons from "@/components/icons";
 import "./workspace.css";
 import {
@@ -112,6 +113,7 @@ export function AdminShell({
   children: ReactNode;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  useNavigationFocus(menuOpen, "workspace-navigation");
   useEffect(() => {
     const close = (event: KeyboardEvent) => {
       if (event.key === "Escape") setMenuOpen(false);
@@ -271,9 +273,7 @@ export function AdminShell({
               <h2 className="font-semibold text-lg tracking-tight leading-tight text-primary">
                 GuardianWork
               </h2>
-              <p className="text-charcoal-40 text-xs font-semibold uppercase tracking-wider">
-                {roleMeta.title}
-              </p>
+              <p className="text-charcoal-40 text-xs font-semibold  ">{roleMeta.title}</p>
             </div>
           </div>
           {(currentRole === "admin" || currentRole === "candidate") && (

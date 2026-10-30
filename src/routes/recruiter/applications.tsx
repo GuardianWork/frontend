@@ -7,7 +7,12 @@ import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
 import { canViewMemberData } from "@/services/companyMembers";
 
 export const Route = createFileRoute("/recruiter/applications")({
-  head: () => ({ meta: [{ title: "Đơn ứng tuyển — GuardianWork" }] }),
+  head: () => ({
+    meta: [
+      { name: "robots", content: "noindex, nofollow" },
+      { title: "Đơn ứng tuyển — GuardianWork" },
+    ],
+  }),
   component: ApplicationsPage,
 });
 function ApplicationsPage() {

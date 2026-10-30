@@ -5,6 +5,7 @@ import { AdminShell, Icon } from "@/components/AdminShell";
 export const Route = createFileRoute("/candidate/copilot")({
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex, nofollow" },
       { title: "AI Legal Copilot — GuardianWork Candidate" },
       {
         name: "description",
@@ -143,8 +144,8 @@ function CandidateCopilotPage() {
             AI Legal Copilot
           </h1>
           <p className="text-base text-charcoal-83 max-w-2xl">
-            Trợ lý AI tra cứu pháp lý chuyên sâu theo Bộ luật Lao động 2019, giải đáp tranh chấp và
-            kiểm toán hợp đồng lao động.
+            Tham khảo câu hỏi lao động và đối chiếu văn bản nguồn. Các câu trả lời hiện được soạn
+            sẵn.
           </p>
         </div>
 
@@ -159,12 +160,12 @@ function CandidateCopilotPage() {
             <span>Cổng VBPL Quốc gia</span>
           </a>
           <span className="workspace-source-label">
-            <span>Gemini AI Engine · Pháp điển hóa 2019</span>
+            <span>Nội dung tham khảo · Bộ luật Lao động 2019</span>
           </span>
         </div>
       </div>
 
-      <details className="workspace-data-note">
+      <details open className="workspace-data-note">
         <summary>Câu trả lời mẫu · chưa kết nối AI</summary>
         <p>
           Bản minh họa sử dụng câu trả lời soạn sẵn và phản hồi mẫu trên trình duyệt. Chưa kết nối
@@ -236,7 +237,7 @@ function CandidateCopilotPage() {
               />
               <button
                 type="submit"
-                className="px-3.5 py-2 bg-primary text-on-primary rounded-lg text-sm font-semibold hover:opacity-90 transition-all shrink-0"
+                className="px-3.5 py-2 bg-primary text-on-primary rounded-lg text-sm font-semibold hover:opacity-90 transition-colors shrink-0"
               >
                 Hỏi
               </button>

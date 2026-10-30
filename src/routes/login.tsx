@@ -1,3 +1,4 @@
+import { hasPendingInvitation } from "@/services/invitationLink";
 import {
   clearMemberEmailSecret,
   getMemberEmailSecret,
@@ -26,6 +27,7 @@ export const Route = createFileRoute("/login")({
     IS_STAFF_PORTAL ? {} : parseAccountPurpose(search),
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex, nofollow" },
       {
         title: IS_STAFF_PORTAL
           ? "Đăng nhập Platform staff — GuardianWork"
@@ -78,7 +80,9 @@ function LoginPage() {
           ? "/recruiter/verification"
           : getInvitationSecret()
             ? "/recruiter/members"
-            : getLoginDestination(user, role),
+            : hasPendingInvitation()
+              ? "/company-invitations"
+              : getLoginDestination(user, role),
       });
       if (legacySetupLink) clearMemberEmailSecret();
     } catch (cause) {
@@ -90,7 +94,7 @@ function LoginPage() {
 
   return (
     <AuthLayout mode="login" purpose={role}>
-      <h2 className="text-2xl font-bold tracking-tight">Đăng nhập GuardianWork</h2>
+      <h1 className="text-2xl font-bold tracking-tight">Đăng nhập GuardianWork</h1>
       <p className="mb-7 mt-2 text-sm leading-6 text-charcoal-83">
         Một tài khoản cho cả tìm việc và tuyển dụng. Chọn không gian bạn muốn tiếp tục.
       </p>

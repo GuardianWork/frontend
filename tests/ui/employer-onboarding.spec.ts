@@ -129,6 +129,8 @@ test("invitation acceptance confirms through the Company API and reloads members
           username: "recruiter_demo",
           email: "recruiter@example.test",
           role: "USER",
+          emailVerified: true,
+          recruitingEmailEligible: true,
           activeMembership: accepted
             ? {
                 companyId: 101,
@@ -199,7 +201,7 @@ test("candidate phone is read from the shared profile API and can be cleared", a
   await login(page, "candidate_demo");
   await page.goto("/candidate/profile");
   await expect(page.getByText("Chưa cập nhật", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Chỉnh sửa hồ sơ" }).click();
+  await page.getByRole("button", { name: "Chỉnh sửa số điện thoại", exact: true }).click();
   await page.locator("#candidate-phone").fill("0909876543");
   await page.screenshot({
     path: `/tmp/candidate-contact-${info.project.name}.png`,

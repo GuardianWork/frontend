@@ -11,6 +11,7 @@ export const Route = createFileRoute("/candidate/jobs_/apply")({
   }),
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex, nofollow" },
       { title: "Ứng tuyển — GuardianWork" },
       {
         name: "description",

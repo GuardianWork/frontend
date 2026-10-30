@@ -12,6 +12,7 @@ export const Route = createFileRoute("/register")({
   validateSearch: parseAccountPurpose,
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex, nofollow" },
       { title: "Đăng ký tìm việc & tuyển dụng — GuardianWork" },
       {
         name: "description",
@@ -91,7 +92,7 @@ function RegisterPage() {
       {registered ? (
         <div role="status" className="py-8 text-center">
           <CheckCircle2 size={46} className="mx-auto mb-5" />
-          <h2 className="text-2xl font-bold">Tạo tài khoản thành công!</h2>
+          <h1 className="text-2xl font-bold">Tạo tài khoản thành công!</h1>
           <p className="mt-3 text-sm leading-7 text-charcoal-83">
             Chào {firstName.trim()}, tài khoản của bạn đã được tạo.{" "}
             {role === "recruiter"
@@ -109,7 +110,7 @@ function RegisterPage() {
         </div>
       ) : (
         <>
-          <h2 className="text-2xl font-bold tracking-tight">Tạo tài khoản của bạn</h2>
+          <h1 className="text-2xl font-bold tracking-tight">Tạo tài khoản của bạn</h1>
           <p className="mb-7 mt-2 text-sm leading-6 text-charcoal-83">
             Một tài khoản cho cả tìm việc và tuyển dụng. Lựa chọn bên dưới chỉ chọn không gian sau
             khi đăng nhập.

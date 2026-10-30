@@ -1,11 +1,9 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { loadEmployerOnboarding, type EmployerOnboarding } from "@/services/employerOnboarding";
 import { loadCurrentUser } from "@/services/auth";
 
-const Context = createContext<{
-  onboarding: EmployerOnboarding;
-  refresh: () => Promise<void>;
-} | null>(null);
+import { EmployerOnboardingContext as Context } from "./employer-onboarding-state";
+
 export function EmployerOnboardingProvider({
   initial,
   children,
@@ -20,7 +18,4 @@ export function EmployerOnboardingProvider({
     setOnboarding(next);
   }
   return <Context.Provider value={{ onboarding, refresh }}>{children}</Context.Provider>;
-}
-export function useEmployerOnboarding() {
-  return useContext(Context);
 }

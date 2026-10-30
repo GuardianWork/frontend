@@ -24,34 +24,34 @@ test("verification pagination shows twenty records then the remainder and resets
   mockApiUrl,
   request,
 }, testInfo) => {
-  for (let index = 0; index < 20; index++) {
-    const username = `pagination_${index}`;
-    const password = "Guardian123!";
-    const registered = await request.post(`${mockApiUrl}/api/auth/register`, {
-      data: {
-        firstName: "Pagination",
-        lastName: `Test ${index}`,
-        username,
-        email: `${username}@example.test`,
-        password,
+  const companies = Array.from({ length: 21 }, (_, index) => ({
+    id: 101 + index,
+    name: `Pagination Company ${index}`,
+    taxCode: `09900000${String(index).padStart(2, "0")}`,
+    verificationStatus: "PENDING",
+    version: 0,
+    createdAt: "2026-10-21T00:00:00Z",
+  }));
+  await page.route("**/api/staff/companies/verifications?**", (route) => {
+    const params = new URL(route.request().url()).searchParams;
+    const rows = params.get("status") === "VERIFIED" ? [] : companies;
+    const number = Number(params.get("page") || 0),
+      size = 20;
+    return route.fulfill({
+      json: {
+        status: 200,
+        data: {
+          content: rows.slice(number * size, (number + 1) * size),
+          pageNumber: number,
+          pageSize: size,
+          totalElements: rows.length,
+          totalPages: Math.ceil(rows.length / size),
+          first: number === 0,
+          last: (number + 1) * size >= rows.length,
+        },
       },
     });
-    expect(registered.status()).toBe(201);
-    const loggedIn = await request.post(`${mockApiUrl}/api/auth/login`, {
-      data: { usernameOrEmail: username, password },
-    });
-    const { data } = await loggedIn.json();
-    const company = await request.post(`${mockApiUrl}/api/companies/verification-request`, {
-      headers: { Authorization: `Bearer ${data.accessToken}` },
-      data: {
-        name: `Pagination Company ${index}`,
-        taxCode: `09900000${String(index).padStart(2, "0")}`,
-        email: `company_${index}@example.test`,
-        registrationCertificateUrl: "https://example.test/license.pdf",
-      },
-    });
-    expect(company.status()).toBe(201);
-  }
+  });
   await login(page, "admin_demo");
   const response = page.waitForResponse(
     (response) =>

@@ -1,3 +1,4 @@
+import { useNavigationFocus } from "@/hooks/useNavigationFocus";
 import { EmailVerificationPanel } from "@/components/auth/EmailVerification";
 import "./workspace.css";
 import "./admin/sidebar.css";
@@ -15,10 +16,11 @@ import {
   VerificationDossierIcon,
   RecruitmentOverviewIcon,
 } from "@/components/icons";
-import { useEmployerOnboarding } from "@/context/EmployerOnboardingContext";
+import { useEmployerOnboarding } from "@/hooks/useEmployerOnboarding";
 import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
 import { LeaveCompanyButton } from "./LeaveCompanyButton";
 import { LogoutButton } from "./LogoutButton";
+import { isStaffUser } from "@/services/auth";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
@@ -50,6 +52,7 @@ export function RecruiterShell({
   const invitedRecruiter = user?.activeMembership?.companyRole === "RECRUITER";
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [menuOpen, setMenuOpen] = useState(false);
+  useNavigationFocus(menuOpen, "recruiter-navigation");
   useEffect(() => {
     const close = (event: KeyboardEvent) => {
       if (event.key === "Escape") setMenuOpen(false);
@@ -186,9 +189,11 @@ export function RecruiterShell({
           <Link to="/jobs" className="workspace-footer-link">
             <CandidateProfileIcon size={18} /> Dành cho ứng viên
           </Link>
-          <Link to="/admin" className="workspace-footer-link">
-            <ArrowUpRightIcon size={18} /> Quản trị hệ thống
-          </Link>
+          {user && isStaffUser(user) && (
+            <Link to="/admin" className="workspace-footer-link">
+              <ArrowUpRightIcon size={18} /> Quản trị hệ thống
+            </Link>
+          )}
         </div>
       </aside>
       <div className="workspace-content flex h-dvh min-w-0 flex-1 flex-col overflow-hidden bg-parchment-bg">

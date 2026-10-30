@@ -7,7 +7,7 @@ import {
   CloseIcon,
 } from "@/components/icons";
 import { GuardianIllustration } from "@/components/GuardianIllustration";
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useHydrated, useNavigate } from "@tanstack/react-router";
 import {
   ShieldCheck,
@@ -76,6 +76,24 @@ const categories = [
 ];
 
 export function LandingView() {
+  const root = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const items = root.current?.querySelectorAll("[data-reveal]");
+    if (!items || !window.IntersectionObserver) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.08 },
+    );
+    items.forEach((item) => observer.observe(item));
+    return () => observer.disconnect();
+  }, []);
   const { dict, locale } = useLanguage();
   const en = locale === "en";
   const navigate = useNavigate();
@@ -89,7 +107,7 @@ export function LandingView() {
     void navigate({ to: "/jobs", search: jobSearch({ q: query.trim(), location }) });
   };
   return (
-    <div className="career-site">
+    <div ref={root} className="career-site guardian-discovery">
       <a className="skip-link" href="#main-content">
         {en ? "Skip to content" : "Đến nội dung chính"}
       </a>
@@ -99,16 +117,16 @@ export function LandingView() {
           <div className="career-container">
             <div className="career-hero__intro">
               <div className="career-hero__copy">
-                <h1>
-                  {dict.landing.title}
-                  <br />
-                  <span>{dict.landing.titleAccent}</span>
-                </h1>
-                <p className="career-hero__description">{dict.landing.description}</p>
+                <h1 data-reveal>{en ? "Your next opportunity" : "Công việc tiếp theo"}</h1>
+                <p data-reveal className="career-hero__description">
+                  {en
+                    ? "Explore jobs across Vietnam, prepare your profile and connect with employers."
+                    : "Tìm việc đa ngành tại Việt Nam, chuẩn bị hồ sơ và kết nối với nhà tuyển dụng."}
+                </p>
               </div>
-              <GuardianIllustration name="careers" className="guardian-art--landing" desktopOnly />
+              <GuardianIllustration name="careers" className="guardian-art--landing" />
             </div>
-            <form className="career-search" role="search" onSubmit={search}>
+            <form data-reveal className="career-search" role="search" onSubmit={search}>
               <label className="career-search__keyword">
                 <SearchIcon size={23} aria-hidden="true" />
                 <span className="sr-only">
@@ -141,21 +159,25 @@ export function LandingView() {
                 {en ? "Find jobs" : "Tìm việc ngay"}
               </button>
             </form>
-            <div className="career-popular">
+            <nav
+              data-reveal
+              className="career-popular"
+              aria-label={en ? "Popular searches" : "Tìm kiếm phổ biến"}
+            >
               <span>{en ? "Popular searches:" : "Tìm kiếm phổ biến:"}</span>
               {["Kinh doanh", "Kế toán", "Tiếp thị", "Nhân sự"].map((q) => (
                 <Link key={q} to="/jobs" search={jobSearch({ q })}>
                   {q}
                 </Link>
               ))}
-            </div>
+            </nav>
           </div>
         </section>
         <section className="career-container career-jobs" aria-labelledby="opportunities-title">
-          <div className="career-section-heading">
+          <div data-reveal className="career-section-heading">
             <div>
               <h2 id="opportunities-title">
-                {en ? "Explore your next opportunity" : "Khám phá cơ hội dành cho bạn"}
+                {en ? "Explore your next opportunity" : "Cơ hội việc làm"}
               </h2>
               <p>
                 {en
@@ -173,12 +195,13 @@ export function LandingView() {
               ? "Sample job listings from the current product."
               : "Các tin tuyển dụng mẫu trong sản phẩm hiện tại."}
           </p>
-          <div className="career-job-grid">
+          <div className="career-job-grid landing-job-list">
             {JOBS.slice(0, 6).map((job) => (
               <Link
                 key={job.id}
                 to="/jobs"
                 search={jobSearch({ job: job.id })}
+                data-reveal
                 className="career-job"
               >
                 <div className="career-job__company">
@@ -190,14 +213,10 @@ export function LandingView() {
                       .join("")}
                   </span>
                   <span>{job.company}</span>
-                  <ArrowRightIcon size={18} className="career-job__arrow" />
                 </div>
                 <h3>{job.title}</h3>
                 <p className="career-job__salary">{job.salaryRange}</p>
-                <p className="career-job__location">
-                  <LocationIcon size={15} />
-                  {job.location}
-                </p>
+                <p className="career-job__location">{job.location}</p>
                 <div className="career-job__bottom">
                   <span>{job.department}</span>
                   <span>{en ? "View details" : "Xem chi tiết"}</span>
@@ -208,32 +227,35 @@ export function LandingView() {
         </section>
         <section id="roles" className="career-fields" aria-labelledby="fields-title">
           <div className="career-container">
-            <div className="career-section-heading">
+            <div data-reveal className="career-section-heading">
               <h2 id="fields-title">{en ? "Find your field" : "Khám phá theo ngành nghề"}</h2>
             </div>
             <div className="career-field-grid">
-              {categories.map(
-                ({ label, en: englishLabel, query: q, detail, detailEn, icon: Icon }) => (
-                  <Link key={label} to="/jobs" search={jobSearch({ q })} className="career-field">
-                    <Icon size={25} />
-                    <h3>{en ? englishLabel : label}</h3>
-                    <p>{en ? detailEn : detail}</p>
-                    <ArrowRightIcon size={18} />
-                  </Link>
-                ),
-              )}
+              {categories.map(({ label, en: englishLabel, query: q, detail, detailEn }) => (
+                <Link
+                  key={label}
+                  to="/jobs"
+                  search={jobSearch({ q })}
+                  data-reveal
+                  className="career-field"
+                >
+                  <h3>{en ? englishLabel : label}</h3>
+                  <p>{en ? detailEn : detail}</p>
+                </Link>
+              ))}
             </div>
           </div>
         </section>
         <section className="career-container career-paths">
-          <div className="career-cv">
+          <div data-reveal className="career-cv">
+            <GuardianIllustration name="discovery" className="guardian-art--path" />
             <div>
-              <h2>
+              <h2>{en ? "Prepare your profile" : "Chuẩn bị hồ sơ"}</h2>
+              <p>
                 {en
-                  ? "Your next job starts with your profile."
-                  : "Cơ hội tiếp theo bắt đầu từ hồ sơ của bạn."}
-              </h2>
-              <p>{dict.landing.candidatesDesc}</p>
+                  ? "Keep your experience, skills and CV together for your next application."
+                  : "Tập hợp kinh nghiệm, kỹ năng và CV cho lần ứng tuyển tiếp theo."}
+              </p>
             </div>
             <div className="career-upload">
               <UploadIcon size={28} aria-hidden="true" />
@@ -298,13 +320,17 @@ export function LandingView() {
               <ArrowRightIcon size={17} />
             </Link>
           </div>
-          <div className="career-employer">
-            <BriefcaseBusiness size={32} />
+          <div data-reveal className="career-employer">
+            <GuardianIllustration name="posting" className="guardian-art--path" />
             <h2>
               {dict.landing.findNextHire}
               {dict.landing.findNextHireAccent}
             </h2>
-            <p>{dict.landing.companiesDesc}</p>
+            <p>
+              {en
+                ? "Set up your company, submit verification documents and prepare your job listings."
+                : "Thiết lập công ty, gửi hồ sơ xác minh và chuẩn bị tin tuyển dụng trong cùng một không gian."}
+            </p>
             <Link className="career-button" to="/register" search={{ role: "recruiter" }}>
               {dict.landing.startHiring}
               <ArrowRightIcon size={18} />
@@ -317,21 +343,38 @@ export function LandingView() {
         </section>
         <section id="how-it-works" className="career-steps">
           <div className="career-container">
-            <h2>{dict.howItWorks.title}</h2>
+            <h2 data-reveal>
+              {en ? "From discovery to application" : "Từ tìm việc đến ứng tuyển"}
+            </h2>
+            <GuardianIllustration name="review" className="guardian-art--process" />
             <ol>
               {[
-                [dict.howItWorks.step1Title, dict.howItWorks.step1Body],
-                [dict.howItWorks.step2Title, dict.howItWorks.step2Body],
-                [dict.howItWorks.step3Title, dict.howItWorks.step3Body],
-              ].map(([title, body], index) => (
-                <li key={title}>
-                  <span className="career-step-number">{index + 1}</span>
+                [
+                  en ? "Find a role" : "Tìm vị trí phù hợp",
+                  en
+                    ? "Search by title, industry or location. Read the salary, requirements and company information."
+                    : "Tìm theo vị trí, ngành nghề hoặc địa điểm. Đọc mức lương, yêu cầu và thông tin doanh nghiệp.",
+                ],
+                [
+                  en ? "Prepare your application" : "Chuẩn bị hồ sơ ứng tuyển",
+                  en
+                    ? "Update your profile and choose the CV for the role."
+                    : "Cập nhật hồ sơ cá nhân và chọn CV phù hợp với vị trí.",
+                ],
+                [
+                  en ? "Review before sending" : "Kiểm tra trước khi gửi",
+                  en
+                    ? "Review the job and your contact details before submitting an application."
+                    : "Kiểm tra tin tuyển dụng và thông tin liên hệ trước khi gửi đơn.",
+                ],
+              ].map(([title, body]) => (
+                <li data-reveal key={title}>
                   <h3>{title}</h3>
                   <p>{body}</p>
                 </li>
               ))}
             </ol>
-            <Link to="/copilot" className="career-law-link">
+            <Link data-reveal to="/copilot" className="career-law-link">
               <ShieldCheck size={23} />
               <span>
                 {en

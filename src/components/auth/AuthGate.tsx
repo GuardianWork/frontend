@@ -2,10 +2,8 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { ApiError } from "@/services/api";
 import { AUTH_SESSION_EVENT, hasAuthSession, isStaffUser, loadCurrentUser } from "@/services/auth";
-import {
-  EmployerOnboardingProvider,
-  useEmployerOnboarding,
-} from "@/context/EmployerOnboardingContext";
+import { EmployerOnboardingProvider } from "@/context/EmployerOnboardingContext";
+import { useEmployerOnboarding } from "@/hooks/useEmployerOnboarding";
 import { EmployerOnboardingPanel } from "@/components/EmployerOnboardingPanel";
 import { RecruiterShell } from "@/components/RecruiterShell";
 import { loadEmployerOnboarding, type EmployerOnboarding } from "@/services/employerOnboarding";

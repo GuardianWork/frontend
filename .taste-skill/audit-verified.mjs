@@ -1,0 +1,15 @@
+import {createMockApiServer} from '../scripts/mock-api.mjs';
+import { chromium } from '@playwright/test';
+import fs from 'node:fs/promises';
+const mock=createMockApiServer();await new Promise(resolve=>mock.listen(0,'127.0.0.1',resolve));const mockOrigin=`http://127.0.0.1:${mock.address().port}`;
+const browser = await chromium.launch({headless:true,executablePath:"/usr/bin/microsoft-edge"});
+const report=[];
+const originalGroups=[['public',5157,null,['/vn','/jobs','/login','/register','/company-invitations']],['candidate',5157,'candidate_demo',['/candidate','/candidate/profile','/candidate/cvs','/candidate/copilot','/candidate/jobs/apply']],['recruiter',5157,'recruiter_demo',['/recruiter','/recruiter/jobs','/recruiter/applications','/recruiter/talent','/recruiter/members','/recruiter/verification']],['owner',5157,'owner_demo',['/recruiter','/recruiter/members','/recruiter/verification']],['staff',5158,'admin_demo',['/staff','/staff/verifications','/staff/jobs','/staff/reports','/staff/accounts','/staff/audit-logs']]];
+const groups=[['verified-owner',5157,'owner_demo',['/recruiter','/recruiter/jobs','/recruiter/jobs?create=true','/recruiter/applications','/recruiter/talent','/recruiter/members','/recruiter/verification']]];
+for(const [role,port,username,routes] of groups){
+ const context=await browser.newContext();const page=await context.newPage();await page.route('**/api/**',async route=>{const u=new URL(route.request().url());const response=await route.fetch({url:mockOrigin+u.pathname+u.search});await route.fulfill({response});});await page.route('**/api/companies/me/verification',route=>route.fulfill({json:{status:200,data:{id:101,name:'Alpha',taxCode:'0101234567',verificationStatus:'VERIFIED',version:1}}}));
+ if(username){await page.goto(`http://localhost:${port}/login?role=${role==='candidate'?'candidate':'recruiter'}`);await page.locator('#login-identifier').fill(username);await page.locator('#login-password').fill('Guardian123!');await page.getByRole('button',{name:'Đăng nhập',exact:true}).click();await page.waitForURL(u=>!u.pathname.includes('login'));}
+ for(const route of routes){for(const width of [1440,390]){await page.setViewportSize({width,height:900});await page.goto(`http://localhost:${port}${route}`,{waitUntil:'networkidle'});const slug=`${role}-${route.replaceAll('/','_')}-${width}`;await page.screenshot({path:`.taste-skill/after/${slug}.png`,fullPage:true});report.push({role,route,width,url:page.url(),...await page.evaluate(()=>({title:document.title,h1:[...document.querySelectorAll('h1')].map(x=>x.textContent),overflow:document.documentElement.scrollWidth>innerWidth,font:getComputedStyle(document.body).fontFamily,fonts:document.fonts.check('16px "Hanken Grotesk"'),description:document.querySelector('meta[name=description]')?.content,canonical:document.querySelector('link[rel=canonical]')?.href,headings:[...document.querySelectorAll('h2')].map(x=>x.textContent)}))});}}
+ await context.close();
+}
+await fs.writeFile('.taste-skill/after/verified-route-observations.json',JSON.stringify(report,null,2));await browser.close();mock.close();console.log(`Captured ${report.length} route/viewports`);

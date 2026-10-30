@@ -40,6 +40,7 @@ const queueLabel = (job: FlaggedPublishedJob) =>
 export const Route = createFileRoute("/admin/compliance")({
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex, nofollow" },
       { title: "JD bị AI gắn cờ — GuardianWork" },
       {
         name: "description",

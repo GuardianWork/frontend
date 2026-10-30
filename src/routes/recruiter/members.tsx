@@ -1,4 +1,4 @@
-import { useEmployerOnboarding } from "@/context/EmployerOnboardingContext";
+import { useEmployerOnboarding } from "@/hooks/useEmployerOnboarding";
 import { RecipientInvitationPanel } from "@/components/RecipientInvitationPanel";
 import { getInvitationSecret } from "@/lib/member-email-secret";
 import { ListSearch } from "@/components/ListSearch";
@@ -28,7 +28,12 @@ import {
 } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/recruiter/members")({
-  head: () => ({ meta: [{ title: "Thành viên công ty — GuardianWork" }] }),
+  head: () => ({
+    meta: [
+      { name: "robots", content: "noindex, nofollow" },
+      { title: "Thành viên công ty — GuardianWork" },
+    ],
+  }),
   component: CompanyMembersPage,
 });
 

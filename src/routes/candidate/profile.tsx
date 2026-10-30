@@ -51,6 +51,7 @@ const PHONE_PATTERN = /^0\d{9}$/;
 export const Route = createFileRoute("/candidate/profile")({
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex, nofollow" },
       { title: "Hồ sơ cá nhân — GuardianWork" },
       {
         name: "description",
@@ -335,6 +336,10 @@ function CandidateProfilePage() {
           </button>
         </header>
 
+        <p className="workspace-inline-note">
+          Kinh nghiệm, học vấn và kỹ năng hiện là dữ liệu trong phiên xem. Thông tin liên hệ được
+          tải và lưu qua dịch vụ hồ sơ.
+        </p>
         {isEditing && (
           <FloatingPanel isOpen={true} onClose={closeEditForm} labelledBy="edit-profile-title">
             <form onSubmit={handleSave} noValidate className="flex min-h-0 flex-1 flex-col">
@@ -896,7 +901,7 @@ function CandidateProfilePage() {
             <div className="mt-5 flex flex-wrap gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-md border border-mint/20 bg-mint/10 px-2.5 py-1 text-xs font-semibold text-mint">
                 <BadgeCheck size={14} aria-hidden="true" />
-                Hồ sơ đã xác minh
+                Hồ sơ cá nhân
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-md border border-accent/15 bg-accent-subtle px-2.5 py-1 text-xs font-semibold text-accent-deep">
                 <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-accent" />
@@ -991,7 +996,7 @@ function CandidateProfilePage() {
                 {profile.isPublic ? "Đang hiển thị" : "Riêng tư"}
               </span>
             </div>
-            <CandidateContact editing={isEditing} />
+            <CandidateContact />
           </aside>
 
           <div className="min-w-0 divide-y divide-rule">

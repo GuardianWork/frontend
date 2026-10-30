@@ -15,6 +15,7 @@ import { EmailVerificationPanel } from "@/components/auth/EmailVerification";
 export const Route = createFileRoute("/company-invitations")({
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex, nofollow" },
       { title: "Lời mời tham gia công ty — GuardianWork" },
       { name: "referrer", content: "no-referrer" },
     ],

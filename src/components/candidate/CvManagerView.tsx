@@ -290,6 +290,10 @@ export function CvManagerView() {
             </button>
           </div>
         </header>
+        <p className="workspace-inline-note">
+          Danh sách có hồ sơ minh họa. CV mới và thay đổi hiện lưu trong phiên xem trên trình duyệt;
+          tệp chưa được lưu lên máy chủ.
+        </p>
 
         {atLimit && (
           <p
@@ -409,7 +413,7 @@ export function CvManagerView() {
                                 {cv.label}
                               </h3>
                               {cv.isDefault && (
-                                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-accent-ink">
+                                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold  tracking-[0.06em] text-accent-ink">
                                   <Star size={10} fill="currentColor" aria-hidden="true" />
                                   Mặc định
                                 </span>
@@ -747,10 +751,7 @@ export function CvManagerView() {
           </DialogHeader>
 
           <div className="px-6 py-5">
-            <label
-              htmlFor="cv-rename-input"
-              className="text-xs font-semibold uppercase tracking-wide text-ink-3"
-            >
+            <label htmlFor="cv-rename-input" className="text-xs font-semibold   text-ink-3">
               Tên hiển thị
             </label>
             <input

@@ -10,7 +10,12 @@ import { AUDIT_ACTION_LABELS, AUDIT_SAMPLE_ENTRIES } from "@/lib/admin-audit-log
 import "@/components/admin/audit-logs.css";
 
 export const Route = createFileRoute("/staff/audit-logs")({
-  head: () => ({ meta: [{ title: "Audit logs — Platform staff GuardianWork" }] }),
+  head: () => ({
+    meta: [
+      { name: "robots", content: "noindex, nofollow" },
+      { title: "Audit logs — Platform staff GuardianWork" },
+    ],
+  }),
   component: AuditLogsPage,
 });
 
