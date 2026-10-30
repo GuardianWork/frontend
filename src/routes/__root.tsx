@@ -76,9 +76,11 @@ function ErrorComponent({ error, reset }: { error: unknown; reset: () => void })
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   beforeLoad: ({ location }) => {
     const path = location.pathname;
+    const staffDestination =
+      path === "/admin/job-approvals" ? "/staff/jobs" : path.replace(/^\/admin(?=\/|$)/, "/staff");
     const staffPath = /^\/(staff|admin)(?:\/|$)/.test(path);
     if (!IS_STAFF_PORTAL && staffPath) {
-      const destination = path.replace(/^\/admin(?=\/|$)/, "/staff");
+      const destination = staffDestination;
       throw redirect({
         href: staffPortalHref(`${destination}${location.searchStr}`),
         replace: true,
@@ -86,7 +88,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     }
     if (IS_STAFF_PORTAL && /^\/admin(?:\/|$)/.test(path)) {
       throw redirect({
-        href: path.replace(/^\/admin(?=\/|$)/, "/staff") + location.searchStr,
+        href: staffDestination + location.searchStr,
         replace: true,
       });
     }

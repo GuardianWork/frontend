@@ -16,7 +16,7 @@ import {
   VerificationDossierIcon,
   RecruitmentOverviewIcon,
 } from "@/components/icons";
-import { useEmployerOnboarding } from "@/context/EmployerOnboardingContext";
+import { useEmployerOnboarding } from "@/hooks/useEmployerOnboarding";
 import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
 import { LeaveCompanyButton } from "./LeaveCompanyButton";
 import { LogoutButton } from "./LogoutButton";

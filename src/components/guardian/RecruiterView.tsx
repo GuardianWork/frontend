@@ -448,9 +448,7 @@ export function RecruiterView() {
                     className="p-4 rounded-2xl bg-paper-2 border border-rule flex flex-col gap-3 min-h-[360px]"
                   >
                     <div className="flex items-center justify-between pb-2 border-b border-rule">
-                      <h3 className="font-mono text-xs  font-bold text-ink">
-                        {labels[stage]}
-                      </h3>
+                      <h3 className="font-mono text-xs  font-bold text-ink">{labels[stage]}</h3>
                       <span className="font-mono text-xs px-2 py-0.5 rounded-full bg-paper font-bold text-ink">
                         {stageCandidates.length}
                       </span>

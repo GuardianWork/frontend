@@ -1,4 +1,4 @@
-import { useEmployerOnboarding } from "@/context/EmployerOnboardingContext";
+import { useEmployerOnboarding } from "@/hooks/useEmployerOnboarding";
 import { RecipientInvitationPanel } from "@/components/RecipientInvitationPanel";
 import { getInvitationSecret } from "@/lib/member-email-secret";
 import { ListSearch } from "@/components/ListSearch";

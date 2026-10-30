@@ -273,9 +273,7 @@ export function AdminShell({
               <h2 className="font-semibold text-lg tracking-tight leading-tight text-primary">
                 GuardianWork
               </h2>
-              <p className="text-charcoal-40 text-xs font-semibold  ">
-                {roleMeta.title}
-              </p>
+              <p className="text-charcoal-40 text-xs font-semibold  ">{roleMeta.title}</p>
             </div>
           </div>
           {(currentRole === "admin" || currentRole === "candidate") && (

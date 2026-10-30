@@ -290,7 +290,10 @@ export function CvManagerView() {
             </button>
           </div>
         </header>
-        <p className="workspace-inline-note">Danh sách có hồ sơ minh họa. CV mới và thay đổi hiện lưu trong phiên xem trên trình duyệt; tệp chưa được lưu lên máy chủ.</p>
+        <p className="workspace-inline-note">
+          Danh sách có hồ sơ minh họa. CV mới và thay đổi hiện lưu trong phiên xem trên trình duyệt;
+          tệp chưa được lưu lên máy chủ.
+        </p>
 
         {atLimit && (
           <p
@@ -748,10 +751,7 @@ export function CvManagerView() {
           </DialogHeader>
 
           <div className="px-6 py-5">
-            <label
-              htmlFor="cv-rename-input"
-              className="text-xs font-semibold   text-ink-3"
-            >
+            <label htmlFor="cv-rename-input" className="text-xs font-semibold   text-ink-3">
               Tên hiển thị
             </label>
             <input

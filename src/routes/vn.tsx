@@ -5,7 +5,8 @@ import { LandingView } from "@/components/guardian/LandingView";
 export const Route = createFileRoute("/vn")({
   head: () => ({
     links: publicSeo("/vn").links,
-    meta: [...publicSeo("/vn").meta,
+    meta: [
+      ...publicSeo("/vn").meta,
       { title: "GuardianWork — Việc làm đa ngành tại Việt Nam" },
       {
         name: "description",

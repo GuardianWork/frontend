@@ -159,7 +159,11 @@ export function LandingView() {
                 {en ? "Find jobs" : "Tìm việc ngay"}
               </button>
             </form>
-            <nav data-reveal className="career-popular" aria-label={en ? "Popular searches" : "Tìm kiếm phổ biến"}>
+            <nav
+              data-reveal
+              className="career-popular"
+              aria-label={en ? "Popular searches" : "Tìm kiếm phổ biến"}
+            >
               <span>{en ? "Popular searches:" : "Tìm kiếm phổ biến:"}</span>
               {["Kinh doanh", "Kế toán", "Tiếp thị", "Nhân sự"].map((q) => (
                 <Link key={q} to="/jobs" search={jobSearch({ q })}>
@@ -212,9 +216,7 @@ export function LandingView() {
                 </div>
                 <h3>{job.title}</h3>
                 <p className="career-job__salary">{job.salaryRange}</p>
-                <p className="career-job__location">
-                  {job.location}
-                </p>
+                <p className="career-job__location">{job.location}</p>
                 <div className="career-job__bottom">
                   <span>{job.department}</span>
                   <span>{en ? "View details" : "Xem chi tiết"}</span>

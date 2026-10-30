@@ -125,9 +125,7 @@ export function CandidateProfileView() {
             <h3 className="font-bold text-sm text-ink">Chỉnh sửa thông tin hồ sơ</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="font-mono text-xs text-ink-3  block mb-1">
-                  Chức danh
-                </label>
+                <label className="font-mono text-xs text-ink-3  block mb-1">Chức danh</label>
                 <input
                   type="text"
                   value={roleInput}
@@ -136,9 +134,7 @@ export function CandidateProfileView() {
                 />
               </div>
               <div>
-                <label className="font-mono text-xs text-ink-3  block mb-1">
-                  Lương mong muốn
-                </label>
+                <label className="font-mono text-xs text-ink-3  block mb-1">Lương mong muốn</label>
                 <input
                   type="text"
                   value={salaryInput}
@@ -176,17 +172,13 @@ export function CandidateProfileView() {
               </h2>
               <div className="flex flex-col gap-3 font-body text-xs">
                 <div className="border-b border-rule pb-2.5">
-                  <span className="text-ink-3 font-mono text-[10px]  block">
-                    Lương Mong muốn
-                  </span>
+                  <span className="text-ink-3 font-mono text-[10px]  block">Lương Mong muốn</span>
                   <span className="text-ink font-semibold mt-0.5 block">
                     {profile.salaryExpectation}
                   </span>
                 </div>
                 <div className="border-b border-rule pb-2.5">
-                  <span className="text-ink-3 font-mono text-[10px]  block">
-                    Kinh nghiệm
-                  </span>
+                  <span className="text-ink-3 font-mono text-[10px]  block">Kinh nghiệm</span>
                   <span className="text-ink font-semibold mt-0.5 block">
                     {profile.experienceYears} Năm
                   </span>
@@ -202,9 +194,7 @@ export function CandidateProfileView() {
                   </span>
                 </div>
                 <div className="border-b border-rule pb-2.5">
-                  <span className="text-ink-3 font-mono text-[10px]  block">
-                    Số điện thoại
-                  </span>
+                  <span className="text-ink-3 font-mono text-[10px]  block">Số điện thoại</span>
                   <span className="text-ink font-semibold mt-0.5 block">{profile.phone}</span>
                 </div>
                 <div className="border-b border-rule pb-2.5">
@@ -227,15 +217,11 @@ export function CandidateProfileView() {
               <div className="flex flex-col gap-2 font-body text-xs">
                 <div className="flex justify-between items-center p-3 border border-rule bg-paper-2 rounded-lg">
                   <span className="font-semibold text-ink">English</span>
-                  <span className="font-mono text-[10px] text-ink-3  font-bold">
-                    IELTS 7.5
-                  </span>
+                  <span className="font-mono text-[10px] text-ink-3  font-bold">IELTS 7.5</span>
                 </div>
                 <div className="flex justify-between items-center p-3 border border-rule bg-paper-2 rounded-lg">
                   <span className="font-semibold text-ink">Vietnamese</span>
-                  <span className="font-mono text-[10px] text-ink-3  font-bold">
-                    Native
-                  </span>
+                  <span className="font-mono text-[10px] text-ink-3  font-bold">Native</span>
                 </div>
               </div>
             </section>

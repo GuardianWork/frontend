@@ -4,14 +4,14 @@ import type { Page, TestInfo } from "@playwright/test";
 const screenshots = "/tmp/guardianwork-refinement";
 const staff = process.env.STAFF_UI_BASE_URL || "http://localhost:5138";
 async function capture(page: Page, info: TestInfo, name: string) {
-  await page.evaluate(async () => {
-    await document.fonts.ready;
-    await Promise.all(
-      Array.from(document.querySelectorAll<HTMLImageElement>(".guardian-art img"))
-        .filter((img) => img.getBoundingClientRect().width > 0)
-        .map((img) => img.decode()),
-    );
-  });
+  await page.evaluate(() => document.fonts.ready);
+  const images = page.locator(".guardian-art img");
+  for (const image of await images.all()) {
+    if (!(await image.isVisible())) continue;
+    await image.scrollIntoViewIfNeeded();
+    await image.evaluate((img: HTMLImageElement) => img.decode());
+  }
+  await page.evaluate(() => window.scrollTo(0, 0));
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(
     false,
   );
@@ -53,7 +53,7 @@ test("landing and audience-specific auth preserve search, forms and responsive a
   test.setTimeout(60000);
   const downloads: string[] = [];
   page.on("request", (request) => {
-    if (request.url().includes("/images/guardianwork/")) downloads.push(request.url());
+    if (request.url().includes("/images/illustrations/")) downloads.push(request.url());
   });
   await page.goto("/vn");
   await expect(page.getByRole("button", { name: "Tìm việc ngay", exact: true })).toBeEnabled();
@@ -77,11 +77,11 @@ test("landing and audience-specific auth preserve search, forms and responsive a
       );
     }
   }
-  if (info.project.name === "mobile") expect(downloads).toEqual([]);
+  expect(downloads.some((url) => url.endsWith("08-multi-industry-careers.png"))).toBe(true);
   if (info.project.name === "desktop") {
     await page.setViewportSize({ width: 1024, height: 900 });
     await page.goto("/vn");
-    await expect(page.locator(".guardian-art")).toBeHidden();
+    await expect(page.locator(".guardian-art--landing")).toBeVisible();
     await capture(page, info, "landing-1024");
     await page.goto("/login?role=recruiter");
     await capture(page, info, "employer-auth-1024");
@@ -123,55 +123,36 @@ test("recruiter welcome and genuine empty jobs keep create action and filter dis
   await login(page, "owner_demo", true);
   await expect(page.locator(".guardian-welcome")).toBeVisible();
   await capture(page, info, "recruiter-welcome");
+  await page.route("**/api/companies/me/jobs?**", (route) =>
+    route.fulfill({
+      json: {
+        status: 200,
+        data: {
+          content: [],
+          pageNumber: 0,
+          pageSize: 20,
+          totalElements: 0,
+          totalPages: 0,
+          first: true,
+          last: true,
+        },
+      },
+    }),
+  );
   await page.goto("/recruiter/jobs");
-  await expect(page.locator(".guardian-art--empty")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Bắt đầu với tin tuyển dụng đầu tiên" }),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Tạo tin tuyển dụng", exact: true })).toHaveCount(2);
+  await expect(page.locator(".guardian-art--empty")).toHaveCount(0);
   await capture(page, info, "recruiter-jobs-empty");
-  await page.getByRole("searchbox").fill("không tồn tại");
+  await page.getByLabel("Trạng thái xuất bản", { exact: true }).selectOption("DRAFT");
+  await expect(page.getByRole("heading", { name: "Không có tin phù hợp" })).toBeVisible();
   await expect(page.locator(".guardian-art--empty")).toHaveCount(0);
-  await expect(page.getByText("Không tìm thấy tin tuyển dụng phù hợp.")).toBeVisible();
-  await page.getByRole("searchbox").fill("");
-  await page.evaluate(() => {
-    const key = Object.keys(localStorage).find((key) =>
-      key.startsWith("guardianwork_company_verification"),
-    )!;
-    const company = JSON.parse(localStorage.getItem(key)!);
-    const user = JSON.parse(sessionStorage.getItem("guardianwork_auth_session")!).user;
-    localStorage.setItem(
-      `guardianwork_company_members_${company.id}_${company.taxCode}`,
-      JSON.stringify({
-        members: [
-          {
-            id: "owner",
-            userId: user.id,
-            name: "Minh",
-            email: user.email,
-            role: "Owner",
-            status: "active",
-            joinedAt: "2026-10-20",
-          },
-        ],
-        grants: [],
-        applications: [],
-        jobs: [
-          {
-            id: "visual-job",
-            authorId: "owner",
-            title: "Chuyên viên kế toán",
-            department: "Tài chính",
-            location: "Hà Nội",
-            salary: "15–20 triệu",
-            status: "Active",
-            created: "2026-10-20",
-            moderationStatus: "approved",
-          },
-        ],
-      }),
-    );
-    window.dispatchEvent(new Event("guardianwork-company-workspace"));
-  });
-  await expect(page.getByText("Chuyên viên kế toán", { exact: true })).toBeVisible();
-  await expect(page.locator(".guardian-art--empty")).toHaveCount(0);
-  await capture(page, info, "recruiter-jobs-populated");
+  await page.getByRole("button", { name: "Xem tất cả tin", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Bắt đầu với tin tuyển dụng đầu tiên" }),
+  ).toBeVisible();
 });
 
 test("Staff queue artwork is exclusive to genuine empty pending results", async ({

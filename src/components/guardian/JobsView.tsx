@@ -486,9 +486,7 @@ export function JobsView() {
 
             {/* Description */}
             <div>
-              <h4 className="font-mono text-xs   font-bold text-ink-3 mb-2">
-                Mô tả công việc
-              </h4>
+              <h4 className="font-mono text-xs   font-bold text-ink-3 mb-2">Mô tả công việc</h4>
               <p className="font-body text-sm text-ink-2 leading-relaxed">
                 {inspectingJob.description}
               </p>
@@ -496,9 +494,7 @@ export function JobsView() {
 
             {/* Requirements */}
             <div>
-              <h4 className="font-mono text-xs   font-bold text-ink-3 mb-2">
-                Kỹ năng & Yêu cầu
-              </h4>
+              <h4 className="font-mono text-xs   font-bold text-ink-3 mb-2">Kỹ năng & Yêu cầu</h4>
               <ul className="space-y-1.5 text-sm text-ink-2 font-body">
                 {inspectingJob.requirements.map((r, idx) => (
                   <li key={idx} className="flex items-start gap-2">

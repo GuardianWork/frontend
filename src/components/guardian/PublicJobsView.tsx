@@ -390,7 +390,9 @@ function Results({
           {filtersActive ? " phù hợp với bộ lọc" : " đang hoạt động"}
         </p>
         {pagination.totalItems > 0 && (
-          <p className="career-data-note">Danh sách có tin minh họa. Huy hiệu mẫu không phải kết quả kiểm định thực tế.</p>
+          <p className="career-data-note">
+            Danh sách có tin minh họa. Huy hiệu mẫu không phải kết quả kiểm định thực tế.
+          </p>
         )}
       </div>
 
@@ -690,7 +692,9 @@ function JobDetail({
               <Building2 size={16} aria-hidden="true" />
               <p>{job.statutoryBase}</p>
             </div>
-            <p className="career-data-note">Danh sách có tin minh họa. Huy hiệu mẫu không phải kết quả kiểm định thực tế.</p>
+            <p className="career-data-note">
+              Danh sách có tin minh họa. Huy hiệu mẫu không phải kết quả kiểm định thực tế.
+            </p>
           </div>
         </aside>
       </div>

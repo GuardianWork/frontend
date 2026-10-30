@@ -167,9 +167,7 @@ export function LoginView() {
 
               <div className="flex flex-col gap-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="font-mono text-xs   font-bold text-ink-2">
-                    Mật khẩu
-                  </label>
+                  <label className="font-mono text-xs   font-bold text-ink-2">Mật khẩu</label>
                   <button type="button" className="font-mono text-xs text-accent hover:underline">
                     Quên mật khẩu?
                   </button>

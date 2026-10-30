@@ -95,16 +95,16 @@ test("admin pages accept search, filtering, details, and content review", async 
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).not.toBeVisible();
   await page.goto("/admin/compliance", { waitUntil: "domcontentloaded" });
-  await expect(page.getByRole("heading", { name: "JD bị AI gắn cờ", exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Xem JD Kế toán công nợ", exact: true }).click();
   await expect(
-    page.getByRole("heading", { name: "Nội dung JD đã đăng", exact: true }),
+    page.getByRole("heading", { name: "Quản lý tin tuyển dụng", exact: true }),
   ).toBeVisible();
+  await page.getByRole("button", { name: "Xem chi tiết Kế toán công nợ", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Nội dung JD", exact: true })).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Dấu hiệu AI phát hiện", exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Quay lại danh sách", exact: true }).click();
-  await expect(page.locator(".compliance-table tbody tr")).toHaveCount(4);
+  await expect(page.locator(".compliance-table tbody tr")).toHaveCount(7);
   await info.attach("input-audit", {
     body: JSON.stringify(report),
     contentType: "application/json",
@@ -116,14 +116,21 @@ test("company onboarding sends entered data and retrieves OWNER membership", asy
   const values = {
     companyName: "Công ty Beta kiểm thử",
     taxCode: "0317654321",
-    companyEmail: "beta@example.test",
-    registrationCertificateUrl: "https://example.test/company.pdf",
+    workAddress: "123 Nguyễn Huệ, TP. Hồ Chí Minh",
+    submitterPosition: "Giám đốc",
   };
   for (const [name, value] of Object.entries(values)) {
     const input = page.locator(`[name="${name}"]`);
     await expect(input).toBeEnabled();
     await input.fill(value);
   }
+  await page.locator('[name="representation"]').selectOption("LEGAL_REPRESENTATIVE");
+  await page.locator('[name="file"]').setInputFiles({
+    name: "license.pdf",
+    mimeType: "application/pdf",
+    buffer: Buffer.from("%PDF-1.4 test"),
+  });
+  await page.getByRole("checkbox").check();
   await page.getByRole("button", { name: "Đăng ký công ty", exact: true }).click();
   await expect(page.getByRole("status")).toContainText("Đã đăng ký công ty thành công");
   await expect

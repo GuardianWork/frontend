@@ -464,9 +464,7 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
                 key={row.term}
                 className="flex flex-col gap-0.5 border-b border-rule py-3 last:border-b-0 sm:flex-row sm:items-baseline sm:gap-4"
               >
-                <dt className="w-40 shrink-0 text-xs font-semibold   text-ink-3">
-                  {row.term}
-                </dt>
+                <dt className="w-40 shrink-0 text-xs font-semibold   text-ink-3">{row.term}</dt>
                 <dd
                   className="min-w-0 text-sm leading-6 text-ink"
                   style={{ overflowWrap: "anywhere" }}
@@ -554,24 +552,18 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
           </p>
           <dl className="mx-auto mt-6 max-w-lg border-t border-rule text-left">
             <div className="flex flex-col gap-0.5 border-b border-rule py-2.5 sm:flex-row sm:items-baseline sm:gap-4">
-              <dt className="w-32 shrink-0 text-xs font-semibold   text-ink-3">
-                Vị trí
-              </dt>
+              <dt className="w-32 shrink-0 text-xs font-semibold   text-ink-3">Vị trí</dt>
               <dd className="min-w-0 text-sm font-semibold leading-6 text-ink">{job.title}</dd>
             </div>
             <div className="flex flex-col gap-0.5 border-b border-rule py-2.5 sm:flex-row sm:items-baseline sm:gap-4">
-              <dt className="w-32 shrink-0 text-xs font-semibold   text-ink-3">
-                Công ty
-              </dt>
+              <dt className="w-32 shrink-0 text-xs font-semibold   text-ink-3">Công ty</dt>
               <dd className="min-w-0 text-sm leading-6 text-ink-2">
                 {job.company} · {shortJobLocation(job.location)}
               </dd>
             </div>
             {appliedAt && (
               <div className="flex flex-col gap-0.5 py-2.5 sm:flex-row sm:items-baseline sm:gap-4">
-                <dt className="w-32 shrink-0 text-xs font-semibold   text-ink-3">
-                  Đã gửi
-                </dt>
+                <dt className="w-32 shrink-0 text-xs font-semibold   text-ink-3">Đã gửi</dt>
                 <dd className="min-w-0 text-sm leading-6 text-ink-2">{formatCvDate(appliedAt)}</dd>
               </div>
             )}

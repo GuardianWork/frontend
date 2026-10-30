@@ -66,9 +66,24 @@ export function CandidateContact() {
           {profile ? profile.phoneNumber || "Chưa cập nhật" : "Đang tải…"}
         </span>
       </div>
-      {profile && <button type="button" className="mt-2 min-h-11 text-sm font-semibold text-primary" aria-expanded={editing} aria-controls="candidate-contact-form" onClick={() => setEditing((value) => !value)}>{editing ? "Đóng chỉnh sửa số điện thoại" : "Chỉnh sửa số điện thoại"}</button>}
+      {profile && (
+        <button
+          type="button"
+          className="mt-2 min-h-11 text-sm font-semibold text-primary"
+          aria-expanded={editing}
+          aria-controls="candidate-contact-form"
+          onClick={() => setEditing((value) => !value)}
+        >
+          {editing ? "Đóng chỉnh sửa số điện thoại" : "Chỉnh sửa số điện thoại"}
+        </button>
+      )}
       {editing && profile && (
-        <form id="candidate-contact-form" onSubmit={save} className="mt-4 space-y-3" aria-busy={busy}>
+        <form
+          id="candidate-contact-form"
+          onSubmit={save}
+          className="mt-4 space-y-3"
+          aria-busy={busy}
+        >
           <label htmlFor="candidate-phone" className="block text-sm font-medium">
             Số điện thoại chung của tài khoản
           </label>

@@ -61,8 +61,34 @@ function paged<T>(content: T[], page = 0, size = 20) {
   };
 }
 async function mockJobs(page: Page, initial: Job[] = [makeJob()]) {
-  await page.route("**/api/companies/me/verification", route => route.fulfill({json:{status:200,data:{id:101,name:"Alpha",taxCode:"0101234567",verificationStatus:"VERIFIED",version:1}}}));
-  await page.route("**/api/companies/101", route => route.fulfill({json:{status:200,data:{id:101,name:"Alpha",taxCode:"0101234567",verificationStatus:"VERIFIED",version:1}}}));
+  await page.route("**/api/companies/me/verification", (route) =>
+    route.fulfill({
+      json: {
+        status: 200,
+        data: {
+          id: 101,
+          name: "Alpha",
+          taxCode: "0101234567",
+          verificationStatus: "VERIFIED",
+          version: 1,
+        },
+      },
+    }),
+  );
+  await page.route("**/api/companies/101", (route) =>
+    route.fulfill({
+      json: {
+        status: 200,
+        data: {
+          id: 101,
+          name: "Alpha",
+          taxCode: "0101234567",
+          verificationStatus: "VERIFIED",
+          version: 1,
+        },
+      },
+    }),
+  );
   const jobs = structuredClone(initial);
   let conflict = false;
   const writes: { path: string; method: string; body: Record<string, unknown> | null }[] = [];
