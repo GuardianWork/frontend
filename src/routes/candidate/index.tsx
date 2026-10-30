@@ -36,7 +36,7 @@ function CandidateIndexPage() {
 
         <div className="flex items-center gap-3">
           <Link
-            to="/candidate/jobs"
+            to="/jobs"
             className="px-5 py-2.5 bg-primary text-on-primary text-xs font-bold rounded-lg hover:opacity-90 transition-all flex items-center gap-2 shadow-sm"
           >
             <Icon name="work" className="!text-base" />
@@ -48,7 +48,7 @@ function CandidateIndexPage() {
       {/* 3 Quick Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
         <Link
-          to="/candidate/jobs"
+          to="/jobs"
           className="bg-paper-white border border-warm-border hover:border-primary rounded-xl p-6 shadow-sm transition-all group flex flex-col justify-between"
         >
           <div>

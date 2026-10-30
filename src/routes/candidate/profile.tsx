@@ -1,16 +1,60 @@
-import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { AdminShell, Icon } from "@/components/AdminShell";
+import { useEffect, useState, type FormEvent, type KeyboardEvent } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { AdminShell } from "@/components/AdminShell";
+import { FloatingPanel } from "@/components/FloatingPanel";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  MAX_CV_COUNT,
+  useCandidate,
+  type CandidateEducation,
+  type CandidateExperience,
+  type CandidateProfileDetails,
+} from "@/context/CandidateContext";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import {
+  ArrowRight,
+  BadgeCheck,
+  Check,
+  CircleAlert,
+  Eye,
+  EyeOff,
+  FileText,
+  Mail,
+  MapPin,
+  Pencil,
+  Phone,
+  Plus,
+  Trash2,
+  X,
+} from "lucide-react";
+
+type ExperienceEntry = CandidateExperience;
+type EducationEntry = CandidateEducation;
+type EditSection = "all" | "basics" | "about" | "experience" | "education" | "skills";
+
+const MAX_NAME_LENGTH = 150;
+const MAX_EMAIL_LENGTH = 50;
+const MAX_ABOUT_LENGTH = 1000;
+const MAX_SKILLS = 20;
+const MAX_SKILL_LENGTH = 30;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const PHONE_PATTERN = /^0\d{9}$/;
 
 export const Route = createFileRoute("/candidate/profile")({
   head: () => ({
     meta: [
-      { title: "My Talent Profile & Safeguards — GuardianWork" },
+      { title: "Hồ sơ cá nhân — GuardianWork" },
       {
         name: "description",
         content:
-          "Manage your verified developer profile, salary floor, skills, and statutory protections.",
+          "Cập nhật thông tin, kinh nghiệm, học vấn và kỹ năng trong hồ sơ ứng viên GuardianWork.",
       },
     ],
   }),
@@ -19,360 +63,1424 @@ export const Route = createFileRoute("/candidate/profile")({
 
 function CandidateProfilePage() {
   const user = useAuthUser();
-  const fullName =
-    [user?.lastName, user?.firstName].filter(Boolean).join(" ") || user?.username || "Ứng viên";
+  const { profileDetails: profile, setProfileDetails, cvs } = useCandidate();
+  const defaultCv = cvs.find((cv) => cv.isDefault);
   const [isEditing, setIsEditing] = useState(false);
-  const [salaryFloor, setSalaryFloor] = useState(
-    "150 triệu VND/tháng ($6,000/tháng) hoặc tương đương + Cổ phần",
-  );
-  const [titleRole, setTitleRole] = useState("Kỹ sư Hệ thống & Full-Stack Cấp cao");
+  const [draft, setDraft] = useState(profile);
+  const [skillsDraft, setSkillsDraft] = useState<string[]>(profile.skills);
+  const [skillInput, setSkillInput] = useState("");
+  const [skillNotice, setSkillNotice] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [successMessage, setSuccessMessage] = useState("");
+  const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false);
+  const [editSection, setEditSection] = useState<EditSection>("all");
+  const [editIndex, setEditIndex] = useState<number | null>(null);
+  const currentRole = profile.experiences[0]?.title || "Chưa cập nhật chức danh";
+  const contactEmail = profile.email.trim() || user?.email || "";
+  const errorCount = Object.keys(fieldErrors).length;
+
+  useEffect(() => {
+    if (isEditing) return;
+    setDraft(profile);
+    setSkillsDraft(profile.skills);
+    setSkillInput("");
+    setSkillNotice("");
+  }, [isEditing, profile]);
+
+  const openEditForm = (section: EditSection = "all", index: number | null = null) => {
+    setDraft(profile);
+    setSkillsDraft(profile.skills);
+    setSkillInput("");
+    setSkillNotice("");
+    setFieldErrors({});
+    setSuccessMessage("");
+    setIsSuccessDialogOpen(false);
+    setEditSection(section);
+    setEditIndex(index);
+    setIsEditing(true);
+  };
+
+  const closeEditForm = () => setIsEditing(false);
+
+  const clearFieldError = (key: string) => {
+    setFieldErrors((current) => {
+      if (!current[key]) return current;
+      const next = { ...current };
+      delete next[key];
+      return next;
+    });
+  };
+
+  const updateDraft = (field: keyof typeof draft, value: string) => {
+    setDraft((current) => ({ ...current, [field]: value }));
+    clearFieldError(field);
+  };
+
+  const updateExperience = (index: number, field: keyof ExperienceEntry, value: string) => {
+    setDraft((current) => ({
+      ...current,
+      experiences: current.experiences.map((entry, entryIndex) =>
+        entryIndex === index ? { ...entry, [field]: value } : entry,
+      ),
+    }));
+    clearFieldError(`experiences.${index}.${field}`);
+  };
+
+  const updateEducation = (index: number, field: keyof EducationEntry, value: string) => {
+    setDraft((current) => ({
+      ...current,
+      education: current.education.map((entry, entryIndex) =>
+        entryIndex === index ? { ...entry, [field]: value } : entry,
+      ),
+    }));
+    clearFieldError(`education.${index}.${field}`);
+  };
+
+  const addExperience = () => {
+    setDraft((current) => ({
+      ...current,
+      experiences: [
+        ...current.experiences,
+        { title: "", company: "", from: "", to: "", description: "" },
+      ],
+    }));
+  };
+
+  const addEducation = () => {
+    setDraft((current) => ({
+      ...current,
+      education: [...current.education, { degree: "", school: "", from: "", to: "" }],
+    }));
+  };
+
+  const removeEducation = (index: number) => {
+    setDraft((current) => ({
+      ...current,
+      education: current.education.filter((_, entryIndex) => entryIndex !== index),
+    }));
+    setFieldErrors((current) => {
+      const next = { ...current };
+      Object.keys(next).forEach((key) => {
+        if (key.startsWith(`education.${index}.`)) delete next[key];
+      });
+      return next;
+    });
+  };
+
+  const removeExperience = (index: number) => {
+    setDraft((current) => ({
+      ...current,
+      experiences: current.experiences.filter((_, entryIndex) => entryIndex !== index),
+    }));
+    setFieldErrors((current) => {
+      const next = { ...current };
+      Object.keys(next).forEach((key) => {
+        if (key.startsWith(`experiences.${index}.`)) delete next[key];
+      });
+      return next;
+    });
+  };
+
+  const addSkill = (raw: string) => {
+    const value = raw.replace(/\s+/g, " ").trim();
+    if (!value) return;
+    if (value.length > MAX_SKILL_LENGTH) {
+      setSkillNotice(`Mỗi kỹ năng tối đa ${MAX_SKILL_LENGTH} ký tự.`);
+      return;
+    }
+    if (skillsDraft.length >= MAX_SKILLS) {
+      setSkillNotice(`Đã đạt tối đa ${MAX_SKILLS} kỹ năng. Xóa bớt để thêm kỹ năng mới.`);
+      return;
+    }
+    if (skillsDraft.some((skill) => skill.toLowerCase() === value.toLowerCase())) {
+      setSkillNotice("Kỹ năng này đã có trong danh sách.");
+      return;
+    }
+    setSkillsDraft((current) => [...current, value]);
+    setSkillInput("");
+    setSkillNotice("");
+    clearFieldError("skills");
+  };
+
+  const removeSkill = (skill: string) => {
+    setSkillsDraft((current) => current.filter((item) => item !== skill));
+    setSkillNotice("");
+  };
+
+  const handleSkillKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter" || event.key === ",") {
+      event.preventDefault();
+      addSkill(skillInput);
+      return;
+    }
+    if (event.key === "Backspace" && !skillInput && skillsDraft.length > 0) {
+      setSkillsDraft((current) => current.slice(0, -1));
+    }
+  };
+
+  const handleSave = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const pendingSkill = skillInput.replace(/\s+/g, " ").trim();
+    const skillsForSave =
+      pendingSkill &&
+      !skillsDraft.some((skill) => skill.toLowerCase() === pendingSkill.toLowerCase())
+        ? [...skillsDraft, pendingSkill]
+        : skillsDraft;
+
+    const errors = validateDraft(draft, skillsForSave, editSection, editIndex);
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setSuccessMessage("");
+      const firstKey = Object.keys(errors)[0];
+      window.requestAnimationFrame(() => {
+        document.getElementById(fieldIdFromError(firstKey))?.focus();
+      });
+      return;
+    }
+
+    const touches = (target: EditSection) => editSection === "all" || editSection === target;
+    const normalizedName = draft.fullName.replace(/\s+/g, " ").trim();
+    const cleanExperiences = draft.experiences.map((entry) => ({
+      ...entry,
+      title: entry.title.trim(),
+      company: entry.company.trim(),
+      description: entry.description.trim(),
+    }));
+    const cleanEducation = draft.education.map((entry) => ({
+      ...entry,
+      degree: entry.degree.trim(),
+      school: entry.school.trim(),
+    }));
+
+    // Each edit mode writes back only the group it owns; everything else stays untouched.
+    const experiences =
+      touches("experience") && editSection === "experience" && editIndex !== null
+        ? profile.experiences.map((entry, index) =>
+            index === editIndex ? cleanExperiences[editIndex] : entry,
+          )
+        : touches("experience")
+          ? cleanExperiences
+          : profile.experiences;
+    const education =
+      touches("education") && editSection === "education" && editIndex !== null
+        ? profile.education.map((entry, index) =>
+            index === editIndex ? cleanEducation[editIndex] : entry,
+          )
+        : touches("education")
+          ? cleanEducation
+          : profile.education;
+
+    const nextProfile: CandidateProfileDetails = {
+      ...profile,
+      fullName: touches("basics") ? normalizedName : profile.fullName,
+      email: touches("basics") ? draft.email.trim() : profile.email,
+      phone: touches("basics") ? draft.phone.replace(/\D/g, "") : profile.phone,
+      experience: touches("about") ? draft.experience.trim() : profile.experience,
+      skills: touches("skills") ? skillsForSave : profile.skills,
+      experiences,
+      education,
+    };
+
+    setProfileDetails(nextProfile);
+    setDraft(nextProfile);
+    setSkillsDraft(nextProfile.skills);
+    setSkillInput("");
+    setSkillNotice("");
+    setFieldErrors({});
+    setSuccessMessage(getSuccessMessage(editSection));
+    setIsSuccessDialogOpen(true);
+    setIsEditing(false);
+  };
+
+  const readinessItems = [
+    {
+      label: "Thông tin cá nhân",
+      done: Boolean(
+        profile.fullName.trim() &&
+        EMAIL_PATTERN.test(contactEmail) &&
+        PHONE_PATTERN.test(profile.phone),
+      ),
+    },
+    { label: "Giới thiệu", done: Boolean(profile.experience.trim()) },
+    { label: "Kinh nghiệm", done: profile.experiences.length > 0 },
+    { label: "Học vấn", done: profile.education.length > 0 },
+    { label: "Kỹ năng", done: profile.skills.length > 0 },
+    { label: "Hồ sơ xin việc", done: cvs.length > 0 },
+  ];
+  const completedCount = readinessItems.filter((item) => item.done).length;
+  const missingLabels = readinessItems.filter((item) => !item.done).map((item) => item.label);
+  const initial = user?.firstName?.slice(0, 1) || profile.fullName.slice(0, 1) || "U";
 
   return (
-    <AdminShell title="My Talent Profile" role="candidate">
-      {/* Header */}
-      <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <h2 className="text-3xl md:text-4xl font-bold text-charcoal-text mb-2 tracking-tight">
-            Hồ Sơ Năng Lực & Quyền Lợi Bảo Vệ
-          </h2>
-          <p className="text-base text-charcoal-83 max-w-2xl">
-            Hồ sơ ứng viên của bạn đã kiểm định danh tính và được bảo vệ theo Bộ luật Lao động 2019.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setIsEditing(!isEditing)}
-            className="px-4 py-2 border border-warm-border bg-paper-white text-charcoal-text text-sm font-medium rounded-lg hover:bg-surface-container transition-colors flex items-center gap-2 shadow-sm"
-          >
-            <Icon name="edit" className="!text-base" />
-            <span>{isEditing ? "Đóng chỉnh sửa" : "Chỉnh sửa hồ sơ"}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* KPI Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-paper-white border border-warm-border rounded-xl p-6 shadow-sm">
-          <span className="font-semibold text-charcoal-40 text-xs uppercase tracking-wider block mb-2">
-            Mức lương Kỳ vọng
-          </span>
-          <div className="font-semibold text-2xl text-charcoal-text font-mono">150M VND / mo</div>
-          <div className="mt-2 text-xs text-charcoal-83 flex items-center gap-1 font-medium">
-            <Icon name="payments" className="!text-[15px] text-primary" /> $6,000/tháng + Cổ phần
-            ESOP
-          </div>
-        </div>
-
-        <div className="bg-paper-white border border-warm-border rounded-xl p-6 shadow-sm">
-          <span className="font-semibold text-charcoal-40 text-xs uppercase tracking-wider block mb-2">
-            Kinh nghiệm Tích lũy
-          </span>
-          <div className="font-semibold text-2xl text-charcoal-text font-mono">
-            8 Năm Chuyên sâu
-          </div>
-          <div className="mt-2 text-xs text-charcoal-83 flex items-center gap-1 font-medium">
-            <Icon name="history_edu" className="!text-[15px] text-primary" /> Backend, K8s &
-            Frontend Architecture
-          </div>
-        </div>
-
-        <div className="bg-primary text-on-primary border border-primary rounded-xl p-6 shadow-sm relative overflow-hidden">
-          <div className="absolute right-0 bottom-0 opacity-15 pointer-events-none">
-            <Icon name="verified_user" className="!text-7xl translate-x-3 translate-y-3" />
-          </div>
-          <span className="font-semibold text-on-primary/80 text-xs uppercase tracking-wider block mb-2">
-            Lá chắn Pháp lý
-          </span>
-          <div className="font-semibold text-2xl font-mono">100% Đã Kiểm định</div>
-          <div className="mt-2 text-xs text-on-primary/90 flex items-center gap-1 font-medium">
-            <Icon name="shield" className="!text-[15px]" /> Bảo vệ theo Điều 98 & Điều 25
-          </div>
-        </div>
-      </div>
-
-      {/* Main Split Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Pane: Candidate Info & Links */}
-        <div className="lg:col-span-5 flex flex-col gap-6">
-          {/* Candidate Card */}
-          <div className="bg-paper-white p-6 rounded-xl border border-warm-border shadow-sm">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-16 h-16 rounded-full overflow-hidden border border-warm-border bg-surface-container shrink-0">
-                <span
-                  aria-hidden="true"
-                  className="flex h-full items-center justify-center text-xl font-semibold text-primary"
-                >
-                  {user?.firstName?.slice(0, 1) || "U"}
-                </span>
-              </div>
-              <div>
-                <h3 className="font-bold text-xl text-charcoal-text">{fullName}</h3>
-                <p className="text-sm font-medium text-charcoal-83 mt-0.5">{titleRole}</p>
-                <div className="flex items-center gap-2 mt-1.5">
-                  <span className="w-2 h-2 rounded-full bg-green-500" />
-                  <span className="text-xs font-semibold text-green-700">
-                    Verified Active Candidate
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Editable Fields if toggled */}
-            {isEditing && (
-              <div className="mb-4 p-4 rounded-lg bg-surface-container-low border border-warm-border space-y-3">
-                <div>
-                  <label className="text-xs font-semibold text-charcoal-40 uppercase block mb-1">
-                    Chức danh
-                  </label>
-                  <input
-                    type="text"
-                    value={titleRole}
-                    onChange={(e) => setTitleRole(e.target.value)}
-                    className="w-full px-3 py-1.5 bg-paper-white border border-warm-border rounded text-xs text-charcoal-text"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-charcoal-40 uppercase block mb-1">
-                    Lương mong muốn
-                  </label>
-                  <input
-                    type="text"
-                    value={salaryFloor}
-                    onChange={(e) => setSalaryFloor(e.target.value)}
-                    className="w-full px-3 py-1.5 bg-paper-white border border-warm-border rounded text-xs text-charcoal-text"
-                  />
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-3 pt-4 border-t border-warm-border text-sm">
-              <div className="flex justify-between items-center">
-                <span className="text-charcoal-40 text-xs font-semibold uppercase">Địa điểm:</span>
-                <span className="text-charcoal-text font-medium">TP. Hồ Chí Minh, Việt Nam</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-charcoal-40 text-xs font-semibold uppercase">Email:</span>
-                <span className="text-charcoal-text font-medium font-mono text-xs">
-                  {user?.email || "—"}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-charcoal-40 text-xs font-semibold uppercase">
-                  Điện thoại:
-                </span>
-                <span className="text-charcoal-text font-medium font-mono text-xs">
-                  +84 987 654 321
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-charcoal-40 text-xs font-semibold uppercase">Năm sinh:</span>
-                <span className="text-charcoal-text font-medium font-mono text-xs">1996</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Languages */}
-          <div className="bg-paper-white p-5 rounded-xl border border-warm-border shadow-sm">
-            <h4 className="font-semibold text-sm text-charcoal-text mb-3 flex items-center gap-2">
-              <Icon name="translate" className="!text-base text-primary" />
-              Ngoại ngữ Đã Xác thực
-            </h4>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between items-center p-2.5 rounded-lg bg-surface-container-low border border-warm-border">
-                <span className="font-medium text-charcoal-text">Tiếng Anh (Professional)</span>
-                <span className="font-mono text-xs font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200">
-                  IELTS 7.5
-                </span>
-              </div>
-              <div className="flex justify-between items-center p-2.5 rounded-lg bg-surface-container-low border border-warm-border">
-                <span className="font-medium text-charcoal-text">Tiếng Việt</span>
-                <span className="font-mono text-xs font-bold text-charcoal-83 bg-surface-container px-2 py-0.5 rounded">
-                  Bản ngữ
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* External Links */}
-          <div className="bg-paper-white p-5 rounded-xl border border-warm-border shadow-sm">
-            <h4 className="font-semibold text-sm text-charcoal-text mb-3 flex items-center gap-2">
-              <Icon name="link" className="!text-base text-primary" />
-              Liên kết Mã nguồn & Hồ sơ
-            </h4>
-            <div className="space-y-2 text-sm font-mono text-xs">
-              <a
-                href="https://github.com/alex-dev"
-                target="_blank"
-                rel="noreferrer"
-                className="flex justify-between items-center p-2.5 rounded-lg bg-surface-container-low hover:bg-surface-container border border-warm-border transition-colors text-charcoal-text"
-              >
-                <span>GitHub</span>
-                <span className="text-primary font-semibold flex items-center gap-1">
-                  github.com/alex-dev <Icon name="open_in_new" className="!text-[13px]" />
-                </span>
-              </a>
-              <a
-                href="https://linkedin.com/in/alex-dev"
-                target="_blank"
-                rel="noreferrer"
-                className="flex justify-between items-center p-2.5 rounded-lg bg-surface-container-low hover:bg-surface-container border border-warm-border transition-colors text-charcoal-text"
-              >
-                <span>LinkedIn</span>
-                <span className="text-primary font-semibold flex items-center gap-1">
-                  linkedin.com/in/alex-dev <Icon name="open_in_new" className="!text-[13px]" />
-                </span>
-              </a>
-            </div>
-          </div>
-
-          {/* Attached Verified CV */}
-          <div className="bg-paper-white p-5 rounded-xl border border-warm-border shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-semibold text-sm text-charcoal-text flex items-center gap-2">
-                <Icon name="description" className="!text-base text-primary" />
-                CV Đính kèm
-              </span>
-              <span className="px-2 py-0.5 bg-primary text-on-primary text-[10px] font-bold rounded">
-                PDF
-              </span>
-            </div>
-            <p className="font-mono text-xs text-charcoal-83 truncate mb-3">
-              Nguyen_Van_An_CV_2026_Verified.pdf
+    <AdminShell title="Hồ sơ của tôi" role="candidate">
+      <div className="mx-auto max-w-6xl caret-accent selection:bg-accent selection:text-accent-ink">
+        <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="text-[clamp(32px,3.8vw,52px)] font-extrabold leading-[1.2] tracking-[-0.035em] text-ink">
+              Hồ sơ cá nhân
+            </h1>
+            <p className="mt-1.5 max-w-[62ch] text-sm leading-6 text-ink-2">
+              Thông tin hiển thị với nhà tuyển dụng và trạng thái hồ sơ của bạn.
             </p>
-            <button className="w-full py-2 bg-surface-container border border-warm-border hover:bg-surface-container-high rounded-lg text-xs font-semibold text-charcoal-text flex items-center justify-center gap-1.5 transition-colors">
-              <Icon name="download" className="!text-base" /> Tải tệp CV đã xác thực
-            </button>
           </div>
-        </div>
+          <button
+            type="button"
+            onClick={() => openEditForm("all")}
+            className="btn min-h-11 shrink-0 px-5 text-sm"
+          >
+            <Pencil size={16} strokeWidth={2.2} aria-hidden="true" />
+            Chỉnh sửa hồ sơ
+          </button>
+        </header>
 
-        {/* Right Pane: Review & Detailed Experience */}
-        <div className="lg:col-span-7">
-          <div className="bg-paper-white rounded-xl border border-warm-border shadow-sm h-full flex flex-col overflow-hidden">
-            {/* Header */}
-            <div className="p-6 border-b border-warm-border flex justify-between items-center gap-4">
-              <div>
-                <h3 className="text-lg font-bold text-charcoal-text">
-                  Chi tiết Năng lực & Kinh nghiệm
-                </h3>
-                <p className="text-sm text-charcoal-83 font-medium">Hồ sơ ID: #SEEKER-VN-8842</p>
-              </div>
-              <span className="px-3 py-1 bg-green-50 text-green-700 border border-green-200 rounded-full text-xs font-bold flex items-center gap-1">
-                <Icon name="verified" className="!text-sm" /> 100% Verified
-              </span>
-            </div>
-
-            {/* Scrollable details */}
-            <div className="flex-1 p-8 overflow-y-auto space-y-8">
-              {/* Statutory Protection Banner */}
-              <div className="bg-parchment-bg border border-warm-border border-l-4 border-l-primary p-5 rounded-lg flex gap-4">
-                <Icon name="shield" className="text-primary mt-0.5 !text-2xl shrink-0" />
-                <div>
-                  <h4 className="text-sm font-semibold text-charcoal-text mb-1">
-                    Bảo vệ Ẩn danh & Quyền tác giả theo Luật Lao động VN
-                  </h4>
-                  <p className="text-sm text-charcoal-83 leading-relaxed mb-2">
-                    Thông tin liên hệ của ứng viên chỉ được gửi tới Nhà tuyển dụng sau khi hai bên
-                    xác nhận quan tâm chung. Quyền sở hữu trí tuệ đối với các dự án mã nguồn mở
-                    ngoài giờ làm việc được bảo hộ 100%.
-                  </p>
-                  <div className="flex items-center gap-2 text-xs font-semibold text-primary">
-                    <Icon name="policy" className="!text-sm" /> Tuân thủ Bộ luật Lao động 2019
+        {isEditing && (
+          <FloatingPanel isOpen={true} onClose={closeEditForm} labelledBy="edit-profile-title">
+            <form onSubmit={handleSave} noValidate className="flex min-h-0 flex-1 flex-col">
+              <div className="shrink-0 border-b border-rule px-5 py-5 sm:px-7">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <h2
+                      id="edit-profile-title"
+                      className="text-lg font-bold leading-[1.45] tracking-[-0.02em] text-ink"
+                    >
+                      {getEditorTitle(editSection)}
+                    </h2>
+                    <p className="mt-1 text-sm leading-6 text-ink-2">
+                      {getEditorDescription(editSection)}
+                    </p>
+                    <p className="mt-2 text-xs leading-4 font-medium text-ink-3">
+                      Trường đánh dấu <span className="font-bold text-error">*</span> là bắt buộc.
+                      Các thông tin khác trong hồ sơ được giữ nguyên.
+                    </p>
                   </div>
+                  <button
+                    type="button"
+                    onClick={closeEditForm}
+                    aria-label="Đóng"
+                    className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink-3 transition-colors hover:bg-paper-2 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                  >
+                    <X size={18} aria-hidden="true" />
+                  </button>
                 </div>
               </div>
 
-              {/* Bio summary */}
-              <div>
-                <h4 className="font-semibold text-xs text-charcoal-40 uppercase tracking-wider mb-2">
-                  Giới thiệu Bản thân
-                </h4>
-                <p className="text-sm text-charcoal-text leading-relaxed bg-surface-container-low p-4 rounded-lg border border-warm-border">
-                  Kỹ sư hệ thống và kỹ sư sản phẩm với hơn 8 năm kinh nghiệm xây dựng các kiến trúc
-                  phân tán chịu tải cao và giao diện người dùng mượt mà. Kết nối hạ tầng DevOps với
-                  ứng dụng web, tập trung vào khả năng mở rộng, độ tin cậy và tuân thủ bảo mật cấp
-                  doanh nghiệp.
-                </p>
+              <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-7">
+                {errorCount > 0 && (
+                  <div
+                    role="alert"
+                    className="mb-5 flex items-start gap-3 rounded-xl border border-error/25 bg-error-container px-4 py-3"
+                  >
+                    <CircleAlert
+                      size={18}
+                      className="mt-0.5 shrink-0 text-on-error-container"
+                      aria-hidden="true"
+                    />
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-on-error-container">
+                        Chưa lưu được thay đổi
+                      </p>
+                      <p className="mt-0.5 text-xs leading-5 text-on-error-container">
+                        {errorCount} trường chưa hợp lệ. Kiểm tra các ô được đánh dấu rồi lưu lại.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  {(editSection === "all" || editSection === "basics") && (
+                    <>
+                      {editSection === "all" && (
+                        <div className="md:col-span-2">
+                          <FormSectionLabel title="Thông tin cá nhân" />
+                        </div>
+                      )}
+                      <div className="md:col-span-2">
+                        <FieldHeader
+                          htmlFor="profile-full-name"
+                          label="Họ tên"
+                          required
+                          counter={`${draft.fullName.length}/${MAX_NAME_LENGTH}`}
+                        />
+                        <input
+                          id="profile-full-name"
+                          maxLength={MAX_NAME_LENGTH}
+                          type="text"
+                          autoComplete="name"
+                          value={draft.fullName}
+                          onChange={(event) => updateDraft("fullName", event.target.value)}
+                          onBlur={(event) =>
+                            updateDraft(
+                              "fullName",
+                              event.target.value.replace(/\s+/g, " ").trimStart(),
+                            )
+                          }
+                          aria-required="true"
+                          aria-invalid={Boolean(fieldErrors.fullName)}
+                          aria-describedby={
+                            fieldErrors.fullName
+                              ? "profile-full-name-error profile-full-name-hint"
+                              : "profile-full-name-hint"
+                          }
+                          className={fieldClass(fieldErrors.fullName)}
+                        />
+                        <p
+                          id="profile-full-name-hint"
+                          className="mt-1 text-xs leading-4 font-normal text-ink-3"
+                        >
+                          Tên hiển thị với nhà tuyển dụng, tối đa {MAX_NAME_LENGTH} ký tự.
+                        </p>
+                        <FieldError id="profile-full-name-error" message={fieldErrors.fullName} />
+                      </div>
+                      <div>
+                        <FieldHeader
+                          htmlFor="profile-email"
+                          label="Email liên hệ"
+                          required
+                          counter={`${draft.email.length}/${MAX_EMAIL_LENGTH}`}
+                        />
+                        <input
+                          id="profile-email"
+                          maxLength={MAX_EMAIL_LENGTH}
+                          type="email"
+                          autoComplete="email"
+                          value={draft.email}
+                          onChange={(event) => updateDraft("email", event.target.value)}
+                          aria-required="true"
+                          aria-invalid={Boolean(fieldErrors.email)}
+                          aria-describedby={
+                            fieldErrors.email ? "profile-email-error" : "profile-email-hint"
+                          }
+                          className={fieldClass(fieldErrors.email)}
+                        />
+                        <p
+                          id="profile-email-hint"
+                          className="mt-1 text-xs leading-4 font-normal text-ink-3"
+                        >
+                          Nhà tuyển dụng dùng email này để phản hồi hồ sơ.
+                        </p>
+                        <FieldError id="profile-email-error" message={fieldErrors.email} />
+                      </div>
+                      <div>
+                        <FieldHeader
+                          htmlFor="profile-phone"
+                          label="Số điện thoại"
+                          required
+                          counter={`${draft.phone.length}/10`}
+                        />
+                        <input
+                          id="profile-phone"
+                          inputMode="numeric"
+                          maxLength={10}
+                          type="tel"
+                          autoComplete="tel"
+                          value={draft.phone}
+                          onChange={(event) =>
+                            updateDraft("phone", event.target.value.replace(/\D/g, ""))
+                          }
+                          aria-required="true"
+                          aria-invalid={Boolean(fieldErrors.phone)}
+                          aria-describedby={
+                            fieldErrors.phone ? "profile-phone-error" : "profile-phone-hint"
+                          }
+                          className={fieldClass(fieldErrors.phone)}
+                        />
+                        <p
+                          id="profile-phone-hint"
+                          className="mt-1 text-xs leading-4 font-normal text-ink-3"
+                        >
+                          10 chữ số, bắt đầu bằng 0. Ví dụ 0987654321.
+                        </p>
+                        <FieldError id="profile-phone-error" message={fieldErrors.phone} />
+                      </div>
+                    </>
+                  )}
+
+                  {(editSection === "all" || editSection === "about") && (
+                    <div className="md:col-span-2">
+                      <FieldHeader
+                        htmlFor="profile-about"
+                        label="Giới thiệu bản thân"
+                        counter={`${draft.experience.length}/${MAX_ABOUT_LENGTH}`}
+                      />
+                      <textarea
+                        id="profile-about"
+                        rows={5}
+                        maxLength={MAX_ABOUT_LENGTH}
+                        value={draft.experience}
+                        onChange={(event) => updateDraft("experience", event.target.value)}
+                        aria-invalid={Boolean(fieldErrors.experience)}
+                        aria-describedby={
+                          fieldErrors.experience ? "profile-about-error" : undefined
+                        }
+                        className={fieldClass(fieldErrors.experience)}
+                      />
+                      <FieldError id="profile-about-error" message={fieldErrors.experience} />
+                    </div>
+                  )}
+
+                  {(editSection === "all" || editSection === "skills") && (
+                    <div className="md:col-span-2">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <label
+                          htmlFor="profile-skill-input"
+                          className="text-sm font-semibold text-ink-2"
+                        >
+                          Kỹ năng chuyên môn
+                        </label>
+                        <span className="text-xs font-medium tabular-nums text-ink-3">
+                          {skillsDraft.length}/{MAX_SKILLS}
+                        </span>
+                      </div>
+                      <div
+                        onClick={(event) => {
+                          if (event.target === event.currentTarget) {
+                            document.getElementById("profile-skill-input")?.focus();
+                          }
+                        }}
+                        className={`mt-1.5 flex min-h-11 w-full flex-wrap items-center gap-1.5 rounded-lg border bg-paper px-2 py-1.5 transition-colors focus-within:ring-2 focus-within:ring-accent/20 ${
+                          fieldErrors.skills
+                            ? "border-error"
+                            : "border-rule focus-within:border-accent"
+                        }`}
+                      >
+                        {skillsDraft.map((skill) => (
+                          <span
+                            key={skill}
+                            className="inline-flex items-center gap-1 rounded-md border border-rule bg-paper-2 py-1 pl-2 pr-1 text-xs font-semibold text-ink-2"
+                          >
+                            {skill}
+                            <button
+                              type="button"
+                              onClick={() => removeSkill(skill)}
+                              aria-label={`Xóa kỹ năng ${skill}`}
+                              className="inline-flex h-5 w-5 items-center justify-center rounded text-ink-3 transition-colors hover:bg-paper-3 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                            >
+                              <X size={12} aria-hidden="true" />
+                            </button>
+                          </span>
+                        ))}
+                        <input
+                          id="profile-skill-input"
+                          type="text"
+                          value={skillInput}
+                          onChange={(event) => {
+                            setSkillInput(event.target.value);
+                            setSkillNotice("");
+                          }}
+                          onKeyDown={handleSkillKeyDown}
+                          onBlur={() => {
+                            if (skillInput.trim()) addSkill(skillInput);
+                          }}
+                          placeholder={
+                            skillsDraft.length >= MAX_SKILLS
+                              ? "Đã đạt tối đa 20 kỹ năng"
+                              : "Nhập kỹ năng rồi nhấn Enter"
+                          }
+                          disabled={skillsDraft.length >= MAX_SKILLS}
+                          aria-invalid={Boolean(fieldErrors.skills)}
+                          aria-describedby={
+                            fieldErrors.skills ? "profile-skill-error" : "profile-skill-hint"
+                          }
+                          className="min-w-[10rem] flex-1 bg-transparent px-1.5 py-1 text-sm font-normal text-ink outline-none placeholder:text-ink-3 disabled:cursor-not-allowed"
+                        />
+                      </div>
+                      <p
+                        id="profile-skill-hint"
+                        className="mt-1 text-xs leading-4 font-normal text-ink-3"
+                      >
+                        Nhấn Enter hoặc dấu phẩy để thêm. Tối đa {MAX_SKILLS} kỹ năng, mỗi kỹ năng
+                        từ 1 đến {MAX_SKILL_LENGTH} ký tự.
+                      </p>
+                      {skillNotice ? (
+                        <p role="status" className="mt-1 text-xs font-medium text-ink-3">
+                          {skillNotice}
+                        </p>
+                      ) : null}
+                      <FieldError id="profile-skill-error" message={fieldErrors.skills} />
+                    </div>
+                  )}
+
+                  {(editSection === "all" || editSection === "experience") && (
+                    <div className="md:col-span-2">
+                      {editIndex === null && <FormSectionLabel title="Kinh nghiệm làm việc" />}
+                      <div className="space-y-5">
+                        {draft.experiences.map((entry, index) =>
+                          editIndex === null || editIndex === index ? (
+                            <div
+                              key={index}
+                              className="border-t border-rule pt-4 first:border-t-0 first:pt-0"
+                            >
+                              <div className="mb-3 flex items-center justify-between gap-3">
+                                <p className="text-xs font-bold text-accent-deep">
+                                  Kinh nghiệm {index + 1}
+                                </p>
+                                <button
+                                  type="button"
+                                  onClick={() => removeExperience(index)}
+                                  className="inline-flex min-h-8 items-center gap-1.5 rounded-md px-2 text-xs font-semibold text-error transition-colors hover:bg-error-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error focus-visible:ring-offset-2"
+                                >
+                                  <Trash2 size={14} aria-hidden="true" />
+                                  Xóa
+                                </button>
+                              </div>
+                              <div className="grid gap-3 md:grid-cols-2">
+                                {(
+                                  [
+                                    ["title", "Chức danh", "Nhập chức danh."],
+                                    ["company", "Công ty / Địa điểm", "Nhập công ty."],
+                                  ] as const
+                                ).map(([field, label, requiredMessage]) => (
+                                  <div key={field}>
+                                    <FieldHeader
+                                      htmlFor={`experience-${index}-${field}`}
+                                      label={label}
+                                      required
+                                    />
+                                    <input
+                                      id={`experience-${index}-${field}`}
+                                      type="text"
+                                      maxLength={100}
+                                      value={entry[field]}
+                                      placeholder={requiredMessage}
+                                      onChange={(event) =>
+                                        updateExperience(index, field, event.target.value)
+                                      }
+                                      aria-required="true"
+                                      aria-invalid={Boolean(
+                                        fieldErrors[`experiences.${index}.${field}`],
+                                      )}
+                                      aria-describedby={
+                                        fieldErrors[`experiences.${index}.${field}`]
+                                          ? `experience-${index}-${field}-error`
+                                          : undefined
+                                      }
+                                      className={fieldClass(
+                                        fieldErrors[`experiences.${index}.${field}`],
+                                      )}
+                                    />
+                                    <FieldError
+                                      id={`experience-${index}-${field}-error`}
+                                      message={fieldErrors[`experiences.${index}.${field}`]}
+                                    />
+                                  </div>
+                                ))}
+                                <DateRangeFields
+                                  from={entry.from}
+                                  to={entry.to}
+                                  fromError={fieldErrors[`experiences.${index}.from`]}
+                                  toError={fieldErrors[`experiences.${index}.to`]}
+                                  onChange={(field, value) => updateExperience(index, field, value)}
+                                  idPrefix={`experience-${index}`}
+                                />
+                                <div className="md:col-span-2">
+                                  <FieldHeader
+                                    htmlFor={`experience-${index}-description`}
+                                    label="Mô tả công việc"
+                                    required
+                                    counter={`${entry.description.length}/1000`}
+                                  />
+                                  <textarea
+                                    id={`experience-${index}-description`}
+                                    rows={3}
+                                    maxLength={1000}
+                                    value={entry.description}
+                                    onChange={(event) =>
+                                      updateExperience(index, "description", event.target.value)
+                                    }
+                                    aria-required="true"
+                                    aria-invalid={Boolean(
+                                      fieldErrors[`experiences.${index}.description`],
+                                    )}
+                                    aria-describedby={
+                                      fieldErrors[`experiences.${index}.description`]
+                                        ? `experience-${index}-description-error`
+                                        : undefined
+                                    }
+                                    className={fieldClass(
+                                      fieldErrors[`experiences.${index}.description`],
+                                    )}
+                                  />
+                                  <FieldError
+                                    id={`experience-${index}-description-error`}
+                                    message={fieldErrors[`experiences.${index}.description`]}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          ) : null,
+                        )}
+
+                        {editIndex === null && (
+                          <button
+                            type="button"
+                            onClick={addExperience}
+                            className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-rule bg-paper px-4 text-sm font-semibold text-accent transition-colors hover:border-accent/40 hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                          >
+                            <Plus size={16} aria-hidden="true" />
+                            Thêm kinh nghiệm làm việc
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {(editSection === "all" || editSection === "education") && (
+                    <div className="md:col-span-2">
+                      {editIndex === null && <FormSectionLabel title="Trình độ học vấn" />}
+                      <div className="space-y-5">
+                        {draft.education.map((education, index) =>
+                          editIndex === null || editIndex === index ? (
+                            <div
+                              key={index}
+                              className="border-t border-rule pt-4 first:border-t-0 first:pt-0"
+                            >
+                              <div className="mb-3 flex items-center justify-between gap-3">
+                                <p className="text-xs font-bold text-accent-deep">
+                                  Học vấn {index + 1}
+                                </p>
+                                <button
+                                  type="button"
+                                  onClick={() => removeEducation(index)}
+                                  className="inline-flex min-h-8 items-center gap-1.5 rounded-md px-2 text-xs font-semibold text-error transition-colors hover:bg-error-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error focus-visible:ring-offset-2"
+                                >
+                                  <Trash2 size={14} aria-hidden="true" />
+                                  Xóa
+                                </button>
+                              </div>
+                              <div className="grid gap-3 md:grid-cols-2">
+                                {(
+                                  [
+                                    ["degree", "Bằng cấp"],
+                                    ["school", "Trường / Cơ sở đào tạo"],
+                                  ] as const
+                                ).map(([field, label]) => (
+                                  <div key={field}>
+                                    <FieldHeader
+                                      htmlFor={`education-${index}-${field}`}
+                                      label={label}
+                                      required
+                                    />
+                                    <input
+                                      id={`education-${index}-${field}`}
+                                      type="text"
+                                      maxLength={field === "school" ? 150 : 100}
+                                      value={education[field]}
+                                      onChange={(event) =>
+                                        updateEducation(index, field, event.target.value)
+                                      }
+                                      aria-required="true"
+                                      aria-invalid={Boolean(
+                                        fieldErrors[`education.${index}.${field}`],
+                                      )}
+                                      aria-describedby={
+                                        fieldErrors[`education.${index}.${field}`]
+                                          ? `education-${index}-${field}-error`
+                                          : undefined
+                                      }
+                                      className={fieldClass(
+                                        fieldErrors[`education.${index}.${field}`],
+                                      )}
+                                    />
+                                    <FieldError
+                                      id={`education-${index}-${field}-error`}
+                                      message={fieldErrors[`education.${index}.${field}`]}
+                                    />
+                                  </div>
+                                ))}
+                                <DateRangeFields
+                                  from={education.from}
+                                  to={education.to}
+                                  fromError={fieldErrors[`education.${index}.from`]}
+                                  toError={fieldErrors[`education.${index}.to`]}
+                                  onChange={(field, value) => updateEducation(index, field, value)}
+                                  idPrefix={`education-${index}`}
+                                  toHint="Bỏ trống nếu bạn vẫn đang theo học."
+                                />
+                              </div>
+                            </div>
+                          ) : null,
+                        )}
+                      </div>
+                      {editIndex === null && (
+                        <button
+                          type="button"
+                          onClick={addEducation}
+                          className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-lg border border-rule bg-paper px-4 text-sm font-semibold text-accent transition-colors hover:border-accent/40 hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                        >
+                          <Plus size={16} aria-hidden="true" />
+                          Thêm trình độ học vấn
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Core Skills */}
-              <div>
-                <h4 className="font-semibold text-xs text-charcoal-40 uppercase tracking-wider mb-3">
-                  Kỹ năng Nổi bật
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    "Go",
-                    "Kubernetes",
-                    "TypeScript",
-                    "React / Next.js",
-                    "Distributed Systems",
-                    "PostgreSQL",
-                    "Tailwind CSS",
-                    "SOC2 Security",
-                    "gRPC / REST",
-                  ].map((s) => (
-                    <span
-                      key={s}
-                      className="px-3 py-1 rounded-md bg-surface-container border border-warm-border text-xs font-mono font-semibold text-charcoal-text"
-                    >
-                      {s}
-                    </span>
+              <div className="flex shrink-0 flex-col-reverse gap-3 border-t border-rule bg-paper px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-7">
+                <p className="text-xs leading-4 text-ink-3">
+                  Hồ sơ cập nhật sẽ hiển thị ngay với nhà tuyển dụng.
+                </p>
+                <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                  <button
+                    type="button"
+                    onClick={closeEditForm}
+                    className="btn btn--secondary min-h-11 px-4 text-sm"
+                  >
+                    Hủy
+                  </button>
+                  <button type="submit" className="btn min-h-11 px-5 text-sm">
+                    Lưu thay đổi
+                  </button>
+                </div>
+              </div>
+            </form>
+          </FloatingPanel>
+        )}
+
+        <Dialog open={isSuccessDialogOpen} onOpenChange={setIsSuccessDialogOpen}>
+          <DialogContent hideClose className="max-w-md border-rule bg-paper p-0">
+            <DialogHeader className="gap-4 border-b border-rule px-6 pb-5 pt-6 text-left">
+              <div className="flex items-start gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-mint/10 text-mint">
+                  <Check size={20} strokeWidth={2.5} aria-hidden="true" />
+                </span>
+                <div className="min-w-0">
+                  <DialogTitle className="text-lg font-bold text-ink">Đã lưu thay đổi</DialogTitle>
+                  <DialogDescription className="mt-1 text-sm leading-6 text-ink-2">
+                    {successMessage} Các thông tin còn lại trong hồ sơ được giữ nguyên.
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+            <DialogFooter className="px-6 py-4">
+              <button
+                type="button"
+                onClick={() => setIsSuccessDialogOpen(false)}
+                className="btn min-h-10 px-5 text-sm"
+              >
+                Đóng
+              </button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <div className="grid overflow-hidden rounded-2xl border border-rule bg-paper lg:grid-cols-[minmax(17rem,0.85fr)_minmax(0,2fr)]">
+          <aside className="border-b border-rule bg-paper-2 px-5 py-6 sm:px-6 lg:border-b-0 lg:border-r lg:px-7 lg:py-8">
+            <div>
+              <div className="relative w-fit">
+                <div
+                  aria-hidden="true"
+                  className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-accent text-2xl font-extrabold text-accent-ink sm:h-20 sm:w-20 sm:text-3xl"
+                >
+                  {initial}
+                </div>
+                <span className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-paper-2 bg-paper text-mint">
+                  <BadgeCheck size={18} strokeWidth={2.4} aria-hidden="true" />
+                </span>
+              </div>
+              <h2 className="mt-4 text-2xl font-extrabold leading-tight tracking-[-0.03em] text-ink text-pretty">
+                {profile.fullName}
+              </h2>
+              <p className="mt-1 text-sm font-semibold leading-5 text-ink-2">
+                <span className="text-xs font-medium text-ink-3">Vị trí hiện tại: </span>
+                {currentRole}
+              </p>
+              <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-ink-3">
+                <MapPin size={14} aria-hidden="true" />
+                Việt Nam
+              </p>
+            </div>
+
+            <div className="mt-5 flex flex-wrap gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-md border border-mint/20 bg-mint/10 px-2.5 py-1 text-xs font-semibold text-mint">
+                <BadgeCheck size={14} aria-hidden="true" />
+                Hồ sơ đã xác minh
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-md border border-accent/15 bg-accent-subtle px-2.5 py-1 text-xs font-semibold text-accent-deep">
+                <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-accent" />
+                Ứng viên đang hoạt động
+              </span>
+            </div>
+
+            <section className="mt-6 border-t border-rule pt-5" aria-labelledby="contact-title">
+              <div className="flex items-center justify-between gap-3">
+                <h2 id="contact-title" className="text-base font-bold text-ink">
+                  Liên hệ
+                </h2>
+                <EditButton
+                  label="Chỉnh sửa thông tin cá nhân"
+                  onClick={() => openEditForm("basics")}
+                  muted
+                />
+              </div>
+              <div className="mt-1 space-y-3">
+                <a
+                  href={contactEmail ? `mailto:${contactEmail}` : undefined}
+                  className="flex items-start gap-2.5 text-sm text-ink-2 transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                >
+                  <Mail size={16} className="mt-0.5 shrink-0 text-ink-3" aria-hidden="true" />
+                  <span className={`min-w-0 break-all ${contactEmail ? "" : "text-ink-3"}`}>
+                    {contactEmail || "Chưa cập nhật email."}
+                  </span>
+                </a>
+                <a
+                  href={profile.phone ? `tel:${profile.phone}` : undefined}
+                  className="flex items-center gap-2.5 text-sm text-ink-2 transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                >
+                  <Phone size={16} className="shrink-0 text-ink-3" aria-hidden="true" />
+                  <span className={profile.phone ? "" : "text-ink-3"}>
+                    {profile.phone || "Chưa cập nhật số điện thoại."}
+                  </span>
+                </a>
+              </div>
+            </section>
+
+            <section className="mt-6 border-t border-rule pt-5" aria-labelledby="cv-title">
+              <div className="flex items-center justify-between gap-3">
+                <h2 id="cv-title" className="flex items-center gap-2 text-base font-bold text-ink">
+                  <FileText size={16} className="text-accent" aria-hidden="true" />
+                  Hồ sơ xin việc
+                </h2>
+                <span className="rounded-md border border-rule bg-paper px-2 py-0.5 text-xs font-bold tabular-nums text-ink-2">
+                  {cvs.length}/{MAX_CV_COUNT}
+                </span>
+              </div>
+              <p className="mt-2 text-xs leading-5 text-ink-2" style={{ overflowWrap: "anywhere" }}>
+                {defaultCv ? defaultCv.fileName : "Chưa chọn hồ sơ mặc định."}
+              </p>
+              {defaultCv ? (
+                <p className="mt-1 text-xs text-ink-3">Đang là hồ sơ mặc định.</p>
+              ) : null}
+              <Link
+                to="/candidate/cvs"
+                className="mt-2.5 inline-flex min-h-10 items-center gap-1 text-xs font-bold text-accent underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+              >
+                Quản lý hồ sơ
+                <ArrowRight size={14} aria-hidden="true" />
+              </Link>
+            </section>
+
+            <section className="mt-6 border-t border-rule pt-5" aria-labelledby="readiness-title">
+              <div className="flex items-center justify-between gap-3">
+                <h2 id="readiness-title" className="text-base font-bold text-ink">
+                  Mức độ hoàn thiện
+                </h2>
+                <span className="text-xs font-bold tabular-nums text-ink-2">
+                  {completedCount}/{readinessItems.length}
+                </span>
+              </div>
+              <p className="mt-1 text-xs leading-5 text-ink-3">
+                {completedCount === readinessItems.length
+                  ? "Hồ sơ đã có đủ thông tin."
+                  : `Còn thiếu: ${missingLabels.join(", ")}.`}
+              </p>
+            </section>
+
+            <div className="mt-6 flex items-center justify-between gap-3 border-t border-rule pt-5">
+              <span className="flex items-center gap-2 text-sm font-medium text-ink-2">
+                {profile.isPublic ? (
+                  <Eye size={16} className="text-ink-3" aria-hidden="true" />
+                ) : (
+                  <EyeOff size={16} className="text-ink-3" aria-hidden="true" />
+                )}
+                Hiển thị hồ sơ
+              </span>
+              <span className="text-base font-bold text-ink">
+                {profile.isPublic ? "Đang hiển thị" : "Riêng tư"}
+              </span>
+            </div>
+          </aside>
+
+          <div className="min-w-0 divide-y divide-rule">
+            <section aria-labelledby="about-title" className="px-5 py-6 sm:px-7 sm:py-7">
+              <SectionHeader
+                id="about-title"
+                title="Giới thiệu bản thân"
+                action={
+                  <EditButton
+                    label="Cập nhật giới thiệu bản thân"
+                    onClick={() => openEditForm("about")}
+                  />
+                }
+              />
+              <p
+                className={`mt-3 max-w-[68ch] text-base leading-7 ${
+                  profile.experience ? "text-ink-2" : "text-ink-3"
+                }`}
+              >
+                {profile.experience || "Giới thiệu điểm mạnh và số năm kinh nghiệm của bạn."}
+              </p>
+            </section>
+
+            <section aria-labelledby="experience-title" className="px-5 py-6 sm:px-7 sm:py-7">
+              <SectionHeader
+                id="experience-title"
+                title="Kinh nghiệm làm việc"
+                action={
+                  <EditButton
+                    label="Chỉnh sửa kinh nghiệm làm việc"
+                    onClick={() => openEditForm("experience")}
+                  />
+                }
+              />
+              {profile.experiences.length > 0 ? (
+                <div className="mt-5 space-y-6">
+                  {profile.experiences.map((entry, index) => (
+                    <RecordEntry
+                      key={`${entry.title}-${entry.from}-${index}`}
+                      title={entry.title}
+                      meta={entry.company}
+                      period={formatPeriod(entry.from, entry.to)}
+                      description={entry.description}
+                      editLabel={`Chỉnh sửa ${entry.title}`}
+                      onEdit={() => openEditForm("experience", index)}
+                    />
                   ))}
                 </div>
-              </div>
+              ) : (
+                <EmptyState
+                  text="Chưa có kinh nghiệm làm việc."
+                  actionLabel="Thêm kinh nghiệm"
+                  onClick={() => openEditForm("experience")}
+                />
+              )}
+            </section>
 
-              {/* Work history */}
-              <div>
-                <h4 className="font-semibold text-xs text-charcoal-40 uppercase tracking-wider mb-3">
-                  Lịch sử Công tác
-                </h4>
-                <div className="space-y-4">
-                  <div className="p-4 rounded-lg bg-surface-container-low border border-warm-border">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h5 className="font-bold text-sm text-charcoal-text">
-                          Senior Tech Lead & Systems Engineer
-                        </h5>
-                        <p className="text-xs text-charcoal-83 mt-0.5 font-medium">
-                          GuardianWork VN • TP. Hồ Chí Minh
-                        </p>
-                      </div>
-                      <span className="font-mono text-xs font-semibold text-primary">
-                        2023 – Hiện tại
-                      </span>
-                    </div>
-                    <p className="text-xs text-charcoal-83 mt-2 leading-relaxed">
-                      Dẫn dắt kiến trúc bảo mật tuân thủ Bộ luật Lao động 2019, điều phối vi dịch vụ
-                      và triển khai hệ thống xác thực tức thì cho hơn 5.000 ứng viên.
-                    </p>
-                  </div>
-
-                  <div className="p-4 rounded-lg bg-surface-container-low border border-warm-border">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h5 className="font-bold text-sm text-charcoal-text">
-                          Lead Frontend Systems Architect
-                        </h5>
-                        <p className="text-xs text-charcoal-83 mt-0.5 font-medium">
-                          Apex Cloud Services • Remote APAC
-                        </p>
-                      </div>
-                      <span className="font-mono text-xs font-semibold text-primary">
-                        2020 – 2023
-                      </span>
-                    </div>
-                    <p className="text-xs text-charcoal-83 mt-2 leading-relaxed">
-                      Thiết kế design system token và tối ưu hóa thời gian tải ứng dụng web xuống
-                      dưới 0.8s cho hơn 50.000 người dùng hàng ngày.
-                    </p>
-                  </div>
+            <section aria-labelledby="education-title" className="px-5 py-6 sm:px-7 sm:py-7">
+              <SectionHeader
+                id="education-title"
+                title="Học vấn"
+                action={
+                  <EditButton label="Chỉnh sửa học vấn" onClick={() => openEditForm("education")} />
+                }
+              />
+              {profile.education.length > 0 ? (
+                <div className="mt-5 space-y-6">
+                  {profile.education.map((education, index) => (
+                    <RecordEntry
+                      key={`${education.school}-${education.from}-${index}`}
+                      title={education.degree}
+                      meta={education.school}
+                      period={formatPeriod(education.from, education.to)}
+                      editLabel={`Chỉnh sửa ${education.degree || "học vấn"}`}
+                      onEdit={() => openEditForm("education", index)}
+                    />
+                  ))}
                 </div>
-              </div>
-            </div>
+              ) : (
+                <EmptyState
+                  text="Chưa có thông tin học vấn."
+                  actionLabel="Thêm học vấn"
+                  onClick={() => openEditForm("education")}
+                />
+              )}
+            </section>
+
+            <section aria-labelledby="skills-title" className="px-5 py-6 sm:px-7 sm:py-7">
+              <SectionHeader
+                id="skills-title"
+                title="Kỹ năng"
+                action={
+                  <EditButton label="Chỉnh sửa kỹ năng" onClick={() => openEditForm("skills")} />
+                }
+              />
+              {profile.skills.length > 0 ? (
+                <ul className="mt-4 flex flex-wrap gap-2">
+                  {profile.skills.map((skill) => (
+                    <li
+                      key={skill}
+                      className="rounded-md border border-rule bg-paper-2 px-2.5 py-1.5 text-xs font-semibold text-ink-2"
+                    >
+                      {skill}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <EmptyState
+                  text="Chưa cập nhật kỹ năng."
+                  actionLabel="Cập nhật kỹ năng"
+                  onClick={() => openEditForm("skills")}
+                />
+              )}
+            </section>
           </div>
         </div>
       </div>
     </AdminShell>
   );
+}
+
+function validateDraft(
+  draft: CandidateProfileDetails,
+  skills: string[],
+  section: EditSection,
+  editIndex: number | null,
+) {
+  const errors: Record<string, string> = {};
+  const touches = (target: EditSection) => section === "all" || section === target;
+
+  if (touches("basics")) {
+    const name = draft.fullName.replace(/\s+/g, " ").trim();
+    if (!name) errors.fullName = "Nhập họ tên của bạn.";
+    else if (name.length > MAX_NAME_LENGTH) {
+      errors.fullName = `Họ tên tối đa ${MAX_NAME_LENGTH} ký tự.`;
+    }
+
+    const email = draft.email.trim();
+    if (!email) errors.email = "Nhập email liên hệ.";
+    else if (email.length > MAX_EMAIL_LENGTH) {
+      errors.email = `Email tối đa ${MAX_EMAIL_LENGTH} ký tự.`;
+    } else if (!EMAIL_PATTERN.test(email)) {
+      errors.email = "Email chưa đúng định dạng, ví dụ ten@congty.vn.";
+    }
+
+    const phone = draft.phone.replace(/\D/g, "");
+    if (!phone) errors.phone = "Nhập số điện thoại.";
+    else if (!PHONE_PATTERN.test(phone)) {
+      errors.phone = "Số điện thoại gồm 10 chữ số và bắt đầu bằng 0.";
+    }
+  }
+
+  if (touches("about") && draft.experience.length > MAX_ABOUT_LENGTH) {
+    errors.experience = `Phần giới thiệu tối đa ${MAX_ABOUT_LENGTH} ký tự.`;
+  }
+
+  if (touches("skills")) {
+    if (skills.length > MAX_SKILLS) {
+      errors.skills = `Chỉ lưu tối đa ${MAX_SKILLS} kỹ năng. Xóa bớt trước khi lưu.`;
+    } else if (skills.some((skill) => skill.length < 1 || skill.length > MAX_SKILL_LENGTH)) {
+      errors.skills = `Mỗi kỹ năng phải dài từ 1 đến ${MAX_SKILL_LENGTH} ký tự.`;
+    }
+  }
+
+  if (touches("experience")) {
+    const indices =
+      section === "experience" && editIndex !== null
+        ? [editIndex]
+        : draft.experiences.map((_, index) => index);
+
+    indices.forEach((index) => {
+      const entry = draft.experiences[index];
+      if (!entry) return;
+      if (!entry.title.trim()) errors[`experiences.${index}.title`] = "Nhập chức danh.";
+      if (!entry.company.trim()) errors[`experiences.${index}.company`] = "Nhập công ty.";
+      if (!entry.from) errors[`experiences.${index}.from`] = "Chọn ngày bắt đầu.";
+      if (!entry.description.trim()) {
+        errors[`experiences.${index}.description`] = "Mô tả ngắn công việc bạn đã làm.";
+      }
+      if (entry.description.length > 1000) {
+        errors[`experiences.${index}.description`] = "Mô tả công việc tối đa 1.000 ký tự.";
+      }
+      if (entry.from && entry.to && entry.to < entry.from) {
+        errors[`experiences.${index}.to`] = "Ngày kết thúc phải sau ngày bắt đầu.";
+      }
+    });
+  }
+
+  if (touches("education")) {
+    const indices =
+      section === "education" && editIndex !== null
+        ? [editIndex]
+        : draft.education.map((_, index) => index);
+
+    indices.forEach((index) => {
+      const education = draft.education[index];
+      if (!education) return;
+      if (!education.degree.trim()) errors[`education.${index}.degree`] = "Nhập bằng cấp.";
+      if (!education.school.trim()) {
+        errors[`education.${index}.school`] = "Nhập trường hoặc cơ sở đào tạo.";
+      }
+      if (!education.from) errors[`education.${index}.from`] = "Chọn ngày bắt đầu.";
+      if (education.from && education.to && education.to < education.from) {
+        errors[`education.${index}.to`] = "Ngày kết thúc phải sau ngày bắt đầu.";
+      }
+    });
+  }
+
+  return errors;
+}
+
+function fieldIdFromError(key: string) {
+  switch (key) {
+    case "fullName":
+      return "profile-full-name";
+    case "email":
+      return "profile-email";
+    case "phone":
+      return "profile-phone";
+    case "skills":
+      return "profile-skill-input";
+    case "experience":
+      return "profile-about";
+    default: {
+      const [group, index, field] = key.split(".");
+      return `${group === "experiences" ? "experience" : "education"}-${index}-${field}`;
+    }
+  }
+}
+
+function fieldClass(hasError?: string) {
+  return `mt-1.5 min-h-11 w-full rounded-lg border bg-paper px-3.5 py-2.5 text-sm font-normal text-ink outline-none transition-colors placeholder:text-ink-3 focus:ring-2 focus:ring-accent/20 ${
+    hasError ? "border-error" : "border-rule focus:border-accent"
+  }`;
+}
+
+function FieldHeader({
+  htmlFor,
+  label,
+  required = false,
+  counter,
+}: {
+  htmlFor: string;
+  label: string;
+  required?: boolean;
+  counter?: string;
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <label htmlFor={htmlFor} className="text-sm font-semibold text-ink-2">
+        {label}
+        {required ? (
+          <span className="ml-0.5 text-error" aria-hidden="true">
+            *
+          </span>
+        ) : null}
+      </label>
+      {counter ? (
+        <span className="text-xs font-medium tabular-nums text-ink-3">{counter}</span>
+      ) : null}
+    </div>
+  );
+}
+
+function SectionHeader({
+  id,
+  title,
+  action,
+}: {
+  id: string;
+  title: string;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <h2 id={id} className="text-lg font-bold leading-[1.45] tracking-[-0.02em] text-ink">
+        {title}
+      </h2>
+      {action}
+    </div>
+  );
+}
+
+function EditButton({
+  label,
+  onClick,
+  muted = false,
+  className = "",
+}: {
+  label: string;
+  onClick: () => void;
+  muted?: boolean;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
+        muted ? "text-ink-3 hover:text-accent" : "text-accent"
+      } ${className}`}
+    >
+      <Pencil size={16} strokeWidth={2.2} aria-hidden="true" />
+    </button>
+  );
+}
+
+function RecordEntry({
+  title,
+  meta,
+  period,
+  description,
+  editLabel,
+  onEdit,
+}: {
+  title: string;
+  meta: string;
+  period: string;
+  description?: string;
+  editLabel: string;
+  onEdit: () => void;
+}) {
+  return (
+    <article>
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <h3 className="text-base font-bold leading-6 text-ink">{title}</h3>
+            <span className="text-xs font-semibold tabular-nums text-ink-3">{period}</span>
+          </div>
+          <p className="mt-1 text-sm font-medium text-ink-2">{meta}</p>
+          {description ? (
+            <p className="mt-2 max-w-[64ch] text-sm leading-6 text-ink-2">{description}</p>
+          ) : null}
+        </div>
+        <EditButton label={editLabel} onClick={onEdit} muted />
+      </div>
+    </article>
+  );
+}
+
+function EmptyState({
+  text,
+  actionLabel,
+  onClick,
+}: {
+  text: string;
+  actionLabel: string;
+  onClick: () => void;
+}) {
+  return (
+    <div className="mt-4 flex flex-col items-start gap-3 rounded-xl border border-dashed border-rule bg-paper-2/60 px-4 py-5 sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-sm text-ink-3">{text}</p>
+      <button
+        type="button"
+        onClick={onClick}
+        className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-rule bg-paper px-3.5 text-xs font-bold text-accent transition-colors hover:border-accent/40 hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+      >
+        <Plus size={14} aria-hidden="true" />
+        {actionLabel}
+      </button>
+    </div>
+  );
+}
+
+function FormSectionLabel({ title }: { title: string }) {
+  return <h3 className="mb-3 text-base font-bold text-ink">{title}</h3>;
+}
+
+function getEditorTitle(section: EditSection) {
+  switch (section) {
+    case "basics":
+      return "Chỉnh sửa thông tin cá nhân";
+    case "about":
+      return "Chỉnh sửa giới thiệu bản thân";
+    case "experience":
+      return "Chỉnh sửa kinh nghiệm làm việc";
+    case "education":
+      return "Chỉnh sửa học vấn";
+    case "skills":
+      return "Chỉnh sửa kỹ năng";
+    default:
+      return "Chỉnh sửa thông tin hồ sơ";
+  }
+}
+
+function getEditorDescription(section: EditSection) {
+  switch (section) {
+    case "basics":
+      return "Cập nhật họ tên, email và số điện thoại nhà tuyển dụng dùng để liên hệ.";
+    case "about":
+      return "Viết phần giới thiệu ngắn gọn để nhà tuyển dụng hiểu điểm mạnh của bạn.";
+    case "experience":
+      return "Cập nhật vị trí, công ty, thời gian và mô tả công việc đã làm.";
+    case "education":
+      return "Bổ sung bằng cấp, cơ sở đào tạo và thời gian học tập của bạn.";
+    case "skills":
+      return "Thêm hoặc bớt kỹ năng chuyên môn bạn muốn nhà tuyển dụng nhìn thấy.";
+    default:
+      return "Cập nhật các thông tin được hiển thị nổi bật với nhà tuyển dụng.";
+  }
+}
+
+function getSuccessMessage(section: EditSection) {
+  switch (section) {
+    case "basics":
+      return "Thông tin cá nhân đã được cập nhật.";
+    case "about":
+      return "Phần giới thiệu bản thân đã được cập nhật.";
+    case "experience":
+      return "Kinh nghiệm làm việc đã được cập nhật.";
+    case "education":
+      return "Học vấn đã được cập nhật.";
+    case "skills":
+      return "Kỹ năng đã được cập nhật.";
+    default:
+      return "Thông tin hồ sơ đã được cập nhật.";
+  }
+}
+
+function FieldError({ id, message }: { id: string; message?: string }) {
+  if (!message) return null;
+
+  return (
+    <span id={id} role="alert" className="mt-1 block text-sm font-medium text-error">
+      {message}
+    </span>
+  );
+}
+
+function DateRangeFields({
+  from,
+  to,
+  fromError,
+  toError,
+  onChange,
+  idPrefix,
+  toHint = "Bỏ trống nếu đang làm việc tại đây.",
+}: {
+  from: string;
+  to: string;
+  fromError?: string;
+  toError?: string;
+  onChange: (field: "from" | "to", value: string) => void;
+  idPrefix: string;
+  toHint?: string;
+}) {
+  return (
+    <>
+      <div>
+        <FieldHeader htmlFor={`${idPrefix}-from`} label="Từ ngày" required />
+        <input
+          id={`${idPrefix}-from`}
+          type="month"
+          lang="vi"
+          value={from}
+          onChange={(event) => onChange("from", event.target.value)}
+          aria-required="true"
+          aria-invalid={Boolean(fromError)}
+          aria-describedby={fromError ? `${idPrefix}-from-error` : undefined}
+          className={fieldClass(fromError)}
+        />
+        <FieldError id={`${idPrefix}-from-error`} message={fromError} />
+      </div>
+      <div>
+        <FieldHeader htmlFor={`${idPrefix}-to`} label="Đến ngày" />
+        <input
+          id={`${idPrefix}-to`}
+          type="month"
+          lang="vi"
+          value={to}
+          onChange={(event) => onChange("to", event.target.value)}
+          aria-invalid={Boolean(toError)}
+          aria-describedby={toError ? `${idPrefix}-to-error` : `${idPrefix}-to-hint`}
+          className={fieldClass(toError)}
+        />
+        <FieldError id={`${idPrefix}-to-error`} message={toError} />
+        <span id={`${idPrefix}-to-hint`} className="mt-1 block text-xs font-normal text-ink-3">
+          {toHint}
+        </span>
+      </div>
+    </>
+  );
+}
+
+function formatPeriod(from: string, to: string) {
+  const format = (value: string) => {
+    if (!value) return "";
+    const [year, month] = value.split("-");
+    return month ? `${month}/${year}` : year;
+  };
+  return `${format(from)} – ${to ? format(to) : "Hiện tại"}`;
 }

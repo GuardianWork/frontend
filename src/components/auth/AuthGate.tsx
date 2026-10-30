@@ -37,10 +37,16 @@ export function AuthGate({ children }: { children: ReactNode }) {
       } catch (error) {
         if (cancelled) return;
         if ((error instanceof ApiError && error.status === 401) || !hasAuthSession()) {
+          const returnTo = `${window.location.pathname}${window.location.search}`;
           void navigate({
             to: "/login",
             search:
-              area === "staff" ? {} : { role: area === "recruiter" ? "recruiter" : "candidate" },
+              area === "staff"
+                ? {}
+                : {
+                    role: area === "recruiter" ? "recruiter" : "candidate",
+                    ...(returnTo && !returnTo.startsWith("/login") ? { next: returnTo } : {}),
+                  },
             replace: true,
           });
         } else

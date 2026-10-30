@@ -22,7 +22,7 @@ export const Route = createFileRoute("/register")({
 });
 
 function RegisterPage() {
-  const { role = "candidate" } = Route.useSearch();
+  const { role = "candidate", next } = Route.useSearch();
   const navigate = Route.useNavigate();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -90,7 +90,7 @@ function RegisterPage() {
           </p>
           <Link
             to="/login"
-            search={{ role }}
+            search={next ? { role, next } : { role }}
             className="mt-6 inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-on-primary"
           >
             Đến trang đăng nhập
@@ -109,9 +109,12 @@ function RegisterPage() {
           <AccountPurposeChoice
             value={role}
             disabled={loading || !ready}
-            onChange={(next) => {
+            onChange={(choice) => {
               setError("");
-              void navigate({ search: { role: next }, replace: true });
+              void navigate({
+                search: (previous) => ({ ...previous, role: choice }),
+                replace: true,
+              });
             }}
           />
           {role === "recruiter" && (

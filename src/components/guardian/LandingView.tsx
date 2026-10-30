@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { JOBS } from "@/lib/job-listings";
+import { jobSearch } from "@/lib/job-search";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 
@@ -82,7 +83,7 @@ export function LandingView() {
   const [uploadError, setUploadError] = useState("");
   const search = (event: FormEvent) => {
     event.preventDefault();
-    void navigate({ to: "/candidate/jobs", search: { q: query.trim(), location, job: "" } });
+    void navigate({ to: "/jobs", search: jobSearch({ q: query.trim(), location }) });
   };
   return (
     <div className="career-site">
@@ -135,7 +136,7 @@ export function LandingView() {
             <div className="career-popular">
               <span>{en ? "Popular searches:" : "Tìm kiếm phổ biến:"}</span>
               {["Kinh doanh", "Kế toán", "Tiếp thị", "Nhân sự"].map((q) => (
-                <Link key={q} to="/candidate/jobs" search={{ q, location: "", job: "" }}>
+                <Link key={q} to="/jobs" search={jobSearch({ q })}>
                   {q}
                 </Link>
               ))}
@@ -154,11 +155,7 @@ export function LandingView() {
                   : "Việc làm đa ngành, mức lương và thông tin doanh nghiệp trong một nơi."}
               </p>
             </div>
-            <Link
-              to="/candidate/jobs"
-              search={{ q: "", location: "", job: "" }}
-              className="career-text-link"
-            >
+            <Link to="/jobs" search={jobSearch({})} className="career-text-link">
               {en ? "View all jobs" : "Xem tất cả việc làm"}
               <ArrowRight size={18} />
             </Link>
@@ -172,8 +169,8 @@ export function LandingView() {
             {JOBS.slice(0, 6).map((job) => (
               <Link
                 key={job.id}
-                to="/candidate/jobs"
-                search={{ q: "", location: "", job: job.id }}
+                to="/jobs"
+                search={jobSearch({ job: job.id })}
                 className="career-job"
               >
                 <div className="career-job__company">
@@ -209,12 +206,7 @@ export function LandingView() {
             <div className="career-field-grid">
               {categories.map(
                 ({ label, en: englishLabel, query: q, detail, detailEn, icon: Icon }) => (
-                  <Link
-                    key={label}
-                    to="/candidate/jobs"
-                    search={{ q, location: "", job: "" }}
-                    className="career-field"
-                  >
+                  <Link key={label} to="/jobs" search={jobSearch({ q })} className="career-field">
                     <Icon size={25} />
                     <h3>{en ? englishLabel : label}</h3>
                     <p>{en ? detailEn : detail}</p>

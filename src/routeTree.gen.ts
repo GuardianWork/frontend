@@ -35,6 +35,7 @@ import { Route as AdminTasksRouteImport } from './routes/admin/tasks'
 import { Route as AdminVerificationsRouteImport } from './routes/admin/verifications'
 import { Route as CandidateIndexRouteImport } from './routes/candidate/index'
 import { Route as CandidateCopilotRouteImport } from './routes/candidate/copilot'
+import { Route as CandidateCvsRouteImport } from './routes/candidate/cvs'
 import { Route as CandidateJobsRouteImport } from './routes/candidate/jobs'
 import { Route as CandidateProfileRouteImport } from './routes/candidate/profile'
 import { Route as RecruiterIndexRouteImport } from './routes/recruiter/index'
@@ -56,6 +57,7 @@ import { Route as StaffMonitoringRouteImport } from './routes/staff/monitoring'
 import { Route as StaffReportsRouteImport } from './routes/staff/reports'
 import { Route as StaffTasksRouteImport } from './routes/staff/tasks'
 import { Route as StaffVerificationsRouteImport } from './routes/staff/verifications'
+import { Route as CandidateJobsApplyRouteImport } from './routes/candidate/jobs_.apply'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -187,6 +189,11 @@ const CandidateCopilotRoute = CandidateCopilotRouteImport.update({
   path: '/candidate/copilot',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CandidateCvsRoute = CandidateCvsRouteImport.update({
+  id: '/candidate/cvs',
+  path: '/candidate/cvs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CandidateJobsRoute = CandidateJobsRouteImport.update({
   id: '/candidate/jobs',
   path: '/candidate/jobs',
@@ -292,6 +299,11 @@ const StaffVerificationsRoute = StaffVerificationsRouteImport.update({
   path: '/staff/verifications',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CandidateJobsApplyRoute = CandidateJobsApplyRouteImport.update({
+  id: '/candidate/jobs_/apply',
+  path: '/candidate/jobs/apply',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -318,6 +330,7 @@ export interface FileRoutesByFullPath {
   '/admin/tasks': typeof AdminTasksRoute
   '/admin/verifications': typeof AdminVerificationsRoute
   '/candidate/copilot': typeof CandidateCopilotRoute
+  '/candidate/cvs': typeof CandidateCvsRoute
   '/candidate/jobs': typeof CandidateJobsRoute
   '/candidate/profile': typeof CandidateProfileRoute
   '/recruiter/applications': typeof RecruiterApplicationsRoute
@@ -341,6 +354,7 @@ export interface FileRoutesByFullPath {
   '/candidate/': typeof CandidateIndexRoute
   '/recruiter/': typeof RecruiterIndexRoute
   '/staff/': typeof StaffIndexRoute
+  '/candidate/jobs/apply': typeof CandidateJobsApplyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -367,6 +381,7 @@ export interface FileRoutesByTo {
   '/admin/tasks': typeof AdminTasksRoute
   '/admin/verifications': typeof AdminVerificationsRoute
   '/candidate/copilot': typeof CandidateCopilotRoute
+  '/candidate/cvs': typeof CandidateCvsRoute
   '/candidate/jobs': typeof CandidateJobsRoute
   '/candidate/profile': typeof CandidateProfileRoute
   '/recruiter/applications': typeof RecruiterApplicationsRoute
@@ -390,6 +405,7 @@ export interface FileRoutesByTo {
   '/candidate': typeof CandidateIndexRoute
   '/recruiter': typeof RecruiterIndexRoute
   '/staff': typeof StaffIndexRoute
+  '/candidate/jobs/apply': typeof CandidateJobsApplyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -417,6 +433,7 @@ export interface FileRoutesById {
   '/admin/tasks': typeof AdminTasksRoute
   '/admin/verifications': typeof AdminVerificationsRoute
   '/candidate/copilot': typeof CandidateCopilotRoute
+  '/candidate/cvs': typeof CandidateCvsRoute
   '/candidate/jobs': typeof CandidateJobsRoute
   '/candidate/profile': typeof CandidateProfileRoute
   '/recruiter/applications': typeof RecruiterApplicationsRoute
@@ -440,6 +457,7 @@ export interface FileRoutesById {
   '/candidate/': typeof CandidateIndexRoute
   '/recruiter/': typeof RecruiterIndexRoute
   '/staff/': typeof StaffIndexRoute
+  '/candidate/jobs_/apply': typeof CandidateJobsApplyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -468,6 +486,7 @@ export interface FileRouteTypes {
     | '/admin/tasks'
     | '/admin/verifications'
     | '/candidate/copilot'
+    | '/candidate/cvs'
     | '/candidate/jobs'
     | '/candidate/profile'
     | '/recruiter/applications'
@@ -491,6 +510,7 @@ export interface FileRouteTypes {
     | '/candidate/'
     | '/recruiter/'
     | '/staff/'
+    | '/candidate/jobs/apply'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -517,6 +537,7 @@ export interface FileRouteTypes {
     | '/admin/tasks'
     | '/admin/verifications'
     | '/candidate/copilot'
+    | '/candidate/cvs'
     | '/candidate/jobs'
     | '/candidate/profile'
     | '/recruiter/applications'
@@ -540,6 +561,7 @@ export interface FileRouteTypes {
     | '/candidate'
     | '/recruiter'
     | '/staff'
+    | '/candidate/jobs/apply'
   id:
     | '__root__'
     | '/'
@@ -566,6 +588,7 @@ export interface FileRouteTypes {
     | '/admin/tasks'
     | '/admin/verifications'
     | '/candidate/copilot'
+    | '/candidate/cvs'
     | '/candidate/jobs'
     | '/candidate/profile'
     | '/recruiter/applications'
@@ -589,6 +612,7 @@ export interface FileRouteTypes {
     | '/candidate/'
     | '/recruiter/'
     | '/staff/'
+    | '/candidate/jobs_/apply'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -616,6 +640,7 @@ export interface RootRouteChildren {
   AdminTasksRoute: typeof AdminTasksRoute
   AdminVerificationsRoute: typeof AdminVerificationsRoute
   CandidateCopilotRoute: typeof CandidateCopilotRoute
+  CandidateCvsRoute: typeof CandidateCvsRoute
   CandidateJobsRoute: typeof CandidateJobsRoute
   CandidateProfileRoute: typeof CandidateProfileRoute
   RecruiterApplicationsRoute: typeof RecruiterApplicationsRoute
@@ -639,6 +664,7 @@ export interface RootRouteChildren {
   CandidateIndexRoute: typeof CandidateIndexRoute
   RecruiterIndexRoute: typeof RecruiterIndexRoute
   StaffIndexRoute: typeof StaffIndexRoute
+  CandidateJobsApplyRoute: typeof CandidateJobsApplyRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -825,6 +851,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CandidateCopilotRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/candidate/cvs': {
+      id: '/candidate/cvs'
+      path: '/candidate/cvs'
+      fullPath: '/candidate/cvs'
+      preLoaderRoute: typeof CandidateCvsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/candidate/jobs': {
       id: '/candidate/jobs'
       path: '/candidate/jobs'
@@ -972,6 +1005,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StaffVerificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/candidate/jobs_/apply': {
+      id: '/candidate/jobs_/apply'
+      path: '/candidate/jobs/apply'
+      fullPath: '/candidate/jobs/apply'
+      preLoaderRoute: typeof CandidateJobsApplyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -1000,6 +1040,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminTasksRoute: AdminTasksRoute,
   AdminVerificationsRoute: AdminVerificationsRoute,
   CandidateCopilotRoute: CandidateCopilotRoute,
+  CandidateCvsRoute: CandidateCvsRoute,
   CandidateJobsRoute: CandidateJobsRoute,
   CandidateProfileRoute: CandidateProfileRoute,
   RecruiterApplicationsRoute: RecruiterApplicationsRoute,
@@ -1023,6 +1064,7 @@ const rootRouteChildren: RootRouteChildren = {
   CandidateIndexRoute: CandidateIndexRoute,
   RecruiterIndexRoute: RecruiterIndexRoute,
   StaffIndexRoute: StaffIndexRoute,
+  CandidateJobsApplyRoute: CandidateJobsApplyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

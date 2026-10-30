@@ -1,31 +1,40 @@
 import { test, expect, login, auditInputs } from "./fixtures";
 
-test("root navigation and public search respond to keyboard input", async ({ page }) => {
-  await page.goto("/", { waitUntil: "domcontentloaded" });
-  await expect(page.locator("#login-identifier")).toBeEnabled();
+test("guests can search and read job listings without an account", async ({ page }) => {
   await page.goto("/vn", { waitUntil: "domcontentloaded" });
   await page.getByRole("button", { name: "Chuyển sang tiếng Anh" }).click();
   await expect(page.getByRole("button", { name: "Switch to Vietnamese" })).toBeVisible();
   await page.getByRole("button", { name: "Switch to Vietnamese" }).click();
   await page.getByRole("textbox", { name: "Vị trí, kỹ năng hoặc công ty" }).fill("Kế toán");
-  await page.getByRole("combobox", { name: "Địa điểm", exact: true }).selectOption("Hà Nội");
+  await page.getByRole("combobox", { name: "Địa điểm", exact: true }).selectOption("Hồ Chí Minh");
   await page.getByRole("button", { name: "Tìm việc ngay", exact: true }).click();
+
+  // Search stays public: no login wall between the landing page and results.
+  await expect(page).toHaveURL(/\/jobs\?/);
+  await expect(page.getByRole("heading", { name: "Tìm việc làm", exact: true })).toBeVisible();
+
+  // Guests can open and read a full listing.
+  await page.getByRole("link", { name: /Kế toán tổng hợp/ }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Kế toán tổng hợp" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Mô tả công việc" })).toBeVisible();
+
+  // Applying still requires an account, and signing in returns to the candidate flow.
+  await page.getByRole("link", { name: "Đăng nhập để ứng tuyển" }).click();
   await expect(page.locator("#login-identifier")).toBeEnabled();
 });
 
 test("candidate pages accept search and profile edits", async ({ page }, info) => {
   test.setTimeout(60000);
   await login(page, "candidate_demo");
-  const report = await auditInputs(page, [
-    "/candidate/jobs",
-    "/candidate/profile",
-    "/candidate/copilot",
-  ]);
+  const report = await auditInputs(page, ["/jobs", "/candidate/profile", "/candidate/copilot"]);
   await page.goto("/candidate/profile", { waitUntil: "domcontentloaded" });
   await page.getByRole("button", { name: "Chỉnh sửa hồ sơ" }).click();
-  const title = page.locator("main input").first();
-  await title.fill("Chuyên viên kế toán");
-  await page.getByRole("button", { name: "Đóng chỉnh sửa" }).click();
+  const editor = page.getByRole("dialog");
+  await editor.getByLabel("Họ tên").fill("Chuyên viên kế toán");
+  await editor.getByRole("button", { name: "Lưu thay đổi" }).click();
+  const savedDialog = page.getByRole("dialog");
+  await expect(savedDialog).toContainText("Thông tin hồ sơ đã được cập nhật.");
+  await savedDialog.getByRole("button", { name: "Đóng", exact: true }).click();
   await expect(page.getByText("Chuyên viên kế toán", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Đăng xuất", exact: true }).click();
   await expect(page.locator("#login-identifier")).toBeEnabled();
