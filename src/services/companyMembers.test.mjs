@@ -57,7 +57,13 @@ async function verifiedCompany() {
     name: "Company",
     taxCode: "0316892341",
     email: "company@example.com",
-    registrationCertificateUrl: "https://example.test/license.pdf",
+    file: new File(["%PDF-1.4 test"], "license.pdf", { type: "application/pdf" }),
+    legal: {
+      workAddress: "Address",
+      submitterPosition: "Owner",
+      representation: "LEGAL_REPRESENTATIVE",
+      declarationAccepted: true,
+    },
   });
   await executeAdminDecision(101, "VERIFIED");
 }
@@ -79,7 +85,8 @@ beforeEach(() => {
         {
           status: 201,
           data: {
-            ...JSON.parse(init.body),
+            ...JSON.parse(await init.body.get("dossier").text()),
+            email: owner.email,
             id: 101,
             verificationStatus: "PENDING",
             version: 0,
@@ -104,7 +111,13 @@ test("only the recorded submitter becomes Owner after approval, independent of c
     name: "Company",
     taxCode: "0316892341",
     email: "company@example.com",
-    registrationCertificateUrl: "https://example.test/license.pdf",
+    file: new File(["%PDF-1.4 test"], "license.pdf", { type: "application/pdf" }),
+    legal: {
+      workAddress: "Address",
+      submitterPosition: "Owner",
+      representation: "LEGAL_REPRESENTATIVE",
+      declarationAccepted: true,
+    },
   });
   assert.equal(getStoredVerificationRecord().submittedBy.id, owner.id);
   assert.equal(currentMember(getCompanyWorkspace()), undefined);
@@ -249,7 +262,13 @@ test("expired or missing identities cannot submit ownerless verification request
       name: "Company",
       taxCode: "0316892341",
       email: "company@example.com",
-      registrationCertificateUrl: "https://example.test/license.pdf",
+      file: new File(["%PDF-1.4 test"], "license.pdf", { type: "application/pdf" }),
+      legal: {
+        workAddress: "Address",
+        submitterPosition: "Owner",
+        representation: "LEGAL_REPRESENTATIVE",
+        declarationAccepted: true,
+      },
     }),
     /đăng nhập/,
   );
@@ -263,7 +282,13 @@ test("expired or missing identities cannot submit ownerless verification request
       name: "Company",
       taxCode: "0316892341",
       email: "company@example.com",
-      registrationCertificateUrl: "https://example.test/license.pdf",
+      file: new File(["%PDF-1.4 test"], "license.pdf", { type: "application/pdf" }),
+      legal: {
+        workAddress: "Address",
+        submitterPosition: "Owner",
+        representation: "LEGAL_REPRESENTATIVE",
+        declarationAccepted: true,
+      },
     }),
     /đăng nhập/,
   );

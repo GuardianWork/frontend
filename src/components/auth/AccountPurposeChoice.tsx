@@ -24,8 +24,8 @@ export function AccountPurposeChoice({
             },
             {
               value: "recruiter",
-              title: "Đăng ký công ty",
-              description: "Bắt đầu tuyển dụng",
+              title: "Tôi muốn tuyển dụng",
+              description: "Vào không gian tuyển dụng",
               icon: BriefcaseBusiness,
             },
           ] as const
@@ -45,7 +45,7 @@ export function AccountPurposeChoice({
             <span className="pointer-events-none absolute inset-0 rounded-xl peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary" />
             <Icon size={22} className="mb-3" />
             <span className="block text-xs font-semibold sm:text-sm">{title}</span>
-            <span className="mt-1 block text-[11px] leading-5 text-charcoal-83">{description}</span>
+            <span className="mt-1 block text-xs leading-5 text-charcoal-83">{description}</span>
             {value === option && <Check size={14} className="absolute right-3 top-3" />}
           </label>
         ))}

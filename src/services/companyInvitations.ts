@@ -60,3 +60,43 @@ export function companyInvitationError(cause: unknown): string {
   }
   return "Không thể xác nhận kết quả gửi lời mời. Lời mời có thể đã được lưu; hãy kiểm tra trạng thái trước khi thử lại.";
 }
+
+export interface RecipientInvitationPreview {
+  invitationId: number;
+  companyId: number;
+  companyName: string;
+  companyRole: "RECRUITER";
+  expiresAt: string;
+}
+export async function previewCompanyInvitation(
+  secret: string,
+): Promise<RecipientInvitationPreview> {
+  const result = (await authenticatedRequest("/company-invitations/preview", {
+    method: "POST",
+    body: JSON.stringify({ secret }),
+    cache: "no-store",
+  })) as RecipientInvitationPreview;
+  if (
+    !Number.isSafeInteger(result?.invitationId) ||
+    !Number.isSafeInteger(result?.companyId) ||
+    typeof result?.companyName !== "string" ||
+    result?.companyRole !== "RECRUITER" ||
+    !Number.isFinite(Date.parse(result?.expiresAt))
+  )
+    throw new ApiError("Không thể đọc thông tin lời mời. Vui lòng thử lại.");
+  return result;
+}
+export async function acceptCompanyInvitation(secret: string) {
+  return authenticatedRequest("/company-invitations/accept", {
+    method: "POST",
+    body: JSON.stringify({ secret, confirm: true }),
+    cache: "no-store",
+  });
+}
+export async function declineCompanyInvitation(secret: string) {
+  return authenticatedRequest("/company-invitations/decline", {
+    method: "POST",
+    body: JSON.stringify({ secret }),
+    cache: "no-store",
+  });
+}

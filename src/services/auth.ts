@@ -15,6 +15,8 @@ export interface AuthUser {
   email: string;
   role: string;
   activeMembership?: ActiveMembership | null;
+  emailVerified?: boolean;
+  recruitingEmailEligible?: boolean;
 }
 export interface RegistrationInput {
   firstName: string;
@@ -183,7 +185,12 @@ export async function refreshAuthSession(): Promise<AuthSession> {
       // /refresh does not include activeMembership; /me remains authoritative.
       saveAuthSession({
         ...result,
-        user: { ...result.user, activeMembership: previous.user.activeMembership },
+        user: {
+          ...result.user,
+          activeMembership: previous.user.activeMembership,
+          emailVerified: previous.user.emailVerified,
+          recruitingEmailEligible: previous.user.recruitingEmailEligible,
+        },
       });
       return result;
     } catch (error) {

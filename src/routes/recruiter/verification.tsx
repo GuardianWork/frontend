@@ -8,6 +8,8 @@ import {
   getStoredVerificationRecord,
   submitVerification,
   resubmitVerification,
+  loadCompanyVerification,
+  type CompanyLegalDossier,
 } from "@/services/companyVerification";
 
 export const Route = createFileRoute("/recruiter/verification")({
@@ -29,8 +31,12 @@ function CompanyVerificationPage() {
   const [record, setRecord] = useState(getStoredVerificationRecord);
   const [name, setName] = useState(record.name);
   const [taxCode, setTaxCode] = useState(record.taxCode);
-  const [email, setEmail] = useState(record.email);
-  const [certificateUrl, setCertificateUrl] = useState(record.registrationCertificateUrl);
+  const [file, setFile] = useState<File | null>(null);
+  const [workAddress, setWorkAddress] = useState("");
+  const [submitterPosition, setSubmitterPosition] = useState("");
+  const [representation, setRepresentation] =
+    useState<CompanyLegalDossier["representation"]>("LEGAL_REPRESENTATIVE");
+  const [declarationAccepted, setDeclarationAccepted] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -38,6 +44,8 @@ function CompanyVerificationPage() {
   const [refreshing, setRefreshing] = useState(false);
   const hasCompany = Boolean(user?.activeMembership);
   const canEdit =
+    user?.recruitingEmailEligible === true &&
+    !record.companySuspended &&
     (!hasCompany || user?.activeMembership?.companyRole === "OWNER") &&
     ["REGISTERED", "REJECTED"].includes(record.verificationStatus);
   const rejected = record.verificationStatus === "REJECTED";
@@ -61,28 +69,30 @@ function CompanyVerificationPage() {
     if (saving || !canEdit) return;
     setError("");
     setNotice("");
-    let certificate: URL;
-    try {
-      certificate = new URL(certificateUrl.trim());
-    } catch {
-      setError("Vui lòng nhập đường dẫn hợp lệ đến giấy đăng ký doanh nghiệp.");
-      return;
-    }
-    if (!["http:", "https:"].includes(certificate.protocol)) {
-      setError("Đường dẫn giấy đăng ký phải bắt đầu bằng http:// hoặc https://.");
-      return;
-    }
-    if (!name.trim() || !taxCode.trim() || !email.trim()) {
-      setError("Vui lòng điền đầy đủ thông tin công ty.");
+    if (
+      !file ||
+      !name.trim() ||
+      !taxCode.trim() ||
+      !workAddress.trim() ||
+      !submitterPosition.trim() ||
+      !declarationAccepted
+    ) {
+      setError("Vui lòng hoàn tất hồ sơ, chọn tài liệu và xác nhận cam kết.");
       return;
     }
     setSaving(true);
     try {
-      const fields = { name, email, registrationCertificateUrl: certificate.href };
+      const fields = {
+        name,
+        file,
+        legal: { workAddress, submitterPosition, representation, declarationAccepted },
+      };
       const result = rejected
         ? await resubmitVerification(record.id, { ...fields, expectedVersion: record.version })
         : await submitVerification({ ...fields, taxCode });
       setRecord(result);
+      setFile(null);
+      setDeclarationAccepted(false);
       setNotice(
         rejected
           ? "Đã gửi lại hồ sơ. Công ty đang chờ xác minh."
@@ -91,6 +101,12 @@ function CompanyVerificationPage() {
       await refreshMembership();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Không thể gửi hồ sơ. Vui lòng thử lại.");
+      // Refresh the version and status after conflicts without losing the entered correction.
+      try {
+        setRecord(await loadCompanyVerification());
+      } catch {
+        /* Keep the form available for retry. */
+      }
     } finally {
       setSaving(false);
     }
@@ -114,6 +130,15 @@ function CompanyVerificationPage() {
             {statusLabels[record.verificationStatus]}
           </span>
         </div>
+        {record.companySuspended && (
+          <p
+            role="status"
+            className="mb-5 rounded-lg border border-warm-border bg-paper-white p-4 text-sm leading-6"
+          >
+            Công ty đang bị tạm ngưng. Bạn có thể xem trạng thái và phản hồi; các thao tác cập nhật
+            và tuyển dụng hiện bị khóa.
+          </p>
+        )}
         {notice && (
           <p
             role="status"
@@ -196,27 +221,50 @@ function CompanyVerificationPage() {
                 />
               </label>
               <label className="text-sm font-medium">
-                Email công ty <span aria-hidden="true">*</span>
+                Chức vụ người nộp <span aria-hidden="true">*</span>
                 <input
-                  name="companyEmail"
-                  type="email"
+                  name="submitterPosition"
                   required
-                  maxLength={255}
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  placeholder="contact@alpha.com.vn"
+                  maxLength={200}
+                  value={submitterPosition}
+                  onChange={(event) => setSubmitterPosition(event.target.value)}
                   className={inputClass}
                 />
               </label>
               <label className="text-sm font-medium sm:col-span-2">
-                Đường dẫn giấy đăng ký doanh nghiệp <span aria-hidden="true">*</span>
-                <input
-                  name="registrationCertificateUrl"
-                  type="url"
+                Địa chỉ đăng ký kinh doanh <span aria-hidden="true">*</span>
+                <textarea
+                  name="workAddress"
                   required
-                  value={certificateUrl}
-                  onChange={(event) => setCertificateUrl(event.target.value)}
-                  placeholder="https://storage.example.vn/licenses/alpha.pdf"
+                  maxLength={1000}
+                  value={workAddress}
+                  onChange={(event) => setWorkAddress(event.target.value)}
+                  className={inputClass}
+                />
+              </label>
+              <label className="text-sm font-medium sm:col-span-2">
+                Tư cách đại diện
+                <select
+                  name="representation"
+                  value={representation}
+                  onChange={(event) =>
+                    setRepresentation(event.target.value as CompanyLegalDossier["representation"])
+                  }
+                  className={inputClass}
+                >
+                  <option value="LEGAL_REPRESENTATIVE">Người đại diện theo pháp luật</option>
+                  <option value="AUTHORIZED_REPRESENTATIVE">Người đại diện được ủy quyền</option>
+                </select>
+              </label>
+              <label className="text-sm font-medium sm:col-span-2">
+                {rejected ? "Tài liệu thay thế" : "Giấy đăng ký doanh nghiệp"}{" "}
+                <span aria-hidden="true">*</span>
+                <input
+                  name="file"
+                  type="file"
+                  required
+                  accept="application/pdf,image/jpeg,image/png"
+                  onChange={(event) => setFile(event.target.files?.[0] ?? null)}
                   aria-describedby="certificate-hint"
                   className={inputClass}
                 />
@@ -224,8 +272,20 @@ function CompanyVerificationPage() {
                   id="certificate-hint"
                   className="mt-2 block text-xs font-normal leading-5 text-charcoal-83"
                 >
-                  Nhập đường dẫn http hoặc https để người xét duyệt có thể mở tài liệu của bạn.
+                  PDF, JPEG hoặc PNG, tối đa 10 MiB. Hồ sơ bổ sung cần tải lên tài liệu mới. Email
+                  liên hệ được lấy từ tài khoản của bạn.
                 </span>
+              </label>
+              <label className="flex min-h-11 items-start gap-3 text-sm leading-6 sm:col-span-2">
+                <input
+                  type="checkbox"
+                  required
+                  checked={declarationAccepted}
+                  onChange={(event) => setDeclarationAccepted(event.target.checked)}
+                  className="mt-1 h-4 w-4 shrink-0 accent-primary"
+                />
+                Tôi cam kết thông tin và tài liệu là chính xác, và có thẩm quyền đại diện doanh
+                nghiệp để nộp hồ sơ.
               </label>
             </fieldset>
             <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-warm-border pt-5">

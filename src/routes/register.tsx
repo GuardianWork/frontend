@@ -85,7 +85,7 @@ function RegisterPage() {
           <p className="mt-3 text-sm leading-7 text-charcoal-83">
             Chào {firstName.trim()}, tài khoản của bạn đã sẵn sàng.{" "}
             {role === "recruiter"
-              ? "Đăng nhập để hoàn thiện và xác thực hồ sơ công ty trước khi bắt đầu tuyển dụng."
+              ? "Đăng nhập, xác minh email tài khoản rồi đăng ký công ty hoặc nhận lời mời tham gia công ty."
               : "Đăng nhập để tạo hồ sơ và khám phá những công việc phù hợp."}
           </p>
           <Link
@@ -104,7 +104,8 @@ function RegisterPage() {
           </p>
           <h2 className="text-2xl font-bold tracking-tight">Tạo tài khoản của bạn</h2>
           <p className="mb-7 mt-2 text-sm leading-6 text-charcoal-83">
-            Chọn mục tiêu và điền thông tin để tham gia GuardianWork.
+            Một tài khoản cho cả tìm việc và tuyển dụng. Lựa chọn bên dưới chỉ chọn không gian sau
+            khi đăng nhập.
           </p>
           <AccountPurposeChoice
             value={role}
@@ -120,7 +121,7 @@ function RegisterPage() {
           {role === "recruiter" && (
             <p className="mb-5 rounded-lg border border-warm-border bg-surface-container-low p-3 text-xs leading-6 text-charcoal-83">
               Dành cho người đại diện doanh nghiệp và nhân sự tuyển dụng. Bạn sẽ bổ sung thông tin
-              công ty trong bước xác thực sau khi đăng nhập.
+              công ty sau khi xác minh email, hoặc tham gia công ty qua lời mời.
             </p>
           )}
           <form onSubmit={handleSubmit} className="space-y-5" aria-busy={loading}>
@@ -192,8 +193,7 @@ function RegisterPage() {
               </div>
               <div>
                 <label htmlFor="register-email" className="mb-2 block text-sm font-medium">
-                  {role === "recruiter" ? "Email công việc" : "Email"}{" "}
-                  <span aria-hidden="true">*</span>
+                  Email tài khoản <span aria-hidden="true">*</span>
                 </label>
                 <input
                   id="register-email"

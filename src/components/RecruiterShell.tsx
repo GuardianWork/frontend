@@ -1,3 +1,4 @@
+import { EmailVerificationPanel } from "./auth/EmailVerification";
 import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
 import { LeaveCompanyButton } from "./LeaveCompanyButton";
 import { LogoutButton } from "./LogoutButton";
@@ -23,7 +24,7 @@ const navigation = [
   { to: "/recruiter/talent", label: "Tìm kiếm ứng viên", icon: Users },
   { to: "/recruiter/applications", label: "Đơn ứng tuyển", icon: BriefcaseBusiness },
   { to: "/recruiter/members", label: "Thành viên công ty", icon: Users },
-  { to: "/recruiter/verification", label: "Cài đặt tài khoản", icon: Building2 },
+  { to: "/recruiter/verification", label: "Hồ sơ công ty", icon: Building2 },
 ];
 
 export function RecruiterShell({
@@ -191,7 +192,16 @@ export function RecruiterShell({
           </div>
         </header>
         <main className="min-h-0 flex-1 overflow-y-auto p-4 md:p-8">
-          <div className="mx-auto max-w-[1200px]">{children}</div>
+          <div className="mx-auto max-w-[1200px]">
+            {user && !user.recruitingEmailEligible && <EmailVerificationPanel />}
+            {user?.recruitingEmailEligible || pathname === "/recruiter/verification" ? (
+              children
+            ) : (
+              <p className="text-sm leading-6 text-charcoal-83">
+                Hoàn tất xác minh email để tiếp tục trong không gian tuyển dụng.
+              </p>
+            )}
+          </div>
         </main>
       </div>
     </div>

@@ -1,3 +1,4 @@
+import { hasPendingInvitation } from "@/services/invitationLink";
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, LoaderCircle } from "lucide-react";
@@ -65,8 +66,9 @@ function LoginPage() {
         window.location.assign(staffPortalHref("/login"));
         return;
       }
-      if (next) await navigate({ href: next, replace: true });
-      else await navigate({ to: getLoginDestination(user, role) });
+      await navigate({
+        to: hasPendingInvitation() ? "/company-invitations" : getLoginDestination(user, role),
+      });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Không thể đăng nhập. Vui lòng thử lại.");
     } finally {
@@ -78,7 +80,7 @@ function LoginPage() {
     <AuthLayout mode="login" purpose={role}>
       <h2 className="text-2xl font-bold tracking-tight">Đăng nhập GuardianWork</h2>
       <p className="mb-7 mt-2 text-sm leading-6 text-charcoal-83">
-        Tiếp tục hành trình của bạn cùng những cơ hội mới.
+        Một tài khoản cho cả tìm việc và tuyển dụng. Chọn không gian bạn muốn tiếp tục.
       </p>
       <AccountPurposeChoice
         value={role}

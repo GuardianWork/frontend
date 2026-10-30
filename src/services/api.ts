@@ -6,6 +6,7 @@ export function getApiBaseUrl() {
 
 export class ApiError extends Error {
   status: number;
+  retryAfterSeconds?: number;
   constructor(message: string, status = 0) {
     super(message);
     this.status = status;
@@ -19,7 +20,9 @@ export async function apiRequest(path: string, init: RequestInit = {}): Promise<
       ...init,
       headers: {
         Accept: "application/json",
-        ...(init.body ? { "Content-Type": "application/json" } : {}),
+        ...(init.body && !(init.body instanceof FormData)
+          ? { "Content-Type": "application/json" }
+          : {}),
         ...init.headers,
       },
       signal: init.signal || AbortSignal.timeout(20000),
@@ -35,7 +38,13 @@ export async function apiRequest(path: string, init: RequestInit = {}): Promise<
   }
   const status = !response.ok ? response.status : (body?.status ?? response.status);
   if (status >= 400) {
-    throw new ApiError(body?.message || "Không thể hoàn tất yêu cầu. Vui lòng thử lại.", status);
+    const error = new ApiError(
+      body?.message || "Không thể hoàn tất yêu cầu. Vui lòng thử lại.",
+      status,
+    );
+    const retryAfter = response.headers.get("Retry-After");
+    if (retryAfter && /^\d+$/.test(retryAfter)) error.retryAfterSeconds = Number(retryAfter);
+    throw error;
   }
   if (!body || !("data" in body)) {
     throw new ApiError("Phản hồi từ dịch vụ không hợp lệ. Vui lòng thử lại sau.");

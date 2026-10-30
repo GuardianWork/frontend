@@ -11,10 +11,10 @@ test("mock API supports candidate/recruiter onboarding, rotation, and logout lik
     const response = await fetch(base + path, {
       method,
       headers: {
-        "Content-Type": "application/json",
+        ...(body instanceof FormData ? {} : { "Content-Type": "application/json" }),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      ...(body ? { body: JSON.stringify(body) } : {}),
+      ...(body ? { body: body instanceof FormData ? body : JSON.stringify(body) } : {}),
     });
     return { status: response.status, ...(await response.json()) };
   };
@@ -50,14 +50,35 @@ test("mock API supports candidate/recruiter onboarding, rotation, and logout lik
   assert.equal((await call("/companies/verification-request", "POST", company)).status, 401);
   assert.equal(
     (await call("/companies/verification-request", "POST", company, login.data.accessToken)).status,
-    201,
+    410,
   );
   const me = await call("/auth/me", "GET", null, login.data.accessToken);
-  assert.equal(me.data.role, "USER");
-  assert.equal(me.data.activeMembership.companyRole, "OWNER");
+  assert.equal(me.data.emailVerified, false);
+  assert.equal(me.data.recruitingEmailEligible, false);
+  assert.equal(me.data.activeMembership, null);
+  const dossier = new FormData();
+  dossier.append(
+    "dossier",
+    new Blob(
+      [
+        JSON.stringify({
+          name: "Beta",
+          taxCode: "0100009999",
+          legal: { workAddress: "Address", submitterPosition: "Owner", declarationAccepted: true },
+        }),
+      ],
+      { type: "application/json" },
+    ),
+  );
+  dossier.append("file", new File(["%PDF-1.4 test"], "license.pdf", { type: "application/pdf" }));
   assert.equal(
-    (await call("/companies/verification-request", "POST", company, login.data.accessToken)).status,
-    409,
+    (await call("/companies/verification-request", "POST", dossier, login.data.accessToken)).status,
+    403,
+  );
+  assert.equal(
+    (await call("/companies/verification-request", "POST", dossier, candidate.data.accessToken))
+      .status,
+    201,
   );
   const rotated = await call("/auth/refresh", "POST", { refreshToken: login.data.refreshToken });
   assert.equal(rotated.status, 200);

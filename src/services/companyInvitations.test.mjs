@@ -70,3 +70,32 @@ test("duplicate, network and malformed responses never report invitation success
   globalThis.fetch = async () => Response.json({ status: 201, data: { id: 17 } });
   await assert.rejects(issueCompanyInvitation(result.email), /không hợp lệ/);
 });
+
+test("recipient decisions post the fragment secret to API endpoints, never the email landing URL", async () => {
+  const { previewCompanyInvitation, acceptCompanyInvitation, declineCompanyInvitation } =
+    await import("./companyInvitations.ts");
+  for (const [operation, action, payload] of [
+    [previewCompanyInvitation, "preview", { secret: "private-invitation" }],
+    [acceptCompanyInvitation, "accept", { secret: "private-invitation", confirm: true }],
+    [declineCompanyInvitation, "decline", { secret: "private-invitation" }],
+  ]) {
+    globalThis.fetch = async (url, init) => {
+      assert.equal(url, `/api/company-invitations/${action}`);
+      assert.equal(init.method, "POST");
+      assert.equal(init.cache, "no-store");
+      assert.equal(init.headers.Authorization, "Bearer owner-access");
+      assert.deepEqual(JSON.parse(init.body), payload);
+      return Response.json({
+        status: 200,
+        data: {
+          invitationId: 17,
+          companyId: 101,
+          companyName: "Company",
+          companyRole: "RECRUITER",
+          expiresAt: "2027-01-01T00:00:00Z",
+        },
+      });
+    };
+    await operation("private-invitation");
+  }
+});
