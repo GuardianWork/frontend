@@ -126,7 +126,7 @@ export function LegalCopilotView() {
         {/* Title & Badge */}
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <span className="font-mono text-xs font-bold text-accent uppercase tracking-widest">
+            <span className="font-mono text-xs font-bold text-accent  ">
               05 · Giao diện Cố vấn Pháp lý
             </span>
             <h1 className="font-display font-extrabold text-2xl sm:text-3xl text-ink mt-1 tracking-tight">
@@ -197,8 +197,8 @@ export function LegalCopilotView() {
         <div className="mt-4 mb-24 px-5 py-3.5 rounded-xl bg-paper-2 border border-rule/60 flex flex-col gap-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <span className="font-body text-[10px] font-black uppercase tracking-wider text-ink-2 flex items-center gap-1.5">
-                <span className="text-amber-500">🛡️</span>
+              <span className="font-body text-[10px] font-black   text-ink-2 flex items-center gap-1.5">
+                <span className="text-amber-500"></span>
                 <span>Tuân thủ Pháp luật AI & VBQPPL</span>
               </span>
               <span className="px-2 py-0.5 rounded bg-paper border border-rule font-mono text-[9px] font-bold text-ink-3">
@@ -235,9 +235,9 @@ export function LegalCopilotView() {
                   key={idx}
                   type="button"
                   onClick={() => handleSend(q.question)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-paper/95 backdrop-blur-md border border-rule hover:border-accent hover:bg-paper-2 transition-all text-xs font-mono font-bold text-ink shadow-md shrink-0 whitespace-nowrap cursor-pointer active:scale-95"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-paper/95 backdrop-blur-md border border-rule hover:border-accent hover:bg-paper-2 transition-colors text-xs font-mono font-bold text-ink shadow-md shrink-0 whitespace-nowrap cursor-pointer active:scale-95"
                 >
-                  <span className="text-accent font-black">⚡</span>
+                  <span className="text-accent font-black"></span>
                   <span>{q.label}</span>
                 </button>
               ))}
@@ -249,11 +249,11 @@ export function LegalCopilotView() {
                 e.preventDefault();
                 handleSend();
               }}
-              className="pointer-events-auto flex items-center gap-2 p-2 sm:p-2.5 rounded-2xl bg-paper/95 backdrop-blur-md border border-rule shadow-xl transition-all"
+              className="pointer-events-auto flex items-center gap-2 p-2 sm:p-2.5 rounded-2xl bg-paper/95 backdrop-blur-md border border-rule shadow-xl transition-colors"
             >
               <button
                 type="button"
-                className="shrink-0 flex items-center justify-center w-9 h-9 rounded-xl bg-paper-2 hover:bg-paper-3 border border-rule text-ink-2 hover:text-accent transition-all active:scale-95 cursor-pointer"
+                className="shrink-0 flex items-center justify-center w-9 h-9 rounded-xl bg-paper-2 hover:bg-paper-3 border border-rule text-ink-2 hover:text-accent transition-colors active:scale-95 cursor-pointer"
                 title="Tải lên tài liệu pháp lý"
               >
                 <Paperclip className="w-4 h-4" />

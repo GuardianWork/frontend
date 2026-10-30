@@ -2,6 +2,7 @@ import { test, expect, login } from "./fixtures";
 import type { Page } from "@playwright/test";
 async function recruiter(page: Page) {
   let left = false;
+  await page.route("**/api/companies/101", route => route.fulfill({json:{status:200,data:{id:101,name:"Alpha",taxCode:"0101234567",verificationStatus:"VERIFIED",version:1}}}));
   await page.route("**/api/auth/me", async (route) => {
     const body = {
       status: 200,
@@ -11,7 +12,7 @@ async function recruiter(page: Page) {
         email: "recruiter@example.test",
         firstName: "Linh",
         lastName: "Trần",
-        role: "USER",
+        role: "USER", emailVerified:true, recruitingEmailEligible:true,
         activeMembership: null as object | null,
       },
     };

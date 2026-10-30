@@ -1,9 +1,11 @@
-import React from "react";
+import { useAuthUser } from "@/hooks/useAuthUser";
+import { isStaffUser } from "@/services/auth";
 import { Link } from "@tanstack/react-router";
 import { useLanguage } from "@/context/LanguageContext";
 
 export function Footer() {
-  const { dict } = useLanguage();
+  const { dict, locale } = useLanguage();
+  const user = useAuthUser();
 
   return (
     <footer aria-label="Site footer" className="landing-footer bg-paper-2 border-t border-rule">
@@ -11,15 +13,15 @@ export function Footer() {
         <div className="landing-footer__top flex flex-col md:flex-row justify-between items-start gap-8 pb-12 border-b border-rule">
           <div>
             <p className="footer-ft5__statement font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-ink leading-tight">
-              {dict.footer.statement1}
-              <br />
-              <span className="text-accent">{dict.footer.statement2}</span>
+              {locale === "en"
+                ? "GuardianWork. Your next step."
+                : "GuardianWork. Cùng bạn đi tiếp."}
             </p>
           </div>
           <div className="landing-footer__cta-col shrink-0 flex flex-col items-start md:items-end">
             <Link
               to="/jobs"
-              className="landing-footer__cta-btn inline-flex items-center justify-center px-8 py-3.5 rounded-full bg-accent text-accent-ink font-bold text-sm shadow-md hover:bg-accent-hover active:scale-[0.98] transition-all"
+              className="landing-footer__cta-btn inline-flex items-center justify-center px-8 py-3.5 rounded-full bg-accent text-accent-ink font-bold text-sm hover:bg-accent-hover active:scale-[0.98] transition-colors"
             >
               {dict.footer.findJobs} →
             </Link>
@@ -42,7 +44,7 @@ export function Footer() {
               {dict.footer.forEmployers}
             </Link>
             <a
-              href="#how-it-works"
+              href="/vn#how-it-works"
               className="footer-ft5__meta text-ink-3 hover:text-ink transition-colors"
             >
               {dict.footer.howItWorks}
@@ -53,12 +55,14 @@ export function Footer() {
             >
               AI Legal Copilot
             </Link>
-            <Link
-              to="/compliance"
-              className="footer-ft5__meta text-ink-3 hover:text-ink transition-colors"
-            >
-              Admin Console
-            </Link>
+            {user && isStaffUser(user) && (
+              <Link
+                to="/compliance"
+                className="footer-ft5__meta text-ink-3 hover:text-ink transition-colors"
+              >
+                Admin Console
+              </Link>
+            )}
           </nav>
           <p className="footer-ft5__meta text-ink-3">{dict.footer.copyright}</p>
         </div>

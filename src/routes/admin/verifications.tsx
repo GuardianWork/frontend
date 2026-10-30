@@ -28,7 +28,12 @@ export const Route = createFileRoute("/admin/verifications")({
         ? search.page
         : 0,
   }),
-  head: () => ({ meta: [{ title: "Hồ sơ xác minh công ty — Quản trị GuardianWork" }] }),
+  head: () => ({
+    meta: [
+      { name: "robots", content: "noindex, nofollow" },
+      { title: "Hồ sơ xác minh công ty — Quản trị GuardianWork" },
+    ],
+  }),
   component: AdminVerificationsPage,
 });
 const LABELS = {

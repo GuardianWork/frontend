@@ -1,3 +1,4 @@
+import { useNavigationFocus } from "@/hooks/useNavigationFocus";
 import "./workspace.css";
 import {
   GlobeIcon,
@@ -36,6 +37,7 @@ export function StaffShell({
 }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [open, setOpen] = useState(false);
+  useNavigationFocus(open, "workspace-navigation");
   useEffect(() => {
     const close = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);

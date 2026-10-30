@@ -4,6 +4,7 @@ import { Link, useHydrated, useRouterState } from "@tanstack/react-router";
 import { ShieldCheck } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCandidate } from "@/context/CandidateContext";
+import { isStaffUser } from "@/services/auth";
 import { useAuthUser } from "@/hooks/useAuthUser";
 
 export function Header({
@@ -160,9 +161,11 @@ export function Header({
           <Link to="/recruit" onClick={() => setMobileOpen(false)}>
             {dict.nav.forCompanies}
           </Link>
-          <Link to="/compliance" onClick={() => setMobileOpen(false)}>
-            Admin Console
-          </Link>
+          {user && isStaffUser(user) && (
+            <Link to="/compliance" onClick={() => setMobileOpen(false)}>
+              Admin Console
+            </Link>
+          )}
           {!user && (
             <>
               <Link to="/login" search={loginSearch} onClick={() => setMobileOpen(false)}>
@@ -187,7 +190,7 @@ export function Header({
           <span>
             {dict.ledger.saved}: {savedJobs.length}
           </span>
-          <Link to="/compliance">Admin Console</Link>
+          {isStaffUser(user) && <Link to="/compliance">Admin Console</Link>}
         </div>
       )}
     </header>

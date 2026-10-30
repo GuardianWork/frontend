@@ -8,6 +8,7 @@ import { getAdminVerifications } from "@/services/adminCompanies";
 export const Route = createFileRoute("/admin/")({
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex, nofollow" },
       { title: "Tổng quan quản trị — GuardianWork" },
       { name: "description", content: "Tổng quan các chỉ số vận hành và hàng đợi quản trị." },
     ],

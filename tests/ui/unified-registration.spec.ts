@@ -46,7 +46,7 @@ test("unverified accounts can sign in and explicitly request email verification"
   });
   await login(page, "new_user", true);
   await expect(page.getByRole("heading", { name: "Xác minh email để tuyển dụng" })).toBeVisible();
-  await expect(page.locator('[name="companyName"]')).toBeDisabled();
+  await expect(page.locator('[name="companyName"]')).toBeEnabled();
   await page.getByRole("button", { name: "Gửi mã xác minh", exact: true }).click();
   await expect(page.getByText("Chưa gửi được mã xác minh.", { exact: false })).toBeVisible();
   await expect(page.getByRole("button", { name: /Gửi lại sau/ })).toBeDisabled();
@@ -100,7 +100,7 @@ test("email verification submits a six-digit string and refreshes eligibility af
   await code.fill("123456");
   await page.getByRole("button", { name: "Xác nhận mã", exact: true }).click();
   await expect(page.getByRole("alert")).toContainText("Mã không hợp lệ");
-  await expect(page.locator('[name="companyName"]')).toBeDisabled();
+  await expect(page.locator('[name="companyName"]')).toBeEnabled();
   await code.fill("012345");
   await page.screenshot({ path: `/tmp/email-code-${info.project.name}.png`, fullPage: true });
   expect(

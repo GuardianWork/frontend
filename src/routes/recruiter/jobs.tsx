@@ -9,6 +9,11 @@ export const Route = createFileRoute("/recruiter/jobs")({
         ? Number(search.jobId)
         : undefined,
   }),
-  head: () => ({ meta: [{ title: "Tin tuyển dụng — GuardianWork Recruiter" }] }),
+  head: () => ({
+    meta: [
+      { name: "robots", content: "noindex, nofollow" },
+      { title: "Tin tuyển dụng — GuardianWork Recruiter" },
+    ],
+  }),
   component: RecruiterJobsPage,
 });

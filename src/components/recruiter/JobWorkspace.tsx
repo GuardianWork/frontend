@@ -201,11 +201,11 @@ export function JobWorkspace({
       </button>
       <header className="jp-page-header">
         <div>
-          <h2 ref={headingRef} tabIndex={-1}>
+          <h1 ref={headingRef} tabIndex={-1}>
             {job
               ? content.title || latest.data?.content.title || `Tin tuyển dụng #${job.id}`
               : "Tạo tin tuyển dụng"}
-          </h2>
+          </h1>
           <p>
             {job
               ? `Tin #${job.id} · Cập nhật ${formatJobDate(job.updatedAt)}`

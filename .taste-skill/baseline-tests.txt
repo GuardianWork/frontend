@@ -1,0 +1,129 @@
+
+Running 3 tests using 1 worker
+
+(node:472451) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node-22 --trace-warnings ...` to show where the warning was created)
+  ✘  1 [desktop] › tests/ui/compliance.spec.ts:9:1 › lists already-published flagged JDs without a prepublication approval flow (20.1s)
+(node:473427) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node-22 --trace-warnings ...` to show where the warning was created)
+  ✘  2 [desktop] › tests/ui/inputs.spec.ts:26:1 › all registration fields retain input and password errors preserve the form (14.4s)
+(node:473915) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node-22 --trace-warnings ...` to show where the warning was created)
+  ✘  3 [desktop] › tests/ui/job-publishing.spec.ts:256:1 › owner creates an incomplete draft, sees validation, completes and submits the persisted revision (13.5s)
+
+
+  1) [desktop] › tests/ui/compliance.spec.ts:9:1 › lists already-published flagged JDs without a prepublication approval flow 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('heading', { name: 'Tin tuyển dụng cần kiểm tra' })
+    Expected: visible
+    Timeout: 7000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('heading', { name: 'Tin tuyển dụng cần kiểm tra' }) with timeout 7000ms
+      - waiting for getByRole('heading', { name: 'Tin tuyển dụng cần kiểm tra' })
+
+
+      4 |   await login(page, "admin_demo");
+      5 |   await page.goto("/admin/compliance", { waitUntil: "domcontentloaded" });
+    > 6 |   await expect(page.getByRole("heading", { name: "Tin tuyển dụng cần kiểm tra" })).toBeVisible();
+        |                                                                                    ^
+      7 | });
+      8 |
+      9 | test("lists already-published flagged JDs without a prepublication approval flow", async ({
+        at /home/vy/Documents/GuardianWork/frontend/tests/ui/compliance.spec.ts:6:84
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    .taste-skill/baseline-test-results/compliance-lists-already-p-074ca-republication-approval-flow-desktop/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: .taste-skill/baseline-test-results/compliance-lists-already-p-074ca-republication-approval-flow-desktop/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    .taste-skill/baseline-test-results/compliance-lists-already-p-074ca-republication-approval-flow-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace .taste-skill/baseline-test-results/compliance-lists-already-p-074ca-republication-approval-flow-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [desktop] › tests/ui/inputs.spec.ts:26:1 › all registration fields retain input and password errors preserve the form 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('#register-fullName')
+    Expected: visible
+    Timeout: 7000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" locator('#register-fullName') with timeout 7000ms
+      - waiting for locator('#register-fullName')
+
+
+      50 |     .filter({ has: page.getByRole("radio", { name: /Tôi muốn tuyển dụng/ }) })
+      51 |     .click();
+    > 52 |   await expect(page.locator("#register-fullName")).toBeVisible();
+         |                                                    ^
+      53 |   await expect(page.locator("#register-username")).toHaveCount(0);
+      54 |   await page
+      55 |     .locator("label")
+        at /home/vy/Documents/GuardianWork/frontend/tests/ui/inputs.spec.ts:52:52
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    .taste-skill/baseline-test-results/inputs-all-registration-fi-97fe4-rd-errors-preserve-the-form-desktop/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: .taste-skill/baseline-test-results/inputs-all-registration-fi-97fe4-rd-errors-preserve-the-form-desktop/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    .taste-skill/baseline-test-results/inputs-all-registration-fi-97fe4-rd-errors-preserve-the-form-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace .taste-skill/baseline-test-results/inputs-all-registration-fi-97fe4-rd-errors-preserve-the-form-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [desktop] › tests/ui/job-publishing.spec.ts:256:1 › owner creates an incomplete draft, sees validation, completes and submits the persisted revision 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('heading', { name: 'Bắt đầu với tin tuyển dụng đầu tiên' })
+    Expected: visible
+    Timeout: 7000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('heading', { name: 'Bắt đầu với tin tuyển dụng đầu tiên' }) with timeout 7000ms
+      - waiting for getByRole('heading', { name: 'Bắt đầu với tin tuyển dụng đầu tiên' })
+
+
+      262 |   await expect(
+      263 |     page.getByRole("heading", { name: "Bắt đầu với tin tuyển dụng đầu tiên" }),
+    > 264 |   ).toBeVisible();
+          |     ^
+      265 |   await page.getByRole("link", { name: "Tạo tin tuyển dụng" }).first().click();
+      266 |   await page.getByLabel("Chức danh công việc", { exact: true }).fill("Chuyên viên kinh doanh");
+      267 |   await page.getByRole("button", { name: "Lưu bản nháp", exact: true }).click();
+        at /home/vy/Documents/GuardianWork/frontend/tests/ui/job-publishing.spec.ts:264:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    .taste-skill/baseline-test-results/job-publishing-owner-creat-5b347-mits-the-persisted-revision-desktop/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: .taste-skill/baseline-test-results/job-publishing-owner-creat-5b347-mits-the-persisted-revision-desktop/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    .taste-skill/baseline-test-results/job-publishing-owner-creat-5b347-mits-the-persisted-revision-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace .taste-skill/baseline-test-results/job-publishing-owner-creat-5b347-mits-the-persisted-revision-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3 failed
+    [desktop] › tests/ui/compliance.spec.ts:9:1 › lists already-published flagged JDs without a prepublication approval flow 
+    [desktop] › tests/ui/inputs.spec.ts:26:1 › all registration fields retain input and password errors preserve the form 
+    [desktop] › tests/ui/job-publishing.spec.ts:256:1 › owner creates an incomplete draft, sees validation, completes and submits the persisted revision 

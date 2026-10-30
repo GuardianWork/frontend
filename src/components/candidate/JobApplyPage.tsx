@@ -464,7 +464,7 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
                 key={row.term}
                 className="flex flex-col gap-0.5 border-b border-rule py-3 last:border-b-0 sm:flex-row sm:items-baseline sm:gap-4"
               >
-                <dt className="w-40 shrink-0 text-xs font-semibold uppercase tracking-wide text-ink-3">
+                <dt className="w-40 shrink-0 text-xs font-semibold   text-ink-3">
                   {row.term}
                 </dt>
                 <dd
@@ -554,13 +554,13 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
           </p>
           <dl className="mx-auto mt-6 max-w-lg border-t border-rule text-left">
             <div className="flex flex-col gap-0.5 border-b border-rule py-2.5 sm:flex-row sm:items-baseline sm:gap-4">
-              <dt className="w-32 shrink-0 text-xs font-semibold uppercase tracking-wide text-ink-3">
+              <dt className="w-32 shrink-0 text-xs font-semibold   text-ink-3">
                 Vị trí
               </dt>
               <dd className="min-w-0 text-sm font-semibold leading-6 text-ink">{job.title}</dd>
             </div>
             <div className="flex flex-col gap-0.5 border-b border-rule py-2.5 sm:flex-row sm:items-baseline sm:gap-4">
-              <dt className="w-32 shrink-0 text-xs font-semibold uppercase tracking-wide text-ink-3">
+              <dt className="w-32 shrink-0 text-xs font-semibold   text-ink-3">
                 Công ty
               </dt>
               <dd className="min-w-0 text-sm leading-6 text-ink-2">
@@ -569,7 +569,7 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
             </div>
             {appliedAt && (
               <div className="flex flex-col gap-0.5 py-2.5 sm:flex-row sm:items-baseline sm:gap-4">
-                <dt className="w-32 shrink-0 text-xs font-semibold uppercase tracking-wide text-ink-3">
+                <dt className="w-32 shrink-0 text-xs font-semibold   text-ink-3">
                   Đã gửi
                 </dt>
                 <dd className="min-w-0 text-sm leading-6 text-ink-2">{formatCvDate(appliedAt)}</dd>
@@ -1177,7 +1177,7 @@ function CvRow({ cv, className = "" }: { cv: CandidateCv; className?: string }) 
         )}
         <p className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-ink-3">
           {cv.isDefault && (
-            <span className="rounded border border-accent/25 bg-paper px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-accent-deep">
+            <span className="rounded border border-accent/25 bg-paper px-1.5 py-0.5 text-[10px] font-bold   text-accent-deep">
               Mặc định
             </span>
           )}

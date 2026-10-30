@@ -1,9 +1,11 @@
+import { publicSeo } from "@/lib/public-seo";
 import { createFileRoute } from "@tanstack/react-router";
 import { LandingView } from "@/components/guardian/LandingView";
 
 export const Route = createFileRoute("/vn")({
   head: () => ({
-    meta: [
+    links: publicSeo("/vn").links,
+    meta: [...publicSeo("/vn").meta,
       { title: "GuardianWork — Việc làm đa ngành tại Việt Nam" },
       {
         name: "description",

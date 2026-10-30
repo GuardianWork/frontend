@@ -10,6 +10,7 @@ import { getAdminVerifications } from "@/services/adminCompanies";
 export const Route = createFileRoute("/staff/")({
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex, nofollow" },
       { title: "Tổng quan Platform staff — GuardianWork" },
       {
         name: "description",

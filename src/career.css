@@ -2829,6 +2829,7 @@ body {
 .guardian-art {
   display: block;
   flex-shrink: 0;
+  max-width: 100%;
 }
 .guardian-art img {
   display: block;

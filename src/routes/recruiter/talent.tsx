@@ -7,11 +7,11 @@ import { AdminShell, Icon } from "@/components/AdminShell";
 export const Route = createFileRoute("/recruiter/talent")({
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex, nofollow" },
       { title: "Hồ sơ ứng viên — GuardianWork Recruiter" },
       {
         name: "description",
-        content:
-          "Inspect verified candidate talent profiles, audited skills, and statutory compliance safeguards.",
+        content: "Danh sách hồ sơ ứng viên minh họa theo chuyên môn và địa điểm.",
       },
     ],
   }),
@@ -33,7 +33,7 @@ function RecruiterTalentPage() {
       ielts: "IELTS 7.5",
       location: "TP. Hồ Chí Minh",
       avatar: "https://api.dicebear.com/7.x/notionists/svg?seed=NguyenVanAn(Alex)",
-      status: "100% Đã Kiểm Định",
+      status: "Hồ sơ minh họa",
     },
     {
       id: "seeker-2",
@@ -44,7 +44,7 @@ function RecruiterTalentPage() {
       ielts: "TOEIC 920",
       location: "Hà Nội",
       avatar: "https://api.dicebear.com/7.x/notionists/svg?seed=MichaelTran",
-      status: "Điều 98 Verified",
+      status: "Hồ sơ minh họa",
     },
     {
       id: "seeker-3",
@@ -55,7 +55,7 @@ function RecruiterTalentPage() {
       ielts: "IELTS 7.0",
       location: "Đà Nẵng / Hybrid",
       avatar: "https://api.dicebear.com/7.x/notionists/svg?seed=LeHoangNam",
-      status: "100% Đã Kiểm Định",
+      status: "Hồ sơ minh họa",
     },
   ];
 
@@ -70,8 +70,7 @@ function RecruiterTalentPage() {
             Danh sách hồ sơ ứng viên
           </h1>
           <p className="text-base text-charcoal-83 max-w-2xl">
-            Danh mục hồ sơ ứng viên đã qua kiểm định KYC, chứng chỉ ngoại ngữ và mức lương sàn minh
-            bạch.
+            Khám phá danh sách hồ sơ minh họa theo chuyên môn, kinh nghiệm và địa điểm.
           </p>
         </div>
 
@@ -85,17 +84,19 @@ function RecruiterTalentPage() {
           </Link>
           <button
             onClick={() => setPitchSent(true)}
-            className="px-4 py-2 bg-primary text-on-primary text-sm font-medium rounded-lg hover:opacity-90 transition-all flex items-center gap-2 shadow-sm"
+            className="px-4 py-2 bg-primary text-on-primary text-sm font-medium rounded-lg hover:opacity-90 transition-colors flex items-center gap-2 shadow-sm"
           >
             <Icon name="mail" className="!text-base" />
             <span>
-              {pitchSent ? `Đã gửi Pitch đến ${current.name} ✓` : "Gửi Outreach Pitch (Bảo Mật)"}
+              {pitchSent
+                ? `Đã ghi nhận thao tác mẫu: ${current.name}`
+                : "Gửi Outreach Pitch (Bảo Mật)"}
             </span>
           </button>
         </div>
       </div>
 
-      <details className="workspace-data-note">
+      <details open className="workspace-data-note">
         <summary>Hồ sơ và thao tác minh họa</summary>
         <p>
           Hồ sơ ứng viên, thông tin kiểm định và thao tác tiếp cận trên trang này là minh họa. Thao
@@ -106,7 +107,7 @@ function RecruiterTalentPage() {
       <div className="workspace-summary">
         <div className="workspace-summary__item">
           <span className="font-semibold text-charcoal-40 text-sm block mb-2">
-            Mức lương Sàn Yêu cầu
+            Mức lương tham khảo
           </span>
           <div className="font-semibold text-2xl text-charcoal-text ">{current.salary}</div>
           <div className="mt-2 text-sm text-charcoal-83 flex items-center gap-1 font-medium">
@@ -127,10 +128,8 @@ function RecruiterTalentPage() {
         </div>
 
         <div className="workspace-summary__item">
-          <span className="font-semibold text-charcoal-40 text-sm block mb-2">
-            Hợp Chuẩn Pháp Lý
-          </span>
-          <div className="font-semibold text-2xl ">100% Đã Kiểm Định</div>
+          <span className="font-semibold text-charcoal-40 text-sm block mb-2">Nguồn hồ sơ</span>
+          <div className="font-semibold text-2xl ">Hồ sơ minh họa</div>
           <div className="mt-2 text-sm text-charcoal-83 flex items-center gap-1 font-medium">
             <Icon name="shield" className="!text-[15px]" /> Bảo vệ theo Điều 98 & Điều 25
           </div>
@@ -404,10 +403,10 @@ function RecruiterTalentPage() {
                 </div>
                 <button
                   onClick={() => setPitchSent(true)}
-                  className="px-5 py-2.5 bg-primary text-on-primary text-sm font-bold rounded-lg hover:opacity-90 transition-all shadow-sm shrink-0 flex items-center gap-1.5"
+                  className="px-5 py-2.5 bg-primary text-on-primary text-sm font-bold rounded-lg hover:opacity-90 transition-colors shadow-sm shrink-0 flex items-center gap-1.5"
                 >
                   <Icon name="send" className="!text-base" />
-                  <span>{pitchSent ? "Đã gửi Pitch ✓" : "Gửi Lời Mời Ngay"}</span>
+                  <span>{pitchSent ? "Đã gửi Pitch " : "Gửi Lời Mời Ngay"}</span>
                 </button>
               </div>
             </div>

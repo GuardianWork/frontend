@@ -4,6 +4,7 @@ import { CvManagerView } from "@/components/candidate/CvManagerView";
 export const Route = createFileRoute("/candidate/cvs")({
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex, nofollow" },
       { title: "Quản lý hồ sơ xin việc — GuardianWork" },
       {
         name: "description",

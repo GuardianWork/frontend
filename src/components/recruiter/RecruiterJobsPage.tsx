@@ -56,7 +56,7 @@ export function RecruiterJobsPage() {
         {!allowed ? (
           <div className="jp-empty">
             <BriefcaseBusiness size={32} aria-hidden="true" />
-            <h2>Tham gia công ty để quản lý tin</h2>
+            <h1>Tham gia công ty để quản lý tin</h1>
             <p>Bạn cần là chủ sở hữu hoặc nhà tuyển dụng đang hoạt động trong công ty.</p>
             <Link className="jp-button jp-primary" to="/recruiter/verification">
               Xem thông tin công ty
@@ -80,7 +80,7 @@ export function RecruiterJobsPage() {
             </p>
           ) : detail.isError ? (
             <div className="jp-empty">
-              <h2>Chưa tải được tin</h2>
+              <h1>Chưa tải được tin</h1>
               <p role="alert">{jobError(detail.error)}</p>
               <div className="jp-actions">
                 <button className="jp-button" onClick={back}>
@@ -110,7 +110,7 @@ export function RecruiterJobsPage() {
           <>
             <header className="jp-page-header">
               <div>
-                <h2>Tin tuyển dụng</h2>
+                <h1>Tin tuyển dụng</h1>
                 <p>
                   {owner
                     ? "Quản lý nội dung đăng tuyển và phân công người phụ trách."

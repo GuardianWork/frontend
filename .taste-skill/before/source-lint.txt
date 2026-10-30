@@ -1,0 +1,101 @@
+TASTESKILL · LINT   252 file(s)
+
+FAIL
+  [hairline] Thin rule / divider line. Separate with space, tone or scale; lines belong to real tables and form fields.  (163×)
+      src/career.css:71  border-bottom: 1px
+      src/career.css:120  border-left: 1px
+      src/career.css:271  border-top: 1px
+      src/career.css:301  border-bottom: 1px
+      src/career.css:322  border-top: 1px
+      src/career.css:382  border-left: 1px
+      … 157 more
+  [shadow] Shadow. Elements at rest carry none; only real overlays (menu, dialog, sticky bar) may.  (77×)
+      src/career.css:362  box-shadow:
+      src/career.css:791  box-shadow:
+      src/career.css:852  box-shadow:
+      src/career.css:2158  box-shadow:
+      src/components/guardian/CandidateProfileView.tsx:81  shadow-sm
+      src/components/guardian/CandidateProfileView.tsx:114  shadow-md
+      … 71 more
+  [mono] Monospace type. Only literal code may be monospace.  (144×)
+      src/career.css:793  font-mono
+      src/components/guardian/CandidateProfileView.tsx:49  font-mono
+      src/components/guardian/CandidateProfileView.tsx:56  font-mono
+      src/components/guardian/CandidateProfileView.tsx:63  font-mono
+      src/components/guardian/CandidateProfileView.tsx:70  font-mono
+      src/components/guardian/CandidateProfileView.tsx:89  font-mono
+      … 138 more
+  [micro-label] Tiny uppercase letter-spaced label.  (23×)
+      src/components/AdminShell.tsx:274  text-charcoal-40 text-xs font-semibold uppercase tracking-wider
+      src/components/candidate/CvManagerView.tsx:752  text-xs font-semibold uppercase tracking-wide text-ink-3
+      src/components/candidate/JobApplyPage.tsx:467  w-40 shrink-0 text-xs font-semibold uppercase tracking-wide text-ink-3
+      src/components/candidate/JobApplyPage.tsx:557  w-32 shrink-0 text-xs font-semibold uppercase tracking-wide text-ink-3
+      src/components/candidate/JobApplyPage.tsx:563  w-32 shrink-0 text-xs font-semibold uppercase tracking-wide text-ink-3
+      src/components/candidate/JobApplyPage.tsx:572  w-32 shrink-0 text-xs font-semibold uppercase tracking-wide text-ink-3
+      … 17 more
+  [numbering] Decorative index numbering (01 / 02 / 03).  (10×)
+      src/components/guardian/CandidateProfileView.tsx:51  >01<
+      src/components/guardian/CandidateProfileView.tsx:58  >03<
+      src/components/guardian/CandidateProfileView.tsx:65  >04<
+      src/components/guardian/JobsView.tsx:206  >01<
+      src/components/guardian/JobsView.tsx:213  >02<
+      src/components/guardian/JobsView.tsx:220  >03<
+      … 4 more
+  [emoji] Emoji used as UI.  (13×)
+      src/components/guardian/LegalCopilotView.tsx:201  🛡
+      src/components/guardian/LegalCopilotView.tsx:240  ⚡
+      src/components/guardian/LoginView.tsx:218  ✨
+      src/components/guardian/RecruiterView.tsx:533  ✓
+      src/components/guardian/RecruiterView.tsx:537  ✓
+      src/components/guardian/RecruiterView.tsx:541  ✓
+      … 7 more
+  [gradient] Gradient fill. Use a flat colour or a real image (a neutral scrim over a photo is the one exception).  (1×)
+      src/components/ui/navigation-menu.tsx:67  from-right-52
+  [purple] Indigo / violet — the generated-page accent.  (1×)
+      src/styles.css:33  #8b5cf6
+
+WARN
+  [outlined-box] A 1px outlined box. Prefer a filled surface or no box.  (74×)
+      src/career.css:168  border: 1px solid
+      src/career.css:241  border: 1px solid
+      src/career.css:403  border: 1px solid
+      src/career.css:524  border: 1px solid
+      src/career.css:803  border: 1px solid
+      src/career.css:1244  border: 1px solid
+      … 68 more
+  [h-screen] 100vh jumps on mobile. Use 100svh / 100dvh.  (14×)
+      src/components/AdminShell.tsx:247  h-screen
+      src/components/AdminShell.tsx:259  h-screen
+      src/components/AdminShell.tsx:362  h-screen
+      src/components/auth/AuthGate.tsx:128  h-screen
+      src/components/auth/AuthLayout.tsx:19  h-screen
+      src/components/candidate/JobApplyPage.tsx:159  h-screen
+      … 8 more
+  [copy] Stock marketing phrase. Say the specific thing the product does.  (3×)
+      src/components/admin/AdminDraftPage.tsx:316  unlock
+      src/components/admin/AdminDraftPage.tsx:359  unlock
+      src/components/admin/AdminDraftPage.tsx:675  unlock
+  [transition-all] transition: all. Name the properties (transform, opacity).  (25×)
+      src/components/guardian/Footer.tsx:22  transition-all
+      src/components/guardian/JobsView.tsx:321  transition-all
+      src/components/guardian/LegalCopilotView.tsx:238  transition-all
+      src/components/guardian/LegalCopilotView.tsx:252  transition-all
+      src/components/guardian/LegalCopilotView.tsx:256  transition-all
+      src/components/guardian/LoginView.tsx:75  transition-all
+      … 19 more
+  [glass] Backdrop blur. One sticky bar at most; glass cards are a tell.  (5×)
+      src/components/guardian/JobsView.tsx:444  backdrop-blur
+      src/components/guardian/JobsView.tsx:553  backdrop-blur
+      src/components/guardian/LegalCopilotView.tsx:238  backdrop-blur
+      src/components/guardian/LegalCopilotView.tsx:252  backdrop-blur
+      src/components/guardian/RecruiterView.tsx:504  backdrop-blur
+  [bounce] Looping attention animation (bounce / ping / pulse dot).  (4×)
+      src/components/guardian/LegalCopilotView.tsx:119  animate-pulse
+      src/components/guardian/LegalCopilotView.tsx:158  animate-pulse
+      src/components/guardian/LoginView.tsx:51  animate-pulse
+      src/components/ui/skeleton.tsx:4  animate-pulse
+  [em-dash] Em-dash habit. Use a full stop or a comma; keep at most one or two on a page.  (1×)
+      (all files):0  45 em dashes
+
+RESULT: 432 FAIL, 126 WARN — fix the FAILs before rendering.
+Interface fragments marked data-ui keep their own borders and shadows. Any other line that must keep a flagged pattern for a real reason can carry the comment taste-skill-ignore.

@@ -28,7 +28,12 @@ import {
 } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/recruiter/members")({
-  head: () => ({ meta: [{ title: "Thành viên công ty — GuardianWork" }] }),
+  head: () => ({
+    meta: [
+      { name: "robots", content: "noindex, nofollow" },
+      { title: "Thành viên công ty — GuardianWork" },
+    ],
+  }),
   component: CompanyMembersPage,
 });
 

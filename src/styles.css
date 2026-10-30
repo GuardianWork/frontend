@@ -9,7 +9,21 @@
   --font-display: "Hanken Grotesk", system-ui, sans-serif;
   --font-body: "Hanken Grotesk", system-ui, -apple-system, sans-serif;
   --font-sans: "Hanken Grotesk", system-ui, sans-serif;
-  --font-mono: "Geist Mono", monospace;
+  --font-mono: "Hanken Grotesk", system-ui, sans-serif;
+
+  --color-primary-foreground: var(--on-primary);
+  --color-secondary-foreground: var(--color-ink);
+  --color-muted: var(--color-paper-2);
+  --color-muted-foreground: var(--color-ink-2);
+  --color-accent-foreground: var(--color-ink);
+  --color-card: var(--color-paper);
+  --color-card-foreground: var(--color-ink);
+  --color-popover: var(--color-paper);
+  --color-popover-foreground: var(--color-ink);
+  --color-input: var(--color-rule-2);
+  --color-ring: var(--color-accent);
+  --color-destructive: var(--error);
+  --color-destructive-foreground: var(--color-paper);
 
   /* Theme color mapping */
   --color-paper: var(--color-paper);
@@ -29,8 +43,8 @@
   --color-rule-2: var(--color-rule-2);
   --color-mint: var(--color-mint);
   --color-lavender: var(--color-lavender);
-  --color-emerald: #10b981;
-  --color-violet: #8b5cf6;
+  --color-emerald: var(--color-mint);
+  --color-violet: var(--color-accent);
 
   /* Admin console compatibility */
   --color-background: var(--background);
@@ -64,9 +78,9 @@
 :root {
   --radius-sm: 0.25rem;
   --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  --radius-2xl: 1.5rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.5rem;
+  --radius-2xl: 1rem;
   --radius-pill: 9999px;
 
   --color-paper: #ffffff;

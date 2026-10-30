@@ -1,0 +1,840 @@
+[
+  {
+    "role": "public",
+    "route": "/vn",
+    "width": 1440,
+    "url": "http://localhost:5157/vn",
+    "title": "GuardianWork — Việc làm đa ngành tại Việt Nam",
+    "h1": [
+      "Công việc tiếp theo"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tìm việc làm đa ngành, khám phá doanh nghiệp và tham khảo thông tin về quyền lợi lao động trên GuardianWork.",
+    "headings": [
+      "Cơ hội việc làm",
+      "Khám phá theo ngành nghề",
+      "Chuẩn bị hồ sơ",
+      "Tìm kiếm nhân sự tiếp theo.",
+      "Từ tìm việc đến ứng tuyển"
+    ]
+  },
+  {
+    "role": "public",
+    "route": "/vn",
+    "width": 390,
+    "url": "http://localhost:5157/vn",
+    "title": "GuardianWork — Việc làm đa ngành tại Việt Nam",
+    "h1": [
+      "Công việc tiếp theo"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tìm việc làm đa ngành, khám phá doanh nghiệp và tham khảo thông tin về quyền lợi lao động trên GuardianWork.",
+    "headings": [
+      "Cơ hội việc làm",
+      "Khám phá theo ngành nghề",
+      "Chuẩn bị hồ sơ",
+      "Tìm kiếm nhân sự tiếp theo.",
+      "Từ tìm việc đến ứng tuyển"
+    ]
+  },
+  {
+    "role": "public",
+    "route": "/jobs",
+    "width": 1440,
+    "url": "http://localhost:5157/jobs",
+    "title": "Tìm việc làm đa ngành — GuardianWork",
+    "h1": [
+      "Tìm việc làm"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tìm việc làm theo vị trí, kỹ năng, ngành nghề, địa điểm và mức lương tại Việt Nam",
+    "headings": [
+      "Kết quả tìm kiếm việc làm"
+    ]
+  },
+  {
+    "role": "public",
+    "route": "/jobs",
+    "width": 390,
+    "url": "http://localhost:5157/jobs",
+    "title": "Tìm việc làm đa ngành — GuardianWork",
+    "h1": [
+      "Tìm việc làm"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tìm việc làm theo vị trí, kỹ năng, ngành nghề, địa điểm và mức lương tại Việt Nam",
+    "headings": [
+      "Kết quả tìm kiếm việc làm"
+    ]
+  },
+  {
+    "role": "public",
+    "route": "/login",
+    "width": 1440,
+    "url": "http://localhost:5157/login?role=candidate",
+    "title": "Đăng nhập — GuardianWork",
+    "h1": [
+      "Đăng nhập GuardianWork"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Đăng nhập GuardianWork để tìm việc, quản lý hồ sơ hoặc tuyển dụng nhân tài.",
+    "headings": []
+  },
+  {
+    "role": "public",
+    "route": "/login",
+    "width": 390,
+    "url": "http://localhost:5157/login?role=candidate",
+    "title": "Đăng nhập — GuardianWork",
+    "h1": [
+      "Đăng nhập GuardianWork"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Đăng nhập GuardianWork để tìm việc, quản lý hồ sơ hoặc tuyển dụng nhân tài.",
+    "headings": []
+  },
+  {
+    "role": "public",
+    "route": "/register",
+    "width": 1440,
+    "url": "http://localhost:5157/register?role=candidate",
+    "title": "Đăng ký tìm việc & tuyển dụng — GuardianWork",
+    "h1": [
+      "Tạo tài khoản của bạn"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tạo tài khoản GuardianWork để tìm việc hoặc tuyển dụng. Lựa chọn hành trình phù hợp với bạn.",
+    "headings": []
+  },
+  {
+    "role": "public",
+    "route": "/register",
+    "width": 390,
+    "url": "http://localhost:5157/register?role=candidate",
+    "title": "Đăng ký tìm việc & tuyển dụng — GuardianWork",
+    "h1": [
+      "Tạo tài khoản của bạn"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tạo tài khoản GuardianWork để tìm việc hoặc tuyển dụng. Lựa chọn hành trình phù hợp với bạn.",
+    "headings": []
+  },
+  {
+    "role": "public",
+    "route": "/company-invitations",
+    "width": 1440,
+    "url": "http://localhost:5157/company-invitations",
+    "title": "Lời mời tham gia công ty — GuardianWork",
+    "h1": [
+      "Lời mời tham gia công ty"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tìm việc làm đa ngành tại Việt Nam: kinh doanh, tiếp thị, kế toán, nhân sự, vận hành và công nghệ. Kết nối ứng viên với doanh nghiệp trên GuardianWork.",
+    "headings": []
+  },
+  {
+    "role": "public",
+    "route": "/company-invitations",
+    "width": 390,
+    "url": "http://localhost:5157/company-invitations",
+    "title": "Lời mời tham gia công ty — GuardianWork",
+    "h1": [
+      "Lời mời tham gia công ty"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tìm việc làm đa ngành tại Việt Nam: kinh doanh, tiếp thị, kế toán, nhân sự, vận hành và công nghệ. Kết nối ứng viên với doanh nghiệp trên GuardianWork.",
+    "headings": []
+  },
+  {
+    "role": "candidate",
+    "route": "/candidate",
+    "width": 1440,
+    "url": "http://localhost:5157/candidate",
+    "title": "Candidate Portal — GuardianWork",
+    "h1": [
+      "Không gian ứng viên"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Không gian ứng viên để quản lý hồ sơ, CV và tham khảo thông tin lao động.",
+    "headings": [
+      "GuardianWork"
+    ]
+  },
+  {
+    "role": "candidate",
+    "route": "/candidate",
+    "width": 390,
+    "url": "http://localhost:5157/candidate",
+    "title": "Candidate Portal — GuardianWork",
+    "h1": [
+      "Không gian ứng viên"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Không gian ứng viên để quản lý hồ sơ, CV và tham khảo thông tin lao động.",
+    "headings": [
+      "GuardianWork"
+    ]
+  },
+  {
+    "role": "candidate",
+    "route": "/candidate/profile",
+    "width": 1440,
+    "url": "http://localhost:5157/candidate/profile",
+    "title": "Hồ sơ cá nhân — GuardianWork",
+    "h1": [
+      "Hồ sơ cá nhân"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Cập nhật thông tin, kinh nghiệm, học vấn và kỹ năng trong hồ sơ ứng viên GuardianWork.",
+    "headings": [
+      "GuardianWork",
+      "Nguyen Van An (Alex)",
+      "Liên hệ",
+      "Hồ sơ xin việc",
+      "Mức độ hoàn thiện",
+      "Giới thiệu bản thân",
+      "Kinh nghiệm làm việc",
+      "Học vấn",
+      "Kỹ năng"
+    ]
+  },
+  {
+    "role": "candidate",
+    "route": "/candidate/profile",
+    "width": 390,
+    "url": "http://localhost:5157/candidate/profile",
+    "title": "Hồ sơ cá nhân — GuardianWork",
+    "h1": [
+      "Hồ sơ cá nhân"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Cập nhật thông tin, kinh nghiệm, học vấn và kỹ năng trong hồ sơ ứng viên GuardianWork.",
+    "headings": [
+      "GuardianWork",
+      "Nguyen Van An (Alex)",
+      "Liên hệ",
+      "Hồ sơ xin việc",
+      "Mức độ hoàn thiện",
+      "Giới thiệu bản thân",
+      "Kinh nghiệm làm việc",
+      "Học vấn",
+      "Kỹ năng"
+    ]
+  },
+  {
+    "role": "candidate",
+    "route": "/candidate/cvs",
+    "width": 1440,
+    "url": "http://localhost:5157/candidate/cvs",
+    "title": "Quản lý hồ sơ xin việc — GuardianWork",
+    "h1": [
+      "Hồ sơ xin việc"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tải lên, đặt mặc định, đổi tên và xóa hồ sơ xin việc dùng khi ứng tuyển trên GuardianWork.",
+    "headings": [
+      "GuardianWork",
+      "Danh sách hồ sơ",
+      "Số lượng hồ sơ",
+      "Cách hoạt động",
+      "Trước khi tải lên",
+      "Hồ sơ đã dùng để ứng tuyển"
+    ]
+  },
+  {
+    "role": "candidate",
+    "route": "/candidate/cvs",
+    "width": 390,
+    "url": "http://localhost:5157/candidate/cvs",
+    "title": "Quản lý hồ sơ xin việc — GuardianWork",
+    "h1": [
+      "Hồ sơ xin việc"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tải lên, đặt mặc định, đổi tên và xóa hồ sơ xin việc dùng khi ứng tuyển trên GuardianWork.",
+    "headings": [
+      "GuardianWork",
+      "Danh sách hồ sơ",
+      "Số lượng hồ sơ",
+      "Cách hoạt động",
+      "Trước khi tải lên",
+      "Hồ sơ đã dùng để ứng tuyển"
+    ]
+  },
+  {
+    "role": "candidate",
+    "route": "/candidate/copilot",
+    "width": 1440,
+    "url": "http://localhost:5157/candidate/copilot",
+    "title": "AI Legal Copilot — GuardianWork Candidate",
+    "h1": [
+      "AI Legal Copilot"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "AI-assisted legal review for Vietnamese Labour Code 2019, probation ceilings, and overtime compliance.",
+    "headings": [
+      "GuardianWork"
+    ]
+  },
+  {
+    "role": "candidate",
+    "route": "/candidate/copilot",
+    "width": 390,
+    "url": "http://localhost:5157/candidate/copilot",
+    "title": "AI Legal Copilot — GuardianWork Candidate",
+    "h1": [
+      "AI Legal Copilot"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "AI-assisted legal review for Vietnamese Labour Code 2019, probation ceilings, and overtime compliance.",
+    "headings": [
+      "GuardianWork"
+    ]
+  },
+  {
+    "role": "candidate",
+    "route": "/candidate/jobs/apply",
+    "width": 1440,
+    "url": "http://localhost:5157/candidate/jobs/apply",
+    "title": "Ứng tuyển — GuardianWork",
+    "h1": [
+      "Tin tuyển dụng không còn nhận hồ sơ"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Kiểm tra hồ sơ đính kèm, thông tin liên hệ và thư giới thiệu trước khi gửi đơn ứng tuyển trên GuardianWork.",
+    "headings": []
+  },
+  {
+    "role": "candidate",
+    "route": "/candidate/jobs/apply",
+    "width": 390,
+    "url": "http://localhost:5157/candidate/jobs/apply",
+    "title": "Ứng tuyển — GuardianWork",
+    "h1": [
+      "Tin tuyển dụng không còn nhận hồ sơ"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Kiểm tra hồ sơ đính kèm, thông tin liên hệ và thư giới thiệu trước khi gửi đơn ứng tuyển trên GuardianWork.",
+    "headings": []
+  },
+  {
+    "role": "recruiter",
+    "route": "/recruiter",
+    "width": 1440,
+    "url": "http://localhost:5157/recruiter",
+    "title": "Recruiter Hub & Sourcing — GuardianWork",
+    "h1": [
+      "Kết nối với công ty của bạn"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "AI Sourcing agent, talent pipeline, and legally-audited job management for employers.",
+    "headings": []
+  },
+  {
+    "role": "recruiter",
+    "route": "/recruiter",
+    "width": 390,
+    "url": "http://localhost:5157/recruiter",
+    "title": "Recruiter Hub & Sourcing — GuardianWork",
+    "h1": [
+      "Kết nối với công ty của bạn"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "AI Sourcing agent, talent pipeline, and legally-audited job management for employers.",
+    "headings": []
+  },
+  {
+    "role": "recruiter",
+    "route": "/recruiter/jobs",
+    "width": 1440,
+    "url": "http://localhost:5157/recruiter/jobs",
+    "title": "Tin tuyển dụng — GuardianWork Recruiter",
+    "h1": [
+      "Kết nối với công ty của bạn"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tìm việc làm đa ngành tại Việt Nam: kinh doanh, tiếp thị, kế toán, nhân sự, vận hành và công nghệ. Kết nối ứng viên với doanh nghiệp trên GuardianWork.",
+    "headings": []
+  },
+  {
+    "role": "recruiter",
+    "route": "/recruiter/jobs",
+    "width": 390,
+    "url": "http://localhost:5157/recruiter/jobs",
+    "title": "Tin tuyển dụng — GuardianWork Recruiter",
+    "h1": [
+      "Kết nối với công ty của bạn"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tìm việc làm đa ngành tại Việt Nam: kinh doanh, tiếp thị, kế toán, nhân sự, vận hành và công nghệ. Kết nối ứng viên với doanh nghiệp trên GuardianWork.",
+    "headings": []
+  },
+  {
+    "role": "recruiter",
+    "route": "/recruiter/applications",
+    "width": 1440,
+    "url": "http://localhost:5157/recruiter/applications",
+    "title": "Đơn ứng tuyển — GuardianWork",
+    "h1": [
+      "Kết nối với công ty của bạn"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tìm việc làm đa ngành tại Việt Nam: kinh doanh, tiếp thị, kế toán, nhân sự, vận hành và công nghệ. Kết nối ứng viên với doanh nghiệp trên GuardianWork.",
+    "headings": []
+  },
+  {
+    "role": "recruiter",
+    "route": "/recruiter/applications",
+    "width": 390,
+    "url": "http://localhost:5157/recruiter/applications",
+    "title": "Đơn ứng tuyển — GuardianWork",
+    "h1": [
+      "Kết nối với công ty của bạn"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tìm việc làm đa ngành tại Việt Nam: kinh doanh, tiếp thị, kế toán, nhân sự, vận hành và công nghệ. Kết nối ứng viên với doanh nghiệp trên GuardianWork.",
+    "headings": []
+  },
+  {
+    "role": "recruiter",
+    "route": "/recruiter/talent",
+    "width": 1440,
+    "url": "http://localhost:5157/recruiter/talent",
+    "title": "Hồ sơ ứng viên — GuardianWork Recruiter",
+    "h1": [
+      "Kết nối với công ty của bạn"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Danh sách hồ sơ ứng viên minh họa theo chuyên môn và địa điểm.",
+    "headings": []
+  },
+  {
+    "role": "recruiter",
+    "route": "/recruiter/talent",
+    "width": 390,
+    "url": "http://localhost:5157/recruiter/talent",
+    "title": "Hồ sơ ứng viên — GuardianWork Recruiter",
+    "h1": [
+      "Kết nối với công ty của bạn"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Danh sách hồ sơ ứng viên minh họa theo chuyên môn và địa điểm.",
+    "headings": []
+  },
+  {
+    "role": "recruiter",
+    "route": "/recruiter/members",
+    "width": 1440,
+    "url": "http://localhost:5157/recruiter/members",
+    "title": "Thành viên công ty — GuardianWork",
+    "h1": [
+      "Lời mời tham gia công ty"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tìm việc làm đa ngành tại Việt Nam: kinh doanh, tiếp thị, kế toán, nhân sự, vận hành và công nghệ. Kết nối ứng viên với doanh nghiệp trên GuardianWork.",
+    "headings": []
+  },
+  {
+    "role": "recruiter",
+    "route": "/recruiter/members",
+    "width": 390,
+    "url": "http://localhost:5157/recruiter/members",
+    "title": "Thành viên công ty — GuardianWork",
+    "h1": [
+      "Lời mời tham gia công ty"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tìm việc làm đa ngành tại Việt Nam: kinh doanh, tiếp thị, kế toán, nhân sự, vận hành và công nghệ. Kết nối ứng viên với doanh nghiệp trên GuardianWork.",
+    "headings": []
+  },
+  {
+    "role": "recruiter",
+    "route": "/recruiter/verification",
+    "width": 1440,
+    "url": "http://localhost:5157/recruiter/verification",
+    "title": "Đăng ký và xác minh công ty — GuardianWork",
+    "h1": [
+      "Đăng ký công ty"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tìm việc làm đa ngành tại Việt Nam: kinh doanh, tiếp thị, kế toán, nhân sự, vận hành và công nghệ. Kết nối ứng viên với doanh nghiệp trên GuardianWork.",
+    "headings": [
+      "Thông tin doanh nghiệp"
+    ]
+  },
+  {
+    "role": "recruiter",
+    "route": "/recruiter/verification",
+    "width": 390,
+    "url": "http://localhost:5157/recruiter/verification",
+    "title": "Đăng ký và xác minh công ty — GuardianWork",
+    "h1": [
+      "Đăng ký công ty"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tìm việc làm đa ngành tại Việt Nam: kinh doanh, tiếp thị, kế toán, nhân sự, vận hành và công nghệ. Kết nối ứng viên với doanh nghiệp trên GuardianWork.",
+    "headings": [
+      "Thông tin doanh nghiệp"
+    ]
+  },
+  {
+    "role": "owner",
+    "route": "/recruiter",
+    "width": 1440,
+    "url": "http://localhost:5157/recruiter",
+    "title": "Recruiter Hub & Sourcing — GuardianWork",
+    "h1": [
+      "Hồ sơ công ty đang chờ duyệt"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "AI Sourcing agent, talent pipeline, and legally-audited job management for employers.",
+    "headings": []
+  },
+  {
+    "role": "owner",
+    "route": "/recruiter",
+    "width": 390,
+    "url": "http://localhost:5157/recruiter",
+    "title": "Recruiter Hub & Sourcing — GuardianWork",
+    "h1": [
+      "Hồ sơ công ty đang chờ duyệt"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "AI Sourcing agent, talent pipeline, and legally-audited job management for employers.",
+    "headings": []
+  },
+  {
+    "role": "owner",
+    "route": "/recruiter/members",
+    "width": 1440,
+    "url": "http://localhost:5157/recruiter/members",
+    "title": "Thành viên công ty — GuardianWork",
+    "h1": [
+      "Hồ sơ công ty đang chờ duyệt"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tìm việc làm đa ngành tại Việt Nam: kinh doanh, tiếp thị, kế toán, nhân sự, vận hành và công nghệ. Kết nối ứng viên với doanh nghiệp trên GuardianWork.",
+    "headings": []
+  },
+  {
+    "role": "owner",
+    "route": "/recruiter/members",
+    "width": 390,
+    "url": "http://localhost:5157/recruiter/members",
+    "title": "Thành viên công ty — GuardianWork",
+    "h1": [
+      "Hồ sơ công ty đang chờ duyệt"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tìm việc làm đa ngành tại Việt Nam: kinh doanh, tiếp thị, kế toán, nhân sự, vận hành và công nghệ. Kết nối ứng viên với doanh nghiệp trên GuardianWork.",
+    "headings": []
+  },
+  {
+    "role": "owner",
+    "route": "/recruiter/verification",
+    "width": 1440,
+    "url": "http://localhost:5157/recruiter/verification",
+    "title": "Đăng ký và xác minh công ty — GuardianWork",
+    "h1": [
+      "Hồ sơ công ty"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tìm việc làm đa ngành tại Việt Nam: kinh doanh, tiếp thị, kế toán, nhân sự, vận hành và công nghệ. Kết nối ứng viên với doanh nghiệp trên GuardianWork.",
+    "headings": [
+      "Thông tin doanh nghiệp"
+    ]
+  },
+  {
+    "role": "owner",
+    "route": "/recruiter/verification",
+    "width": 390,
+    "url": "http://localhost:5157/recruiter/verification",
+    "title": "Đăng ký và xác minh công ty — GuardianWork",
+    "h1": [
+      "Hồ sơ công ty"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tìm việc làm đa ngành tại Việt Nam: kinh doanh, tiếp thị, kế toán, nhân sự, vận hành và công nghệ. Kết nối ứng viên với doanh nghiệp trên GuardianWork.",
+    "headings": [
+      "Thông tin doanh nghiệp"
+    ]
+  },
+  {
+    "role": "staff",
+    "route": "/staff",
+    "width": 1440,
+    "url": "http://localhost:5158/staff",
+    "title": "Tổng quan Platform staff — GuardianWork",
+    "h1": [
+      "Tổng quan Platform staff"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tổng quan hồ sơ xác minh, báo cáo vi phạm, tin tuyển dụng và tài khoản.",
+    "headings": [
+      "Quản lý tin tuyển dụng",
+      "Nguyễn Quản trị"
+    ]
+  },
+  {
+    "role": "staff",
+    "route": "/staff",
+    "width": 390,
+    "url": "http://localhost:5158/staff",
+    "title": "Tổng quan Platform staff — GuardianWork",
+    "h1": [
+      "Tổng quan Platform staff"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tổng quan hồ sơ xác minh, báo cáo vi phạm, tin tuyển dụng và tài khoản.",
+    "headings": [
+      "Quản lý tin tuyển dụng",
+      "Nguyễn Quản trị"
+    ]
+  },
+  {
+    "role": "staff",
+    "route": "/staff/verifications",
+    "width": 1440,
+    "url": "http://localhost:5158/staff/verifications?status=PENDING&page=0",
+    "title": "Hồ sơ xác minh công ty — Platform staff GuardianWork",
+    "h1": [
+      "Hồ sơ xác minh công ty"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tìm việc làm đa ngành tại Việt Nam: kinh doanh, tiếp thị, kế toán, nhân sự, vận hành và công nghệ. Kết nối ứng viên với doanh nghiệp trên GuardianWork.",
+    "headings": []
+  },
+  {
+    "role": "staff",
+    "route": "/staff/verifications",
+    "width": 390,
+    "url": "http://localhost:5158/staff/verifications?status=PENDING&page=0",
+    "title": "Hồ sơ xác minh công ty — Platform staff GuardianWork",
+    "h1": [
+      "Hồ sơ xác minh công ty"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tìm việc làm đa ngành tại Việt Nam: kinh doanh, tiếp thị, kế toán, nhân sự, vận hành và công nghệ. Kết nối ứng viên với doanh nghiệp trên GuardianWork.",
+    "headings": []
+  },
+  {
+    "role": "staff",
+    "route": "/staff/jobs",
+    "width": 1440,
+    "url": "http://localhost:5158/staff/jobs",
+    "title": "Quản lý tin tuyển dụng — Platform staff GuardianWork",
+    "h1": [
+      "Quản lý tin tuyển dụng"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tìm việc làm đa ngành tại Việt Nam: kinh doanh, tiếp thị, kế toán, nhân sự, vận hành và công nghệ. Kết nối ứng viên với doanh nghiệp trên GuardianWork.",
+    "headings": [
+      "Tin tuyển dụng gần đây"
+    ]
+  },
+  {
+    "role": "staff",
+    "route": "/staff/jobs",
+    "width": 390,
+    "url": "http://localhost:5158/staff/jobs",
+    "title": "Quản lý tin tuyển dụng — Platform staff GuardianWork",
+    "h1": [
+      "Quản lý tin tuyển dụng"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tìm việc làm đa ngành tại Việt Nam: kinh doanh, tiếp thị, kế toán, nhân sự, vận hành và công nghệ. Kết nối ứng viên với doanh nghiệp trên GuardianWork.",
+    "headings": [
+      "Tin tuyển dụng gần đây"
+    ]
+  },
+  {
+    "role": "staff",
+    "route": "/staff/reports",
+    "width": 1440,
+    "url": "http://localhost:5158/staff/reports",
+    "title": "Báo cáo vi phạm — Platform staff GuardianWork",
+    "h1": [
+      "Báo cáo vi phạm"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tìm việc làm đa ngành tại Việt Nam: kinh doanh, tiếp thị, kế toán, nhân sự, vận hành và công nghệ. Kết nối ứng viên với doanh nghiệp trên GuardianWork.",
+    "headings": [
+      "Báo cáo gần đây"
+    ]
+  },
+  {
+    "role": "staff",
+    "route": "/staff/reports",
+    "width": 390,
+    "url": "http://localhost:5158/staff/reports",
+    "title": "Báo cáo vi phạm — Platform staff GuardianWork",
+    "h1": [
+      "Báo cáo vi phạm"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tìm việc làm đa ngành tại Việt Nam: kinh doanh, tiếp thị, kế toán, nhân sự, vận hành và công nghệ. Kết nối ứng viên với doanh nghiệp trên GuardianWork.",
+    "headings": [
+      "Báo cáo gần đây"
+    ]
+  },
+  {
+    "role": "staff",
+    "route": "/staff/accounts",
+    "width": 1440,
+    "url": "http://localhost:5158/staff/accounts",
+    "title": "Quản lý tài khoản — Platform staff GuardianWork",
+    "h1": [
+      "Quản lý tài khoản"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tìm việc làm đa ngành tại Việt Nam: kinh doanh, tiếp thị, kế toán, nhân sự, vận hành và công nghệ. Kết nối ứng viên với doanh nghiệp trên GuardianWork.",
+    "headings": [
+      "Tài khoản mẫu"
+    ]
+  },
+  {
+    "role": "staff",
+    "route": "/staff/accounts",
+    "width": 390,
+    "url": "http://localhost:5158/staff/accounts",
+    "title": "Quản lý tài khoản — Platform staff GuardianWork",
+    "h1": [
+      "Quản lý tài khoản"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tìm việc làm đa ngành tại Việt Nam: kinh doanh, tiếp thị, kế toán, nhân sự, vận hành và công nghệ. Kết nối ứng viên với doanh nghiệp trên GuardianWork.",
+    "headings": [
+      "Tài khoản mẫu"
+    ]
+  },
+  {
+    "role": "staff",
+    "route": "/staff/audit-logs",
+    "width": 1440,
+    "url": "http://localhost:5158/staff/audit-logs",
+    "title": "Audit logs — Platform staff GuardianWork",
+    "h1": [
+      "Audit logs"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tìm việc làm đa ngành tại Việt Nam: kinh doanh, tiếp thị, kế toán, nhân sự, vận hành và công nghệ. Kết nối ứng viên với doanh nghiệp trên GuardianWork.",
+    "headings": [
+      "Nhật ký thay đổi"
+    ]
+  },
+  {
+    "role": "staff",
+    "route": "/staff/audit-logs",
+    "width": 390,
+    "url": "http://localhost:5158/staff/audit-logs",
+    "title": "Audit logs — Platform staff GuardianWork",
+    "h1": [
+      "Audit logs"
+    ],
+    "overflow": false,
+    "font": "\"Hanken Grotesk\", system-ui, -apple-system, sans-serif",
+    "fonts": true,
+    "description": "Tìm việc làm đa ngành tại Việt Nam: kinh doanh, tiếp thị, kế toán, nhân sự, vận hành và công nghệ. Kết nối ứng viên với doanh nghiệp trên GuardianWork.",
+    "headings": [
+      "Nhật ký thay đổi"
+    ]
+  }
+]

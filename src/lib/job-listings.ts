@@ -260,8 +260,8 @@ export const JOBS: JobItem[] = [
 
 /** Vietnamese labels for badges that are authored in English (legacy seed data). */
 const BADGE_LABELS: Partial<Record<JobItem["badge"], string>> = {
-  "100% Audited": "Đã kiểm định 100%",
-  "Điều 98 Verified": "Điều 98 đã xác minh",
+  "100% Audited": "Huy hiệu minh họa",
+  "Điều 98 Verified": "Huy hiệu minh họa",
   "High Salary": "Lương cao",
 };
 

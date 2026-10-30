@@ -34,7 +34,12 @@ export const Route = createFileRoute("/staff/verifications")({
         ? search.page
         : 0,
   }),
-  head: () => ({ meta: [{ title: "Hồ sơ xác minh công ty — Platform staff GuardianWork" }] }),
+  head: () => ({
+    meta: [
+      { name: "robots", content: "noindex, nofollow" },
+      { title: "Hồ sơ xác minh công ty — Platform staff GuardianWork" },
+    ],
+  }),
   component: AdminVerificationsPage,
 });
 const STATUS_TONES = {

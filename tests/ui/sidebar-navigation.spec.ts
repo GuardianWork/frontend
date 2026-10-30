@@ -32,7 +32,7 @@ test("candidate navigation shares Staff styling and follows selection on mobile 
   page,
 }, info) => {
   await login(page, "candidate_demo");
-  await page.goto("/candidate/jobs");
+  await page.goto("/candidate");
   const nav = page.getByRole("navigation", { name: "Điều hướng chính", exact: true });
   if (info.project.name === "mobile")
     await page.getByRole("button", { name: "Mở điều hướng" }).click();
@@ -43,10 +43,10 @@ test("candidate navigation shares Staff styling and follows selection on mobile 
   await expect(selected).toHaveAttribute("aria-current", "page");
   await expect(nav.locator('a[aria-current="page"]')).toHaveCount(1);
   await page.mouse.move(600, 300);
-  await expect(selected).toHaveCSS("border-radius", "12px");
+  await expect(selected).toHaveCSS("border-radius", "6px");
   await expect(selected.locator(".workspace-nav-icon")).toHaveCSS(
     "background-color",
-    "rgb(8, 104, 201)",
+    "rgba(0, 0, 0, 0)",
   );
   await selected.focus();
   await expect(selected).toBeFocused();
@@ -95,10 +95,10 @@ test("recruiter navigation shares Staff styling without selecting overview on jo
   );
   await expect(nav.locator('a[aria-current="page"]')).toHaveCount(1);
   await page.mouse.move(600, 300);
-  await expect(selected).toHaveCSS("border-radius", "12px");
+  await expect(selected).toHaveCSS("border-radius", "6px");
   await expect(selected.locator(".workspace-nav-icon")).toHaveCSS(
     "background-color",
-    "rgb(8, 104, 201)",
+    "rgba(0, 0, 0, 0)",
   );
   await page.screenshot({
     path: `/tmp/guardianwork-refinement/${info.project.name}-recruiter-sidebar.png`,

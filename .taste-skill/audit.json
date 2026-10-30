@@ -1,0 +1,99 @@
+{
+  "phase": "Step 1 only; awaiting approval",
+  "design_source": "/home/vy/.agents/skills/design-taste-frontend/SKILL.md",
+  "version_mismatch": "Installed tasteskill v2 lacks Section 11.B, Section 11.D, Section 14 Pre-Flight, and named three-dial definitions. Followed existing-brand, redesign/review, app-screen, and critique guidance; no Impeccable used.",
+  "preservation": [
+    "React 19, TanStack Start and Router, Tailwind 4, Radix",
+    "All URLs, search contracts, redirects, navigation labels",
+    "Auth restore, token handling, invitation secrets, separate staff origin",
+    "Employer onboarding stages, email verification, company membership permissions",
+    "API-backed job publishing with revision/version/action contracts",
+    "Company evidence uploads, verification decisions and history",
+    "Candidate profile/contact validation, CV operations and application flows",
+    "Vietnamese dictionaries and legal content unchanged"
+  ],
+  "brand": {
+    "mark": "ShieldCheck shield with check and GuardianWork wordmark; Work blue in public lockup",
+    "font": "Hanken Grotesk 400–800; Geist Mono legacy secondary; Material Symbols plus semantic icons and Lucide",
+    "ground": "#ffffff",
+    "ground2": "#f3f6fb",
+    "ground3": "#e8eff8",
+    "ink": "#172d49",
+    "ink2": "#435771",
+    "ink3": "#5a6d84",
+    "accent": "#0868c9",
+    "accentHover": "#0755a3",
+    "accentDeep": "#064887",
+    "accentSubtle": "#e9f3ff",
+    "secondaryAccent": "#df650d",
+    "positive": "#147953",
+    "error": "#b42318",
+    "borders": [
+      "#dde5ef",
+      "#afbed0"
+    ],
+    "radius": "4, 8, 12, 16, 24px and pill; heterogeneous component overrides",
+    "assets": "Seven local GuardianWork WebP illustrations; favicon; external Dicebear avatars; existing job screenshot",
+    "theme": "Single guardian-blue theme; legacy theme preference cleared"
+  },
+  "inferred_dials": {
+    "qualification": "Qualitative inference only; installed skill does not define named dials or numeric scale",
+    "design_variance": "Existing low-to-moderate, inconsistent by shell; preserve identity and task-specific composition",
+    "motion_intensity": "Existing low; public inspector measured zero moving elements; app motion should stay feedback-only",
+    "visual_density": "Existing uneven; spacious welcome/gate screens and dense tables; task screens need purpose-specific density"
+  },
+  "seo": {
+    "language": "Root html lang=vi; UTF-8; viewport present",
+    "titles": "Most route surfaces define title/description; some English and obsolete tech/AI claims remain",
+    "social": "Root og:title, og:description, og:type, twitter:card; no og:image or og:url found",
+    "canonical": "No canonical or hreflang link implementation found",
+    "structuredData": "No JSON-LD found",
+    "robots": "User-agent * Allow /; no Sitemap declaration",
+    "sitemap": "BASE_URL empty, relative loc values; only /, /candidates, /compliance, /analytics; three target staff-bound legacy redirects; omits /vn and /jobs",
+    "privateIndexing": "No noindex implementation found for auth/private routes",
+    "productionUnknown": [
+      "Index coverage",
+      "Search Console",
+      "Core Web Vitals",
+      "Production redirect/status semantics",
+      "Production font delivery"
+    ],
+    "reference": "VietnamWorks homepage fetch returned 403; no live competitor measurements claimed"
+  },
+  "baseline": {
+    "publicInspector": "11 FAIL, 6 WARN; 1440, 768, 390px",
+    "publicHeadline": "47.5px at desktop, 2 lines; 32px mobile, 4 lines",
+    "fontSizes": "11,12,13,14,15,16,17,18,22,28,30,48px",
+    "publicBody": "14px dominant",
+    "sourceLint": "432 FAIL, 126 WARN across 252 files; raw page-mode lint includes unused files and valid app conventions, not a route defect count",
+    "routeCaptures": "50 initial desktop/mobile captures across public, candidate, recruiter, owner, staff; no document-level overflow measured; recruiter/owner gated states accurately preserved",
+    "verifiedCaptures": "14 further verified-owner desktop/mobile captures using existing repository fixture; mock job-list errors visible; no production verification changed"
+  },
+  "critique": {
+    "round": "before 1",
+    "seenInOneSecond": "Blue recruitment search with a shield wordmark and stock people illustration",
+    "idea": "Company verification and worker protection, expressed in copy but not consistently in evidence or task structure",
+    "liveThing": "Working keyword/location search into /jobs",
+    "layoutWords": "hero=split/search; opportunities=card-grid; industries=icon-grid; CV/employer=split; process=three-columns; footer=split",
+    "scores": {
+      "design": 5.5,
+      "usability": 6,
+      "creativity": 4.5,
+      "content": 4.5,
+      "overall": 5.4
+    },
+    "caps": "Inspector failures cap overall at 6; fewer than four images and four-line mobile headline also apply",
+    "topThree": [
+      "Mobile hero consumes most of first screen; four-line heading plus long claims delays actual opportunities",
+      "Rounded cards, boxed search and repeated peer layouts dominate instead of a clear evidence-led hierarchy",
+      "Protection/AI/verified claims and sample profiles exceed demonstrated backend capabilities; disclaimers vary in prominence"
+    ]
+  },
+  "limitations": [
+    "Development/mock rendering; no production data touched",
+    "Browser captures are an audit, not exhaustive keyboard/form/state regression tests",
+    "Verified-company surfaces require explicit local fixture; initial captures do not prove their functional paths",
+    "No implementation, typecheck, tests, production build, push or deploy performed in Step 1"
+  ],
+  "routeCount": 50
+}

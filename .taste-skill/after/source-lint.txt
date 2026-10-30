@@ -1,0 +1,47 @@
+TASTESKILL · LINT   255 file(s)
+
+WARN
+  [shadow] Shadow. Elements at rest carry none; only real overlays (menu, dialog, sticky bar) may.  (79×)
+      src/career.css:362  box-shadow:
+      src/career.css:791  box-shadow:
+      src/career.css:852  box-shadow:
+      src/career.css:2158  box-shadow:
+      src/components/guardian/CandidateProfileView.tsx:81  shadow-sm
+      src/components/guardian/CandidateProfileView.tsx:114  shadow-md
+      … 73 more
+  [mono] Monospace type. Only literal code may be monospace.  (144×)
+      src/career.css:793  font-mono
+      src/components/guardian/CandidateProfileView.tsx:49  font-mono
+      src/components/guardian/CandidateProfileView.tsx:56  font-mono
+      src/components/guardian/CandidateProfileView.tsx:63  font-mono
+      src/components/guardian/CandidateProfileView.tsx:70  font-mono
+      src/components/guardian/CandidateProfileView.tsx:89  font-mono
+      … 138 more
+  [copy] Stock marketing phrase. Say the specific thing the product does.  (3×)
+      src/components/admin/AdminDraftPage.tsx:316  unlock
+      src/components/admin/AdminDraftPage.tsx:359  unlock
+      src/components/admin/AdminDraftPage.tsx:675  unlock
+  [numbering] Decorative index numbering (01 / 02 / 03).  (10×)
+      src/components/guardian/CandidateProfileView.tsx:51  >01<
+      src/components/guardian/CandidateProfileView.tsx:58  >03<
+      src/components/guardian/CandidateProfileView.tsx:65  >04<
+      src/components/guardian/JobsView.tsx:206  >01<
+      src/components/guardian/JobsView.tsx:213  >02<
+      src/components/guardian/JobsView.tsx:220  >03<
+      … 4 more
+  [glass] Backdrop blur. One sticky bar at most; glass cards are a tell.  (5×)
+      src/components/guardian/JobsView.tsx:444  backdrop-blur
+      src/components/guardian/JobsView.tsx:553  backdrop-blur
+      src/components/guardian/LegalCopilotView.tsx:238  backdrop-blur
+      src/components/guardian/LegalCopilotView.tsx:252  backdrop-blur
+      src/components/guardian/RecruiterView.tsx:504  backdrop-blur
+  [bounce] Looping attention animation (bounce / ping / pulse dot).  (4×)
+      src/components/guardian/LegalCopilotView.tsx:119  animate-pulse
+      src/components/guardian/LegalCopilotView.tsx:158  animate-pulse
+      src/components/guardian/LoginView.tsx:51  animate-pulse
+      src/components/ui/skeleton.tsx:4  animate-pulse
+  [em-dash] Em-dash habit. Use a full stop or a comma; keep at most one or two on a page.  (1×)
+      (all files):0  45 em dashes
+
+RESULT: 0 FAIL, 246 WARN
+Interface fragments marked data-ui keep their own borders and shadows. Any other line that must keep a flagged pattern for a real reason can carry the comment taste-skill-ignore.

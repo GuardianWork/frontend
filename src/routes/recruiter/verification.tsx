@@ -14,7 +14,12 @@ import {
 } from "@/services/companyVerification";
 
 export const Route = createFileRoute("/recruiter/verification")({
-  head: () => ({ meta: [{ title: "Đăng ký và xác minh công ty — GuardianWork" }] }),
+  head: () => ({
+    meta: [
+      { name: "robots", content: "noindex, nofollow" },
+      { title: "Đăng ký và xác minh công ty — GuardianWork" },
+    ],
+  }),
   component: CompanyVerificationPage,
 });
 

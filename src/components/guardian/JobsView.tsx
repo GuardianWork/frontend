@@ -248,7 +248,7 @@ export function JobsView() {
               />
             </div>
             <div>
-              <div className="font-mono text-[10px] uppercase font-bold text-accent tracking-wider">
+              <div className="font-mono text-[10px]  font-bold text-accent ">
                 Hồ sơ đã kiểm toán 100%
               </div>
               <h1 className="font-display text-xl sm:text-2xl font-bold text-ink">
@@ -318,7 +318,7 @@ export function JobsView() {
             return (
               <div
                 key={job.id}
-                className="rounded-2xl border border-rule bg-paper hover:border-rule-2 hover:shadow-md transition-all p-5 flex flex-col justify-between group relative overflow-hidden"
+                className="rounded-2xl border border-rule bg-paper hover:border-rule-2 hover:shadow-md transition-colors p-5 flex flex-col justify-between group relative overflow-hidden"
               >
                 <div className="flex flex-col gap-3">
                   {/* Top card row: Company and Match rate */}
@@ -459,7 +459,7 @@ export function JobsView() {
                 />
               </div>
               <div>
-                <span className="font-mono text-xs uppercase font-bold text-accent">
+                <span className="font-mono text-xs  font-bold text-accent">
                   {inspectingJob.company} · {inspectingJob.department}
                 </span>
                 <h2 className="font-display text-2xl font-bold text-ink mt-0.5">
@@ -486,7 +486,7 @@ export function JobsView() {
 
             {/* Description */}
             <div>
-              <h4 className="font-mono text-xs uppercase tracking-wider font-bold text-ink-3 mb-2">
+              <h4 className="font-mono text-xs   font-bold text-ink-3 mb-2">
                 Mô tả công việc
               </h4>
               <p className="font-body text-sm text-ink-2 leading-relaxed">
@@ -496,7 +496,7 @@ export function JobsView() {
 
             {/* Requirements */}
             <div>
-              <h4 className="font-mono text-xs uppercase tracking-wider font-bold text-ink-3 mb-2">
+              <h4 className="font-mono text-xs   font-bold text-ink-3 mb-2">
                 Kỹ năng & Yêu cầu
               </h4>
               <ul className="space-y-1.5 text-sm text-ink-2 font-body">
@@ -579,19 +579,19 @@ export function JobsView() {
 
             <div className="grid grid-cols-2 gap-3 text-xs font-mono">
               <div className="p-3 rounded-xl bg-paper-2 border border-rule">
-                <div className="text-ink-3 uppercase text-[10px]">Điểm Tuân thủ TB</div>
+                <div className="text-ink-3  text-[10px]">Điểm Tuân thủ TB</div>
                 <div className="text-emerald font-bold text-base mt-1">99.4%</div>
               </div>
               <div className="p-3 rounded-xl bg-paper-2 border border-rule">
-                <div className="text-ink-3 uppercase text-[10px]">Bảo vệ Điều 98</div>
+                <div className="text-ink-3  text-[10px]">Bảo vệ Điều 98</div>
                 <div className="text-ink font-bold text-base mt-1">Cam kết</div>
               </div>
               <div className="p-3 rounded-xl bg-paper-2 border border-rule">
-                <div className="text-ink-3 uppercase text-[10px]">Địa bàn hoạt động</div>
+                <div className="text-ink-3  text-[10px]">Địa bàn hoạt động</div>
                 <div className="text-ink font-medium mt-1">Việt Nam & APAC</div>
               </div>
               <div className="p-3 rounded-xl bg-paper-2 border border-rule">
-                <div className="text-ink-3 uppercase text-[10px]">Chế độ làm việc</div>
+                <div className="text-ink-3  text-[10px]">Chế độ làm việc</div>
                 <div className="text-ink font-medium mt-1">Thứ 2 – Thứ 6</div>
               </div>
             </div>

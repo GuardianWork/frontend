@@ -1,0 +1,1957 @@
+{
+ "url": "http://localhost:5137/vn",
+ "at": "2026-10-30T08:43:22.751Z",
+ "allow": [],
+ "viewports": [
+  {
+   "width": 1440,
+   "height": 900,
+   "load": "load",
+   "screens": 4,
+   "filled": [
+    0.63,
+    0.58,
+    0.48,
+    0.52
+   ],
+   "motion": {
+    "elements": 0,
+    "css": 0,
+    "transitions": 0,
+    "scripted": 0,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "page": {
+     "height": 2815,
+     "screens": 3.1,
+     "words": 709,
+     "img": 1,
+     "video": 0,
+     "canvas": 0,
+     "svg": 39,
+     "sections": 5,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 1,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [
+      "08-multi-industry-careers.webp"
+     ],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "Nơi các công ty được xác thực gặp gỡ nhân tài được bảo vệ.",
+     "words": 14,
+     "chars": 58,
+     "lines": 2,
+     "size": 47.5,
+     "vw": 3.3,
+     "font": "Hanken Grotesk",
+     "weight": 800,
+     "tracking": -0.035,
+     "leading": 1.2,
+     "upper": false,
+     "italic": false,
+     "mono": false,
+     "align": "left",
+     "position": "left",
+     "widthRatio": 0.53,
+     "top": 142,
+     "tag": "h1",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "Nơi các công ty được xác thực gặp gỡ nhân tài được bảo vệ.",
+     "words": 14,
+     "lines": 2,
+     "size": 47.5,
+     "font": "Hanken Grotesk"
+    },
+    "headings": [
+     {
+      "text": "Nơi các công ty được xác thực gặp gỡ nhân tài được bảo vệ.",
+      "words": 14,
+      "chars": 58,
+      "lines": 2,
+      "size": 47.5,
+      "vw": 3.3,
+      "font": "Hanken Grotesk",
+      "weight": 800,
+      "tracking": -0.035,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.53,
+      "top": 142,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "Khám phá cơ hội dành cho bạn",
+      "words": 7,
+      "chars": 28,
+      "lines": 1,
+      "size": 30,
+      "vw": 2.1,
+      "font": "Hanken Grotesk",
+      "weight": 750,
+      "tracking": -0.025,
+      "leading": 1.3,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.33,
+      "top": 598,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Khám phá theo ngành nghề",
+      "words": 5,
+      "chars": 24,
+      "lines": 1,
+      "size": 30,
+      "vw": 2.1,
+      "font": "Hanken Grotesk",
+      "weight": 750,
+      "tracking": -0.025,
+      "leading": 1.3,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.25,
+      "top": 1311,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Cơ hội tiếp theo bắt đầu từ hồ sơ của bạn.",
+      "words": 11,
+      "chars": 42,
+      "lines": 1,
+      "size": 30,
+      "vw": 2.1,
+      "font": "Hanken Grotesk",
+      "weight": 750,
+      "tracking": -0.025,
+      "leading": 1.3,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.44,
+      "top": 1751,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Tìm kiếm nhân sự tiếp theo.",
+      "words": 6,
+      "chars": 27,
+      "lines": 1,
+      "size": 30,
+      "vw": 2.1,
+      "font": "Hanken Grotesk",
+      "weight": 750,
+      "tracking": -0.025,
+      "leading": 1.3,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.31,
+      "top": 1835,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Ba bước để đến với các vai trò đã được xác thực.",
+      "words": 12,
+      "chars": 48,
+      "lines": 1,
+      "size": 30,
+      "vw": 2.1,
+      "font": "Hanken Grotesk",
+      "weight": 750,
+      "tracking": -0.025,
+      "leading": 1.3,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.83,
+      "top": 2214,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Đồng hành cùng sự nghiệp của người lao động Việt Nam.",
+      "words": 11,
+      "chars": 53,
+      "lines": 2,
+      "size": 28,
+      "vw": 1.9,
+      "font": "Hanken Grotesk",
+      "weight": 800,
+      "tracking": -0.03,
+      "leading": 1.1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.24,
+      "top": 2640,
+      "tag": "p",
+      "kind": "statement"
+     }
+    ],
+    "headingSummary": {
+     "count": 7,
+     "maxLines": 2,
+     "over2Lines": 0,
+     "statements": 1,
+     "centered": 1,
+     "medianWords": 11,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Hanken Grotesk",
+       "share": 1,
+       "mono": false
+      }
+     ],
+     "familyCount": 1,
+     "sizes": [
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      22,
+      28,
+      30,
+      48
+     ],
+     "sizeCount": 12,
+     "notLoaded": [],
+     "body": {
+      "font": "Hanken Grotesk",
+      "size": 14,
+      "leading": 1.75,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 7.4
+     },
+     "measureChars": 90,
+     "max": {
+      "size": 47.5,
+      "vw": 3.3,
+      "font": "Hanken Grotesk",
+      "text": "Nơi các công ty được xác thực"
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0,
+     "centerShare": 0.04,
+     "smallText": 20
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#ffffff",
+     "bodyBgHsl": {
+      "h": 0,
+      "s": 0,
+      "l": 1
+     },
+     "dark": false,
+     "sectionBgs": [
+      {
+       "color": "#ffffff",
+       "top": 0,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 1
+       }
+      },
+      {
+       "color": "#e9f3ff",
+       "top": 81,
+       "hsl": {
+        "h": 213,
+        "s": 1,
+        "l": 0.96
+       }
+      },
+      {
+       "color": "#f3f6fb",
+       "top": 1272,
+       "hsl": {
+        "h": 217,
+        "s": 0.5,
+        "l": 0.97
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#435771",
+       "share": 0.51
+      },
+      {
+       "color": "#172d49",
+       "share": 0.2
+      },
+      {
+       "color": "#0868c9",
+       "share": 0.16
+      },
+      {
+       "color": "#5a6d84",
+       "share": 0.11
+      },
+      {
+       "color": "#ffffff",
+       "share": 0.02
+      }
+     ],
+     "button": {
+      "bg": "#0868c9",
+      "hsl": {
+       "h": 210,
+       "s": 0.92,
+       "l": 0.41
+      },
+      "fg": "#ffffff"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 5,
+     "inHero": 3,
+     "radius": 8,
+     "height": 48,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Đến nội dung chính",
+      "Dành cho công ty",
+      "Tìm việc ngay"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 1,
+     "shadowOverlay": 0,
+     "shadowSamples": [
+      "form.career-search → rgba(25, 59, 91, 0.25) 0px 8px 28px -12px"
+     ],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 11,
+     "hairlineSamples": [
+      "header.career-header 1440px",
+      "div.career-job__bottom 342px",
+      "div.career-job__bottom 342px",
+      "div.career-job__bottom 342px",
+      "div.career-job__bottom 342px"
+     ],
+     "outlinedBoxes": 7,
+     "dashed": 1,
+     "blurred": 0,
+     "roundedBoxes": 8,
+     "boxRadius": 12,
+     "squareMedia": 1,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": [
+      {
+       "count": 6,
+       "iconTopped": true,
+       "rounded": true,
+       "top": 715
+      }
+     ]
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 4,
+     "fixed": true,
+     "height": 81,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "hanken grotesk"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "pageH": 2815,
+    "margins": {
+     "left": 120,
+     "right": 120
+    },
+    "sections": [
+     {
+      "sel": "section.career-hero",
+      "tag": "section",
+      "top": 81,
+      "height": 473,
+      "words": 67,
+      "media": 2,
+      "middle": 0,
+      "heading": {
+       "text": "Nơi các công ty được xác thực",
+       "size": 48,
+       "tag": "h1"
+      },
+      "left": 120,
+      "right": 120,
+      "textLeft": 120,
+      "textRight": 240,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section.career-container.career-jobs",
+      "tag": "section",
+      "top": 554,
+      "height": 719,
+      "words": 192,
+      "media": 0,
+      "middle": 64,
+      "heading": {
+       "text": "Khám phá cơ hội dành cho bạn",
+       "size": 30,
+       "tag": "h2"
+      },
+      "left": 120,
+      "right": 143,
+      "textLeft": 120,
+      "textRight": 143,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#roles.career-fields",
+      "tag": "section",
+      "top": 1272,
+      "height": 419,
+      "words": 69,
+      "media": 0,
+      "middle": 188,
+      "heading": {
+       "text": "Khám phá theo ngành nghề",
+       "size": 30,
+       "tag": "h2"
+      },
+      "left": 120,
+      "right": 328,
+      "textLeft": 120,
+      "textRight": 328,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section.career-container.career-paths",
+      "tag": "section",
+      "top": 1691,
+      "height": 480,
+      "words": 125,
+      "media": 0,
+      "middle": 100,
+      "heading": {
+       "text": "Cơ hội tiếp theo bắt đầu từ hồ sơ của bạn.",
+       "size": 30,
+       "tag": "h2"
+      },
+      "left": 120,
+      "right": 155,
+      "textLeft": 120,
+      "textRight": 155,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#how-it-works.career-steps",
+      "tag": "section",
+      "top": 2171,
+      "height": 428,
+      "words": 129,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Ba bước để đến với các vai trò đã được xác thực.",
+       "size": 30,
+       "tag": "h2"
+      },
+      "left": 120,
+      "right": 124,
+      "textLeft": 120,
+      "textRight": 124,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "footer.landing-footer.bg-paper-2",
+      "tag": "footer",
+      "top": 2599,
+      "height": 216,
+      "words": 49,
+      "media": 0,
+      "middle": 204,
+      "heading": {
+       "text": "Đồng hành cùng sự nghiệp",
+       "size": 28,
+       "tag": "p"
+      },
+      "left": 120,
+      "right": 120,
+      "textLeft": 120,
+      "textRight": 120,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "Nơi các công ty được xác thực gặp gỡ nhân tài được bảo vệ.",
+      "size": 48,
+      "top": 142,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 120,
+      "n": 10
+     },
+     {
+      "x": 143,
+      "n": 2
+     },
+     {
+      "x": 528,
+      "n": 2
+     },
+     {
+      "x": 549,
+      "n": 2
+     },
+     {
+      "x": 845,
+      "n": 2
+     },
+     {
+      "x": 936,
+      "n": 2
+     },
+     {
+      "x": 955,
+      "n": 2
+     },
+     {
+      "x": 971,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 23,
+    "bodySize": 15,
+    "stage": false,
+    "explains": true,
+    "slivers": [],
+    "voidShare": 0.08,
+    "voidBox": {
+     "x": 600,
+     "y": 540,
+     "w": 540,
+     "h": 180
+    }
+   },
+   "app": null,
+   "consoleErrors": []
+  },
+  {
+   "width": 768,
+   "height": 1024,
+   "load": "load",
+   "screens": 4,
+   "filled": [
+    0.48,
+    0.56,
+    0.48,
+    0.65
+   ],
+   "motion": {
+    "elements": 0,
+    "css": 0,
+    "transitions": 0,
+    "scripted": 0,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "page": {
+     "height": 3427,
+     "screens": 3.3,
+     "words": 705,
+     "img": 1,
+     "video": 0,
+     "canvas": 0,
+     "svg": 39,
+     "sections": 5,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "Nơi các công ty được xác thực gặp gỡ nhân tài được bảo vệ.",
+     "words": 14,
+     "chars": 58,
+     "lines": 2,
+     "size": 32,
+     "vw": 4.2,
+     "font": "Hanken Grotesk",
+     "weight": 800,
+     "tracking": -0.035,
+     "leading": 1.2,
+     "upper": false,
+     "italic": false,
+     "mono": false,
+     "align": "center",
+     "position": "center",
+     "widthRatio": 0.94,
+     "top": 133,
+     "tag": "h1",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "Nơi các công ty được xác thực gặp gỡ nhân tài được bảo vệ.",
+     "words": 14,
+     "lines": 2,
+     "size": 32,
+     "font": "Hanken Grotesk"
+    },
+    "headings": [
+     {
+      "text": "Nơi các công ty được xác thực gặp gỡ nhân tài được bảo vệ.",
+      "words": 14,
+      "chars": 58,
+      "lines": 2,
+      "size": 32,
+      "vw": 4.2,
+      "font": "Hanken Grotesk",
+      "weight": 800,
+      "tracking": -0.035,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.94,
+      "top": 133,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "Đồng hành cùng sự nghiệp của người lao động Việt Nam.",
+      "words": 11,
+      "chars": 53,
+      "lines": 2,
+      "size": 28,
+      "vw": 3.6,
+      "font": "Hanken Grotesk",
+      "weight": 800,
+      "tracking": -0.03,
+      "leading": 1.1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.45,
+      "top": 3220,
+      "tag": "p",
+      "kind": "statement"
+     }
+    ],
+    "headingSummary": {
+     "count": 2,
+     "maxLines": 2,
+     "over2Lines": 0,
+     "statements": 1,
+     "centered": 1,
+     "medianWords": 11,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Hanken Grotesk",
+       "share": 1,
+       "mono": false
+      }
+     ],
+     "familyCount": 1,
+     "sizes": [
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      22,
+      24,
+      28,
+      32
+     ],
+     "sizeCount": 12,
+     "notLoaded": [],
+     "body": {
+      "font": "Hanken Grotesk",
+      "size": 14,
+      "leading": 1.75,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 7.4
+     },
+     "measureChars": 85,
+     "max": {
+      "size": 32,
+      "vw": 4.2,
+      "font": "Hanken Grotesk",
+      "text": "Nơi các công ty được xác thực"
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0,
+     "centerShare": 0.13,
+     "smallText": 20
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#ffffff",
+     "bodyBgHsl": {
+      "h": 0,
+      "s": 0,
+      "l": 1
+     },
+     "dark": false,
+     "sectionBgs": [
+      {
+       "color": "#ffffff",
+       "top": 0,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 1
+       }
+      },
+      {
+       "color": "#e9f3ff",
+       "top": 75,
+       "hsl": {
+        "h": 213,
+        "s": 1,
+        "l": 0.96
+       }
+      },
+      {
+       "color": "#f3f6fb",
+       "top": 1503,
+       "hsl": {
+        "h": 217,
+        "s": 0.5,
+        "l": 0.97
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#435771",
+       "share": 0.51
+      },
+      {
+       "color": "#172d49",
+       "share": 0.2
+      },
+      {
+       "color": "#0868c9",
+       "share": 0.16
+      },
+      {
+       "color": "#5a6d84",
+       "share": 0.11
+      },
+      {
+       "color": "#ffffff",
+       "share": 0.02
+      }
+     ],
+     "button": {
+      "bg": "#0868c9",
+      "hsl": {
+       "h": 210,
+       "s": 0.92,
+       "l": 0.41
+      },
+      "fg": "#ffffff"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 6,
+     "inHero": 3,
+     "radius": 8,
+     "height": 48,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Đến nội dung chính",
+      "Dành cho công ty",
+      "Tìm việc ngay"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 1,
+     "shadowOverlay": 0,
+     "shadowSamples": [
+      "form.career-search → rgba(25, 59, 91, 0.25) 0px 8px 28px -12px"
+     ],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 11,
+     "hairlineSamples": [
+      "header.career-header 768px",
+      "div.career-job__bottom 305px",
+      "div.career-job__bottom 305px",
+      "div.career-job__bottom 305px",
+      "div.career-job__bottom 305px"
+     ],
+     "outlinedBoxes": 7,
+     "dashed": 1,
+     "blurred": 0,
+     "roundedBoxes": 8,
+     "boxRadius": 12,
+     "squareMedia": 0,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": [
+      {
+       "count": 6,
+       "iconTopped": true,
+       "rounded": true,
+       "top": 658
+      }
+     ]
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 2,
+     "fixed": true,
+     "height": 75,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "hanken grotesk"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "pageH": 3427,
+    "margins": {
+     "left": 24,
+     "right": 26
+    },
+    "sections": [
+     {
+      "sel": "section.career-hero",
+      "tag": "section",
+      "top": 75,
+      "height": 429,
+      "words": 67,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Nơi các công ty được xác thực",
+       "size": 32,
+       "tag": "h1"
+      },
+      "left": 33,
+      "right": 33,
+      "textLeft": 33,
+      "textRight": 33,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section.career-container.career-jobs",
+      "tag": "section",
+      "top": 504,
+      "height": 999,
+      "words": 192,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Khám phá cơ hội dành cho bạn",
+       "size": 24,
+       "tag": "h2"
+      },
+      "left": 24,
+      "right": 47,
+      "textLeft": 24,
+      "textRight": 47,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#roles.career-fields",
+      "tag": "section",
+      "top": 1503,
+      "height": 411,
+      "words": 69,
+      "media": 0,
+      "middle": 28,
+      "heading": {
+       "text": "Khám phá theo ngành nghề",
+       "size": 24,
+       "tag": "h2"
+      },
+      "left": 24,
+      "right": 72,
+      "textLeft": 24,
+      "textRight": 72,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section.career-container.career-paths",
+      "tag": "section",
+      "top": 1914,
+      "height": 769,
+      "words": 125,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Cơ hội tiếp theo bắt đầu từ hồ sơ của bạn.",
+       "size": 24,
+       "tag": "h2"
+      },
+      "left": 24,
+      "right": 50,
+      "textLeft": 24,
+      "textRight": 50,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#how-it-works.career-steps",
+      "tag": "section",
+      "top": 2683,
+      "height": 496,
+      "words": 129,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Ba bước để đến với các vai trò đã được xác thực.",
+       "size": 24,
+       "tag": "h2"
+      },
+      "left": 24,
+      "right": 26,
+      "textLeft": 24,
+      "textRight": 26,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "footer.landing-footer.bg-paper-2",
+      "tag": "footer",
+      "top": 3179,
+      "height": 248,
+      "words": 49,
+      "media": 0,
+      "middle": 24,
+      "heading": {
+       "text": "Đồng hành cùng sự nghiệp",
+       "size": 28,
+       "tag": "p"
+      },
+      "left": 24,
+      "right": 24,
+      "textLeft": 24,
+      "textRight": 24,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "Nơi các công ty được xác thực gặp gỡ nhân tài được bảo vệ.",
+      "size": 32,
+      "top": 133,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 24,
+      "n": 7
+     },
+     {
+      "x": 47,
+      "n": 5
+     },
+     {
+      "x": 416,
+      "n": 3
+     },
+     {
+      "x": 272,
+      "n": 2
+     },
+     {
+      "x": 520,
+      "n": 2
+     },
+     {
+      "x": 157,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 20,
+    "bodySize": 15,
+    "stage": false,
+    "explains": true,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": null,
+   "consoleErrors": []
+  },
+  {
+   "width": 390,
+   "height": 844,
+   "load": "load",
+   "screens": 7,
+   "filled": [
+    0.77,
+    0.26,
+    0.36,
+    0.85,
+    0.64,
+    0.63,
+    0.69
+   ],
+   "motion": {
+    "elements": 0,
+    "css": 0,
+    "transitions": 0,
+    "scripted": 0,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "page": {
+     "height": 5119,
+     "screens": 6.1,
+     "words": 676,
+     "img": 1,
+     "video": 0,
+     "canvas": 0,
+     "svg": 39,
+     "sections": 5,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "Nơi các công ty được xác thực gặp gỡ nhân tài được bảo vệ.",
+     "words": 14,
+     "chars": 58,
+     "lines": 4,
+     "size": 32,
+     "vw": 8.2,
+     "font": "Hanken Grotesk",
+     "weight": 800,
+     "tracking": -0.035,
+     "leading": 1.24,
+     "upper": false,
+     "italic": false,
+     "mono": false,
+     "align": "center",
+     "position": "center",
+     "widthRatio": 0.9,
+     "top": 107,
+     "tag": "h1",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "Nơi các công ty được xác thực gặp gỡ nhân tài được bảo vệ.",
+     "words": 14,
+     "lines": 4,
+     "size": 32,
+     "font": "Hanken Grotesk"
+    },
+    "headings": [
+     {
+      "text": "Nơi các công ty được xác thực gặp gỡ nhân tài được bảo vệ.",
+      "words": 14,
+      "chars": 58,
+      "lines": 4,
+      "size": 32,
+      "vw": 8.2,
+      "font": "Hanken Grotesk",
+      "weight": 800,
+      "tracking": -0.035,
+      "leading": 1.24,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.9,
+      "top": 107,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "Khám phá cơ hội dành cho bạn",
+      "words": 7,
+      "chars": 28,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Hanken Grotesk",
+      "weight": 750,
+      "tracking": -0.025,
+      "leading": 1.3,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.9,
+      "top": 736,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Khám phá theo ngành nghề",
+      "words": 5,
+      "chars": 24,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Hanken Grotesk",
+      "weight": 750,
+      "tracking": -0.025,
+      "leading": 1.3,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.73,
+      "top": 2470,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Cơ hội tiếp theo bắt đầu từ hồ sơ của bạn.",
+      "words": 11,
+      "chars": 42,
+      "lines": 2,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Hanken Grotesk",
+      "weight": 750,
+      "tracking": -0.025,
+      "leading": 1.3,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.9,
+      "top": 3085,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Tìm kiếm nhân sự tiếp theo.",
+      "words": 6,
+      "chars": 27,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Hanken Grotesk",
+      "weight": 750,
+      "tracking": -0.025,
+      "leading": 1.3,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.77,
+      "top": 3643,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Ba bước để đến với các vai trò đã được xác thực.",
+      "words": 12,
+      "chars": 48,
+      "lines": 2,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Hanken Grotesk",
+      "weight": 750,
+      "tracking": -0.025,
+      "leading": 1.3,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.9,
+      "top": 3998,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Đồng hành cùng sự nghiệp của người lao động Việt Nam.",
+      "words": 11,
+      "chars": 53,
+      "lines": 2,
+      "size": 25,
+      "vw": 6.4,
+      "font": "Hanken Grotesk",
+      "weight": 800,
+      "tracking": -0.03,
+      "leading": 1.1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.8,
+      "top": 4761,
+      "tag": "p",
+      "kind": "statement"
+     }
+    ],
+    "headingSummary": {
+     "count": 7,
+     "maxLines": 4,
+     "over2Lines": 1,
+     "statements": 1,
+     "centered": 1,
+     "medianWords": 11,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Hanken Grotesk",
+       "share": 1,
+       "mono": false
+      }
+     ],
+     "familyCount": 1,
+     "sizes": [
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      24,
+      25,
+      32
+     ],
+     "sizeCount": 11,
+     "notLoaded": [],
+     "body": {
+      "font": "Hanken Grotesk",
+      "size": 15,
+      "leading": 1.7,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 6.6
+     },
+     "measureChars": 47,
+     "max": {
+      "size": 32,
+      "vw": 8.2,
+      "font": "Hanken Grotesk",
+      "text": "Nơi các công ty được xác thực"
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0,
+     "centerShare": 0.11,
+     "smallText": 14
+    },
+    "eyebrows": [
+     {
+      "text": "Kinh doanh",
+      "above": "Khám phá cơ hội dành cho bạn",
+      "upper": false,
+      "tracked": false,
+      "mono": false,
+      "pill": false,
+      "size": 12,
+      "top": 650
+     }
+    ],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#ffffff",
+     "bodyBgHsl": {
+      "h": 0,
+      "s": 0,
+      "l": 1
+     },
+     "dark": false,
+     "sectionBgs": [
+      {
+       "color": "#ffffff",
+       "top": 0,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 1
+       }
+      },
+      {
+       "color": "#e9f3ff",
+       "top": 71,
+       "hsl": {
+        "h": 213,
+        "s": 1,
+        "l": 0.96
+       }
+      },
+      {
+       "color": "#f3f6fb",
+       "top": 2439,
+       "hsl": {
+        "h": 217,
+        "s": 0.5,
+        "l": 0.97
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#435771",
+       "share": 0.53
+      },
+      {
+       "color": "#172d49",
+       "share": 0.2
+      },
+      {
+       "color": "#0868c9",
+       "share": 0.14
+      },
+      {
+       "color": "#5a6d84",
+       "share": 0.1
+      },
+      {
+       "color": "#ffffff",
+       "share": 0.02
+      }
+     ],
+     "button": {
+      "bg": "#0868c9",
+      "hsl": {
+       "h": 210,
+       "s": 0.92,
+       "l": 0.41
+      },
+      "fg": "#ffffff"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 5,
+     "inHero": 2,
+     "radius": 8,
+     "height": 48,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Đến nội dung chính",
+      "Tìm việc ngay"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 1,
+     "shadowOverlay": 0,
+     "shadowSamples": [
+      "form.career-search → rgba(25, 59, 91, 0.25) 0px 8px 28px -12px"
+     ],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 12,
+     "hairlineSamples": [
+      "header.career-header 390px",
+      "label.career-search__location 334px",
+      "div.career-job__bottom 308px",
+      "div.career-job__bottom 308px",
+      "div.career-job__bottom 308px"
+     ],
+     "outlinedBoxes": 7,
+     "dashed": 1,
+     "blurred": 0,
+     "roundedBoxes": 9,
+     "boxRadius": 12,
+     "squareMedia": 0,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": [
+      {
+       "count": 6,
+       "iconTopped": true,
+       "rounded": true,
+       "top": 903
+      }
+     ]
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 1,
+     "fixed": true,
+     "height": 71,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "hanken grotesk"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "pageH": 5119,
+    "margins": {
+     "left": 20,
+     "right": 21
+    },
+    "sections": [
+     {
+      "sel": "section.career-hero",
+      "tag": "section",
+      "top": 71,
+      "height": 633,
+      "words": 67,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Nơi các công ty được xác thực",
+       "size": 32,
+       "tag": "h1"
+      },
+      "left": 22,
+      "right": 22,
+      "textLeft": 22,
+      "textRight": 22,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section.career-container.career-jobs",
+      "tag": "section",
+      "top": 704,
+      "height": 1735,
+      "words": 174,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Khám phá cơ hội dành cho bạn",
+       "size": 24,
+       "tag": "h2"
+      },
+      "left": 20,
+      "right": 43,
+      "textLeft": 20,
+      "textRight": 43,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#roles.career-fields",
+      "tag": "section",
+      "top": 2439,
+      "height": 611,
+      "words": 69,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Khám phá theo ngành nghề",
+       "size": 24,
+       "tag": "h2"
+      },
+      "left": 20,
+      "right": 22,
+      "textLeft": 20,
+      "textRight": 22,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section.career-container.career-paths",
+      "tag": "section",
+      "top": 3049,
+      "height": 916,
+      "words": 125,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Cơ hội tiếp theo bắt đầu từ hồ sơ của bạn.",
+       "size": 24,
+       "tag": "h2"
+      },
+      "left": 20,
+      "right": 21,
+      "textLeft": 20,
+      "textRight": 21,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#how-it-works.career-steps",
+      "tag": "section",
+      "top": 3965,
+      "height": 754,
+      "words": 129,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Ba bước để đến với các vai trò đã được xác thực.",
+       "size": 24,
+       "tag": "h2"
+      },
+      "left": 20,
+      "right": 21,
+      "textLeft": 20,
+      "textRight": 21,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "footer.landing-footer.bg-paper-2",
+      "tag": "footer",
+      "top": 4720,
+      "height": 399,
+      "words": 49,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Đồng hành cùng sự nghiệp",
+       "size": 25,
+       "tag": "p"
+      },
+      "left": 24,
+      "right": 32,
+      "textLeft": 24,
+      "textRight": 32,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "Nơi các công ty được xác thực gặp gỡ nhân tài được bảo vệ.",
+      "size": 32,
+      "top": 107,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 20,
+      "n": 9
+     },
+     {
+      "x": 41,
+      "n": 8
+     },
+     {
+      "x": 204,
+      "n": 3
+     },
+     {
+      "x": 145,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 21,
+    "bodySize": 15,
+    "stage": false,
+    "explains": true,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": null,
+   "consoleErrors": []
+  }
+ ],
+ "findings": [
+  {
+   "level": "WARN",
+   "id": "hero-words",
+   "width": 1440,
+   "message": "Hero headline is 14 words (\"Nơi các công ty được xác thực gặp gỡ nhân tài được bảo vệ.\"). Gallery median is 5.",
+   "fix": "Say the one thing. Move the rest to the supporting line.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "shadow",
+   "width": 1440,
+   "message": "1 box-shadow(s) on elements at rest: form.career-search → rgba(25, 59, 91, 0.25) 0px 8px 28px -12px",
+   "fix": "Remove. Separate surfaces with a tone step or space. Shadows are for things that really float (menus, dialogs, sticky bars).",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "hairline",
+   "width": 1440,
+   "message": "11 thin rule(s)/divider line(s): header.career-header 1440px | div.career-job__bottom 342px | div.career-job__bottom 342px | div.career-job__bottom 342px",
+   "fix": "Delete. Separate with space, a tone change, or scale. Lines are only for real tables and form fields.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "outlined-box",
+   "width": 1440,
+   "message": "7 boxes drawn with a 1px outline.",
+   "fix": "Define a surface by its fill (one tone step from the page) or leave the content unboxed.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "WARN",
+   "id": "dashed",
+   "width": 1440,
+   "message": "1 dashed/dotted border(s).",
+   "fix": "Remove unless it is a real drop zone.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "icon-cards",
+   "width": 1440,
+   "message": "1 row(s) of identical cards each topped with a small icon (6 cards).",
+   "fix": "Replace with one composed section from the direction: a narrative split, a list set in large type, or real imagery per item.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "WARN",
+   "id": "size-count",
+   "width": 1440,
+   "message": "12 different font sizes (11, 12, 13, 14, 15, 16, 17, 18, 22, 28, 30, 48).",
+   "fix": "A page needs about five: display, heading, lead, body, small.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "body-size",
+   "width": 1440,
+   "message": "Body text is 14px (the size most of the running text is set in).",
+   "fix": "Body copy 16–20px. Map small sizes from blueprints onto your body step.",
+   "alsoAt": [
+    768
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "few-pictures",
+   "width": 1440,
+   "message": "Only 1 picture(s) on the page (1 photographs, footage or raster images, 0 interface fragments). Drawings in SVG do not count.",
+   "fix": "Find real pictures of the subject's world with scripts/assets.mjs (photographs, archival images, maps, engravings, footage), download them to assets/ and give them room: a hero picture, one per section that has a subject, a full-width band. At least four, usually six to twelve."
+  },
+  {
+   "level": "WARN",
+   "id": "no-footage",
+   "width": 1440,
+   "message": "No video anywhere on the page.",
+   "fix": "Look for one honest clip with scripts/assets.mjs --video (the place, the material, the process) and use it as a muted loop with a poster frame. Defend its absence only if no clip fits the subject."
+  },
+  {
+   "level": "WARN",
+   "id": "measure",
+   "width": 1440,
+   "message": "Longest paragraph runs about 90 characters per line.",
+   "fix": "Cap paragraphs at 45–75 characters (max-width: 60ch)."
+  },
+  {
+   "level": "FAIL",
+   "id": "small-text",
+   "width": 1440,
+   "message": "20 text blocks under 13px.",
+   "fix": "Nothing meant to be read goes below 13px.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "focal-point",
+   "width": 1440,
+   "message": "The first screen has no dominant element: the largest type is 47.5px (3.3vw) and no single picture holds a third of the viewport.",
+   "fix": "Make one thing lead: the headline at display size, or one large picture. A grid of many small pictures is not one thing; in blind tests jurors marked a first screen without a headline down every time. On the strongest studied sites the largest type has a median of 8.4vw.",
+   "alsoAt": [
+    768
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "still-page",
+   "width": 1440,
+   "message": "Only 0 element(s) moved while the page loaded and scrolled.",
+   "fix": "Build the motion layer (SKILL.md step 9, references/motion.md): the signature move, an entrance for the parts of every section, feedback on every control, and one moving picture. Transform and opacity only, with a reduced-motion fallback."
+  },
+  {
+   "level": "FAIL",
+   "id": "headline-lines",
+   "width": 390,
+   "message": "1 headline(s) wrap past two lines at 390px: \"Nơi các công ty được xác thực gặp gỡ nhân tài đư\" → 4 lines (14 words, 32px)",
+   "fix": "Cut words first (a headline is a title, not a sentence). Then give it a wider measure. Lower the size only as a last resort and never below the scale you chose. A real statement paragraph belongs in a <p> or <blockquote> at 24px or less."
+  },
+  {
+   "level": "FAIL",
+   "id": "eyebrow",
+   "width": 390,
+   "message": "1 eyebrow/kicker label(s) above headings: \"Kinh doanh\" above \"Khám phá cơ hội dành cho bạn\"",
+   "fix": "Delete them. If the label carried real information, fold it into the headline or the supporting sentence."
+  },
+  {
+   "level": "WARN",
+   "id": "grey-body",
+   "width": 390,
+   "message": "The running text is a soft grey on its ground (6.6:1).",
+   "fix": "Set body copy in the full ink (7:1 or more). Keep the muted ink for secondary notes; pages read thin and unfinished when everything is grey."
+  }
+ ],
+ "images": [
+  {
+   "viewport": "desktop",
+   "width": 1440,
+   "fold": "/home/vy/Documents/GuardianWork/frontend/.taste-skill/before/public/desktop-fold.jpg",
+   "pages": [
+    "/home/vy/Documents/GuardianWork/frontend/.taste-skill/before/public/desktop-page-01.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "tablet",
+   "width": 768,
+   "fold": "/home/vy/Documents/GuardianWork/frontend/.taste-skill/before/public/tablet-fold.jpg",
+   "pages": [
+    "/home/vy/Documents/GuardianWork/frontend/.taste-skill/before/public/tablet-page-01.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "mobile",
+   "width": 390,
+   "fold": "/home/vy/Documents/GuardianWork/frontend/.taste-skill/before/public/mobile-fold.jpg",
+   "pages": [
+    "/home/vy/Documents/GuardianWork/frontend/.taste-skill/before/public/mobile-page-01.jpg"
+   ],
+   "film": []
+  }
+ ]
+}
