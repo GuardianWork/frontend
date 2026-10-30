@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEmployerOnboarding } from "@/context/EmployerOnboardingContext";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Building2, LoaderCircle, RefreshCw } from "lucide-react";
 import { RecruiterShell } from "@/components/RecruiterShell";
@@ -28,8 +29,11 @@ const statusLabels = {
 
 function CompanyVerificationPage() {
   const user = useAuthUser();
+  const onboarding = useEmployerOnboarding();
+  const stage = onboarding?.onboarding.stage;
+  const draftCompanyName = onboarding?.onboarding.companyName || "";
   const [record, setRecord] = useState(getStoredVerificationRecord);
-  const [name, setName] = useState(record.name);
+  const [name, setName] = useState(record.name || onboarding?.onboarding.companyName || "");
   const [taxCode, setTaxCode] = useState(record.taxCode);
   const [file, setFile] = useState<File | null>(null);
   const [workAddress, setWorkAddress] = useState("");
@@ -42,18 +46,29 @@ function CompanyVerificationPage() {
   const [notice, setNotice] = useState("");
   const [membershipError, setMembershipError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+  useEffect(() => {
+    const next = getStoredVerificationRecord();
+    setRecord(next);
+    setName(next.name || draftCompanyName);
+    setTaxCode(next.taxCode);
+    setEmail(next.email);
+    setCertificateUrl(next.registrationCertificateUrl);
+  }, [stage, draftCompanyName]);
   const hasCompany = Boolean(user?.activeMembership);
   const canEdit =
-    user?.recruitingEmailEligible === true &&
-    !record.companySuspended &&
-    (!hasCompany || user?.activeMembership?.companyRole === "OWNER") &&
-    ["REGISTERED", "REJECTED"].includes(record.verificationStatus);
-  const rejected = record.verificationStatus === "REJECTED";
+    (stage === "COMPANY_ACTION_REQUIRED" &&
+      !hasCompany &&
+      record.verificationStatus === "REGISTERED") ||
+    (stage === "REJECTED" &&
+      user?.activeMembership?.companyRole === "OWNER" &&
+      record.verificationStatus === "REJECTED");
+  const rejected = stage === "REJECTED";
 
   async function refreshMembership() {
     setRefreshing(true);
     try {
       await loadCurrentUser();
+      await onboarding?.refresh();
       setMembershipError("");
     } catch {
       setMembershipError(
@@ -127,18 +142,31 @@ function CompanyVerificationPage() {
             </p>
           </div>
           <span className="rounded-md border border-warm-border bg-paper-white px-3 py-2 text-sm">
-            {statusLabels[record.verificationStatus]}
+            {stage === "PENDING"
+              ? "Chờ xác minh"
+              : stage === "REJECTED"
+                ? "Cần bổ sung hồ sơ"
+                : stage === "VERIFIED"
+                  ? "Đã xác minh"
+                  : statusLabels.REGISTERED}
           </span>
         </div>
-        {record.companySuspended && (
-          <p
-            role="status"
-            className="mb-5 rounded-lg border border-warm-border bg-paper-white p-4 text-sm leading-6"
-          >
-            Công ty đang bị tạm ngưng. Bạn có thể xem trạng thái và phản hồi; các thao tác cập nhật
-            và tuyển dụng hiện bị khóa.
+        {stage === "COMPANY_ACTION_REQUIRED" && (
+          <p className="mb-5 text-sm leading-6 text-charcoal-83">
+            Bạn được mời tham gia công ty có sẵn?{" "}
+            <Link
+              to="/recruiter/members"
+              className="font-semibold text-primary underline underline-offset-4"
+            >
+              Xem lời mời công ty
+            </Link>
+            .
           </p>
         )}
+        <p className="mb-5 break-words text-sm leading-6 text-charcoal-83">
+          Liên hệ tài khoản: {user?.email} ·{" "}
+          {onboarding?.onboarding.phone || "Chưa có số điện thoại"}
+        </p>
         {notice && (
           <p
             role="status"
@@ -188,7 +216,7 @@ function CompanyVerificationPage() {
                 {error}
               </p>
             )}
-            {rejected && (
+            {rejected && user?.activeMembership?.companyRole === "OWNER" && (
               <p className="mb-5 rounded-lg bg-amber-50 p-4 text-sm leading-6 text-amber-900">
                 Lý do cần bổ sung:{" "}
                 {record.rejectionReason || "Vui lòng kiểm tra và cập nhật thông tin hồ sơ."}
@@ -290,9 +318,9 @@ function CompanyVerificationPage() {
             </fieldset>
             <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-warm-border pt-5">
               <p className="max-w-lg text-sm leading-6 text-charcoal-83">
-                {record.verificationStatus === "PENDING"
+                {stage === "PENDING"
                   ? "Hồ sơ đã được gửi và đang chờ xét duyệt."
-                  : record.verificationStatus === "VERIFIED"
+                  : stage === "VERIFIED"
                     ? "Công ty đã được xác minh."
                     : "Kiểm tra thông tin trước khi gửi hồ sơ."}
               </p>

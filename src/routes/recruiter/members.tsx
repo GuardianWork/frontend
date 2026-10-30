@@ -1,3 +1,6 @@
+import { useEmployerOnboarding } from "@/context/EmployerOnboardingContext";
+import { RecipientInvitationPanel } from "@/components/RecipientInvitationPanel";
+import { getInvitationSecret } from "@/lib/member-email-secret";
 import { ListSearch } from "@/components/ListSearch";
 import { matchesSearch } from "@/lib/list-search";
 import { useRef, useState } from "react";
@@ -30,6 +33,7 @@ export const Route = createFileRoute("/recruiter/members")({
 });
 
 function CompanyMembersPage() {
+  const onboarding = useEmployerOnboarding();
   const { workspace, company, member, user, error } = useCompanyWorkspace();
   const [query, setQuery] = useState("");
   const [email, setEmail] = useState("");
@@ -81,6 +85,12 @@ function CompanyMembersPage() {
     (m) => m.status === "invited" && m.email === user?.email.toLowerCase(),
   );
   const activeMembers = workspace.members.filter((m) => m.status === "active");
+  if (onboarding?.onboarding.stage === "COMPANY_ACTION_REQUIRED" || getInvitationSecret())
+    return (
+      <RecruiterShell title="Lời mời công ty">
+        <RecipientInvitationPanel />
+      </RecruiterShell>
+    );
   return (
     <RecruiterShell title="Thành viên công ty">
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
@@ -223,9 +233,9 @@ function CompanyMembersPage() {
                 : "Liên hệ Owner để được mời. Hồ sơ xác thực cũ chưa ghi nhận người nộp cần được hệ thống bổ sung trước khi cấp Owner."}
           </p>
           {invitation ? (
-            <button className="recruiter-primary" onClick={() => run({ type: "accept" })}>
-              Chấp nhận lời mời
-            </button>
+            <p className="text-sm leading-6 text-charcoal-83">
+              Mở liên kết trong email mời để xác nhận lời mời với máy chủ.
+            </p>
           ) : (
             !user && (
               <Link

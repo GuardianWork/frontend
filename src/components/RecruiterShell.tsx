@@ -1,4 +1,4 @@
-import { EmailVerificationPanel } from "./auth/EmailVerification";
+import { useEmployerOnboarding } from "@/context/EmployerOnboardingContext";
 import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
 import { LeaveCompanyButton } from "./LeaveCompanyButton";
 import { LogoutButton } from "./LogoutButton";
@@ -36,6 +36,9 @@ export function RecruiterShell({
   children: ReactNode;
   topNavExtras?: ReactNode;
 }) {
+  const onboarding = useEmployerOnboarding();
+  const stage = onboarding?.onboarding.stage;
+  const recruitingEnabled = stage === "VERIFIED";
   const { member } = useCompanyWorkspace();
   const user = useAuthUser();
   const invitedRecruiter = user?.activeMembership?.companyRole === "RECRUITER";
@@ -108,10 +111,32 @@ export function RecruiterShell({
                   to === "/recruiter"
                     ? pathname.replace(/\/$/, "") === to
                     : pathname.startsWith(to);
+                const locked =
+                  stage === "EMAIL_REQUIRED" ||
+                  (!recruitingEnabled &&
+                    ![
+                      "/recruiter",
+                      "/recruiter/verification",
+                      ...(stage === "COMPANY_ACTION_REQUIRED" ? ["/recruiter/members"] : []),
+                    ].includes(to));
+                if (locked)
+                  return (
+                    <span
+                      key={to}
+                      aria-disabled="true"
+                      title="Hoàn tất thiết lập tuyển dụng để sử dụng"
+                      className="flex min-h-11 items-center gap-3 rounded-md px-3 py-2.5 text-sm text-charcoal-83"
+                    >
+                      <Icon size={20} className="shrink-0" aria-hidden="true" />
+                      {label}
+                      <span className="ml-auto text-xs">Khóa</span>
+                    </span>
+                  );
                 return (
                   <Link
                     key={to}
                     to={to}
+                    activeOptions={{ exact: to === "/recruiter" }}
                     onClick={() => setMenuOpen(false)}
                     aria-current={active ? "page" : undefined}
                     className={`flex min-h-11 items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors ${active ? "bg-surface-container font-semibold text-primary" : "font-medium text-charcoal-40 hover:bg-charcoal-04 hover:text-charcoal-text"}`}
@@ -122,7 +147,7 @@ export function RecruiterShell({
                 );
               })}
           </nav>
-          {!invitedRecruiter && (
+          {!invitedRecruiter && stage !== "EMAIL_REQUIRED" && (
             <div className="mx-3 mb-4 mt-6 rounded-lg bg-surface-container-low p-4">
               <ShieldCheck className="mb-3 text-primary" size={26} />
               <p className="text-sm font-semibold">Xây dựng uy tín doanh nghiệp</p>
@@ -140,7 +165,7 @@ export function RecruiterShell({
           )}
         </div>
         <div className="mt-auto space-y-3 border-t border-warm-border p-5 text-xs text-charcoal-83">
-          {invitedRecruiter && user.activeMembership && (
+          {recruitingEnabled && invitedRecruiter && user.activeMembership && (
             <LeaveCompanyButton companyName={user.activeMembership.companyName} />
           )}
           <Link to="/vn" className="block hover:text-primary">
@@ -178,16 +203,18 @@ export function RecruiterShell({
             >
               <Globe size={14} className="text-primary" aria-hidden="true" /> Trang chủ
             </Link>
-            {topNavExtras}
-            <Link
-              to="/recruiter/jobs"
-              aria-label="Đăng tin tuyển dụng"
-              search={{ create: true }}
-              className="recruiter-primary flex items-center gap-2"
-            >
-              <Plus size={17} aria-hidden="true" />
-              <span className="hidden sm:inline">Đăng tin tuyển dụng</span>
-            </Link>
+            {recruitingEnabled && topNavExtras}
+            {recruitingEnabled && (
+              <Link
+                to="/recruiter/jobs"
+                aria-label="Đăng tin tuyển dụng"
+                search={{ create: true }}
+                className="recruiter-primary flex items-center gap-2"
+              >
+                <Plus size={17} aria-hidden="true" />
+                <span className="hidden sm:inline">Đăng tin tuyển dụng</span>
+              </Link>
+            )}
             <LogoutButton />
           </div>
         </header>

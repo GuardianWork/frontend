@@ -16,9 +16,9 @@ test("login hydrates and accepts typing, purpose selection, and password visibil
   await expect(page.locator("#login-password")).toHaveAttribute("type", "text");
   await page
     .locator("label")
-    .filter({ has: page.getByRole("radio", { name: /Đăng ký công ty/ }) })
+    .filter({ has: page.getByRole("radio", { name: /Tôi muốn tuyển dụng/ }) })
     .click();
-  await expect(page.getByRole("radio", { name: /Đăng ký công ty/ })).toBeChecked();
+  await expect(page.getByRole("radio", { name: /Tôi muốn tuyển dụng/ })).toBeChecked();
   await expect(identifier).toHaveValue("candidate_demo");
   expect(errors).toEqual([]);
 });
@@ -47,7 +47,13 @@ test("all registration fields retain input and password errors preserve the form
   await expect(page.locator("#register-first-name")).toHaveValue("An");
   await page
     .locator("label")
-    .filter({ has: page.getByRole("radio", { name: /Đăng ký công ty/ }) })
+    .filter({ has: page.getByRole("radio", { name: /Tôi muốn tuyển dụng/ }) })
+    .click();
+  await expect(page.locator("#register-fullName")).toBeVisible();
+  await expect(page.locator("#register-username")).toHaveCount(0);
+  await page
+    .locator("label")
+    .filter({ has: page.getByRole("radio", { name: /Tôi muốn tìm việc/ }) })
     .click();
   await expect(page.locator("#register-username")).toHaveValue("nguyen_van_an");
 });

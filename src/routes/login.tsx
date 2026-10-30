@@ -1,4 +1,4 @@
-import { hasPendingInvitation } from "@/services/invitationLink";
+import { getMemberEmailSecret, getInvitationSecret } from "@/lib/member-email-secret";
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, LoaderCircle } from "lucide-react";
@@ -42,9 +42,11 @@ function LoginPage() {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [hasEmailLink, setHasEmailLink] = useState(false);
   const [ready, setReady] = useState(false);
   useEffect(() => {
     setReady(true);
+    setHasEmailLink(Boolean(getMemberEmailSecret()));
   }, []);
   const [error, setError] = useState("");
 
@@ -67,7 +69,11 @@ function LoginPage() {
         return;
       }
       await navigate({
-        to: hasPendingInvitation() ? "/company-invitations" : getLoginDestination(user, role),
+        to: getMemberEmailSecret()
+          ? "/recruiter/verification"
+          : getInvitationSecret()
+            ? "/recruiter/members"
+            : getLoginDestination(user, role),
       });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Không thể đăng nhập. Vui lòng thử lại.");
@@ -82,6 +88,15 @@ function LoginPage() {
       <p className="mb-7 mt-2 text-sm leading-6 text-charcoal-83">
         Một tài khoản cho cả tìm việc và tuyển dụng. Chọn không gian bạn muốn tiếp tục.
       </p>
+      {hasEmailLink && (
+        <p
+          role="status"
+          className="mb-5 rounded-lg border border-warm-border bg-surface-container-low p-4 text-sm leading-6"
+        >
+          Đăng nhập đúng tài khoản nhận email để xác thực. Liên kết đã được đọc an toàn; không cần
+          nhập lại mật khẩu đăng ký.
+        </p>
+      )}
       <AccountPurposeChoice
         value={role}
         disabled={loading || !ready}

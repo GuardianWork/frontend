@@ -25,7 +25,7 @@ export function AccountPurposeChoice({
             {
               value: "recruiter",
               title: "Tôi muốn tuyển dụng",
-              description: "Vào không gian tuyển dụng",
+              description: "Bắt đầu tuyển dụng",
               icon: BriefcaseBusiness,
             },
           ] as const
