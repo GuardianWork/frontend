@@ -1,6 +1,6 @@
+import { UploadIcon, CloseIcon, EvidenceIcon } from "@/components/icons";
 import { useId, useState } from "react";
 import { useDocumentUrl } from "@/hooks/use-document-url";
-import { FileText, UploadCloud, X } from "lucide-react";
 
 export function VerificationUpload({
   label,
@@ -55,7 +55,7 @@ export function VerificationUpload({
         }}
         className={`rounded-lg border border-dashed border-warm-border bg-surface-container-low p-6 text-center ${disabled ? "opacity-60" : "hover:border-primary"}`}
       >
-        <UploadCloud className="mx-auto mb-3 text-primary" size={30} />
+        <UploadIcon className="mx-auto mb-3 text-primary" size={30} />
         <p className="text-sm font-medium">Chọn hoặc kéo thả tệp vào đây</p>
         <p className="mt-1 text-xs text-charcoal-83">PDF, PNG, JPG · Tối đa 1 MB / tệp</p>
         <input
@@ -82,7 +82,7 @@ export function VerificationUpload({
       )}
       {value && (
         <div className="mt-3 flex items-center gap-2 rounded-md border border-emerald-100 bg-surface-container p-3 text-xs text-emerald-800">
-          <FileText size={18} />
+          <EvidenceIcon size={20} />
           <span className="min-w-0 flex-1 truncate">{fileName || "Tài liệu đã lưu"}</span>
           <a
             href={documentUrl || undefined}
@@ -102,7 +102,7 @@ export function VerificationUpload({
               }}
               className="p-1"
             >
-              <X size={15} />
+              <CloseIcon size={15} />
             </button>
           )}
         </div>

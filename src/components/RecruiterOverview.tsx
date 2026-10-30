@@ -1,7 +1,16 @@
+import {
+  ArrowRightIcon,
+  CompanyIcon,
+  JobPostingsIcon,
+  TalentSearchIcon,
+  CandidateProfileIcon,
+  VerificationDossierIcon,
+} from "@/components/icons";
+import { GuardianIllustration } from "@/components/GuardianIllustration";
 import { useEffect, useState } from "react";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Building2, FilePlus2, Search, ShieldCheck, Users } from "lucide-react";
+
 import {
   getStoredVerificationRecord,
   type CompanyVerificationRecord,
@@ -35,31 +44,33 @@ export function RecruiterOverview({
           : "Hoàn thiện xác thực doanh nghiệp";
   return (
     <div className="mb-8 space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <p className="mb-1 text-sm text-charcoal-83">Không gian tuyển dụng của bạn</p>
-          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
-            Chào mừng bạn trở lại <span className="text-primary">!</span>
-          </h2>
-          <p className="mt-2 text-sm text-charcoal-83">
-            Kết nối đúng nhân tài. Xây dựng đội ngũ vững mạnh.
-          </p>
+      <div className="guardian-welcome">
+        <div className="guardian-welcome__content">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+              Chào mừng bạn trở lại <span className="text-primary">!</span>
+            </h1>
+            <p className="mt-2 text-sm text-charcoal-83">
+              Kết nối đúng nhân tài. Xây dựng đội ngũ vững mạnh.
+            </p>
+          </div>
+          <Link to="/recruiter/jobs" search={{ create: true }} className="recruiter-primary">
+            <JobPostingsIcon size={17} />
+            Đăng tin tuyển dụng
+          </Link>
         </div>
-        <Link to="/recruiter/jobs" search={{ create: true }} className="recruiter-primary">
-          <FilePlus2 size={17} />
-          Đăng tin tuyển dụng
-        </Link>
+        <GuardianIllustration name="teamwork" className="guardian-art--welcome" desktopOnly />
       </div>
       <div className="flex flex-col justify-between gap-4 rounded-xl border border-warm-border bg-surface-container-low p-5 sm:flex-row sm:items-center">
         <div className="flex items-start gap-3">
           <div className="rounded-lg bg-paper-white p-2.5 text-primary">
-            <ShieldCheck size={25} />
+            <VerificationDossierIcon size={25} />
           </div>
           <div>
             <h3 className="text-sm font-semibold text-charcoal-text">
               {invitedRecruiter ? user?.activeMembership?.companyName : statusText}
             </h3>
-            <p className="mt-1 max-w-xl text-xs leading-5 text-charcoal-83">
+            <p className="mt-1 max-w-xl text-sm leading-5 text-charcoal-83">
               {invitedRecruiter
                 ? "Bạn đang tham gia công ty với vai trò Nhà tuyển dụng. Hồ sơ pháp lý do chủ sở hữu phụ trách."
                 : status === "VERIFIED"
@@ -80,11 +91,11 @@ export function RecruiterOverview({
               : status === "PENDING"
                 ? "Xem hồ sơ"
                 : "Xác thực ngay"}
-            <ArrowRight size={16} />
+            <ArrowRightIcon size={16} />
           </Link>
         )}
       </div>
-      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+      <div className="workspace-summary">
         {[
           {
             label: "Ứng viên trong danh sách",
@@ -107,56 +118,45 @@ export function RecruiterOverview({
             sub: "Tiến gần hơn đến đội ngũ mới",
           },
         ].map((item) => (
-          <div
-            key={item.label}
-            className="rounded-xl border border-warm-border bg-paper-white p-4 sm:p-5"
-          >
+          <div key={item.label} className="workspace-summary__item">
             <div className="flex items-start justify-between gap-2">
-              <p className="text-xs font-medium leading-5 text-charcoal-83">{item.label}</p>
-              <Users
-                size={30}
-                className="shrink-0 rounded-lg bg-surface-container p-1.5 text-primary"
-              />
+              <p className="text-sm font-medium leading-5 text-charcoal-83">{item.label}</p>
             </div>
             <p className="mt-2 text-3xl font-semibold">{item.value}</p>
-            <p className="mt-2 text-[11px] text-charcoal-40">{item.sub}</p>
+            <p className="mt-2 text-xs text-charcoal-40">{item.sub}</p>
           </div>
         ))}
       </div>
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="workspace-shortcuts">
         {[
           {
             title: "Đăng tin tuyển dụng",
             description: "Tạo tin đăng, tiếp cận ứng viên phù hợp.",
             to: "/recruiter/jobs",
-            icon: FilePlus2,
+            icon: JobPostingsIcon,
           },
           {
             title: "Khám phá ứng viên",
             description: "Tìm kiếm nhân tài cho đội ngũ của bạn.",
             to: "/recruiter/talent",
-            icon: Search,
+            icon: TalentSearchIcon,
           },
           {
             title: "Hồ sơ doanh nghiệp",
             description: "Quản lý thông tin và giấy tờ xác thực.",
             to: "/recruiter/verification",
-            icon: Building2,
+            icon: CompanyIcon,
           },
         ]
           .filter((item) => !invitedRecruiter || item.to !== "/recruiter/verification")
           .map(({ title, description, to, icon: Icon }) => (
-            <Link
-              key={to}
-              to={to}
-              className="group flex items-center gap-3 rounded-xl border border-warm-border bg-paper-white p-4 transition-colors hover:border-primary/30"
-            >
+            <Link key={to} to={to} className="workspace-shortcut group">
               <Icon size={21} className="shrink-0 text-primary" />
               <div>
-                <h3 className="text-sm font-semibold">{title}</h3>
-                <p className="mt-1 text-xs leading-5 text-charcoal-83">{description}</p>
+                <h3 className="text-[15px] font-semibold">{title}</h3>
+                <p className="mt-1 text-sm leading-5 text-charcoal-83">{description}</p>
               </div>
-              <ArrowRight
+              <ArrowRightIcon
                 size={15}
                 className="ml-auto shrink-0 text-charcoal-40 group-hover:text-primary"
               />

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { createMockApiServer, MOCK_PASSWORD } from "./mock-api.mjs";
 
-test("mock API supports candidate/recruiter onboarding, rotation, and logout like the backend", async (t) => {
+test("mock API supports shared registration, Company setup, rotation, and logout", async (t) => {
   const server = createMockApiServer();
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   t.after(() => new Promise((resolve) => server.close(resolve)));
@@ -47,6 +47,11 @@ test("mock API supports candidate/recruiter onboarding, rotation, and logout lik
     email: "beta@example.test",
     registrationCertificateUrl: "http://localhost:5137/api/mock/certificate.pdf",
   };
+  assert.equal(
+    (await call("/me/employer-onboarding", "GET", null, login.data.accessToken)).status,
+    410,
+  );
+  assert.equal((await call("/employer-registrations", "POST", {})).status, 410);
   assert.equal((await call("/companies/verification-request", "POST", company)).status, 401);
   assert.equal(
     (await call("/companies/verification-request", "POST", company, login.data.accessToken)).status,

@@ -1,6 +1,25 @@
-.admin-workspace .workspace-sidebar { background: var(--color-paper); }
-.admin-workspace .workspace-sidebar nav { gap: 6px; padding: 18px 12px; }
-.admin-workspace .staff-nav-link {
+/* Shared Staff, recruiter and candidate navigation in Guardian Blue. */
+.workspace-shell .workspace-sidebar {
+  background: var(--color-paper);
+}
+.workspace-shell .workspace-sidebar .workspace-brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 76px;
+  padding: 16px 20px;
+}
+.candidate-workspace .workspace-brand p {
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.workspace-shell .workspace-sidebar .workspace-navigation {
+  gap: 6px;
+  padding: 18px 12px;
+}
+.workspace-shell .workspace-navigation .workspace-nav-link {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -14,24 +33,95 @@
   font-weight: 500;
   line-height: 1.4;
   text-decoration: none;
-  transition: background-color 240ms ease, color 240ms ease, border-color 240ms ease, transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    border-color 160ms ease;
 }
-.staff-nav-icon { display: grid; place-items: center; width: 32px; height: 32px; flex-shrink: 0; border-radius: 8px; color: var(--color-ink-3); transition: background-color 240ms ease, color 240ms ease; }
-.staff-nav-label { min-width: 0; }
-.admin-workspace .staff-nav-link[aria-current="page"] { border-color: var(--color-rule); background: var(--color-accent-subtle); color: var(--color-accent-deep); font-weight: 650; }
-.staff-nav-link[aria-current="page"] .staff-nav-icon { background: var(--color-accent); color: var(--color-paper); }
-.admin-workspace .staff-nav-link:focus-visible { background: var(--color-accent-subtle); color: var(--color-accent-deep); }
-.admin-workspace .workspace-sidebar > div:last-child { padding: 16px 12px; }
-.admin-workspace .workspace-sidebar > div:last-child a { min-height: 44px; padding: 10px 12px; gap: 12px; border-radius: 8px; color: var(--color-ink-3); transition: color 240ms ease, background-color 240ms ease; }
+.workspace-nav-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  color: var(--color-ink-3);
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
+}
+.workspace-nav-label {
+  min-width: 0;
+}
+.workspace-shell .workspace-navigation .workspace-nav-link[aria-current="page"] {
+  border-color: var(--color-rule);
+  background: var(--color-accent-subtle);
+  color: var(--color-accent-deep);
+  font-weight: 650;
+}
+.workspace-nav-link[aria-current="page"] .workspace-nav-icon {
+  background: var(--color-accent);
+  color: var(--color-paper);
+}
+.workspace-shell .workspace-nav-link:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+.workspace-shell .workspace-nav-link--locked {
+  color: var(--color-ink-3);
+  cursor: default;
+}
+.workspace-shell .workspace-sidebar-footer {
+  padding: 16px 12px;
+}
+.workspace-footer-link {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 10px 12px;
+  gap: 12px;
+  border-radius: 8px;
+  color: var(--color-ink-3);
+  font-size: 13px;
+  transition:
+    color 160ms ease,
+    background-color 160ms ease;
+}
+.workspace-footer-link svg {
+  flex-shrink: 0;
+}
+.workspace-footer-cta {
+  min-height: 44px;
+}
 @media (hover: hover) and (pointer: fine) {
-  .admin-workspace .staff-nav-link:hover { background: var(--color-paper-2); border-color: var(--color-rule); color: var(--color-accent-deep); transform: translateX(3px); transition-duration: 160ms; }
-  .staff-nav-link:hover .staff-nav-icon { background: var(--color-accent-subtle); color: var(--color-accent); }
-  .admin-workspace .staff-nav-link[aria-current="page"]:hover { background: var(--color-accent-subtle); }
-  .staff-nav-link[aria-current="page"]:hover .staff-nav-icon { background: var(--color-accent-hover); color: var(--color-paper); }
-  .admin-workspace .workspace-sidebar > div:last-child a:hover { background: var(--color-paper-2); color: var(--color-accent-deep); }
+  .workspace-shell .workspace-navigation a.workspace-nav-link:hover {
+    background: var(--color-paper-2);
+    border-color: var(--color-rule);
+    color: var(--color-accent-deep);
+  }
+  a.workspace-nav-link:hover .workspace-nav-icon {
+    background: var(--color-accent-subtle);
+    color: var(--color-accent);
+  }
+  .workspace-shell .workspace-navigation a.workspace-nav-link[aria-current="page"]:hover {
+    background: var(--color-accent-subtle);
+  }
+  a.workspace-nav-link[aria-current="page"]:hover .workspace-nav-icon {
+    background: var(--color-accent-hover);
+    color: var(--color-paper);
+  }
+  .workspace-footer-link:hover {
+    background: var(--color-paper-2);
+    color: var(--color-accent-deep);
+  }
 }
-.admin-workspace .staff-nav-link:active { transform: translateX(0); background: var(--color-paper-3); }
+.workspace-shell .workspace-navigation a.workspace-nav-link:active {
+  background: var(--color-paper-3);
+}
 @media (prefers-reduced-motion: reduce) {
-  .admin-workspace .staff-nav-link, .staff-nav-icon, .admin-workspace .workspace-sidebar > div:last-child a { transition: none; }
-  .admin-workspace .staff-nav-link:hover { transform: none; }
+  .workspace-shell .workspace-nav-link,
+  .workspace-nav-icon,
+  .workspace-footer-link {
+    transition: none;
+  }
 }

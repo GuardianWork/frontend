@@ -1,3 +1,4 @@
+import { CandidateContact } from "@/components/CandidateContact";
 import { useEffect, useState, type FormEvent, type KeyboardEvent } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AdminShell } from "@/components/AdminShell";
@@ -990,6 +991,7 @@ function CandidateProfilePage() {
                 {profile.isPublic ? "Đang hiển thị" : "Riêng tư"}
               </span>
             </div>
+            <CandidateContact editing={isEditing} />
           </aside>
 
           <div className="min-w-0 divide-y divide-rule">

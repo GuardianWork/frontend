@@ -1,6 +1,10 @@
+import { ErrorIcon, ArrowLeftIcon, ArrowRightIcon, RefreshIcon } from "@/components/icons";
+import { GuardianIllustration } from "@/components/GuardianIllustration";
+import { dossierDate as date } from "@/lib/dossier-date";
+import { DossierHistory, LegacyEvidence } from "@/components/staff/DossierHistory";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { AlertCircle, ArrowLeft, ArrowRight, Database, RotateCcw } from "lucide-react";
+import { Database } from "lucide-react";
 import { StaffStatusBadge } from "@/components/admin/StaffStatusBadge";
 import { AdminShell } from "@/components/AdminShell";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -10,6 +14,7 @@ import { useListPagination } from "@/hooks/useListPagination";
 import { matchesSearch } from "@/lib/list-search";
 import {
   AdminApiError,
+  VERIFICATION_PAGE_SIZE,
   decideAdminVerification,
   getAdminVerifications,
   type AdminCompany,
@@ -50,17 +55,6 @@ const STATUS_OPTIONS: { id: VerificationFilter; label: string }[] = [
   { id: "REJECTED", label: "Đã từ chối" },
   { id: "ALL", label: "Tất cả" },
 ];
-function date(value: string | null) {
-  if (!value) return "Chưa có thông tin";
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime())
-    ? "Chưa có thông tin"
-    : new Intl.DateTimeFormat("vi-VN", {
-        dateStyle: "medium",
-        timeStyle: "short",
-        timeZone: "Asia/Ho_Chi_Minh",
-      }).format(parsed);
-}
 function AdminVerificationsPage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
@@ -190,7 +184,14 @@ function AdminVerificationsPage() {
     setDialogOpen(true);
   };
   const submitDecision = async () => {
-    if (!selected || selected.verificationStatus !== "PENDING" || mockMode) return;
+    if (
+      !selected ||
+      selected.verificationStatus !== "PENDING" ||
+      mockMode ||
+      saving ||
+      decisionError?.conflict
+    )
+      return;
     setSaving(true);
     setDecisionError(null);
     try {
@@ -216,18 +217,14 @@ function AdminVerificationsPage() {
     }
   };
   const reloadAfterConflict = () => {
+    setRows([]);
+    setLoading(true);
     setSelected(null);
+    setDialogOpen(false);
     setDecisionError(null);
     setNotice("Danh sách đang được tải lại để lấy trạng thái mới nhất.");
     retry();
   };
-  const certificateValue = selected?.registrationCertificateUrl;
-  const certificateHref =
-    certificateValue &&
-    (/^https?:\/\//i.test(certificateValue) ||
-      (certificateValue.startsWith("/") && !certificateValue.startsWith("//")))
-      ? certificateValue
-      : null;
   return (
     <AdminShell title="Hồ sơ xác minh công ty" role="admin">
       {!selected ? (
@@ -293,11 +290,11 @@ function AdminVerificationsPage() {
           </div>
           {!mockMode && error ? (
             <div className="admin-list-state" role="alert">
-              <AlertCircle aria-hidden="true" />
+              <ErrorIcon aria-hidden="true" />
               <h2>Không tải được hồ sơ</h2>
               <p>{error}</p>
               <button type="button" className="admin-secondary-action" onClick={retry}>
-                <RotateCcw size={16} />
+                <RefreshIcon size={16} />
                 Thử tải lại
               </button>
             </div>
@@ -352,7 +349,7 @@ function AdminVerificationsPage() {
                           className="admin-text-link"
                           onClick={() => choose(item)}
                         >
-                          Mở hồ sơ <ArrowRight size={16} aria-hidden="true" />
+                          Mở hồ sơ <ArrowRightIcon size={16} aria-hidden="true" />
                         </button>
                       </td>
                     </tr>
@@ -361,11 +358,17 @@ function AdminVerificationsPage() {
               </table>
               {visibleRows.length === 0 && (
                 <div className="admin-list-empty">
+                  {!rows.length &&
+                    !query.trim() &&
+                    search.page === 0 &&
+                    search.status === "PENDING" && (
+                      <GuardianIllustration name="review" className="guardian-art--empty" />
+                    )}
                   <h2>
-                    {rows.length ? "Không tìm thấy hồ sơ phù hợp" : "Không có hồ sơ trong mục này"}
+                    {query.trim() ? "Không tìm thấy hồ sơ phù hợp" : "Không có hồ sơ trong mục này"}
                   </h2>
                   <p>
-                    {rows.length
+                    {query.trim()
                       ? "Thử từ khóa khác trong trang hiện tại."
                       : "Khi có hồ sơ phù hợp với bộ lọc, hồ sơ sẽ xuất hiện tại đây."}
                   </p>
@@ -385,6 +388,7 @@ function AdminVerificationsPage() {
               onPageChange={
                 mockMode ? mockPagination.onPageChange : (page) => updateSearch({ page })
               }
+              pageSize={mockMode ? undefined : VERIFICATION_PAGE_SIZE}
               itemLabel="hồ sơ"
               label="Phân trang hồ sơ xác minh"
               standalone
@@ -397,11 +401,16 @@ function AdminVerificationsPage() {
             type="button"
             className="admin-text-link mb-5"
             onClick={() => {
+              if (decisionError?.conflict) {
+                setRows([]);
+                setLoading(true);
+                retry();
+              }
               setSelected(null);
               setNotice(null);
             }}
           >
-            <ArrowLeft size={16} />
+            <ArrowLeftIcon size={16} />
             Quay lại danh sách
           </button>
           <div className="admin-page-heading">
@@ -429,12 +438,12 @@ function AdminVerificationsPage() {
           )}
           {decisionError && (
             <div className="admin-inline-error" role="alert">
-              <AlertCircle size={18} />
+              <ErrorIcon size={18} />
               <div>
                 <p>{decisionError.message}</p>
                 {decisionError.conflict && (
                   <button type="button" className="admin-text-link" onClick={reloadAfterConflict}>
-                    Tải lại danh sách <RotateCcw size={15} />
+                    Tải lại danh sách <RefreshIcon size={15} />
                   </button>
                 )}
               </div>
@@ -476,18 +485,7 @@ function AdminVerificationsPage() {
               <div className="admin-company-fields-wide">
                 <dt>Giấy đăng ký công ty</dt>
                 <dd>
-                  {certificateHref ? (
-                    <a
-                      href={certificateHref}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="admin-text-link"
-                    >
-                      Mở đường dẫn giấy đăng ký <ArrowRight size={16} />
-                    </a>
-                  ) : (
-                    "Chưa có đường dẫn tài liệu trong hồ sơ."
-                  )}
+                  <LegacyEvidence value={selected.registrationCertificateUrl} />
                 </dd>
               </div>
               {selected.verificationStatus === "REJECTED" && (
@@ -498,6 +496,9 @@ function AdminVerificationsPage() {
               )}
             </dl>
           </section>
+          {!mockMode && (
+            <DossierHistory key={selected.id} companyId={selected.id} revision={reload} />
+          )}
           {selected.verificationStatus === "PENDING" && !mockMode && (
             <div className="admin-decision-actions">
               <p>Chỉ hồ sơ đang chờ duyệt mới có thể được quyết định.</p>
@@ -505,6 +506,7 @@ function AdminVerificationsPage() {
                 <button
                   type="button"
                   className="admin-secondary-action"
+                  disabled={saving || decisionError?.conflict}
                   onClick={() => openDecision("REJECTED")}
                 >
                   Từ chối hồ sơ
@@ -512,9 +514,10 @@ function AdminVerificationsPage() {
                 <button
                   type="button"
                   className="admin-primary-action"
+                  disabled={saving || decisionError?.conflict}
                   onClick={() => openDecision("VERIFIED")}
                 >
-                  Phê duyệt <ArrowRight size={16} />
+                  Phê duyệt <ArrowRightIcon size={16} />
                 </button>
               </div>
             </div>
@@ -576,6 +579,7 @@ function AdminVerificationsPage() {
                     className="admin-primary-action"
                     disabled={
                       saving ||
+                      decisionError?.conflict ||
                       (decision === "REJECTED" &&
                         (reason.trim().length < 10 || reason.trim().length > 1000))
                     }

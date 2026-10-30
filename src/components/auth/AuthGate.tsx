@@ -1,8 +1,34 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { ApiError } from "@/services/api";
-import { hasAuthSession, isStaffUser, loadCurrentUser } from "@/services/auth";
-import { loadCompanyVerification } from "@/services/companyVerification";
+import { AUTH_SESSION_EVENT, hasAuthSession, isStaffUser, loadCurrentUser } from "@/services/auth";
+import {
+  EmployerOnboardingProvider,
+  useEmployerOnboarding,
+} from "@/context/EmployerOnboardingContext";
+import { EmployerOnboardingPanel } from "@/components/EmployerOnboardingPanel";
+import { RecruiterShell } from "@/components/RecruiterShell";
+import { loadEmployerOnboarding, type EmployerOnboarding } from "@/services/employerOnboarding";
+import { getMemberEmailSecret, getInvitationSecret } from "@/lib/member-email-secret";
+
+function RecruiterAccess({ children }: { children: ReactNode }) {
+  const context = useEmployerOnboarding();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const stage = context?.onboarding.stage;
+  const companyPage = pathname === "/recruiter/verification";
+  const invitationsPage = pathname === "/recruiter/members";
+  const allowed =
+    stage === "VERIFIED" ||
+    (stage === "COMPANY_ACTION_REQUIRED" && (companyPage || invitationsPage)) ||
+    ((stage === "PENDING" || stage === "REJECTED") && companyPage);
+  if (!allowed)
+    return (
+      <RecruiterShell title="Thiết lập tuyển dụng">
+        <EmployerOnboardingPanel />
+      </RecruiterShell>
+    );
+  return children;
+}
 
 /** Restore identity from /me before showing an authenticated workspace. */
 export function AuthGate({ children }: { children: ReactNode }) {
@@ -14,8 +40,33 @@ export function AuthGate({ children }: { children: ReactNode }) {
     ready: false,
     error: "",
   });
+  const [onboarding, setOnboarding] = useState<EmployerOnboarding | null>(null);
   const [retry, setRetry] = useState(0);
   const reload = useCallback(() => setRetry((value) => value + 1), []);
+  useEffect(() => {
+    const sessionChanged = () => {
+      if (!hasAuthSession()) reload();
+    };
+    window.addEventListener(AUTH_SESSION_EVENT, sessionChanged);
+    return () => window.removeEventListener(AUTH_SESSION_EVENT, sessionChanged);
+  }, [reload]);
+  useEffect(() => {
+    if (
+      (getMemberEmailSecret() || getInvitationSecret()) &&
+      area !== "recruiter" &&
+      pathname !== "/login"
+    ) {
+      void navigate({
+        to: hasAuthSession()
+          ? getInvitationSecret()
+            ? "/recruiter/members"
+            : "/recruiter/verification"
+          : "/login",
+        search: { role: "recruiter" },
+        replace: true,
+      });
+    }
+  }, [area, pathname, navigate]);
   useEffect(() => {
     if (!area) {
       setState({ area: "", ready: false, error: "" });
@@ -29,9 +80,10 @@ export function AuthGate({ children }: { children: ReactNode }) {
         const user = await loadCurrentUser();
         if ((area === "admin" || area === "staff") && !isStaffUser(user))
           throw new ApiError("Tài khoản hiện tại không có quyền truy cập Platform staff.", 403);
-        if (area === "recruiter" && user.activeMembership) {
-          // Private company dossiers belong to the Owner; Recruiters cannot read them.
-          if (user.activeMembership.companyRole === "OWNER") await loadCompanyVerification();
+        if (area === "recruiter") {
+          const next = await loadEmployerOnboarding();
+          if (cancelled) return;
+          setOnboarding(next);
         }
         if (!cancelled) setState({ area, ready: true, error: "" });
       } catch (error) {
@@ -62,10 +114,22 @@ export function AuthGate({ children }: { children: ReactNode }) {
       cancelled = true;
     };
   }, [area, navigate, retry]);
-  if (!area || (state.area === area && state.ready && hasAuthSession())) return children;
+  if (!area) return children;
+  if (state.area === area && state.ready && hasAuthSession()) {
+    if (area === "recruiter" && onboarding)
+      return (
+        <EmployerOnboardingProvider key={retry} initial={onboarding}>
+          <RecruiterAccess>{children}</RecruiterAccess>
+        </EmployerOnboardingProvider>
+      );
+    return children;
+  }
   return (
     <main className="mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center gap-4 px-6 text-center">
-      <p role={state.error ? "alert" : "status"} className="text-sm leading-6">
+      {state.error && (
+        <h1 className="text-2xl font-semibold tracking-tight">Chưa thể mở không gian làm việc</h1>
+      )}
+      <p role={state.error ? "alert" : "status"} className="text-[15px] leading-7 text-ink-2">
         {state.error || "Đang tải thông tin tài khoản…"}
       </p>
       {state.error && (

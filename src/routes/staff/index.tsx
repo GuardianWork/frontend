@@ -70,8 +70,6 @@ function AdminDashboard() {
         <span className="admin-dashboard-date">Một phần là dữ liệu mẫu</span>
       </div>
 
-      <StaffAccount summary />
-
       <div className="admin-dashboard-source" role="note">
         <CircleAlert size={16} aria-hidden="true" />
         <p>
@@ -132,6 +130,7 @@ function AdminDashboard() {
           </Link>
         </div>
       </section>
+      <StaffAccount summary />
     </AdminShell>
   );
 }

@@ -110,6 +110,7 @@ function CandidateCopilotPage() {
   const [customInput, setCustomInput] = useState("");
   const [customAnswer, setCustomAnswer] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState("");
 
   const activePreset = PRESETS.find((p) => p.id === activeId) || PRESETS[0];
 
@@ -122,21 +123,25 @@ function CandidateCopilotPage() {
     );
   };
 
-  const handleCopy = () => {
-    const textToCopy = customAnswer || activePreset.answer;
-    navigator.clipboard.writeText(textToCopy);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopy = async () => {
+    setCopyError("");
+    try {
+      await navigator.clipboard.writeText(customAnswer || activePreset.answer);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopyError("Không thể sao chép tự động. Hãy chọn nội dung câu trả lời để sao chép.");
+    }
   };
 
   return (
     <AdminShell title="AI Legal Copilot" role="candidate">
       {/* Header */}
-      <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div className="workspace-heading">
         <div>
-          <h2 className="text-3xl md:text-4xl font-bold text-charcoal-text mb-2 tracking-tight">
+          <h1 className="text-3xl md:text-3xl font-bold text-charcoal-text mb-2 tracking-tight">
             AI Legal Copilot
-          </h2>
+          </h1>
           <p className="text-base text-charcoal-83 max-w-2xl">
             Trợ lý AI tra cứu pháp lý chuyên sâu theo Bộ luật Lao động 2019, giải đáp tranh chấp và
             kiểm toán hợp đồng lao động.
@@ -153,21 +158,27 @@ function CandidateCopilotPage() {
             <Icon name="open_in_new" className="!text-base text-primary" />
             <span>Cổng VBPL Quốc gia</span>
           </a>
-          <span className="px-3 py-1.5 bg-green-50 border border-green-200 text-green-700 rounded-full text-xs font-semibold flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-green-500" />
+          <span className="workspace-source-label">
             <span>Gemini AI Engine · Pháp điển hóa 2019</span>
           </span>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <details className="workspace-data-note">
+        <summary>Câu trả lời mẫu · chưa kết nối AI</summary>
+        <p>
+          Bản minh họa sử dụng câu trả lời soạn sẵn và phản hồi mẫu trên trình duyệt. Chưa kết nối
+          dịch vụ AI; hãy kiểm tra văn bản nguồn trước khi áp dụng.
+        </p>
+      </details>
+      <div className="workspace-split workspace-reading">
         {/* Left Pane: Preset queries list */}
-        <div className="lg:col-span-5 flex flex-col gap-4">
-          <div className="flex justify-between items-center bg-paper-white p-3 rounded-xl border border-warm-border">
-            <span className="font-semibold text-xs text-charcoal-text uppercase tracking-wider">
+        <div className="workspace-result-list">
+          <div className="workspace-tabs">
+            <span className="font-semibold text-sm text-charcoal-text ">
               Án lệ & Điều khoản Tra cứu Phổ biến ({PRESETS.length})
             </span>
-            <span className="text-xs font-mono text-charcoal-40">VBQPPL 2019</span>
+            <span className="text-sm text-charcoal-40">VBQPPL 2019</span>
           </div>
 
           {PRESETS.map((p) => {
@@ -175,26 +186,32 @@ function CandidateCopilotPage() {
             return (
               <div
                 key={p.id}
+                role="button"
+                tabIndex={0}
+                aria-pressed={isActive}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    setActiveId(p.id);
+                    setCustomAnswer(null);
+                  }
+                }}
                 onClick={() => {
                   setActiveId(p.id);
                   setCustomAnswer(null);
                 }}
-                className={
-                  isActive
-                    ? "bg-paper-white p-5 rounded-xl border-l-4 border-l-primary border border-warm-border shadow-sm cursor-pointer transition-all"
-                    : "bg-paper-white p-5 rounded-xl border border-warm-border hover:shadow-sm transition-shadow cursor-pointer opacity-85 hover:opacity-100"
-                }
+                className={isActive ? "workspace-result is-selected" : "workspace-result"}
               >
                 <div className="flex justify-between items-start mb-2 gap-3">
                   <h3 className="font-semibold text-base leading-snug text-charcoal-text">
                     {p.label}
                   </h3>
-                  <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-surface-container text-charcoal-text shrink-0 border border-warm-border">
+                  <span className="text-xs font-bold px-2 py-0.5 rounded bg-surface-container text-charcoal-text shrink-0 border border-warm-border">
                     {p.badge}
                   </span>
                 </div>
-                <p className="text-xs text-charcoal-83 line-clamp-2 mb-3">{p.question}</p>
-                <div className="flex items-center gap-1.5 text-xs text-charcoal-40 font-mono">
+                <p className="text-sm text-charcoal-83 line-clamp-2 mb-3">{p.question}</p>
+                <div className="flex items-center gap-1.5 text-sm text-charcoal-40 ">
                   <Icon name="gavel" className="!text-[14px] text-primary" />
                   <span>{p.article}</span>
                 </div>
@@ -204,21 +221,22 @@ function CandidateCopilotPage() {
 
           {/* Quick query form */}
           <div className="bg-paper-white p-4 rounded-xl border border-warm-border shadow-sm mt-2">
-            <h4 className="font-semibold text-xs text-charcoal-40 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <h4 className="font-semibold text-sm text-charcoal-40 mb-2 flex items-center gap-1.5">
               <Icon name="search" className="!text-base text-primary" />
               Tra cứu Điều khoản Khác
             </h4>
-            <form onSubmit={handleCustomSubmit} className="flex gap-2">
+            <form onSubmit={handleCustomSubmit} className="flex flex-wrap gap-2">
               <input
                 type="text"
+                aria-label="Câu hỏi về hợp đồng hoặc thử việc"
                 placeholder="Nhập câu hỏi về hợp đồng, thử việc..."
                 value={customInput}
                 onChange={(e) => setCustomInput(e.target.value)}
-                className="flex-1 px-3 py-2 bg-surface-container-low border border-warm-border rounded-lg text-xs text-charcoal-text focus:outline-none"
+                className="flex-1 px-3 py-2 bg-surface-container-low border border-warm-border rounded-lg text-sm text-charcoal-text focus:outline-none"
               />
               <button
                 type="submit"
-                className="px-3.5 py-2 bg-primary text-on-primary rounded-lg text-xs font-semibold hover:opacity-90 transition-all shrink-0"
+                className="px-3.5 py-2 bg-primary text-on-primary rounded-lg text-sm font-semibold hover:opacity-90 transition-all shrink-0"
               >
                 Hỏi
               </button>
@@ -227,10 +245,10 @@ function CandidateCopilotPage() {
         </div>
 
         {/* Right Pane: AI Legal Review Inspector */}
-        <div className="lg:col-span-7">
-          <div className="bg-paper-white rounded-xl border border-warm-border shadow-sm h-full flex flex-col overflow-hidden">
+        <div className="workspace-detail-column">
+          <div className="workspace-detail">
             {/* Header */}
-            <div className="p-6 border-b border-warm-border flex justify-between items-center gap-3">
+            <div className="workspace-detail-header">
               <div>
                 <h3 className="text-lg font-bold text-charcoal-text">
                   {customAnswer ? "Kết quả Tra cứu Tùy chỉnh" : activePreset.label}
@@ -241,38 +259,43 @@ function CandidateCopilotPage() {
               </div>
               <button
                 onClick={handleCopy}
-                className="px-4 py-2 border border-warm-border bg-paper-white hover:bg-surface-container text-charcoal-text text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
+                className="px-4 py-2 border border-warm-border bg-paper-white hover:bg-surface-container text-charcoal-text text-sm font-semibold rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
               >
                 <Icon name="content_copy" className="!text-base" />
                 <span>{copied ? "Đã sao chép!" : "Sao chép"}</span>
               </button>
             </div>
 
+            {copyError && (
+              <p role="alert" className="px-6 pt-4 text-sm text-error">
+                {copyError}
+              </p>
+            )}
             {/* Scrollable details */}
-            <div className="flex-1 p-8 overflow-y-auto space-y-6">
+            <div className="workspace-prose">
               {/* Question card */}
               <div>
-                <h4 className="font-semibold text-xs text-charcoal-40 uppercase tracking-wide mb-2 flex items-center gap-2">
+                <h4 className="font-semibold text-sm text-charcoal-40 mb-2 flex items-center gap-2">
                   <Icon name="contact_support" className="!text-[18px]" />
                   Tình huống Pháp lý Đặt ra
                 </h4>
-                <div className="p-4 rounded-lg bg-surface-container-low border border-warm-border text-sm text-charcoal-text font-medium leading-relaxed">
+                <div className="text-[15px] leading-7 text-charcoal-text">
                   "{customAnswer ? customInput : activePreset.question}"
                 </div>
               </div>
 
               {/* AI Compliance Note Callout */}
-              <div className="bg-parchment-bg border border-warm-border border-l-4 border-l-primary p-5 rounded-lg flex gap-4">
+              <div className="workspace-reference-note flex gap-4">
                 <Icon name="smart_toy" className="text-primary mt-0.5 !text-2xl shrink-0" />
                 <div>
                   <h5 className="text-sm font-semibold text-charcoal-text mb-1">
                     AI Legal Analysis & Statutory Ground
                   </h5>
-                  <p className="text-xs text-charcoal-83 leading-relaxed mb-2 font-mono">
+                  <p className="text-sm text-charcoal-83 leading-relaxed mb-2 ">
                     Hệ thống trích xuất văn bản hợp nhất số 45/2019/QH14, bảo đảm nguyên tắc bảo vệ
                     quyền và lợi ích hợp pháp của người lao động.
                   </p>
-                  <div className="flex flex-wrap gap-2 text-xs font-mono">
+                  <div className="flex flex-wrap gap-2 text-sm ">
                     {activePreset.articlesCited.map((c) => (
                       <span
                         key={c.dieu}
@@ -287,17 +310,17 @@ function CandidateCopilotPage() {
 
               {/* Answer Content */}
               <div>
-                <h4 className="font-semibold text-xs text-charcoal-40 uppercase tracking-wide mb-3 flex items-center gap-2">
+                <h4 className="font-semibold text-sm text-charcoal-40 mb-3 flex items-center gap-2">
                   <Icon name="gavel" className="!text-[18px] text-primary" />
                   Nội dung Tư vấn & Căn cứ Pháp lý
                 </h4>
-                <div className="p-6 rounded-lg bg-surface-container-low border border-warm-border text-sm text-charcoal-text leading-relaxed whitespace-pre-line font-body">
+                <div className="workspace-answer text-charcoal-text">
                   {customAnswer || activePreset.answer}
                 </div>
               </div>
 
               {/* Disclaimer Notice */}
-              <div className="p-4 rounded-lg bg-paper-white border border-warm-border text-xs text-charcoal-40 leading-relaxed flex items-start gap-2">
+              <div className="p-4 rounded-lg bg-paper-white border border-warm-border text-sm text-charcoal-40 leading-relaxed flex items-start gap-2">
                 <Icon name="info" className="!text-base shrink-0 mt-0.5" />
                 <span>
                   <strong>Lưu ý:</strong> Thông tin do AI trích dẫn chỉ mang tính chất tham khảo đối

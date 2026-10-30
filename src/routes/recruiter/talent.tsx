@@ -64,11 +64,11 @@ function RecruiterTalentPage() {
   return (
     <AdminShell title="Hồ sơ ứng viên" role="recruiter">
       {/* Header */}
-      <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div className="workspace-heading">
         <div>
-          <h2 className="text-3xl md:text-4xl font-bold text-charcoal-text mb-2 tracking-tight">
+          <h1 className="text-3xl md:text-3xl font-bold text-charcoal-text mb-2 tracking-tight">
             Danh sách hồ sơ ứng viên
-          </h2>
+          </h1>
           <p className="text-base text-charcoal-83 max-w-2xl">
             Danh mục hồ sơ ứng viên đã qua kiểm định KYC, chứng chỉ ngoại ngữ và mức lương sàn minh
             bạch.
@@ -88,48 +88,50 @@ function RecruiterTalentPage() {
             className="px-4 py-2 bg-primary text-on-primary text-sm font-medium rounded-lg hover:opacity-90 transition-all flex items-center gap-2 shadow-sm"
           >
             <Icon name="mail" className="!text-base" />
-            <span>{pitchSent ? "Đã gửi Pitch đến Alex ✓" : "Gửi Outreach Pitch (Bảo Mật)"}</span>
+            <span>
+              {pitchSent ? `Đã gửi Pitch đến ${current.name} ✓` : "Gửi Outreach Pitch (Bảo Mật)"}
+            </span>
           </button>
         </div>
       </div>
 
+      <details className="workspace-data-note">
+        <summary>Hồ sơ và thao tác minh họa</summary>
+        <p>
+          Hồ sơ ứng viên, thông tin kiểm định và thao tác tiếp cận trên trang này là minh họa. Thao
+          tác không gửi tin nhắn tới ứng viên.
+        </p>
+      </details>
       {/* KPI Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-paper-white border border-warm-border rounded-xl p-6 shadow-sm">
-          <span className="font-semibold text-charcoal-40 text-xs uppercase tracking-wider block mb-2">
+      <div className="workspace-summary">
+        <div className="workspace-summary__item">
+          <span className="font-semibold text-charcoal-40 text-sm block mb-2">
             Mức lương Sàn Yêu cầu
           </span>
-          <div className="font-semibold text-2xl text-charcoal-text font-mono">
-            {current.salary}
-          </div>
-          <div className="mt-2 text-xs text-charcoal-83 flex items-center gap-1 font-medium">
+          <div className="font-semibold text-2xl text-charcoal-text ">{current.salary}</div>
+          <div className="mt-2 text-sm text-charcoal-83 flex items-center gap-1 font-medium">
             <Icon name="payments" className="!text-[15px] text-primary" /> Cam kết hợp đồng chính
             thức
           </div>
         </div>
 
-        <div className="bg-paper-white border border-warm-border rounded-xl p-6 shadow-sm">
-          <span className="font-semibold text-charcoal-40 text-xs uppercase tracking-wider block mb-2">
+        <div className="workspace-summary__item">
+          <span className="font-semibold text-charcoal-40 text-sm block mb-2">
             Kinh nghiệm Tích lũy
           </span>
-          <div className="font-semibold text-2xl text-charcoal-text font-mono">
-            {current.experience}
-          </div>
-          <div className="mt-2 text-xs text-charcoal-83 flex items-center gap-1 font-medium">
+          <div className="font-semibold text-2xl text-charcoal-text ">{current.experience}</div>
+          <div className="mt-2 text-sm text-charcoal-83 flex items-center gap-1 font-medium">
             <Icon name="history_edu" className="!text-[15px] text-primary" /> Backend, K8s & Design
             Systems
           </div>
         </div>
 
-        <div className="bg-primary text-on-primary border border-primary rounded-xl p-6 shadow-sm relative overflow-hidden">
-          <div className="absolute right-0 bottom-0 opacity-15 pointer-events-none">
-            <Icon name="verified_user" className="!text-7xl translate-x-3 translate-y-3" />
-          </div>
-          <span className="font-semibold text-on-primary/80 text-xs uppercase tracking-wider block mb-2">
+        <div className="workspace-summary__item">
+          <span className="font-semibold text-charcoal-40 text-sm block mb-2">
             Hợp Chuẩn Pháp Lý
           </span>
-          <div className="font-semibold text-2xl font-mono">100% Đã Kiểm Định</div>
-          <div className="mt-2 text-xs text-on-primary/90 flex items-center gap-1 font-medium">
+          <div className="font-semibold text-2xl ">100% Đã Kiểm Định</div>
+          <div className="mt-2 text-sm text-charcoal-83 flex items-center gap-1 font-medium">
             <Icon name="shield" className="!text-[15px]" /> Bảo vệ theo Điều 98 & Điều 25
           </div>
         </div>
@@ -144,14 +146,12 @@ function RecruiterTalentPage() {
         }
       />
       {/* Split Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="workspace-split">
         {/* Left Pane: Candidates list & Active Card */}
-        <div className="lg:col-span-5 flex flex-col gap-6">
+        <div className="workspace-profile-sidebar">
           {/* Candidate selector pills */}
-          <div className="bg-paper-white p-3 rounded-xl border border-warm-border flex flex-col gap-2">
-            <span className="text-[10px] font-bold text-charcoal-40 uppercase tracking-wider px-1">
-              Chọn hồ sơ ứng viên
-            </span>
+          <div className="workspace-result-list">
+            <span className="text-xs font-bold text-charcoal-40 px-1">Chọn hồ sơ ứng viên</span>
             <div className="flex flex-col gap-1.5">
               {!candidatesList.some((c) => matchesSearch(query, c.name, c.role, c.location)) && (
                 <p className="p-3 text-sm text-charcoal-83">Không tìm thấy hồ sơ phù hợp.</p>
@@ -163,28 +163,39 @@ function RecruiterTalentPage() {
                   return (
                     <div
                       key={c.id}
+                      role="button"
+                      tabIndex={0}
+                      aria-pressed={active}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          setSelectedCandidateId(c.id);
+                          setPitchSent(false);
+                        }
+                      }}
                       onClick={() => {
                         setSelectedCandidateId(c.id);
                         setPitchSent(false);
                       }}
                       className={
                         active
-                          ? "p-3 rounded-lg bg-surface-container border border-primary/40 cursor-pointer flex items-center justify-between"
-                          : "p-3 rounded-lg bg-surface-container-low hover:bg-surface-container border border-warm-border cursor-pointer transition-colors flex items-center justify-between opacity-80 hover:opacity-100"
+                          ? "workspace-result is-selected flex items-center justify-between gap-3"
+                          : "workspace-result flex items-center justify-between gap-3"
                       }
                     >
                       <div className="flex items-center gap-3">
-                        <img
-                          src={c.avatar}
-                          alt={c.name}
-                          className="w-8 h-8 rounded-full border border-warm-border"
-                        />
+                        <span
+                          aria-hidden="true"
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-container text-primary font-semibold"
+                        >
+                          {c.name.slice(0, 1)}
+                        </span>
                         <div>
-                          <div className="font-bold text-xs text-charcoal-text">{c.name}</div>
-                          <div className="text-[11px] text-charcoal-83">{c.role}</div>
+                          <div className="font-bold text-sm text-charcoal-text">{c.name}</div>
+                          <div className="text-xs text-charcoal-83">{c.role}</div>
                         </div>
                       </div>
-                      <span className="text-[10px] font-mono font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200">
+                      <span className="text-xs font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200">
                         {c.ielts}
                       </span>
                     </div>
@@ -197,18 +208,19 @@ function RecruiterTalentPage() {
           <div className="bg-paper-white p-6 rounded-xl border border-warm-border shadow-sm">
             <div className="flex items-center gap-4 mb-4">
               <div className="w-16 h-16 rounded-full overflow-hidden border border-warm-border bg-surface-container shrink-0">
-                <img
-                  src={current.avatar}
-                  alt={current.name}
-                  className="w-full h-full object-cover scale-110"
-                />
+                <span
+                  aria-hidden="true"
+                  className="flex h-full items-center justify-center bg-surface-container text-primary font-semibold text-xl"
+                >
+                  {current.name.slice(0, 1)}
+                </span>
               </div>
               <div>
                 <h3 className="font-bold text-xl text-charcoal-text">{current.name}</h3>
                 <p className="text-sm font-medium text-charcoal-83 mt-0.5">{current.role}</p>
                 <div className="flex items-center gap-2 mt-1.5">
                   <span className="w-2 h-2 rounded-full bg-green-500" />
-                  <span className="text-xs font-semibold text-green-700">
+                  <span className="text-sm font-semibold text-green-700">
                     Verified Active Candidate
                   </span>
                 </div>
@@ -217,18 +229,18 @@ function RecruiterTalentPage() {
 
             <div className="space-y-3 pt-4 border-t border-warm-border text-sm">
               <div className="flex justify-between items-center">
-                <span className="text-charcoal-40 text-xs font-semibold uppercase">Địa điểm:</span>
+                <span className="text-charcoal-40 text-sm font-semibold ">Địa điểm:</span>
                 <span className="text-charcoal-text font-medium">{current.location}, Việt Nam</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-charcoal-40 text-xs font-semibold uppercase">Định danh:</span>
-                <span className="text-charcoal-text font-medium font-mono text-xs">
+                <span className="text-charcoal-40 text-sm font-semibold ">Định danh:</span>
+                <span className="text-charcoal-text font-medium text-sm">
                   Đã xác thực CCCD điện tử
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-charcoal-40 text-xs font-semibold uppercase">Ngoại ngữ:</span>
-                <span className="text-green-700 font-mono text-xs font-bold bg-green-50 px-2 py-0.5 rounded border border-green-200">
+                <span className="text-charcoal-40 text-sm font-semibold ">Ngoại ngữ:</span>
+                <span className="text-green-700 text-sm font-bold bg-green-50 px-2 py-0.5 rounded border border-green-200">
                   {current.ielts}
                 </span>
               </div>
@@ -242,24 +254,28 @@ function RecruiterTalentPage() {
                 <Icon name="description" className="!text-base text-primary" />
                 CV Thẩm Định Đính Kèm
               </span>
-              <span className="px-2 py-0.5 bg-primary text-on-primary text-[10px] font-bold rounded">
+              <span className="px-2 py-0.5 bg-primary text-on-primary text-xs font-bold rounded">
                 PDF
               </span>
             </div>
-            <p className="font-mono text-xs text-charcoal-83 truncate mb-3">
+            <p className="text-sm text-charcoal-83 break-words mb-3">
               {current.name.replace(/[^a-zA-Z]/g, "_")}_CV_2026_Verified.pdf
             </p>
-            <button className="w-full py-2 bg-surface-container border border-warm-border hover:bg-surface-container-high rounded-lg text-xs font-semibold text-charcoal-text flex items-center justify-center gap-1.5 transition-colors">
+            <button
+              disabled
+              title="Tệp CV trong hồ sơ minh họa chưa có tài liệu để tải về"
+              className="w-full py-2 bg-surface-container border border-warm-border rounded-lg text-sm font-semibold text-charcoal-83 flex items-center justify-center gap-1.5 disabled:cursor-not-allowed disabled:opacity-60"
+            >
               <Icon name="download" className="!text-base" /> Tải tệp CV bản đã thẩm định
             </button>
           </div>
         </div>
 
         {/* Right Pane: Review & Detailed Experience */}
-        <div className="lg:col-span-7">
-          <div className="bg-paper-white rounded-xl border border-warm-border shadow-sm h-full flex flex-col overflow-hidden">
+        <div className="workspace-detail-column">
+          <div className="workspace-detail">
             {/* Header */}
-            <div className="p-6 border-b border-warm-border flex justify-between items-center gap-4">
+            <div className="workspace-detail-header">
               <div>
                 <h3 className="text-lg font-bold text-charcoal-text">
                   Chi tiết Năng lực & Đánh giá Sourcing
@@ -268,15 +284,15 @@ function RecruiterTalentPage() {
                   Hồ sơ ID: #{current.id.toUpperCase()}-VERIFIED
                 </p>
               </div>
-              <span className="px-3 py-1 bg-green-50 text-green-700 border border-green-200 rounded-full text-xs font-bold flex items-center gap-1">
+              <span className="px-3 py-1 bg-green-50 text-green-700 border border-green-200 rounded-full text-sm font-bold flex items-center gap-1">
                 <Icon name="verified" className="!text-sm" /> 100% Verified
               </span>
             </div>
 
             {/* Scrollable details */}
-            <div className="flex-1 p-8 overflow-y-auto space-y-8">
+            <div className="workspace-prose">
               {/* Statutory Protection Banner */}
-              <div className="bg-parchment-bg border border-warm-border border-l-4 border-l-primary p-5 rounded-lg flex gap-4">
+              <div className="workspace-reference-note flex gap-4">
                 <Icon name="shield" className="text-primary mt-0.5 !text-2xl shrink-0" />
                 <div>
                   <h4 className="text-sm font-semibold text-charcoal-text mb-1">
@@ -287,7 +303,7 @@ function RecruiterTalentPage() {
                     đồng ý tiếp nhận Outreach Pitch. Hợp đồng tuyển dụng phải cam kết thử việc tối
                     đa 60 ngày theo Điều 25 và tính đủ lương làm thêm giờ theo Điều 98.
                   </p>
-                  <div className="flex items-center gap-2 text-xs font-semibold text-primary">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-primary">
                     <Icon name="policy" className="!text-sm" /> Tuân thủ Bộ luật Lao động 2019
                   </div>
                 </div>
@@ -295,10 +311,10 @@ function RecruiterTalentPage() {
 
               {/* Bio summary */}
               <div>
-                <h4 className="font-semibold text-xs text-charcoal-40 uppercase tracking-wider mb-2">
+                <h4 className="font-semibold text-sm text-charcoal-40 mb-2">
                   Tóm Tắt Năng Lực Ứng Viên
                 </h4>
-                <p className="text-sm text-charcoal-text leading-relaxed bg-surface-container-low p-4 rounded-lg border border-warm-border">
+                <p className="text-sm text-charcoal-text leading-relaxed">
                   Kỹ sư có bề dày chuyên môn về hệ thống phân tán và ứng dụng hiệu năng cao. Có kinh
                   nghiệm xây dựng các giải pháp chịu tải hàng triệu người dùng, dẫn dắt đội ngũ kỹ
                   thuật và duy trì tuân thủ an toàn bảo mật.
@@ -307,7 +323,7 @@ function RecruiterTalentPage() {
 
               {/* Core Skills */}
               <div>
-                <h4 className="font-semibold text-xs text-charcoal-40 uppercase tracking-wider mb-3">
+                <h4 className="font-semibold text-sm text-charcoal-40 mb-3">
                   Kỹ Năng Đã Thẩm Định Thực Tế
                 </h4>
                 <div className="flex flex-wrap gap-2">
@@ -324,7 +340,7 @@ function RecruiterTalentPage() {
                   ].map((s) => (
                     <span
                       key={s}
-                      className="px-3 py-1 rounded-md bg-surface-container border border-warm-border text-xs font-mono font-semibold text-charcoal-text"
+                      className="px-3 py-1 rounded-md bg-surface-container border border-warm-border text-sm font-semibold text-charcoal-text"
                     >
                       {s}
                     </span>
@@ -334,7 +350,7 @@ function RecruiterTalentPage() {
 
               {/* Work history */}
               <div>
-                <h4 className="font-semibold text-xs text-charcoal-40 uppercase tracking-wider mb-3">
+                <h4 className="font-semibold text-sm text-charcoal-40 mb-3">
                   Kinh Nghiệm Thực Tế Xác Thực
                 </h4>
                 <div className="space-y-4">
@@ -344,15 +360,13 @@ function RecruiterTalentPage() {
                         <h5 className="font-bold text-sm text-charcoal-text">
                           Senior Tech Lead & Systems Engineer
                         </h5>
-                        <p className="text-xs text-charcoal-83 mt-0.5 font-medium">
+                        <p className="text-sm text-charcoal-83 mt-0.5 font-medium">
                           GuardianWork VN • TP. Hồ Chí Minh
                         </p>
                       </div>
-                      <span className="font-mono text-xs font-semibold text-primary">
-                        2023 – Hiện tại
-                      </span>
+                      <span className="text-sm font-semibold text-primary">2023 – Hiện tại</span>
                     </div>
-                    <p className="text-xs text-charcoal-83 mt-2 leading-relaxed">
+                    <p className="text-sm text-charcoal-83 mt-2 leading-relaxed">
                       Dẫn dắt kiến trúc bảo mật tuân thủ Bộ luật Lao động 2019, điều phối vi dịch vụ
                       và triển khai hệ thống xác thực tức thì cho hơn 5.000 ứng viên.
                     </p>
@@ -364,15 +378,13 @@ function RecruiterTalentPage() {
                         <h5 className="font-bold text-sm text-charcoal-text">
                           Lead Frontend Systems Architect
                         </h5>
-                        <p className="text-xs text-charcoal-83 mt-0.5 font-medium">
+                        <p className="text-sm text-charcoal-83 mt-0.5 font-medium">
                           Apex Cloud Services • Remote APAC
                         </p>
                       </div>
-                      <span className="font-mono text-xs font-semibold text-primary">
-                        2020 – 2023
-                      </span>
+                      <span className="text-sm font-semibold text-primary">2020 – 2023</span>
                     </div>
-                    <p className="text-xs text-charcoal-83 mt-2 leading-relaxed">
+                    <p className="text-sm text-charcoal-83 mt-2 leading-relaxed">
                       Thiết kế design system token và tối ưu hóa thời gian tải ứng dụng web xuống
                       dưới 0.8s cho hơn 50.000 người dùng hàng ngày.
                     </p>
@@ -386,13 +398,13 @@ function RecruiterTalentPage() {
                   <h5 className="font-bold text-sm text-charcoal-text">
                     Gửi lời mời phỏng vấn đến ứng viên
                   </h5>
-                  <p className="text-xs text-charcoal-83 mt-0.5">
+                  <p className="text-sm text-charcoal-83 mt-0.5">
                     Lời mời được gắn nhãn hợp đồng bảo vệ Điều 98
                   </p>
                 </div>
                 <button
                   onClick={() => setPitchSent(true)}
-                  className="px-5 py-2.5 bg-primary text-on-primary text-xs font-bold rounded-lg hover:opacity-90 transition-all shadow-sm shrink-0 flex items-center gap-1.5"
+                  className="px-5 py-2.5 bg-primary text-on-primary text-sm font-bold rounded-lg hover:opacity-90 transition-all shadow-sm shrink-0 flex items-center gap-1.5"
                 >
                   <Icon name="send" className="!text-base" />
                   <span>{pitchSent ? "Đã gửi Pitch ✓" : "Gửi Lời Mời Ngay"}</span>

@@ -1,4 +1,4 @@
-import { ApiError, apiRequest, getApiBaseUrl } from "./api.ts";
+import { ApiError, apiFetch, apiRequest, parseApiResponse, getApiBaseUrl } from "./api.ts";
 
 export type AccountPurpose = "candidate" | "recruiter";
 export interface ActiveMembership {
@@ -194,13 +194,8 @@ export async function refreshAuthSession(): Promise<AuthSession> {
       });
       return result;
     } catch (error) {
-      if (
-        error instanceof ApiError &&
-        [400, 401, 403].includes(error.status) &&
-        readSession()?.refreshToken === previous.refreshToken
-      )
-        clearAuthSession();
-      throw error;
+      if (readSession()?.refreshToken === previous.refreshToken) clearAuthSession();
+      throw new ApiError("Không thể làm mới phiên. Vui lòng đăng nhập lại.", 401);
     }
   })();
   refreshing = { token: previous.refreshToken, promise };
@@ -216,35 +211,31 @@ export async function getAccessToken(): Promise<string> {
   if (session.expiresAt <= Date.now() + 10000) return (await refreshAuthSession()).accessToken;
   return session.accessToken;
 }
-export async function authenticatedRequest(path: string, init: RequestInit = {}): Promise<unknown> {
+/** Only relative API paths are accepted so credentials cannot leak to external hosts. */
+export async function authenticatedFetch(path: string, init: RequestInit = {}): Promise<Response> {
+  if (!path.startsWith("/") || path.startsWith("//"))
+    throw new ApiError("Đường dẫn API không hợp lệ.");
   const token = await getAccessToken();
-  const request = (accessToken: string) =>
-    apiRequest(path, {
+  const request = (accessToken: string) => {
+    const headers = Object.fromEntries(new Headers(init.headers).entries());
+    return apiFetch(path, {
       ...init,
-      headers: { ...init.headers, Authorization: `Bearer ${accessToken}` },
+      headers: { ...headers, Authorization: `Bearer ${accessToken}` },
     });
-  try {
-    return await request(token);
-  } catch (error) {
-    if (!(error instanceof ApiError) || error.status !== 401) throw error;
-    if (!hasAuthSession()) throw error;
-    const current = readSession();
-    const refreshedToken =
-      current?.accessToken !== token
-        ? await getAccessToken()
-        : (await refreshAuthSession()).accessToken;
-    try {
-      return await request(refreshedToken);
-    } catch (retryError) {
-      if (
-        retryError instanceof ApiError &&
-        retryError.status === 401 &&
-        readSession()?.accessToken === refreshedToken
-      )
-        clearAuthSession();
-      throw retryError;
-    }
-  }
+  };
+  const response = await request(token);
+  if (response.status !== 401 || !hasAuthSession()) return response;
+  const current = readSession();
+  const refreshedToken =
+    current?.accessToken !== token
+      ? await getAccessToken()
+      : (await refreshAuthSession()).accessToken;
+  const retry = await request(refreshedToken);
+  if (retry.status === 401 && readSession()?.accessToken === refreshedToken) clearAuthSession();
+  return retry;
+}
+export async function authenticatedRequest(path: string, init: RequestInit = {}): Promise<unknown> {
+  return parseApiResponse(await authenticatedFetch(path, init));
 }
 export async function loadCurrentUser(): Promise<AuthUser> {
   const result = await authenticatedRequest("/auth/me");
@@ -253,7 +244,7 @@ export async function loadCurrentUser(): Promise<AuthUser> {
   if (
     !isAuthUser(user) ||
     !(
-      membership === null ||
+      membership == null ||
       (membership &&
         Number.isSafeInteger(membership.companyId) &&
         typeof membership.companyName === "string" &&

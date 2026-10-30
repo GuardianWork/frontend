@@ -1,0 +1,9 @@
+GuardianWork includes selected Radix Icons 1.3.2 React sources in src/components/icons/radix/.
+Copyright (c) 2022 WorkOS. MIT license: see RADIX-LICENSE.txt in this directory.
+Source: https://registry.npmjs.org/@radix-ui/react-icons/-/react-icons-1.3.2.tgz
+Package gitHead: bde33b13aa5848555f5512ac12155930fb4beb7d
+Sources extracted from the official package's dist/react-icons.esm.js.map sourcesContent.
+Changes: type-only imports, license header, formatting. Icon geometry is unchanged.
+Project-owned adapters normalize sizing and accessibility separately in icons/actions.tsx.
+The original deliverable's notice is retained as RADIX-SUPPLIED-NOTICE.txt.
+No @radix-ui/react-icons dependency was installed; package.json and package-lock.json remain unchanged.

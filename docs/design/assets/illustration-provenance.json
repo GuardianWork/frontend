@@ -1,0 +1,161 @@
+[
+  {
+    "index": 1,
+    "source": "../guardianwork-illustrations-deliverable/public/images/guardianwork/01-candidate-job-discovery.webp",
+    "sourceSha256": "afe65500081dd8566a939799f5237ca69bc62316bb5c23165d2f16f913eb07f1",
+    "status": "mounted",
+    "originalMethod": "subject-focused feathered alpha extraction from original panel; not generative reconstruction",
+    "production": "public/images/guardianwork/01-candidate-job-discovery.webp",
+    "dimensions": [
+      278,
+      324
+    ],
+    "bytes": 15424,
+    "sha256": "afe65500081dd8566a939799f5237ca69bc62316bb5c23165d2f16f913eb07f1",
+    "reviewBackgrounds": [
+      "#FFFFFF",
+      "#F3F6FB"
+    ],
+    "limitations": "Original feathered cutout retains soft office context. Reviewed and accepted only at the compact documented size; not a scalable hero master."
+  },
+  {
+    "index": 2,
+    "source": "../guardianwork-illustrations-deliverable/public/images/guardianwork/02-candidate-cv-profile.webp",
+    "sourceSha256": "95aa058c294322ef960bee7cbdf483cabb4b073d9a50491a2fd815152a63d673",
+    "status": "reserved",
+    "originalMethod": "subject-focused feathered alpha extraction from original panel; not generative reconstruction",
+    "reason": "Active profile already has a dense introduction, avatar, edit and upload controls; avoid extra imagery."
+  },
+  {
+    "index": 3,
+    "source": "../guardianwork-illustrations-deliverable/public/images/guardianwork/03-application-success.webp",
+    "sourceSha256": "ddd14096ec7dd9d1db006af52d4c7912ad9a590a7db3921ae197e1683a0c256f",
+    "status": "rejected-original/reserved-placement",
+    "originalMethod": "subject-focused feathered alpha extraction from original panel; not generative reconstruction",
+    "reason": "Original has visible text remnants; current confirmed application feedback is a compact inline status, with no useful illustration placement."
+  },
+  {
+    "index": 4,
+    "source": "../guardianwork-illustrations-deliverable/public/images/guardianwork/04-recruiter-teamwork.webp",
+    "sourceSha256": "96270b09ad618e44c31cf8755eac7555743dacd239847eb8ff19d78607d70c01",
+    "status": "mounted",
+    "originalMethod": "subject-focused feathered alpha extraction from original panel; not generative reconstruction",
+    "production": "public/images/guardianwork/04-recruiter-teamwork.webp",
+    "dimensions": [
+      500,
+      304
+    ],
+    "bytes": 26756,
+    "sha256": "96270b09ad618e44c31cf8755eac7555743dacd239847eb8ff19d78607d70c01",
+    "reviewBackgrounds": [
+      "#FFFFFF",
+      "#F3F6FB"
+    ],
+    "limitations": "Original feathered cutout retains soft office context. Reviewed and accepted only at the compact documented size; not a scalable hero master."
+  },
+  {
+    "index": 5,
+    "source": "../guardianwork-illustrations-deliverable/public/images/guardianwork/05-company-onboarding.webp",
+    "sourceSha256": "72bba89a13488d11b26d169c398dddcfc0b640de3fd878a90f65d3ca8a769045",
+    "status": "mounted",
+    "originalMethod": "subject-focused feathered alpha extraction from original panel; not generative reconstruction",
+    "production": "public/images/guardianwork/recruiter-login-illustration.webp",
+    "dimensions": [
+      640,
+      463
+    ],
+    "bytes": 35482,
+    "sha256": "b8d83f431e4259ac46581ca0448df66939f1be292ef7a6dcd24cdfe88189286d",
+    "reviewBackgrounds": [
+      "#FFFFFF",
+      "#F3F6FB"
+    ],
+    "editedMaster": "docs/design/assets/edited-masters/recruiter-login-illustration.png",
+    "editMethod": "New high-resolution imagegen rendering using inspected live recruiter login artwork as reference; not upscaled from the crop. Proportional 640px WebP export, quality 88, alpha preserved.",
+    "previousProduction": "public/images/guardianwork/05-company-onboarding-clean.webp",
+    "previousReference": "docs/design/assets/reference/recruiter-login-before.webp",
+    "masterDimensions": [
+      1475,
+      1067
+    ],
+    "prompt": "docs/design/assets/recruiter-login-prompt.txt"
+  },
+  {
+    "index": 6,
+    "source": "../guardianwork-illustrations-deliverable/public/images/guardianwork/06-recruiter-job-posting.webp",
+    "sourceSha256": "5f76fede0835073fbf22317903fccba57b9ebbd16e830e7feefdce8c23a4247b",
+    "status": "mounted",
+    "originalMethod": "subject-focused feathered alpha extraction from original panel; not generative reconstruction",
+    "production": "public/images/guardianwork/06-recruiter-job-posting-clean.webp",
+    "dimensions": [
+      313,
+      302
+    ],
+    "bytes": 12958,
+    "sha256": "3458a47cbe7df77630d5464af501154cf4a7e59f60100658e01fcb58c6e7118b",
+    "reviewBackgrounds": [
+      "#FFFFFF",
+      "#F3F6FB"
+    ],
+    "editedMaster": "docs/design/assets/edited-masters/06-recruiter-job-posting-clean.png",
+    "editMethod": "Built-in imagegen cleanup preserving person/pose/palette; removed text, UI, background fragments; transparent output; magick proportional resize to WebP quality 88"
+  },
+  {
+    "index": 7,
+    "source": "../guardianwork-illustrations-deliverable/public/images/guardianwork/07-staff-dossier-review.webp",
+    "sourceSha256": "cd8e50de25bf86930a5530962dbf19acc2262f83e9c191fb3fc5a887cb44ab95",
+    "status": "mounted",
+    "originalMethod": "subject-focused feathered alpha extraction from original panel; not generative reconstruction",
+    "production": "public/images/guardianwork/07-staff-dossier-review.webp",
+    "dimensions": [
+      289,
+      354
+    ],
+    "bytes": 17106,
+    "sha256": "cd8e50de25bf86930a5530962dbf19acc2262f83e9c191fb3fc5a887cb44ab95",
+    "reviewBackgrounds": [
+      "#FFFFFF",
+      "#F3F6FB"
+    ],
+    "limitations": "Original feathered cutout retains soft office context. Reviewed and accepted only at the compact documented size; not a scalable hero master."
+  },
+  {
+    "index": 8,
+    "source": "../guardianwork-illustrations-deliverable/public/images/guardianwork/08-multi-industry-careers.webp",
+    "sourceSha256": "065374316826e2751b6e4ae9fe5344ff6a96872963ad78c007969103cfe88eca",
+    "status": "mounted",
+    "originalMethod": "subject-focused feathered alpha extraction from original panel; not generative reconstruction",
+    "production": "public/images/guardianwork/08-multi-industry-careers.webp",
+    "dimensions": [
+      496,
+      281
+    ],
+    "bytes": 30374,
+    "sha256": "065374316826e2751b6e4ae9fe5344ff6a96872963ad78c007969103cfe88eca",
+    "reviewBackgrounds": [
+      "#FFFFFF",
+      "#F3F6FB"
+    ],
+    "limitations": "Original feathered cutout retains soft office context. Reviewed and accepted only at the compact documented size; not a scalable hero master."
+  },
+  {
+    "index": 9,
+    "source": "../guardianwork-illustrations-deliverable/public/images/guardianwork/09-career-growth.webp",
+    "sourceSha256": "812566f3959da8d06e33c363fbe5cfff200d77cffd32e16d60c16fce600c238b",
+    "status": "mounted",
+    "originalMethod": "subject-focused feathered alpha extraction from original panel; not generative reconstruction",
+    "production": "public/images/guardianwork/09-career-growth-clean.webp",
+    "dimensions": [
+      306,
+      280
+    ],
+    "bytes": 13726,
+    "sha256": "c0654147a4306c6cfa15d54879c703608540bca307066da02bbaa49cac781472",
+    "reviewBackgrounds": [
+      "#FFFFFF",
+      "#F3F6FB"
+    ],
+    "editedMaster": "docs/design/assets/edited-masters/09-career-growth-clean.png",
+    "editMethod": "Built-in imagegen cleanup preserving person/pose/palette; removed text, UI, background fragments; transparent output; magick proportional resize to WebP quality 88"
+  }
+]

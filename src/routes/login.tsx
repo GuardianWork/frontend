@@ -1,4 +1,8 @@
-import { hasPendingInvitation } from "@/services/invitationLink";
+import {
+  clearMemberEmailSecret,
+  getMemberEmailSecret,
+  getInvitationSecret,
+} from "@/lib/member-email-secret";
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, LoaderCircle } from "lucide-react";
@@ -42,9 +46,11 @@ function LoginPage() {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [hasEmailLink, setHasEmailLink] = useState(false);
   const [ready, setReady] = useState(false);
   useEffect(() => {
     setReady(true);
+    setHasEmailLink(Boolean(getMemberEmailSecret()));
   }, []);
   const [error, setError] = useState("");
 
@@ -66,9 +72,15 @@ function LoginPage() {
         window.location.assign(staffPortalHref("/login"));
         return;
       }
+      const legacySetupLink = getMemberEmailSecret();
       await navigate({
-        to: hasPendingInvitation() ? "/company-invitations" : getLoginDestination(user, role),
+        to: legacySetupLink
+          ? "/recruiter/verification"
+          : getInvitationSecret()
+            ? "/recruiter/members"
+            : getLoginDestination(user, role),
       });
+      if (legacySetupLink) clearMemberEmailSecret();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Không thể đăng nhập. Vui lòng thử lại.");
     } finally {
@@ -82,6 +94,15 @@ function LoginPage() {
       <p className="mb-7 mt-2 text-sm leading-6 text-charcoal-83">
         Một tài khoản cho cả tìm việc và tuyển dụng. Chọn không gian bạn muốn tiếp tục.
       </p>
+      {hasEmailLink && (
+        <p
+          role="status"
+          className="mb-5 rounded-lg border border-warm-border bg-surface-container-low p-4 text-sm leading-6"
+        >
+          Liên kết thiết lập tuyển dụng cũ không còn được dùng. Đăng nhập để tiếp tục với hồ sơ công
+          ty.
+        </p>
+      )}
       <AccountPurposeChoice
         value={role}
         disabled={loading || !ready}

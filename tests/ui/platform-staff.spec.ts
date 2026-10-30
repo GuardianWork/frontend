@@ -167,10 +167,18 @@ test("legacy admin URLs redirect to staff and AI evidence has high contrast", as
 
 test("staff routes reject a signed-in candidate", async ({ page }) => {
   await login(page, "candidate_demo");
-  await page.goto("/staff/jobs", { waitUntil: "domcontentloaded" });
-  await expect(page.getByRole("alert")).toContainText(
-    "không có quyền truy cập khu vực Platform staff",
-  );
+  const session = await page.evaluate(() => sessionStorage.getItem("guardianwork_auth_session"));
+  expect(session).not.toBeNull();
+  await page.goto(`${process.env.STAFF_UI_BASE_URL || "http://localhost:5138"}/login`, {
+    waitUntil: "domcontentloaded",
+  });
+  await page.evaluate((savedSession) => {
+    sessionStorage.setItem("guardianwork_auth_session", savedSession!);
+  }, session);
+  await page.goto(`${process.env.STAFF_UI_BASE_URL || "http://localhost:5138"}/staff/jobs`, {
+    waitUntil: "domcontentloaded",
+  });
+  await expect(page.getByRole("alert")).toContainText("không có quyền truy cập Platform staff");
   await expect(
     page.getByRole("heading", { name: "Quản lý tin tuyển dụng", exact: true }),
   ).toHaveCount(0);

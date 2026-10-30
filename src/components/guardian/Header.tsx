@@ -1,6 +1,7 @@
+import { GlobeIcon, MenuIcon, CloseIcon, ArrowRightIcon } from "@/components/icons";
 import { useEffect, useState } from "react";
 import { Link, useHydrated, useRouterState } from "@tanstack/react-router";
-import { ArrowRight, Menu, X, Globe, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCandidate } from "@/context/CandidateContext";
 import { useAuthUser } from "@/hooks/useAuthUser";
@@ -78,7 +79,7 @@ export function Header({
             aria-label={en ? "Switch to Vietnamese" : "Chuyển sang tiếng Anh"}
             onClick={() => setLocale(en ? "vn" : "en")}
           >
-            <Globe size={17} />
+            <GlobeIcon size={17} />
             <span>{en ? "EN" : "VI"}</span>
           </button>
           {user ? (
@@ -101,12 +102,12 @@ export function Header({
           {landing ? (
             <Link className="career-header__employer" to="/register" search={{ role: "recruiter" }}>
               {dict.nav.forCompanies}
-              <ArrowRight size={15} aria-hidden="true" />
+              <ArrowRightIcon size={15} aria-hidden="true" />
             </Link>
           ) : (
             <Link className="career-header__employer" to="/recruit">
               Recruiter Hub
-              <ArrowRight size={15} aria-hidden="true" />
+              <ArrowRightIcon size={15} aria-hidden="true" />
             </Link>
           )}
           <button
@@ -125,7 +126,7 @@ export function Header({
             aria-expanded={mobileOpen}
             onClick={() => setMobileOpen(!mobileOpen)}
           >
-            {mobileOpen ? <X size={23} /> : <Menu size={23} />}
+            {mobileOpen ? <CloseIcon size={23} /> : <MenuIcon size={23} />}
           </button>
         </div>
       </div>

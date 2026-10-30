@@ -143,9 +143,16 @@ function RecruiterIndexPage() {
         interviews={candidates.filter((c) => c.stage === "Interview").length}
         offers={candidates.filter((c) => c.stage === "Offer").length}
       />
+      <details className="workspace-data-note">
+        <summary>Ứng viên minh họa · hồ sơ công ty từ API</summary>
+        <p>
+          Danh sách ứng viên và tiến độ dưới đây là dữ liệu minh họa. Cập nhật tiến độ chỉ áp dụng
+          trong phiên xem; hồ sơ công ty sử dụng dịch vụ xác minh riêng.
+        </p>
+      </details>
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-semibold">Theo dõi ứng viên</h2>
-        <Link to="/recruiter/talent" className="text-xs font-semibold text-primary">
+        <Link to="/recruiter/talent" className="text-sm font-semibold text-primary">
           Xem tất cả ứng viên →
         </Link>
       </div>
@@ -156,14 +163,15 @@ function RecruiterIndexPage() {
         count={filteredCandidates.length}
       />
       {/* Main Split Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="workspace-split">
         {/* Left Pane: Candidates list */}
-        <div className="lg:col-span-5 flex flex-col gap-4">
-          <div className="flex justify-between items-center bg-paper-white p-3 rounded-xl border border-warm-border">
-            <div className="flex gap-2">
+        <div className="workspace-result-list">
+          <div className="workspace-tabs">
+            <div className="flex flex-wrap gap-2">
               <button
+                aria-pressed={filter === "all"}
                 onClick={() => setFilter("all")}
-                className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors ${
+                className={`px-3 py-1 text-sm font-semibold rounded-full transition-colors ${
                   filter === "all"
                     ? "bg-primary text-on-primary"
                     : "bg-surface-container text-charcoal-text"
@@ -172,8 +180,9 @@ function RecruiterIndexPage() {
                 Tất cả ({candidates.length})
               </button>
               <button
+                aria-pressed={filter === "strong"}
                 onClick={() => setFilter("strong")}
-                className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors ${
+                className={`px-3 py-1 text-sm font-semibold rounded-full transition-colors ${
                   filter === "strong"
                     ? "bg-primary text-on-primary"
                     : "bg-surface-container text-charcoal-text"
@@ -182,8 +191,9 @@ function RecruiterIndexPage() {
                 Strong Fit
               </button>
               <button
+                aria-pressed={filter === "interview"}
                 onClick={() => setFilter("interview")}
-                className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors ${
+                className={`px-3 py-1 text-sm font-semibold rounded-full transition-colors ${
                   filter === "interview"
                     ? "bg-primary text-on-primary"
                     : "bg-surface-container text-charcoal-text"
@@ -192,7 +202,7 @@ function RecruiterIndexPage() {
                 Phỏng vấn & Offer
               </button>
             </div>
-            <span className="text-xs font-mono text-charcoal-40">AI Sourced</span>
+            <span className="text-sm text-charcoal-40">AI Sourced</span>
           </div>
 
           {filteredCandidates.length === 0 && (
@@ -205,39 +215,45 @@ function RecruiterIndexPage() {
             return (
               <div
                 key={c.id}
+                role="button"
+                tabIndex={0}
+                aria-pressed={isActive}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    setSelectedId(c.id);
+                    setPitchSent(false);
+                  }
+                }}
                 onClick={() => {
                   setSelectedId(c.id);
                   setPitchSent(false);
                 }}
-                className={
-                  isActive
-                    ? "bg-paper-white p-5 rounded-xl border border-warm-border shadow-sm cursor-pointer transition-all"
-                    : "bg-paper-white p-5 rounded-xl border border-warm-border hover:shadow-sm transition-shadow cursor-pointer opacity-85 hover:opacity-100"
-                }
+                className={isActive ? "workspace-result is-selected" : "workspace-result"}
               >
                 <div className="flex justify-between items-start mb-2 gap-3">
                   <div>
                     <h3 className="font-semibold text-lg leading-tight text-charcoal-text">
                       {c.role}
                     </h3>
-                    <p className="text-xs text-charcoal-83 mt-0.5 font-medium">{c.location}</p>
+                    <p className="text-sm text-charcoal-83 mt-0.5 font-medium">{c.location}</p>
                   </div>
                   <span
-                    className={`font-mono text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded shrink-0 ${fitBadgeClass(c.fit)}`}
+                    className={`text-xs font-bold px-2 py-0.5 rounded shrink-0 ${fitBadgeClass(c.fit)}`}
                   >
                     {c.fit}
                   </span>
                 </div>
 
-                <p className="text-xs text-charcoal-83 line-clamp-2 mt-2 leading-relaxed">
+                <p className="text-sm text-charcoal-83 line-clamp-2 mt-2 leading-relaxed">
                   {c.description}
                 </p>
 
-                <div className="mt-3 pt-3 border-t border-warm-border flex items-center justify-between text-xs">
-                  <span className="font-mono text-xs font-semibold text-primary">
+                <div className="mt-3 pt-3 border-t border-warm-border flex items-center justify-between text-sm">
+                  <span className="text-sm font-semibold text-primary">
                     Kinh nghiệm: {c.experience}
                   </span>
-                  <span className="font-mono text-[11px] font-bold text-charcoal-40 bg-surface-container px-2 py-0.5 rounded">
+                  <span className="text-xs font-bold text-charcoal-40 bg-surface-container px-2 py-0.5 rounded">
                     Stage: {c.stage}
                   </span>
                 </div>
@@ -247,16 +263,16 @@ function RecruiterIndexPage() {
         </div>
 
         {/* Right Pane: Candidate Inspector & Pipeline Tracker */}
-        <div className="lg:col-span-7">
-          <div className="bg-paper-white rounded-xl border border-warm-border shadow-sm h-full flex flex-col overflow-hidden">
+        <div className="workspace-detail-column">
+          <div className="workspace-detail">
             {/* Header */}
-            <div className="p-6 border-b border-warm-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="workspace-detail-header">
               <div>
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-green-50 text-green-700 border border-green-200">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="px-2 py-0.5 rounded text-xs font-bold bg-green-50 text-green-700 border border-green-200">
                     MATCH RATE: {activeCandidate.matchRate}%
                   </span>
-                  <span className="text-xs font-mono text-charcoal-40">
+                  <span className="text-sm text-charcoal-40">
                     ID: #{activeCandidate.id.toUpperCase()}
                   </span>
                 </div>
@@ -269,7 +285,7 @@ function RecruiterIndexPage() {
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   onClick={() => setPitchSent(true)}
-                  className="px-4 py-2 bg-primary text-on-primary text-xs font-bold rounded-lg hover:opacity-90 transition-all flex items-center gap-1.5 shadow-sm"
+                  className="px-4 py-2 bg-primary text-on-primary text-sm font-bold rounded-lg hover:opacity-90 transition-all flex items-center gap-1.5 shadow-sm"
                 >
                   <Icon name="send" className="!text-base" />
                   <span>{pitchSent ? "Đã gửi Pitch ✓" : "Gửi Outreach Pitch"}</span>
@@ -278,10 +294,10 @@ function RecruiterIndexPage() {
             </div>
 
             {/* Scrollable details */}
-            <div className="flex-1 p-8 overflow-y-auto space-y-6">
+            <div className="workspace-prose">
               {/* Pipeline Stage Control */}
               <div className="p-4 rounded-xl bg-surface-container-low border border-warm-border">
-                <span className="text-xs font-semibold text-charcoal-40 uppercase block mb-2">
+                <span className="text-sm font-semibold text-charcoal-40 block mb-2">
                   Tiến độ Tuyển dụng (Pipeline Stage)
                 </span>
                 <div className="grid grid-cols-4 gap-2">
@@ -289,7 +305,7 @@ function RecruiterIndexPage() {
                     <button
                       key={st}
                       onClick={() => handleUpdateStage(st)}
-                      className={`py-2 rounded-lg text-xs font-semibold transition-all ${
+                      className={`py-2 rounded-lg text-sm font-semibold transition-all ${
                         activeCandidate.stage === st
                           ? "bg-primary text-on-primary shadow-sm"
                           : "bg-paper-white border border-warm-border text-charcoal-83 hover:bg-surface-container"
@@ -302,7 +318,7 @@ function RecruiterIndexPage() {
               </div>
 
               {/* AI Verification Note */}
-              <div className="bg-parchment-bg border border-warm-border p-5 rounded-lg flex gap-4">
+              <div className="workspace-reference-note flex gap-4">
                 <Icon name="verified_user" className="text-primary mt-0.5 !text-2xl shrink-0" />
                 <div>
                   <h4 className="text-sm font-semibold text-charcoal-text mb-1">
@@ -313,7 +329,7 @@ function RecruiterIndexPage() {
                     pitch chính thức. Thỏa ước tuyển dụng tuân thủ điều khoản thử việc và chế độ làm
                     thêm giờ theo Bộ luật Lao động 2019.
                   </p>
-                  <div className="text-xs font-mono font-semibold text-green-700 flex items-center gap-1">
+                  <div className="text-sm font-semibold text-green-700 flex items-center gap-1">
                     <Icon name="check" className="!text-sm" /> CV đã trích xuất tự động và đối chiếu
                     kỹ năng thực tế
                   </div>
@@ -322,25 +338,23 @@ function RecruiterIndexPage() {
 
               {/* Candidate Experience */}
               <div>
-                <h4 className="font-semibold text-xs text-charcoal-40 uppercase tracking-wide mb-2 flex items-center gap-2">
+                <h4 className="font-semibold text-sm text-charcoal-40 mb-2 flex items-center gap-2">
                   <Icon name="account_box" className="!text-[18px]" />
                   Tổng quan Năng lực Ứng viên
                 </h4>
-                <div className="p-4 rounded-lg bg-surface-container-low border border-warm-border text-sm text-charcoal-text leading-relaxed">
+                <div className="text-[15px] leading-7 text-charcoal-text">
                   {activeCandidate.description}
                 </div>
               </div>
 
               {/* Skills Tags */}
               <div>
-                <h4 className="font-semibold text-xs text-charcoal-40 uppercase tracking-wide mb-2">
-                  Kỹ năng Xác thực
-                </h4>
+                <h4 className="font-semibold text-sm text-charcoal-40 mb-2">Kỹ năng Xác thực</h4>
                 <div className="flex flex-wrap gap-2">
                   {activeCandidate.skills.map((s) => (
                     <span
                       key={s}
-                      className="px-3 py-1 bg-surface-container border border-warm-border rounded-md text-xs font-mono font-semibold text-charcoal-text"
+                      className="px-3 py-1 bg-surface-container border border-warm-border rounded-md text-sm font-semibold text-charcoal-text"
                     >
                       {s}
                     </span>
@@ -350,11 +364,11 @@ function RecruiterIndexPage() {
 
               {/* Automated Outreach Pitch Draft */}
               <div>
-                <h4 className="font-semibold text-xs text-charcoal-40 uppercase tracking-wide mb-2 flex items-center gap-2">
+                <h4 className="font-semibold text-sm text-charcoal-40 mb-2 flex items-center gap-2">
                   <Icon name="mark_email_read" className="!text-[18px] text-primary" />
                   Mẫu Tin nhắn Tiếp cận Đã tạo Tự động (Pitch Template)
                 </h4>
-                <div className="p-4 rounded-lg bg-surface-container-low border border-warm-border font-mono text-xs text-charcoal-text leading-relaxed">
+                <div className="text-[15px] leading-7 text-charcoal-text">
                   Chào bạn, chúng tôi theo dõi hồ sơ {activeCandidate.role} của bạn với chuyên môn
                   nổi bật về {activeCandidate.skills.slice(0, 3).join(", ")}. Công ty chúng tôi có
                   vị trí tương ứng với mức lương minh bạch, cam kết hợp đồng lao động chuẩn Bộ luật

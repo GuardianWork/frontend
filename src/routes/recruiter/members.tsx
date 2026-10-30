@@ -1,3 +1,6 @@
+import { useEmployerOnboarding } from "@/context/EmployerOnboardingContext";
+import { RecipientInvitationPanel } from "@/components/RecipientInvitationPanel";
+import { getInvitationSecret } from "@/lib/member-email-secret";
 import { ListSearch } from "@/components/ListSearch";
 import { matchesSearch } from "@/lib/list-search";
 import { useRef, useState } from "react";
@@ -30,6 +33,7 @@ export const Route = createFileRoute("/recruiter/members")({
 });
 
 function CompanyMembersPage() {
+  const onboarding = useEmployerOnboarding();
   const { workspace, company, member, user, error } = useCompanyWorkspace();
   const [query, setQuery] = useState("");
   const [email, setEmail] = useState("");
@@ -81,6 +85,12 @@ function CompanyMembersPage() {
     (m) => m.status === "invited" && m.email === user?.email.toLowerCase(),
   );
   const activeMembers = workspace.members.filter((m) => m.status === "active");
+  if (onboarding?.onboarding.stage === "COMPANY_ACTION_REQUIRED" || getInvitationSecret())
+    return (
+      <RecruiterShell title="Lời mời công ty">
+        <RecipientInvitationPanel />
+      </RecruiterShell>
+    );
   return (
     <RecruiterShell title="Thành viên công ty">
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
@@ -150,7 +160,7 @@ function CompanyMembersPage() {
             {sendingInvitation ? "Đang gửi…" : "Tạo lời mời"}
           </button>
         </div>
-        <p className="mt-3 text-xs text-charcoal-83">
+        <p className="mt-3 text-sm text-charcoal-83">
           Thành viên mới có vai trò Nhà tuyển dụng. Hệ thống sẽ gửi liên kết lời mời qua email. Việc
           tạo lời mời chưa cấp quyền thành viên.
         </p>
@@ -176,7 +186,7 @@ function CompanyMembersPage() {
                 ? "Lời mời đã được lưu nhưng gửi email thất bại. Bạn có thể gửi lại lời mời."
                 : "Lời mời đã được lưu nhưng chưa xác nhận được kết quả gửi email. Bạn có thể gửi lại lời mời."}
           </p>
-          <p className="mt-2 text-xs leading-6 text-charcoal-83">
+          <p className="mt-2 text-sm leading-6 text-charcoal-83">
             Hết hạn:{" "}
             {new Date(invitationResult.expiresAt).toLocaleString("vi-VN", {
               timeZone: "Asia/Ho_Chi_Minh",
@@ -223,9 +233,9 @@ function CompanyMembersPage() {
                 : "Liên hệ Owner để được mời. Hồ sơ xác thực cũ chưa ghi nhận người nộp cần được hệ thống bổ sung trước khi cấp Owner."}
           </p>
           {invitation ? (
-            <button className="recruiter-primary" onClick={() => run({ type: "accept" })}>
-              Chấp nhận lời mời
-            </button>
+            <p className="text-sm leading-6 text-charcoal-83">
+              Mở liên kết trong email mời để xác nhận lời mời với máy chủ.
+            </p>
           ) : (
             !user && (
               <Link
@@ -240,12 +250,12 @@ function CompanyMembersPage() {
         </div>
       ) : (
         <>
-          <div className="mb-6 grid gap-4 sm:grid-cols-2">
+          <div className="workspace-summary">
             {[
               ["Thành viên", activeMembers.length],
               ["Owner", activeMembers.filter((m) => m.role === "Owner").length],
             ].map(([label, count]) => (
-              <div key={label} className="rounded-xl border border-warm-border bg-paper-white p-5">
+              <div key={label} className="workspace-summary__item">
                 <p className="text-sm text-charcoal-83">{label}</p>
                 <p className="mt-2 text-3xl font-bold">{count}</p>
               </div>
@@ -256,7 +266,12 @@ function CompanyMembersPage() {
             onChange={setQuery}
             label="Tìm tên, thư điện tử hoặc vai trò thành viên"
           />
-          <div className="overflow-x-auto rounded-xl border border-warm-border bg-paper-white">
+          <div
+            role="region"
+            aria-label="Danh sách thành viên công ty"
+            tabIndex={0}
+            className="overflow-x-auto rounded-xl border border-warm-border bg-paper-white"
+          >
             <table className="w-full text-left text-sm">
               <thead className="bg-surface-container-low">
                 <tr>
@@ -292,7 +307,7 @@ function CompanyMembersPage() {
                           {m.name}
                           {m.id === member.id ? " (Bạn)" : ""}
                         </p>
-                        <p className="mt-1 text-xs text-charcoal-83">{m.email}</p>
+                        <p className="mt-1 text-sm text-charcoal-83">{m.email}</p>
                       </td>
                       <td className="p-4">
                         {m.status === "active" ? (
@@ -373,7 +388,7 @@ function CompanyMembersPage() {
               </tbody>
             </table>
           </div>
-          <p className="mt-4 text-xs leading-5 text-charcoal-83">
+          <p className="mt-4 text-sm leading-5 text-charcoal-83">
             Owner quản lý toàn bộ công ty. recruiter xem dữ liệu của mình và dữ liệu được Owner cấp
             quyền. Quyền xem tin và quyền xem đơn được cấp riêng theo từng người đăng. Công ty luôn
             phải có ít nhất một Owner.
@@ -458,7 +473,7 @@ function CompanyMembersPage() {
                       .map((j) => (
                         <div key={j.id} className="mb-2 rounded-lg border border-warm-border p-3">
                           <p className="font-medium">{j.title}</p>
-                          <p className="mt-1 text-xs text-charcoal-83">
+                          <p className="mt-1 text-sm text-charcoal-83">
                             {new Date(j.created).toLocaleString("vi-VN")} · {j.status}
                           </p>
                         </div>

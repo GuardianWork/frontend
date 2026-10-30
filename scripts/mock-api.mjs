@@ -44,6 +44,7 @@ export function createMockApiServer() {
     emailVerified: true,
     password: MOCK_PASSWORD,
   }));
+  const candidateProfiles = new Map();
   const accessTokens = new Map();
   const refreshTokens = new Map();
   const companies = [
@@ -64,7 +65,7 @@ export function createMockApiServer() {
     },
   ];
   function userDto(user) {
-    const { password, ...dto } = user;
+    const { password, emailVerified, phone, ...dto } = user;
     return dto;
   }
   function membership(user) {
@@ -138,6 +139,10 @@ export function createMockApiServer() {
       } else if (raw) body = JSON.parse(raw);
     } catch {
       send(400, "Invalid JSON");
+      return;
+    }
+    if (path === "/api/employer-registrations" || path.startsWith("/api/me/employer-onboarding")) {
+      send(410, "41030 ONBOARDING_RETIRED: Use shared registration and Company setup.");
       return;
     }
     if (req.method === "POST" && path === "/api/auth/register") {
@@ -233,6 +238,45 @@ export function createMockApiServer() {
       });
       return;
     }
+    if (path === "/api/v1/candidates/profile" && ["GET", "PUT"].includes(req.method)) {
+      const previous = candidateProfiles.get(user.id) || {
+        id: randomUUID(),
+        userId: user.id,
+        fullName: `${user.lastName} ${user.firstName}`.trim(),
+        avatarUrl: null,
+        skills: [],
+        experienceSummary: null,
+        educationSummary: null,
+        isPublic: false,
+      };
+      if (req.method === "PUT") {
+        const phone =
+          body.phoneNumber
+            ?.trim()
+            .replace(/[\s.-]/g, "")
+            .replace(/^0/, "+84") || null;
+        if (!body.fullName?.trim() || (phone && !/^\+84\d{9,10}$/.test(phone))) {
+          send(400, "Thông tin không hợp lệ.");
+          return;
+        }
+        if (phone && users.some((account) => account.id !== user.id && account.phone === phone)) {
+          send(409, "Số điện thoại đã được sử dụng.");
+          return;
+        }
+        user.phone = phone;
+        Object.assign(previous, {
+          fullName: body.fullName,
+          avatarUrl: body.avatarUrl,
+          skills: body.skills,
+          experienceSummary: body.experienceSummary,
+          educationSummary: body.educationSummary,
+          isPublic: body.isPublic,
+        });
+        candidateProfiles.set(user.id, previous);
+      }
+      send(200, "Candidate profile", { ...previous, phoneNumber: user.phone || null });
+      return;
+    }
     if (req.method === "POST" && path === "/api/companies/verification-request") {
       if (!body.file) {
         send(410, "41030 ONBOARDING_RETIRED");
@@ -286,11 +330,11 @@ export function createMockApiServer() {
         send(403, "Admin required");
         return;
       }
-      const status = url.searchParams.get("status");
-      const content = companies.filter(
-        (company) => !status || status === "ALL" || company.verificationStatus === status,
-      );
-      const pageSize = Math.max(1, Math.min(100, Number(url.searchParams.get("size")) || 10));
+      const status = url.searchParams.get("status") || "PENDING";
+      const content = companies
+        .filter((company) => status === "ALL" || company.verificationStatus === status)
+        .sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id - b.id);
+      const pageSize = Math.max(1, Math.min(100, Number(url.searchParams.get("size")) || 20));
       const pageNumber = Math.max(0, Number(url.searchParams.get("page")) || 0);
       const totalPages = Math.ceil(content.length / pageSize);
       send(200, "ok", {
@@ -302,6 +346,19 @@ export function createMockApiServer() {
         first: pageNumber === 0,
         last: pageNumber >= totalPages - 1,
       });
+      return;
+    }
+    const historyMatch = /^\/api\/admin\/companies\/(\d+)\/verification-history$/.exec(path);
+    if (req.method === "GET" && historyMatch) {
+      if (user.role !== "STAFF") {
+        send(403, "Staff required");
+        return;
+      }
+      if (!companies.some((company) => company.id === Number(historyMatch[1]))) {
+        send(404, "COMPANY_NOT_FOUND");
+        return;
+      }
+      send(200, "ok", []);
       return;
     }
     const adminDecision = /^\/api\/admin\/companies\/(\d+)\/(verify|reject)$/.exec(path);
@@ -320,7 +377,7 @@ export function createMockApiServer() {
         return;
       }
       if (
-        adminDecision[2] === "reject" &&
+        (adminDecision[2] === "reject" || body.status === "REJECTED") &&
         (typeof body.rejectionReason !== "string" ||
           body.rejectionReason.trim().length < 10 ||
           body.rejectionReason.trim().length > 1000)
@@ -329,8 +386,12 @@ export function createMockApiServer() {
         return;
       }
       Object.assign(company, {
-        verificationStatus: adminDecision[2] === "verify" ? "VERIFIED" : "REJECTED",
-        rejectionReason: adminDecision[2] === "reject" ? body.rejectionReason.trim() : null,
+        verificationStatus:
+          adminDecision[2] === "reject" || body.status === "REJECTED" ? "REJECTED" : "VERIFIED",
+        rejectionReason:
+          adminDecision[2] === "reject" || body.status === "REJECTED"
+            ? body.rejectionReason.trim()
+            : null,
         version: company.version + 1,
         verifiedBy: user.id,
         verifiedAt: new Date().toISOString(),

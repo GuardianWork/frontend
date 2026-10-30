@@ -1,19 +1,22 @@
+import {
+  ArrowRightIcon,
+  SearchIcon,
+  LocationIcon,
+  UploadIcon,
+  CheckIcon,
+  CloseIcon,
+} from "@/components/icons";
+import { GuardianIllustration } from "@/components/GuardianIllustration";
 import { useState, type FormEvent } from "react";
 import { Link, useHydrated, useNavigate } from "@tanstack/react-router";
 import {
-  ArrowRight,
-  Search,
-  MapPin,
   ShieldCheck,
-  FileUp,
-  CheckCircle2,
   BriefcaseBusiness,
   Code2,
   Megaphone,
   Calculator,
   Users,
   Truck,
-  X,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { JOBS } from "@/lib/job-listings";
@@ -94,15 +97,20 @@ export function LandingView() {
       <main id="main-content">
         <section className="career-hero">
           <div className="career-container">
-            <h1>
-              {dict.landing.title}
-              <br />
-              <span>{dict.landing.titleAccent}</span>
-            </h1>
-            <p className="career-hero__description">{dict.landing.description}</p>
+            <div className="career-hero__intro">
+              <div className="career-hero__copy">
+                <h1>
+                  {dict.landing.title}
+                  <br />
+                  <span>{dict.landing.titleAccent}</span>
+                </h1>
+                <p className="career-hero__description">{dict.landing.description}</p>
+              </div>
+              <GuardianIllustration name="careers" className="guardian-art--landing" desktopOnly />
+            </div>
             <form className="career-search" role="search" onSubmit={search}>
               <label className="career-search__keyword">
-                <Search size={23} aria-hidden="true" />
+                <SearchIcon size={23} aria-hidden="true" />
                 <span className="sr-only">
                   {en ? "Job title, skill or company" : "Vị trí, kỹ năng hoặc công ty"}
                 </span>
@@ -114,7 +122,7 @@ export function LandingView() {
                 />
               </label>
               <label className="career-search__location">
-                <MapPin size={22} aria-hidden="true" />
+                <LocationIcon size={22} aria-hidden="true" />
                 <span className="sr-only">{en ? "Location" : "Địa điểm"}</span>
                 <select
                   disabled={!hydrated}
@@ -129,7 +137,7 @@ export function LandingView() {
                 </select>
               </label>
               <button className="career-button" type="submit" disabled={!hydrated}>
-                <Search size={19} />
+                <SearchIcon size={19} />
                 {en ? "Find jobs" : "Tìm việc ngay"}
               </button>
             </form>
@@ -157,7 +165,7 @@ export function LandingView() {
             </div>
             <Link to="/jobs" search={jobSearch({})} className="career-text-link">
               {en ? "View all jobs" : "Xem tất cả việc làm"}
-              <ArrowRight size={18} />
+              <ArrowRightIcon size={18} />
             </Link>
           </div>
           <p className="career-demo-note">
@@ -182,12 +190,12 @@ export function LandingView() {
                       .join("")}
                   </span>
                   <span>{job.company}</span>
-                  <ArrowRight size={18} className="career-job__arrow" />
+                  <ArrowRightIcon size={18} className="career-job__arrow" />
                 </div>
                 <h3>{job.title}</h3>
                 <p className="career-job__salary">{job.salaryRange}</p>
                 <p className="career-job__location">
-                  <MapPin size={15} />
+                  <LocationIcon size={15} />
                   {job.location}
                 </p>
                 <div className="career-job__bottom">
@@ -210,7 +218,7 @@ export function LandingView() {
                     <Icon size={25} />
                     <h3>{en ? englishLabel : label}</h3>
                     <p>{en ? detailEn : detail}</p>
-                    <ArrowRight size={18} />
+                    <ArrowRightIcon size={18} />
                   </Link>
                 ),
               )}
@@ -228,7 +236,7 @@ export function LandingView() {
               <p>{dict.landing.candidatesDesc}</p>
             </div>
             <div className="career-upload">
-              <FileUp size={28} aria-hidden="true" />
+              <UploadIcon size={28} aria-hidden="true" />
               <div>
                 <strong>{en ? "Try uploading your CV" : "Trải nghiệm tải CV lên"}</strong>
                 <p>{en ? "PDF, DOC or DOCX · up to 15 MB" : "PDF, DOC hoặc DOCX · tối đa 15 MB"}</p>
@@ -266,7 +274,7 @@ export function LandingView() {
             )}
             {uploadedCv && (
               <p className="career-upload-status" role="status">
-                <CheckCircle2 size={17} />
+                <CheckIcon size={17} />
                 <span>{uploadedCv}</span>
                 <button
                   aria-label={en ? "Remove selected file" : "Bỏ chọn tệp"}
@@ -276,7 +284,7 @@ export function LandingView() {
                     input.value = "";
                   }}
                 >
-                  <X size={16} />
+                  <CloseIcon size={16} />
                 </button>
               </p>
             )}
@@ -287,7 +295,7 @@ export function LandingView() {
             </p>
             <Link to="/candidate/profile" className="career-text-link">
               {en ? "Go to your profile" : "Đến hồ sơ của bạn"}
-              <ArrowRight size={17} />
+              <ArrowRightIcon size={17} />
             </Link>
           </div>
           <div className="career-employer">
@@ -299,11 +307,11 @@ export function LandingView() {
             <p>{dict.landing.companiesDesc}</p>
             <Link className="career-button" to="/register" search={{ role: "recruiter" }}>
               {dict.landing.startHiring}
-              <ArrowRight size={18} />
+              <ArrowRightIcon size={18} />
             </Link>
             <Link className="career-employer__secondary" to="/recruit">
               {en ? "Explore the recruiter workspace" : "Khám phá không gian nhà tuyển dụng"}
-              <ArrowRight size={16} />
+              <ArrowRightIcon size={16} />
             </Link>
           </div>
         </section>
@@ -330,7 +338,7 @@ export function LandingView() {
                   ? "Questions about employment terms? Explore Legal Copilot."
                   : "Có câu hỏi về điều kiện lao động? Khám phá Legal Copilot."}
               </span>
-              <ArrowRight size={19} />
+              <ArrowRightIcon size={19} />
             </Link>
           </div>
         </section>

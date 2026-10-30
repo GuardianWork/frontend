@@ -1,9 +1,11 @@
+import { isLegacyRegistrationLink } from "@/lib/member-email-secret";
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, CheckCircle2, LoaderCircle } from "lucide-react";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { AccountPurposeChoice } from "@/components/auth/AccountPurposeChoice";
 import { PasswordInput, authInputClass } from "@/components/auth/PasswordInput";
+import { ApiError } from "@/services/api";
 import { parseAccountPurpose, registerAccount } from "@/services/auth";
 
 export const Route = createFileRoute("/register")({
@@ -36,6 +38,8 @@ function RegisterPage() {
     setReady(true);
   }, []);
   const [error, setError] = useState("");
+  const [legacy, setLegacy] = useState(false);
+  useEffect(() => setLegacy(isLegacyRegistrationLink()), []);
   const [registered, setRegistered] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -70,7 +74,13 @@ function RegisterPage() {
       setConfirmation("");
       setRegistered(true);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Không thể đăng ký. Vui lòng thử lại.");
+      setError(
+        cause instanceof ApiError && cause.status === 409
+          ? "Email hoặc số điện thoại đã được sử dụng. Hãy đăng nhập nếu bạn đã có tài khoản."
+          : cause instanceof Error
+            ? cause.message
+            : "Không thể đăng ký. Vui lòng thử lại.",
+      );
     } finally {
       setLoading(false);
     }
@@ -83,9 +93,9 @@ function RegisterPage() {
           <CheckCircle2 size={46} className="mx-auto mb-5" />
           <h2 className="text-2xl font-bold">Tạo tài khoản thành công!</h2>
           <p className="mt-3 text-sm leading-7 text-charcoal-83">
-            Chào {firstName.trim()}, tài khoản của bạn đã sẵn sàng.{" "}
+            Chào {firstName.trim()}, tài khoản của bạn đã được tạo.{" "}
             {role === "recruiter"
-              ? "Đăng nhập, xác minh email tài khoản rồi đăng ký công ty hoặc nhận lời mời tham gia công ty."
+              ? "Đăng nhập với lựa chọn Nhà tuyển dụng để thiết lập hồ sơ công ty hoặc chấp nhận lời mời thành viên."
               : "Đăng nhập để tạo hồ sơ và khám phá những công việc phù hợp."}
           </p>
           <Link
@@ -99,14 +109,27 @@ function RegisterPage() {
         </div>
       ) : (
         <>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-charcoal-40">
-            Bắt đầu hành trình mới
-          </p>
           <h2 className="text-2xl font-bold tracking-tight">Tạo tài khoản của bạn</h2>
           <p className="mb-7 mt-2 text-sm leading-6 text-charcoal-83">
             Một tài khoản cho cả tìm việc và tuyển dụng. Lựa chọn bên dưới chỉ chọn không gian sau
             khi đăng nhập.
           </p>
+          {legacy && (
+            <p
+              role="status"
+              className="mb-5 rounded-lg border border-warm-border bg-surface-container-low p-4 text-sm leading-6"
+            >
+              Liên kết đăng ký cũ đã ngừng sử dụng. Hãy đăng ký mới bên dưới hoặc{" "}
+              <Link
+                to="/login"
+                search={{ role: "recruiter" }}
+                className="font-semibold text-primary underline"
+              >
+                đăng nhập nếu đã có tài khoản
+              </Link>
+              .
+            </p>
+          )}
           <AccountPurposeChoice
             value={role}
             disabled={loading || !ready}
@@ -119,9 +142,9 @@ function RegisterPage() {
             }}
           />
           {role === "recruiter" && (
-            <p className="mb-5 rounded-lg border border-warm-border bg-surface-container-low p-3 text-xs leading-6 text-charcoal-83">
-              Dành cho người đại diện doanh nghiệp và nhân sự tuyển dụng. Bạn sẽ bổ sung thông tin
-              công ty sau khi xác minh email, hoặc tham gia công ty qua lời mời.
+            <p className="mb-5 rounded-lg border border-warm-border bg-surface-container-low p-3 text-sm leading-6 text-charcoal-83">
+              Tạo tài khoản trước. Sau khi đăng nhập, bạn có thể thiết lập hồ sơ công ty hoặc chấp
+              nhận lời mời tham gia công ty.
             </p>
           )}
           <form onSubmit={handleSubmit} className="space-y-5" aria-busy={loading}>
@@ -134,63 +157,65 @@ function RegisterPage() {
               </p>
             )}
             <fieldset disabled={loading || !ready} className="space-y-5">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label htmlFor="register-last-name" className="mb-2 block text-sm font-medium">
-                    Họ và tên đệm <span aria-hidden="true">*</span>
-                  </label>
-                  <input
-                    id="register-last-name"
-                    name="lastName"
-                    autoComplete="family-name"
-                    required
-                    maxLength={100}
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    placeholder="Nguyễn Văn"
-                    className={authInputClass}
-                  />
+              <>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="register-last-name" className="mb-2 block text-sm font-medium">
+                      Họ và tên đệm <span aria-hidden="true">*</span>
+                    </label>
+                    <input
+                      id="register-last-name"
+                      name="lastName"
+                      autoComplete="family-name"
+                      required
+                      maxLength={100}
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      placeholder="Nguyễn Văn"
+                      className={authInputClass}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="register-first-name" className="mb-2 block text-sm font-medium">
+                      Tên <span aria-hidden="true">*</span>
+                    </label>
+                    <input
+                      id="register-first-name"
+                      name="firstName"
+                      autoComplete="given-name"
+                      required
+                      maxLength={100}
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      placeholder="An"
+                      className={authInputClass}
+                    />
+                  </div>
                 </div>
                 <div>
-                  <label htmlFor="register-first-name" className="mb-2 block text-sm font-medium">
-                    Tên <span aria-hidden="true">*</span>
+                  <label htmlFor="register-username" className="mb-2 block text-sm font-medium">
+                    Tên đăng nhập <span aria-hidden="true">*</span>
                   </label>
                   <input
-                    id="register-first-name"
-                    name="firstName"
-                    autoComplete="given-name"
+                    id="register-username"
+                    name="username"
+                    autoComplete="username"
+                    autoCapitalize="none"
+                    spellCheck={false}
                     required
-                    maxLength={100}
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    placeholder="An"
+                    minLength={3}
+                    maxLength={50}
+                    aria-describedby="username-hint"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="nguyen_van_an"
                     className={authInputClass}
                   />
+                  <p id="username-hint" className="mt-2 text-xs text-charcoal-83">
+                    3–50 ký tự: chữ không dấu, số, dấu gạch dưới.
+                  </p>
                 </div>
-              </div>
-              <div>
-                <label htmlFor="register-username" className="mb-2 block text-sm font-medium">
-                  Tên đăng nhập <span aria-hidden="true">*</span>
-                </label>
-                <input
-                  id="register-username"
-                  name="username"
-                  autoComplete="username"
-                  autoCapitalize="none"
-                  spellCheck={false}
-                  required
-                  minLength={3}
-                  maxLength={50}
-                  aria-describedby="username-hint"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="nguyen_van_an"
-                  className={authInputClass}
-                />
-                <p id="username-hint" className="mt-2 text-xs text-charcoal-83">
-                  3–50 ký tự: chữ không dấu, số, dấu gạch dưới.
-                </p>
-              </div>
+              </>
               <div>
                 <label htmlFor="register-email" className="mb-2 block text-sm font-medium">
                   Email tài khoản <span aria-hidden="true">*</span>
@@ -204,7 +229,7 @@ function RegisterPage() {
                   maxLength={254}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder={role === "recruiter" ? "ban@congty.vn" : "ban@email.com"}
+                  placeholder="ban@email.com"
                   className={authInputClass}
                 />
               </div>

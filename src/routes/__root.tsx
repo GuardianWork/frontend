@@ -16,19 +16,19 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-screen items-center justify-center bg-paper-2 px-6 py-12">
       <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
+        <p className="mb-4 text-2xl font-semibold text-primary">404</p>
+        <h1 className="text-3xl font-bold tracking-tight text-ink">Không tìm thấy trang</h1>
+        <p className="mt-2 text-[15px] leading-7 text-ink-2">
+          Trang bạn tìm không còn ở địa chỉ này. Hãy quay lại trang chủ để tiếp tục.
         </p>
         <div className="mt-6">
           <Link
             to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex items-center justify-center rounded-md bg-primary min-h-11 px-5 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Go home
+            Về trang chủ
           </Link>
         </div>
       </div>
@@ -44,13 +44,11 @@ function ErrorComponent({ error, reset }: { error: unknown; reset: () => void })
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-screen items-center justify-center bg-paper-2 px-6 py-12">
       <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+        <h1 className="text-xl font-semibold tracking-tight text-foreground">Chưa thể tải trang</h1>
+        <p className="mt-2 text-[15px] leading-7 text-ink-2">
+          Đã có lỗi khi tải nội dung. Bạn có thể thử lại hoặc quay về trang chủ.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
@@ -58,15 +56,15 @@ function ErrorComponent({ error, reset }: { error: unknown; reset: () => void })
               router.invalidate();
               reset();
             }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex items-center justify-center rounded-md bg-primary min-h-11 px-5 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Try again
+            Thử tải lại
           </button>
           <a
             href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+            className="inline-flex items-center justify-center rounded-md border border-input bg-background min-h-11 px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
           >
-            Go home
+            Về trang chủ
           </a>
         </div>
       </div>
