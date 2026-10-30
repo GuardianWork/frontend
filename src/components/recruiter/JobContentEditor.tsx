@@ -34,7 +34,10 @@ export function JobContentEditor({
     <fieldset disabled={disabled} className="jp-editor-fields">
       <section className="jp-form-section" aria-labelledby="job-basic-heading">
         <h3 id="job-basic-heading">Thông tin vị trí</h3>
-        <p>Có thể lưu khi chưa hoàn tất. Các mục bên dưới cần được bổ sung trước khi gửi duyệt.</p>
+        <p>
+          Chỉ cần 6 mục để gửi duyệt: chức danh, mô tả, loại công việc, hình thức, địa điểm và hạn
+          ứng tuyển. Bạn vẫn có thể lưu bản nháp chưa hoàn tất.
+        </p>
         <label>
           Chức danh công việc
           <input
@@ -75,26 +78,30 @@ export function JobContentEditor({
             </select>
           </label>
           <label>
-            Địa điểm làm việc
+            {content.workArrangement === "REMOTE"
+              ? "Khu vực có thể làm việc từ xa"
+              : "Địa điểm làm việc"}
             <input
+              aria-label={
+                content.workArrangement === "REMOTE"
+                  ? "Khu vực có thể làm việc từ xa"
+                  : "Địa điểm làm việc"
+              }
               value={content.location ?? ""}
               maxLength={1000}
+              aria-describedby="job-location-hint"
               onChange={(e) => update({ location: e.target.value })}
-              placeholder="Tỉnh / thành phố, địa chỉ làm việc"
-            />
-          </label>
-          <label>
-            Số lượng tuyển
-            <input
-              type="number"
-              min={1}
-              max={10000}
-              step={1}
-              value={content.headcount ?? ""}
-              onChange={(e) =>
-                update({ headcount: e.target.value ? Number(e.target.value) : undefined })
+              placeholder={
+                content.workArrangement === "REMOTE"
+                  ? "Ví dụ: Việt Nam hoặc Toàn thế giới"
+                  : "Tỉnh / thành phố, địa chỉ làm việc"
               }
             />
+            <span className="jp-hint" id="job-location-hint">
+              {content.workArrangement === "REMOTE"
+                ? "Ghi khu vực ứng viên được phép làm việc, ví dụ Việt Nam hoặc Toàn thế giới."
+                : "Ghi địa điểm làm việc tại văn phòng hoặc theo hình thức kết hợp."}
+            </span>
           </label>
           <label>
             Hạn ứng tuyển
@@ -115,8 +122,55 @@ export function JobContentEditor({
           </label>
         </div>
       </section>
+      <section className="jp-form-section" aria-labelledby="job-content-heading">
+        <h3 id="job-content-heading">Mô tả công việc</h3>
+        <p>
+          Dán toàn bộ bản mô tả vào đây, gồm trách nhiệm, yêu cầu, kinh nghiệm và quyền lợi. Giữ
+          tiêu đề và xuống dòng để ứng viên dễ đọc.
+        </p>
+        {textSections.map(([key, label, max]) => (
+          <label key={key}>
+            {label}
+            <textarea
+              aria-label={label}
+              aria-describedby={`job-${key}-hint`}
+              rows={12}
+              maxLength={max}
+              placeholder={
+                "Mô tả vị trí\n\nTrách nhiệm công việc\n\nYêu cầu và kinh nghiệm\n\nQuyền lợi"
+              }
+              value={content[key] ?? ""}
+              onChange={(e) => update({ [key]: e.target.value })}
+            />
+            <span className="jp-hint" id={`job-${key}-hint`}>
+              {(content[key] ?? "").length.toLocaleString("vi-VN")} / {max.toLocaleString("vi-VN")}{" "}
+              ký tự
+            </span>
+          </label>
+        ))}
+      </section>
       <section className="jp-form-section" aria-labelledby="job-pay-heading">
-        <h3 id="job-pay-heading">Lương và đãi ngộ</h3>
+        <h3 id="job-pay-heading">
+          Thông tin bổ sung <span className="jp-optional">Không bắt buộc</span>
+        </h3>
+        <p>
+          Có thể để trống số lượng tuyển và mức lương. Nếu công khai lương, hãy điền đầy đủ khoảng
+          lương, tiền tệ và kỳ trả lương.
+        </p>
+        <label>
+          Số lượng tuyển
+          <input
+            type="number"
+            min={1}
+            max={10000}
+            step={1}
+            value={content.headcount ?? ""}
+            onChange={(e) =>
+              update({ headcount: e.target.value ? Number(e.target.value) : undefined })
+            }
+          />
+        </label>
+
         <label>
           Mức lương
           <select
@@ -132,7 +186,7 @@ export function JobContentEditor({
               })
             }
           >
-            <option value="">Chọn cách hiển thị lương</option>
+            <option value="">Chưa cung cấp thông tin lương</option>
             <option value="true">Công khai khoảng lương</option>
             <option value="false">Không công khai mức lương</option>
           </select>
@@ -211,27 +265,6 @@ export function JobContentEditor({
             </label>
           </div>
         )}
-      </section>
-      <section className="jp-form-section" aria-labelledby="job-content-heading">
-        <h3 id="job-content-heading">Nội dung tuyển dụng</h3>
-        <p>Viết rõ công việc, tiêu chí tuyển chọn và quyền lợi thực tế của vị trí.</p>
-        {textSections.map(([key, label, max]) => (
-          <label key={key}>
-            {label}
-            <textarea
-              aria-label={label}
-              aria-describedby={`job-${key}-hint`}
-              rows={key === "description" || key === "responsibilities" ? 5 : 3}
-              maxLength={max}
-              value={content[key] ?? ""}
-              onChange={(e) => update({ [key]: e.target.value })}
-            />
-            <span className="jp-hint" id={`job-${key}-hint`}>
-              {(content[key] ?? "").length.toLocaleString("vi-VN")} / {max.toLocaleString("vi-VN")}{" "}
-              ký tự
-            </span>
-          </label>
-        ))}
       </section>
       <section className="jp-form-section" aria-labelledby="job-questions-heading">
         <h3 id="job-questions-heading">
@@ -334,7 +367,10 @@ export function JobContentView({ content }: { content: JobContent }) {
     <article className="jp-content-view">
       <h3>{content.title || "Chưa có chức danh"}</h3>
       <div className="jp-job-facts">
-        <span>{content.location || "Chưa có địa điểm"}</span>
+        <span>
+          {content.workArrangement === "REMOTE" ? "Khu vực làm việc từ xa: " : ""}
+          {content.location || "Chưa có địa điểm"}
+        </span>
         {content.employmentType && <span>{employmentTypes[content.employmentType]}</span>}
         {content.workArrangement && <span>{workArrangements[content.workArrangement]}</span>}
         {content.headcount && <span>Tuyển {content.headcount} người</span>}

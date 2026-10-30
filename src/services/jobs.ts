@@ -13,13 +13,7 @@ export interface ScreeningQuestion {
 export interface JobContent {
   title?: string;
   description?: string;
-  responsibilities?: string;
-  requiredQualifications?: string;
-  preferredQualifications?: string;
-  experienceExpectations?: string;
-  benefits?: string;
   location?: string;
-  applicationInstructions?: string;
   employmentType?: string;
   workArrangement?: string;
   deadline?: string;

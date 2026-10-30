@@ -81,6 +81,23 @@ Công ty Alpha có sẵn: ID `101`, MST `0101234567`, email `contact@alpha.examp
 
 Các màn hình khác có thể vẫn dùng dữ liệu minh họa trong ứng dụng. API mock chỉ mô phỏng hợp đồng API; không phải kiểm chứng kết nối backend thật.
 
+## Job publishing and assignment (GW-83)
+
+The recruiter workspace at `/recruiter/jobs` uses the authenticated backend endpoints documented in `api-docs.json` and implemented in `../API_FOR_FE/backend`. Configure the existing API proxy for that backend; job data is not saved in browser-local company records.
+
+- Owners see company jobs and manage recruiter assignments or their own responsibility. Recruiters see only their assigned jobs; creation assigns responsibility according to the backend rules.
+- Save an incomplete draft, then use **Lưu và xem trước** to check the saved revision against server validation. **Xác nhận gửi duyệt** submits that exact job/revision version. Publication requires staff approval, a verified eligible company, a responsible person, complete content, and a future application deadline.
+- Published content and working revisions are shown separately. Review history includes rejection reasons. Withdraw a pending revision before creating a replacement draft. Pause, resume, and close follow the API's available actions; closing is final.
+- Concurrent updates retain the user's unsaved text and offer an explicit reload. Save or copy changes before replacing them with server data. Dates are entered in the device's local time and sent as ISO timestamps.
+
+The candidate browser retains its separate sample/local data flow. The staff jobs screen now uses the review APIs described below. The general `dev:mock` server does not implement job endpoints. The dedicated browser tests intercept them with isolated contract fixtures:
+
+```sh
+npx playwright test tests/ui/job-publishing.spec.ts
+```
+
+These tests cover desktop/mobile creation, incomplete-content validation, preview/submission, withdrawal, assignment, conflicts, publication controls, and permission/error states. Live-backend end-to-end verification requires a running backend with eligible company memberships and staff review data.
+
 ## Chạy với backend thật
 
 Cấu hình hiện tại dùng backend ở `http://localhost:8080`. Cần khởi động backend trước; `npm run dev` không tự tạo API mock. Nếu backend tắt, các yêu cầu đăng ký/đăng nhập sẽ báo `ECONNREFUSED` trong terminal Vite:
@@ -142,3 +159,15 @@ Với backend thật và local demo seed, đăng nhập `demo_staff` / `GuardWor
 Khi triển khai Staff, dùng API cùng origin (`VITE_API_BASE_URL=/api`) và cấu hình gateway theo [`deploy/staff-gateway.conf`](deploy/staff-gateway.conf). Include snippet trong HTTPS server block Staff, thay backend upstream cho đúng môi trường và kiểm tra `nginx -t` trước khi reload. Gateway giữ nguyên `/api` và **ghi đè** `X-Guardian-Portal: staff`, kể cả khi client tự gửi header khác. Gateway của public portal phải ghi đè thành `public`. Header chỉ cung cấp ngữ cảnh; backend vẫn phải kiểm tra Platform role `STAFF` trong token. Không trỏ trình duyệt trực tiếp đến backend để thay thế gateway này.
 
 Hợp đồng backend được cung cấp cho lần tích hợp này tham chiếu `docs/software-requirements/auth/portal-routing-contract.md`; file đó không có trong repository frontend. Việc triển khai gateway và smoke test với backend/demo seed thật cần được thực hiện trong môi trường triển khai tương ứng.
+
+## Staff job review
+
+`/staff/jobs` loads `/api/staff/job-revisions` with server-side status filtering and pagination. Opening a revision fetches its current details and paginated `/api/staff/jobs/{jobId}/revisions` history. Approve/reject uses `PUT /api/staff/job-revisions/{id}/decision` with both inspected version numbers. Rejection requires 10–1,000 characters. Failed or uncertain decisions retain the reason and require a fresh inspection before another attempt.
+
+Approval eligibility comes from the backend. An approved revision is distinct from the job's publication status (for example, a paused job stays paused). The API does not expose staff hide/restore actions, AI findings, company names, or a keyword search, so this screen shows company IDs and the supported review controls.
+
+Run `npm run dev` with the real backend configured to use the staff portal at `http://localhost:5138/staff/jobs`. `dev:staff:mock` is for isolated testing; it does not implement job-review endpoints. Contract tests intercept those endpoints without writing decisions to a real backend:
+
+```sh
+npx playwright test tests/ui/job-approvals.spec.ts
+```
