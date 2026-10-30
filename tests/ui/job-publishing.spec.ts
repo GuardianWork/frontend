@@ -4,25 +4,12 @@ import type { Job, JobContent, RevisionHistory } from "../../src/services/jobs";
 
 const completeContent: JobContent = {
   title: "Chuyên viên kinh doanh",
-  description: "Phát triển khách hàng doanh nghiệp.",
-  responsibilities: "Tư vấn và theo dõi hợp đồng.",
-  requiredQualifications: "Giao tiếp rõ ràng.",
-  preferredQualifications: "Ưu tiên kinh nghiệm bán hàng.",
-  experienceExpectations: "Một năm kinh nghiệm.",
-  benefits: "Bảo hiểm và đào tạo chuyên môn.",
+  description:
+    "Phát triển khách hàng doanh nghiệp.\n\nTrách nhiệm\nTư vấn và theo dõi hợp đồng.\n\nYêu cầu\nGiao tiếp rõ ràng.\n\nQuyền lợi\nBảo hiểm và đào tạo chuyên môn.",
   location: "Hà Nội",
-  applicationInstructions: "Gửi CV bằng tiếng Việt.",
   employmentType: "FULL_TIME",
   workArrangement: "ONSITE",
   deadline: "2099-12-01T10:00:00Z",
-  headcount: 2,
-  compensation: {
-    disclosed: true,
-    minimum: 15000000,
-    maximum: 25000000,
-    currency: "VND",
-    payPeriod: "MONTH",
-  },
 };
 const stamp = "2026-10-27T01:00:00Z";
 function makeJob(content: JobContent = completeContent): Job {
@@ -161,18 +148,10 @@ async function mockJobs(page: Page, initial: Job[] = [makeJob()]) {
       const issues = [
         "title",
         "description",
-        "responsibilities",
-        "requiredQualifications",
-        "preferredQualifications",
-        "experienceExpectations",
-        "benefits",
         "location",
-        "applicationInstructions",
         "employmentType",
         "workArrangement",
         "deadline",
-        "headcount",
-        "compensation",
       ]
         .filter((key) => !job.workingRevision?.content[key as keyof JobContent])
         .map((field) => ({ field: `content.${field}`, code: "REQUIRED" }));
@@ -299,29 +278,19 @@ test("owner creates an incomplete draft, sees validation, completes and submits 
   await expect(page.getByRole("button", { name: "Xác nhận gửi duyệt" })).toBeDisabled();
   await page.getByRole("button", { name: "Tiếp tục chỉnh sửa" }).click();
   for (const [label, value] of [
-    ["Giới thiệu công việc", completeContent.description],
-    ["Trách nhiệm công việc", completeContent.responsibilities],
-    ["Yêu cầu bắt buộc", completeContent.requiredQualifications],
-    ["Yêu cầu ưu tiên", completeContent.preferredQualifications],
-    ["Kinh nghiệm mong đợi", completeContent.experienceExpectations],
-    ["Quyền lợi", completeContent.benefits],
-    ["Hướng dẫn ứng tuyển", completeContent.applicationInstructions],
+    ["Mô tả công việc", completeContent.description],
     ["Địa điểm làm việc", completeContent.location],
   ])
-    await page.getByLabel(label!, { exact: true }).fill(value!);
+    await page.getByRole("textbox", { name: label!, exact: true }).fill(value!);
   await page
     .getByRole("combobox", { name: "Loại công việc", exact: true })
     .selectOption("FULL_TIME");
   await page
     .getByRole("combobox", { name: "Hình thức làm việc", exact: true })
     .selectOption("ONSITE");
-  await page.getByLabel("Số lượng tuyển", { exact: true }).fill("2");
   await page.getByLabel("Hạn ứng tuyển", { exact: true }).fill("2099-12-01T17:00");
-  await page.getByRole("combobox", { name: "Mức lương", exact: true }).selectOption("true");
-  await page.getByLabel("Lương tối thiểu", { exact: true }).fill("15000000");
-  await page.getByLabel("Lương tối đa", { exact: true }).fill("25000000");
-  await page.getByRole("button", { name: "Thêm câu hỏi" }).click();
-  await page.getByLabel("Nội dung câu hỏi 1").fill("Bạn có thể bắt đầu khi nào?");
+  await expect(page.getByLabel("Trách nhiệm công việc", { exact: true })).toHaveCount(0);
+  await expect(page.getByLabel("Yêu cầu bắt buộc", { exact: true })).toHaveCount(0);
   await page.screenshot({
     path: `/tmp/job-publishing-${info.project.name}-editor.png`,
     fullPage: true,
@@ -344,8 +313,8 @@ test("owner creates an incomplete draft, sees validation, completes and submits 
   const saved = mock.writes.find(
     (write) => write.method === "PUT" && write.path.endsWith("/draft"),
   );
-  expect((saved!.body!.content as JobContent).screeningQuestions?.[0].prompt).toBe(
-    "Bạn có thể bắt đầu khi nào?",
+  expect(Object.keys(saved!.body!.content as JobContent).sort()).toEqual(
+    ["title", "description", "employmentType", "workArrangement", "location", "deadline"].sort(),
   );
 });
 
@@ -508,4 +477,48 @@ test("expired jobs with unfinished revisions open in readable history without an
   await expect(page.getByRole("heading", { name: "Lịch sử xét duyệt", exact: true })).toBeVisible();
   await expect(page.getByText("Tin đã kết thúc.", { exact: false })).toBeVisible();
   await expect(page.getByLabel("Chức danh công việc", { exact: true })).toHaveCount(0);
+});
+
+test("remote jobs keep multiline descriptions and optional values can be added then omitted", async ({
+  page,
+}) => {
+  const mock = await mockJobs(page);
+  await login(page, "owner_demo", true);
+  await page.goto("/recruiter/jobs?jobId=83");
+  await page
+    .getByRole("combobox", { name: "Hình thức làm việc", exact: true })
+    .selectOption("REMOTE");
+  await page.getByLabel("Khu vực có thể làm việc từ xa", { exact: true }).fill("Toàn thế giới");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await noOverflow(page);
+  await page.screenshot({ path: "/tmp/job-publishing-mobile-editor.png", fullPage: true });
+  await page.getByLabel("Số lượng tuyển", { exact: true }).fill("2");
+  await page.getByRole("combobox", { name: "Mức lương", exact: true }).selectOption("true");
+  await page.getByLabel("Lương tối thiểu", { exact: true }).fill("15000000");
+  await page.getByLabel("Lương tối đa", { exact: true }).fill("25000000");
+  await page.getByRole("button", { name: "Thêm câu hỏi" }).click();
+  await page.getByLabel("Nội dung câu hỏi 1").fill("Bạn có thể bắt đầu khi nào?");
+  await page.getByRole("button", { name: "Lưu và xem trước" }).click();
+  await expect(page.getByRole("button", { name: "Xác nhận gửi duyệt" })).toBeEnabled();
+  await expect(page.locator(".jp-content-view")).toContainText(
+    "Khu vực làm việc từ xa: Toàn thế giới",
+  );
+  await expect(page.locator(".jp-content-view")).toContainText(completeContent.description!);
+  await page.getByRole("button", { name: "Tiếp tục chỉnh sửa" }).click();
+  await page.getByLabel("Số lượng tuyển", { exact: true }).fill("");
+  await page.getByRole("combobox", { name: "Mức lương", exact: true }).selectOption("false");
+  await page.getByRole("button", { name: "Xóa câu hỏi 1", exact: true }).click();
+  await page.getByRole("button", { name: "Lưu và xem trước" }).click();
+  await expect(page.locator(".jp-content-view")).toContainText("Không công khai mức lương");
+  await page.getByRole("button", { name: "Tiếp tục chỉnh sửa" }).click();
+  await page.getByRole("combobox", { name: "Mức lương", exact: true }).selectOption("");
+  await page.getByRole("button", { name: "Lưu và xem trước" }).click();
+  await expect(page.getByRole("button", { name: "Xác nhận gửi duyệt" })).toBeEnabled();
+  await expect(page.locator(".jp-content-view")).toContainText("Chưa có thông tin lương");
+  const saved = mock.writes
+    .filter((write) => write.path.endsWith("/draft") && write.method === "PUT")
+    .at(-1)!;
+  expect(saved.body!.content).not.toHaveProperty("compensation");
+  expect(saved.body!.content).not.toHaveProperty("headcount");
+  expect((saved.body!.content as JobContent).screeningQuestions).toEqual([]);
 });

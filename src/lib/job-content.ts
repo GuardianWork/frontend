@@ -1,14 +1,6 @@
 import type { ScreeningQuestion } from "@/services/jobs";
 
-export const textSections = [
-  ["description", "Giới thiệu công việc", 10000],
-  ["responsibilities", "Trách nhiệm công việc", 10000],
-  ["requiredQualifications", "Yêu cầu bắt buộc", 5000],
-  ["preferredQualifications", "Yêu cầu ưu tiên", 5000],
-  ["experienceExpectations", "Kinh nghiệm mong đợi", 5000],
-  ["benefits", "Quyền lợi", 5000],
-  ["applicationInstructions", "Hướng dẫn ứng tuyển", 2000],
-] as const;
+export const textSections = [["description", "Mô tả công việc", 10000]] as const;
 export const employmentTypes: Record<string, string> = {
   FULL_TIME: "Toàn thời gian",
   PART_TIME: "Bán thời gian",

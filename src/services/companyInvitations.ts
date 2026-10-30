@@ -49,6 +49,50 @@ export async function resendCompanyInvitation(id: number): Promise<OwnerInvitati
     }),
   );
 }
+export async function revokeCompanyInvitation(id: number): Promise<OwnerInvitation> {
+  const invitation = parseInvitation(
+    await authenticatedRequest(`/companies/me/invitations/${id}`, {
+      method: "DELETE",
+      cache: "no-store",
+    }),
+  );
+  if (invitation.status !== "REVOKED")
+    throw new ApiError("Chưa thể xác nhận lời mời đã được thu hồi. Hãy kiểm tra lại danh sách.");
+  return invitation;
+}
+export function companyInvitationManagementError(cause: unknown, action: "resend" | "revoke") {
+  if (cause instanceof ApiError) {
+    if (cause.status === 401) return "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
+    if (cause.status === 403) return "Bạn không có quyền quản lý lời mời này.";
+    if (cause.status === 404 || cause.status === 409)
+      return "Lời mời hoặc trạng thái công ty đã thay đổi. Hãy kiểm tra danh sách và trạng thái công ty trước khi thử lại.";
+  }
+  return `Chưa thể xác nhận kết quả ${action === "resend" ? "gửi lại" : "thu hồi"} lời mời. Hãy kiểm tra danh sách trước khi thử lại.`;
+}
+export interface CompanyInvitationPage {
+  content: OwnerInvitation[];
+  pageNumber: number;
+  totalElements: number;
+  totalPages: number;
+}
+export async function listPendingCompanyInvitations(page = 0): Promise<CompanyInvitationPage> {
+  const result = (await authenticatedRequest(
+    `/companies/me/invitations?status=PENDING&page=${page}&size=20`,
+    { cache: "no-store" },
+  )) as CompanyInvitationPage | null;
+  if (
+    !result ||
+    !Array.isArray(result.content) ||
+    !Number.isSafeInteger(result.pageNumber) ||
+    result.pageNumber < 0 ||
+    !Number.isSafeInteger(result.totalElements) ||
+    result.totalElements < 0 ||
+    !Number.isSafeInteger(result.totalPages) ||
+    result.totalPages < 0
+  )
+    throw new ApiError("Phản hồi danh sách lời mời không hợp lệ. Vui lòng thử lại.");
+  return { ...result, content: result.content.map(parseInvitation) };
+}
 export function companyInvitationError(cause: unknown): string {
   if (cause instanceof ApiError) {
     if (cause.status === 401) return "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";

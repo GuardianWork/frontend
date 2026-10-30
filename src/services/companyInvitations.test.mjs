@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { beforeEach, afterEach, test } from "node:test";
-import { issueCompanyInvitation, resendCompanyInvitation } from "./companyInvitations.ts";
+import {
+  issueCompanyInvitation,
+  resendCompanyInvitation,
+  revokeCompanyInvitation,
+  listPendingCompanyInvitations,
+} from "./companyInvitations.ts";
 import { AUTH_SESSION_KEY } from "./auth.ts";
 const originalFetch = globalThis.fetch;
 const result = {
@@ -59,6 +64,30 @@ test("resend uses the persisted ID and never creates a second invitation", async
   };
   assert.equal((await resendCompanyInvitation(17)).id, 17);
 });
+test("pending invitations use authenticated server filtering and pagination", async () => {
+  const page = { content: [result], pageNumber: 1, totalElements: 21, totalPages: 2 };
+  globalThis.fetch = async (url, init) => {
+    assert.equal(url, "/api/companies/me/invitations?status=PENDING&page=1&size=20");
+    assert.equal(init.headers.Authorization, "Bearer owner-access");
+    assert.equal(init.cache, "no-store");
+    return Response.json({ status: 200, data: page });
+  };
+  assert.deepEqual(await listPendingCompanyInvitations(1), page);
+});
+test("pending invitations reject malformed pages and propagate authorization errors", async () => {
+  for (const data of [
+    null,
+    {},
+    { content: [{}], pageNumber: 0, totalElements: 1, totalPages: 1 },
+    { content: [], pageNumber: 0, totalElements: -1, totalPages: 0 },
+  ]) {
+    globalThis.fetch = async () => Response.json({ status: 200, data });
+    await assert.rejects(listPendingCompanyInvitations(), /không hợp lệ/);
+  }
+  globalThis.fetch = async () =>
+    Response.json({ status: 403, message: "Owner required" }, { status: 403 });
+  await assert.rejects(listPendingCompanyInvitations(), (error) => error.status === 403);
+});
 test("duplicate, network and malformed responses never report invitation success", async () => {
   globalThis.fetch = async () =>
     Response.json({ status: 409, message: "PENDING_INVITATION_EXISTS" }, { status: 409 });
@@ -98,4 +127,21 @@ test("recipient decisions post the fragment secret to API endpoints, never the e
     };
     await operation("private-invitation");
   }
+});
+
+test("revoke deletes the persisted invitation and requires a revoked receipt", async () => {
+  globalThis.fetch = async (url, init) => {
+    assert.equal(url, "/api/companies/me/invitations/17");
+    assert.equal(init.method, "DELETE");
+    assert.equal(init.headers.Authorization, "Bearer owner-access");
+    assert.equal(init.cache, "no-store");
+    assert.equal(init.body, undefined);
+    return Response.json({ status: 200, data: { ...result, status: "REVOKED" } });
+  };
+  assert.equal((await revokeCompanyInvitation(17)).status, "REVOKED");
+  globalThis.fetch = async () => Response.json({ status: 200, data: result });
+  await assert.rejects(revokeCompanyInvitation(17), /Chưa thể xác nhận/);
+  globalThis.fetch = async () =>
+    Response.json({ status: 404, message: "Unavailable" }, { status: 404 });
+  await assert.rejects(revokeCompanyInvitation(17), (error) => error.status === 404);
 });

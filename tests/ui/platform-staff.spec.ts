@@ -1,4 +1,5 @@
 import { test, expect, login } from "./fixtures";
+import { staffJobApi } from "./helpers/staff-job-api";
 
 test("staff identity and audit logs support search, dates, details, and pagination", async ({
   page,
@@ -54,70 +55,9 @@ test("staff identity and audit logs support search, dates, details, and paginati
   await page.screenshot({ path: info.outputPath("audit-logs.png"), animations: "disabled" });
 });
 
-test("one job list opens full JD details with approval, rejection and hiding actions", async ({
-  page,
-}, info) => {
+test("legacy admin URLs redirect to the API-backed staff review queue", async ({ page }, info) => {
   test.setTimeout(90000);
-  await login(page, "admin_demo");
-  await page.goto("/staff/jobs", { waitUntil: "domcontentloaded" });
-  await expect(page.getByRole("tab")).toHaveCount(0);
-  const status = page.getByRole("combobox", { name: "Trạng thái", exact: true });
-  await status.selectOption("PENDING");
-  await expect(page.locator(".compliance-table tbody tr")).toHaveCount(2);
-  await page
-    .getByRole("button", { name: "Xem chi tiết Chuyên viên chăm sóc khách hàng", exact: true })
-    .click();
-  await expect(page.getByRole("heading", { name: "Nội dung JD", exact: true })).toBeVisible();
-  await expect(
-    page.getByText("Chưa có kết quả quét AI cho tin này.", { exact: true }),
-  ).toBeVisible();
-  await expect(page.getByRole("button", { name: "Ẩn tin đã đăng", exact: true })).toHaveCount(0);
-  await page.getByRole("button", { name: "Đồng ý đăng tin", exact: true }).click();
-  await page.getByRole("button", { name: "Xác nhận đồng ý đăng tin", exact: true }).click();
-  await expect(page.locator(".compliance-jd .admin-record-status")).toHaveText("Đang công khai");
-  await page.getByRole("button", { name: "Ẩn tin đã đăng", exact: true }).click();
-  await page.getByLabel("Lý do xử lý", { exact: false }).fill("   ");
-  await page.getByRole("button", { name: "Xác nhận ẩn tin", exact: true }).click();
-  await expect(page.getByRole("alert")).toContainText("Nhập lý do");
-  await page
-    .getByLabel("Lý do xử lý", { exact: false })
-    .fill("Tạm ẩn để kiểm tra nội dung theo phản hồi.");
-  await page.getByRole("button", { name: "Xác nhận ẩn tin", exact: true }).click();
-  await expect(page.locator(".compliance-jd .admin-record-status")).toHaveText("Đã ẩn");
-  await page.getByRole("button", { name: "Quay lại danh sách", exact: true }).click();
-  await expect(status).toHaveValue("PENDING");
-  await expect(page.locator(".compliance-table tbody tr")).toHaveCount(1);
-  await page
-    .getByRole("button", { name: "Xem chi tiết Chuyên viên marketing", exact: true })
-    .click();
-  await page.getByRole("button", { name: "Từ chối đăng tin", exact: true }).click();
-  await page.getByLabel("Lý do từ chối", { exact: false }).fill("   ");
-  await page.getByRole("button", { name: "Xác nhận từ chối đăng tin", exact: true }).click();
-  await expect(page.getByRole("alert")).toContainText("Nhập lý do");
-  await page
-    .getByLabel("Lý do từ chối", { exact: false })
-    .fill("Cần bổ sung thông tin về quyền lợi và thời gian làm việc.");
-  await page.screenshot({ path: info.outputPath("reject-job.png"), animations: "disabled" });
-  await page.getByRole("button", { name: "Xác nhận từ chối đăng tin", exact: true }).click();
-  await expect(page.locator(".compliance-jd .admin-record-status")).toHaveText("Đã từ chối");
-  await expect(page.locator(".compliance-history")).toContainText(
-    "Cần bổ sung thông tin về quyền lợi và thời gian làm việc.",
-  );
-  await expect(page.getByRole("button", { name: "Đồng ý đăng tin", exact: true })).toHaveCount(0);
-  await page.getByRole("button", { name: "Quay lại danh sách", exact: true }).click();
-  await status.selectOption("REJECTED");
-  await expect(page.locator(".compliance-table tbody tr")).toHaveCount(2);
-  await page.locator("main").evaluate((main) => main.scrollTo({ top: 0 }));
-  await page.screenshot({ path: info.outputPath("staff-jobs.png"), animations: "disabled" });
-  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(
-    false,
-  );
-});
-
-test("legacy admin URLs redirect to staff and AI evidence has high contrast", async ({
-  page,
-}, info) => {
-  test.setTimeout(90000);
+  await staffJobApi(page);
   await login(page, "admin_demo");
   await page.goto("/admin", { waitUntil: "domcontentloaded" });
   await expect(page).toHaveURL(/\/staff\/?$/);
@@ -133,33 +73,11 @@ test("legacy admin URLs redirect to staff and AI evidence has high contrast", as
   await page.goto("/admin/compliance", { waitUntil: "domcontentloaded" });
   await expect(page).toHaveURL(/\/staff\/jobs$/);
   await expect(page.getByRole("tab")).toHaveCount(0);
-  await page.getByRole("button", { name: "Xem chi tiết Kế toán công nợ", exact: true }).click();
-  const highlights = page.locator(".compliance-jd-content mark");
-  await expect(highlights).toHaveCount(2);
-  await expect(highlights.first()).toHaveText(
-    "Ứng viên nộp khoản đặt cọc 2.000.000 đồng trước khi nhận việc.",
-  );
-  const contrast = await highlights.first().evaluate((element) => {
-    const style = getComputedStyle(element);
-    const luminance = (color: string) => {
-      const rgb = color
-        .match(/\d+/g)!
-        .slice(0, 3)
-        .map(Number)
-        .map((v) => {
-          const s = v / 255;
-          return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
-        });
-      return rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722;
-    };
-    const values = [luminance(style.color), luminance(style.backgroundColor)].sort((a, b) => b - a);
-    return (values[0] + 0.05) / (values[1] + 0.05);
-  });
-  expect(contrast).toBeGreaterThanOrEqual(7);
-  await highlights.first().scrollIntoViewIfNeeded();
-  await page.screenshot({ path: info.outputPath("ai-highlighted-jd.png"), animations: "disabled" });
-  await page.locator(".compliance-finding-list blockquote").first().scrollIntoViewIfNeeded();
-  await page.screenshot({ path: info.outputPath("ai-findings.png"), animations: "disabled" });
+  await page.getByRole("button", { name: "Xem chi tiết Chuyên viên kế toán", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Nội dung gửi duyệt", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("Dữ liệu minh họa", { exact: true })).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(
     false,
   );

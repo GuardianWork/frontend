@@ -1,18 +1,19 @@
 import { useEmployerOnboarding } from "@/hooks/useEmployerOnboarding";
 import { RecipientInvitationPanel } from "@/components/RecipientInvitationPanel";
+import { PendingCompanyInvitations } from "@/components/recruiter/PendingCompanyInvitations";
 import { getInvitationSecret } from "@/lib/member-email-secret";
 import { ListSearch } from "@/components/ListSearch";
 import { matchesSearch } from "@/lib/list-search";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Users, UserPlus, ShieldCheck, History } from "lucide-react";
+import { Users, UserPlus } from "lucide-react";
 import { RecruiterShell } from "@/components/RecruiterShell";
-import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
+import { getCurrentUser } from "@/services/auth";
 import {
-  canViewMemberData,
-  updateCompanyMembers,
-  type MemberAction,
-} from "@/services/companyMembers";
+  listBackendCompanyMembers,
+  removeBackendCompanyMember,
+  type BackendCompanyMember,
+} from "@/services/backendCompanyMembers";
 import {
   issueCompanyInvitation,
   resendCompanyInvitation,
@@ -39,15 +40,72 @@ export const Route = createFileRoute("/recruiter/members")({
 
 function CompanyMembersPage() {
   const onboarding = useEmployerOnboarding();
-  const { workspace, company, member, user, error } = useCompanyWorkspace();
+  const user = getCurrentUser();
+  const membership = user?.activeMembership;
+  const owner = membership?.companyRole === "OWNER";
+  const [members, setMembers] = useState<BackendCompanyMember[]>([]);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [reload, setReload] = useState(0);
+  const [removing, setRemoving] = useState<BackendCompanyMember | null>(null);
+  const [saving, setSaving] = useState(false);
+  const removalPending = useRef(false);
+  useEffect(() => {
+    let active = true;
+    setMembers([]);
+    setError("");
+    setLoading(owner);
+    if (owner) {
+      listBackendCompanyMembers(page)
+        .then((result) => {
+          if (!active) return;
+          setMembers(result.content);
+          setTotal(result.totalElements);
+          setTotalPages(result.totalPages);
+        })
+        .catch((cause) => {
+          if (active)
+            setError(cause instanceof Error ? cause.message : "Không thể tải thành viên.");
+        })
+        .finally(() => {
+          if (active) setLoading(false);
+        });
+    }
+    return () => {
+      active = false;
+    };
+  }, [owner, membership?.companyId, page, reload]);
+  async function removeMember() {
+    if (!removing || removalPending.current) return;
+    removalPending.current = true;
+    setSaving(true);
+    setError("");
+    try {
+      await removeBackendCompanyMember(removing.membershipId);
+      setRemoving(null);
+      if (members.length === 1 && page > 0) setPage(page - 1);
+      else setReload((value) => value + 1);
+    } catch (cause) {
+      setError(
+        cause instanceof Error ? cause.message : "Không thể xóa thành viên. Vui lòng thử lại.",
+      );
+      setRemoving(null);
+    } finally {
+      removalPending.current = false;
+      setSaving(false);
+    }
+  }
   const [query, setQuery] = useState("");
   const [email, setEmail] = useState("");
   const [invitationResult, setInvitationResult] = useState<OwnerInvitation | null>(null);
   const [invitationError, setInvitationError] = useState("");
   const [sendingInvitation, setSendingInvitation] = useState(false);
+  const [invitationRefresh, setInvitationRefresh] = useState(0);
   const invitationPending = useRef(false);
-  const canInvite =
-    user?.activeMembership?.companyRole === "OWNER" && company?.verificationStatus === "VERIFIED";
+  const canInvite = owner;
   async function sendInvitation(resend = false) {
     if (!canInvite || invitationPending.current || (resend && !invitationResult)) return;
     invitationPending.current = true;
@@ -65,31 +123,9 @@ function CompanyMembersPage() {
     } finally {
       invitationPending.current = false;
       setSendingInvitation(false);
+      setInvitationRefresh((value) => value + 1);
     }
   }
-  const [message, setMessage] = useState("");
-  const [failed, setFailed] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [removingId, setRemovingId] = useState<string | null>(null);
-  const owner = member?.role === "Owner";
-  const selected = workspace.members.find((m) => m.id === selectedId);
-  const removing = workspace.members.find((m) => m.id === removingId);
-  const run = (action: MemberAction) => {
-    try {
-      updateCompanyMembers(action);
-      setFailed(false);
-      setMessage("Đã lưu thay đổi.");
-      return true;
-    } catch (e) {
-      setFailed(true);
-      setMessage(e instanceof Error ? e.message : "Không thể lưu thay đổi.");
-      return false;
-    }
-  };
-  const invitation = workspace.members.find(
-    (m) => m.status === "invited" && m.email === user?.email.toLowerCase(),
-  );
-  const activeMembers = workspace.members.filter((m) => m.status === "active");
   if (onboarding?.onboarding.stage === "COMPANY_ACTION_REQUIRED" || getInvitationSecret())
     return (
       <RecruiterShell title="Lời mời công ty">
@@ -101,34 +137,37 @@ function CompanyMembersPage() {
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="mb-2 text-sm text-charcoal-83">
-            {company?.name || "Không gian doanh nghiệp"}
+            {membership?.companyName || "Không gian doanh nghiệp"}
           </p>
           <h1 className="flex items-center gap-3 text-3xl font-bold">
             <Users className="text-primary" />
             Thành viên công ty
           </h1>
           <p className="mt-3 text-sm text-charcoal-83">
-            Quản lý đội ngũ, vai trò và quyền xem dữ liệu tuyển dụng.
+            Quản lý thành viên công ty và gửi lời mời tham gia.
           </p>
         </div>
-        {member && (
+        {membership && (
           <span className="rounded-full bg-surface-container px-4 py-2 text-sm font-semibold">
-            Vai trò của bạn: {member.role}
+            Vai trò của bạn: {membership.companyRole}
           </span>
         )}
       </div>
-      {(message || error) && (
-        <p
-          role={failed || error ? "alert" : "status"}
-          className="mb-5 rounded-lg border border-warm-border bg-paper-white p-4 text-sm"
-        >
-          {error || message}
-        </p>
+      {error && (
+        <div role="alert" className="mb-5 rounded-lg border border-warm-border p-4 text-sm">
+          <p>{error}</p>
+          <button
+            type="button"
+            className="mt-2 font-semibold text-primary"
+            onClick={() => setReload((value) => value + 1)}
+          >
+            Thử lại
+          </button>
+        </div>
       )}
       {!owner && (
-        <p className="mb-4 rounded-lg border border-warm-border bg-surface-container-low p-4 text-sm">
-          Chỉ Owner của công ty đã xác thực được mời, xóa thành viên, đổi vai trò và phân quyền. Bạn
-          vẫn có thể xem lịch sử đăng tin và đơn ứng tuyển trong phạm vi quyền được cấp.
+        <p className="mb-4 rounded-lg border border-warm-border p-4 text-sm">
+          Chỉ Owner được xem danh sách và quản lý thành viên công ty.
         </p>
       )}
       <form
@@ -211,328 +250,152 @@ function CompanyMembersPage() {
             )}
         </section>
       )}
-      {!company ? (
-        <p>Đang tải công ty…</p>
-      ) : company.verificationStatus !== "VERIFIED" ? (
-        <div className="rounded-xl border border-warm-border bg-paper-white p-8">
-          <ShieldCheck className="mb-4 text-primary" />
-          <h2 className="text-xl font-semibold">Công ty cần được xác thực</h2>
-          <p className="my-3 text-sm text-charcoal-83">
-            Các thao tác quản lý sẽ được mở cho Owner sau khi hệ thống duyệt hồ sơ công ty. Người
-            nộp hồ sơ sẽ trở thành Owner.
-          </p>
-          <Link to="/recruiter/verification" className="recruiter-primary inline-flex">
-            Xem hồ sơ xác thực
-          </Link>
-        </div>
-      ) : !member ? (
-        <div className="rounded-xl border border-warm-border bg-paper-white p-8">
-          <h2 className="text-xl font-semibold">
-            {invitation ? "Bạn được mời tham gia công ty" : "Bạn chưa là thành viên công ty"}
+      {owner && (
+        <PendingCompanyInvitations
+          key={membership?.companyId}
+          refreshVersion={invitationRefresh}
+          onInvitationChange={(updated) =>
+            setInvitationResult((current) =>
+              current?.id === updated.id
+                ? updated.status === "PENDING"
+                  ? updated
+                  : null
+                : current,
+            )
+          }
+        />
+      )}
+      {owner && (
+        <section aria-label="Danh sách thành viên công ty" aria-busy={loading}>
+          <h2 className="mb-4 text-xl font-semibold">
+            Thành viên ({loading || error ? "…" : total})
           </h2>
-          <p className="my-3 text-sm text-charcoal-83">
-            {invitation
-              ? `Lời mời dành cho ${invitation.email}. Vai trò: recruiter.`
-              : !user
-                ? "Vui lòng đăng nhập để kiểm tra lời mời."
-                : "Liên hệ Owner để được mời. Hồ sơ xác thực cũ chưa ghi nhận người nộp cần được hệ thống bổ sung trước khi cấp Owner."}
-          </p>
-          {invitation ? (
-            <p className="text-sm leading-6 text-charcoal-83">
-              Mở liên kết trong email mời để xác nhận lời mời với máy chủ.
+          <ListSearch value={query} onChange={setQuery} label="Tìm trong trang hiện tại…" />
+          {loading ? (
+            <p role="status" className="py-8">
+              Đang tải thành viên…
             </p>
           ) : (
-            !user && (
-              <Link
-                to="/login"
-                search={{ role: "recruiter" }}
-                className="recruiter-primary inline-flex"
-              >
-                Đăng nhập
-              </Link>
+            !error && (
+              <>
+                <div className="overflow-x-auto rounded-xl border border-warm-border bg-paper-white">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-surface-container-low">
+                      <tr>
+                        {["Thành viên", "Vai trò", "Trạng thái", "Thao tác"].map((label) => (
+                          <th key={label} className="p-4">
+                            {label}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {members
+                        .filter((m) =>
+                          matchesSearch(
+                            query,
+                            m.firstName || "",
+                            m.lastName || "",
+                            m.email,
+                            m.companyRole,
+                          ),
+                        )
+                        .map((m) => (
+                          <tr key={m.membershipId} className="border-t border-warm-border">
+                            <td className="p-4">
+                              <p className="font-semibold">
+                                {[m.firstName, m.lastName].filter(Boolean).join(" ") || m.email}
+                                {m.userId === user?.id ? " (Bạn)" : ""}
+                              </p>
+                              <p className="mt-1 text-charcoal-83">{m.email}</p>
+                            </td>
+                            <td className="p-4">{m.companyRole}</td>
+                            <td className="p-4">Đang hoạt động</td>
+                            <td className="p-4">
+                              {m.companyRole === "RECRUITER" && (
+                                <button
+                                  type="button"
+                                  disabled={saving}
+                                  className="text-red-700 disabled:opacity-50"
+                                  onClick={() => setRemoving(m)}
+                                >
+                                  Xóa thành viên
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      {!members.some((m) =>
+                        matchesSearch(
+                          query,
+                          m.firstName || "",
+                          m.lastName || "",
+                          m.email,
+                          m.companyRole,
+                        ),
+                      ) && (
+                        <tr>
+                          <td colSpan={4} className="p-8 text-center text-charcoal-83">
+                            Không tìm thấy thành viên phù hợp.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                {totalPages > 1 && (
+                  <nav aria-label="Phân trang thành viên" className="mt-4 flex items-center gap-4">
+                    <button
+                      type="button"
+                      disabled={page === 0}
+                      onClick={() => setPage(page - 1)}
+                      className="disabled:opacity-50"
+                    >
+                      Trang trước
+                    </button>
+                    <span>
+                      Trang {page + 1} / {totalPages}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={page + 1 >= totalPages}
+                      onClick={() => setPage(page + 1)}
+                      className="disabled:opacity-50"
+                    >
+                      Trang sau
+                    </button>
+                  </nav>
+                )}
+              </>
             )
           )}
-        </div>
-      ) : (
-        <>
-          <div className="workspace-summary">
-            {[
-              ["Thành viên", activeMembers.length],
-              ["Owner", activeMembers.filter((m) => m.role === "Owner").length],
-            ].map(([label, count]) => (
-              <div key={label} className="workspace-summary__item">
-                <p className="text-sm text-charcoal-83">{label}</p>
-                <p className="mt-2 text-3xl font-bold">{count}</p>
-              </div>
-            ))}
-          </div>
-          <ListSearch
-            value={query}
-            onChange={setQuery}
-            label="Tìm tên, thư điện tử hoặc vai trò thành viên"
-          />
-          <div
-            role="region"
-            aria-label="Danh sách thành viên công ty"
-            tabIndex={0}
-            className="overflow-x-auto rounded-xl border border-warm-border bg-paper-white"
-          >
-            <table className="w-full text-left text-sm">
-              <thead className="bg-surface-container-low">
-                <tr>
-                  {["Thành viên", "Vai trò", "Trạng thái", "Thao tác"].map((t) => (
-                    <th key={t} className="p-4">
-                      {t}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {!workspace.members.some(
-                  (m) =>
-                    (owner || m.status !== "removed") &&
-                    matchesSearch(query, m.name, m.email, m.role),
-                ) && (
-                  <tr>
-                    <td colSpan={4} className="p-8 text-center text-charcoal-83">
-                      Không tìm thấy thành viên phù hợp.
-                    </td>
-                  </tr>
-                )}
-                {workspace.members
-                  .filter(
-                    (m) =>
-                      (owner || m.status !== "removed") &&
-                      matchesSearch(query, m.name, m.email, m.role),
-                  )
-                  .map((m) => (
-                    <tr key={m.id} className="border-t border-warm-border">
-                      <td className="p-4">
-                        <p className="font-semibold">
-                          {m.name}
-                          {m.id === member.id ? " (Bạn)" : ""}
-                        </p>
-                        <p className="mt-1 text-sm text-charcoal-83">{m.email}</p>
-                      </td>
-                      <td className="p-4">
-                        {m.status === "active" ? (
-                          <select
-                            disabled={!owner}
-                            title={!owner ? "Chỉ Owner được đổi vai trò" : undefined}
-                            aria-label={`Vai trò của ${m.email}`}
-                            className="rounded-lg border border-warm-border bg-paper-white p-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            value={m.role}
-                            onChange={(e) =>
-                              run({
-                                type: "role",
-                                memberId: m.id,
-                                role: e.target.value as "Owner" | "recruiter",
-                              })
-                            }
-                          >
-                            <option>Owner</option>
-                            <option>recruiter</option>
-                          </select>
-                        ) : (
-                          m.role
-                        )}
-                      </td>
-                      <td className="p-4">
-                        {m.status === "active"
-                          ? "Đang hoạt động"
-                          : m.status === "removed"
-                            ? "Đã xóa"
-                            : "Chờ chấp nhận"}
-                      </td>
-                      <td className="p-4">
-                        <div className="flex flex-wrap gap-3">
-                          {m.status !== "invited" &&
-                            (owner ||
-                              canViewMemberData(workspace, m.id, "jobs") ||
-                              canViewMemberData(workspace, m.id, "applications")) && (
-                              <button
-                                className="flex items-center gap-1 font-semibold text-primary"
-                                onClick={() => setSelectedId(m.id)}
-                              >
-                                <History size={16} />
-                                Xem lịch sử
-                              </button>
-                            )}
-                          {m.status === "active" && (
-                            <button
-                              disabled={!owner}
-                              title={!owner ? "Chỉ Owner được phân quyền" : undefined}
-                              className="font-semibold text-primary disabled:cursor-not-allowed disabled:opacity-50"
-                              onClick={() => {
-                                if (owner) setSelectedId(m.id);
-                              }}
-                            >
-                              Phân quyền
-                            </button>
-                          )}
-                          {m.status !== "removed" && (
-                            <button
-                              disabled={!owner}
-                              title={
-                                !owner
-                                  ? "Chỉ Owner được xóa thành viên hoặc thu hồi lời mời"
-                                  : undefined
-                              }
-                              className="text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
-                              onClick={() => {
-                                if (owner) setRemovingId(m.id);
-                              }}
-                            >
-                              {m.status === "invited" ? "Thu hồi lời mời" : "Xóa thành viên"}
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-          <p className="mt-4 text-sm leading-5 text-charcoal-83">
-            Owner quản lý toàn bộ công ty. recruiter xem dữ liệu của mình và dữ liệu được Owner cấp
-            quyền. Quyền xem tin và quyền xem đơn được cấp riêng theo từng người đăng. Công ty luôn
-            phải có ít nhất một Owner.
-          </p>
-        </>
+        </section>
       )}
       <Dialog
-        open={!!selected && !!member}
+        open={!!removing}
         onOpenChange={(open) => {
-          if (!open) setSelectedId(null);
-        }}
-      >
-        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{selected?.name}</DialogTitle>
-            <DialogDescription>
-              Lịch sử đăng tin và quyền xem dữ liệu của thành viên.
-            </DialogDescription>
-          </DialogHeader>
-          {message && (
-            <p role={failed ? "alert" : "status"} className="text-sm">
-              {message}
-            </p>
-          )}
-          {selected && (
-            <>
-              {selected.status === "active" && (
-                <section>
-                  <h3 className="mb-3 font-semibold">Cho phép {selected.name} xem dữ liệu của</h3>
-                  {selected.role === "Owner" ? (
-                    <p className="text-sm">Owner có quyền xem toàn bộ tin và đơn ứng tuyển.</p>
-                  ) : (
-                    activeMembers
-                      .filter((m) => m.id !== selected.id)
-                      .map((author) => {
-                        const grant = workspace.grants.find(
-                          (g) => g.viewerId === selected.id && g.authorId === author.id,
-                        );
-                        return (
-                          <div
-                            key={author.id}
-                            className="mb-3 rounded-lg border border-warm-border p-3"
-                          >
-                            <p className="mb-2 text-sm font-semibold">{author.name}</p>
-                            <div className="flex flex-wrap gap-4">
-                              {(["jobs", "applications"] as const).map((kind) => (
-                                <label key={kind} className="flex items-center gap-2 text-sm">
-                                  <input
-                                    disabled={!owner}
-                                    title={!owner ? "Chỉ Owner được phân quyền" : undefined}
-                                    type="checkbox"
-                                    checked={grant?.[kind] ?? false}
-                                    onChange={(e) =>
-                                      run({
-                                        type: "grant",
-                                        grant: {
-                                          viewerId: selected.id,
-                                          authorId: author.id,
-                                          jobs: grant?.jobs ?? false,
-                                          applications: grant?.applications ?? false,
-                                          [kind]: e.target.checked,
-                                        },
-                                      })
-                                    }
-                                  />
-                                  {kind === "jobs" ? "Tin tuyển dụng" : "Đơn ứng tuyển"}
-                                </label>
-                              ))}
-                            </div>
-                          </div>
-                        );
-                      })
-                  )}
-                </section>
-              )}
-              <section>
-                <h3 className="mb-3 font-semibold">Lịch sử đăng bài</h3>
-                {canViewMemberData(workspace, selected.id, "jobs") ? (
-                  workspace.jobs.filter((j) => j.authorId === selected.id).length ? (
-                    workspace.jobs
-                      .filter((j) => j.authorId === selected.id)
-                      .map((j) => (
-                        <div key={j.id} className="mb-2 rounded-lg border border-warm-border p-3">
-                          <p className="font-medium">{j.title}</p>
-                          <p className="mt-1 text-sm text-charcoal-83">
-                            {new Date(j.created).toLocaleString("vi-VN")} · {j.status}
-                          </p>
-                        </div>
-                      ))
-                  ) : (
-                    <p className="text-sm text-charcoal-83">Thành viên chưa đăng tin nào.</p>
-                  )
-                ) : (
-                  <p className="text-sm">Bạn chưa được cấp quyền xem tin.</p>
-                )}
-              </section>
-              {canViewMemberData(workspace, selected.id, "applications") && (
-                <Link to="/recruiter/applications" className="text-sm font-semibold text-primary">
-                  Xem đơn ứng tuyển được cấp quyền →
-                </Link>
-              )}
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
-      <Dialog
-        open={!!removing && owner}
-        onOpenChange={(open) => {
-          if (!open) setRemovingId(null);
+          if (!open && !saving) setRemoving(null);
         }}
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {removing?.status === "invited" ? "Thu hồi lời mời?" : "Xóa thành viên?"}
-            </DialogTitle>
+            <DialogTitle>Xóa thành viên</DialogTitle>
             <DialogDescription>
-              {removing?.email} sẽ mất quyền truy cập công ty. Lịch sử đăng tin được giữ lại.
+              Bạn muốn xóa {removing?.email} khỏi công ty? Thành viên sẽ mất quyền truy cập dữ liệu
+              công ty.
             </DialogDescription>
           </DialogHeader>
-          {failed && (
-            <p role="alert" className="text-sm text-red-700">
-              {message}
-            </p>
-          )}
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={() => setRemovingId(null)}
-              className="rounded-lg border border-warm-border px-4 py-2 text-sm"
-            >
+          <div className="flex justify-end gap-4">
+            <button type="button" disabled={saving} onClick={() => setRemoving(null)}>
               Hủy
             </button>
             <button
-              className="rounded-lg bg-red-700 px-4 py-2 text-white"
-              onClick={() => {
-                if (removing && run({ type: "remove", memberId: removing.id })) setRemovingId(null);
-              }}
+              type="button"
+              disabled={saving}
+              className="recruiter-primary"
+              onClick={() => void removeMember()}
             >
-              Xác nhận
+              {saving ? "Đang xóa…" : "Xóa thành viên"}
             </button>
           </div>
         </DialogContent>

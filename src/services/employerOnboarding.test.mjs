@@ -95,3 +95,26 @@ test("a company lookup failure is retryable and does not unlock recruiter featur
   };
   await assert.rejects(loadEmployerOnboarding());
 });
+
+test("a recruiter checks current membership without requesting owner-only company details", async () => {
+  const session = JSON.parse(sessionStorage.getItem(AUTH_SESSION_KEY));
+  session.user.activeMembership = {
+    companyId: 12,
+    companyName: "Alpha",
+    companyRole: "RECRUITER",
+    joinedAt: "2026-10-19T00:00:00Z",
+  };
+  sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+  globalThis.fetch = async (url) => {
+    assert.equal(url, "/api/companies/me");
+    return Response.json({ status: 200, data: session.user.activeMembership });
+  };
+  assert.deepEqual(await loadEmployerOnboarding(), { stage: "VERIFIED" });
+
+  globalThis.fetch = async () => Response.json({ status: 200, data: null });
+  assert.deepEqual(await loadEmployerOnboarding(), { stage: "COMPANY_ACTION_REQUIRED" });
+
+  globalThis.fetch = async () =>
+    Response.json({ status: 404, message: "Company not found" }, { status: 404 });
+  await assert.rejects(loadEmployerOnboarding());
+});
