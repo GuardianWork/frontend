@@ -39,7 +39,11 @@ export const MOCK_ACCOUNTS = [
 
 /** In-memory fixtures, available only through npm run dev:mock. */
 export function createMockApiServer() {
-  const users = MOCK_ACCOUNTS.map((user) => ({ ...user, emailVerified: true, password: MOCK_PASSWORD }));
+  const users = MOCK_ACCOUNTS.map((user) => ({
+    ...user,
+    emailVerified: true,
+    password: MOCK_PASSWORD,
+  }));
   const candidateProfiles = new Map();
   const accessTokens = new Map();
   const refreshTokens = new Map();
