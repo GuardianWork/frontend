@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowLeftIcon as ArrowLeft,
@@ -66,7 +67,6 @@ export function StaffAccountsPage() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
   const [needsReload, setNeedsReload] = useState(false);
-  const [notice, setNotice] = useState("");
   const sequence = useRef(0);
   const pending = useRef(false);
   const detailHeading = useRef<HTMLHeadingElement>(null);
@@ -122,7 +122,7 @@ export function StaffAccountsPage() {
         setId(null);
         setDetail(null);
         setAction(null);
-        setNotice(mapped.message);
+        toast.error(mapped.message);
         setRevision((value) => value + 1);
       } else {
         setDetailError(mapped.message);
@@ -188,7 +188,7 @@ export function StaffAccountsPage() {
       );
       setDetail(result);
       setAction(null);
-      setNotice(action === "ban" ? "Đã khóa tài khoản." : "Đã mở khóa tài khoản.");
+      toast.success(action === "ban" ? "Đã khóa tài khoản." : "Đã mở khóa tài khoản.");
       setRevision((value) => value + 1);
     } catch (error) {
       const mapped = accountError(error);
@@ -197,7 +197,7 @@ export function StaffAccountsPage() {
         setAction(null);
         setId(null);
         setDetail(null);
-        setNotice(mapped.message);
+        toast.error(mapped.message);
         setRevision((value) => value + 1);
       }
       if ([0, 409, 500, 503].includes(mapped.status)) setNeedsReload(true);
@@ -234,11 +234,6 @@ export function StaffAccountsPage() {
           </div>
           <LockIcon size={28} aria-hidden="true" className="accounts-heading-icon" />
         </div>
-        {notice && (
-          <p role="status" className="admin-inline-notice">
-            {notice}
-          </p>
-        )}
         {id === null ? (
           <>
             <div className="accounts-tabs" role="tablist" aria-label="Loại tài khoản">
@@ -271,7 +266,6 @@ export function StaffAccountsPage() {
                     setFilter({ q: "", page: 0 });
                     setQuery("");
                     setData(null);
-                    setNotice("");
                   }}
                 >
                   {tab === "users" ? "Tài khoản người dùng" : "Công ty"}
@@ -367,7 +361,6 @@ export function StaffAccountsPage() {
                                 onClick={() => {
                                   setDetail(null);
                                   setId(item.id);
-                                  setNotice("");
                                 }}
                               >
                                 {name(item)}
@@ -391,7 +384,6 @@ export function StaffAccountsPage() {
                                 onClick={() => {
                                   setDetail(null);
                                   setId(item.id);
-                                  setNotice("");
                                 }}
                               >
                                 Xem chi tiết <ArrowRight size={16} />

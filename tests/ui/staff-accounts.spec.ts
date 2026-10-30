@@ -180,6 +180,27 @@ test("company temporary ban, conflict refresh and unban use server permissions",
   await expect(dialog.getByRole("button", { name: "Xác nhận mở khóa" })).toBeEnabled();
   await dialog.getByRole("button", { name: "Xác nhận mở khóa" }).click();
   await expect(page.getByText("Đã mở khóa tài khoản.", { exact: true })).toBeVisible();
+  const toast = page.locator("[data-sonner-toast]").filter({ hasText: "Đã mở khóa tài khoản." });
+  await expect(toast).toBeVisible();
+  await expect(dialog).not.toBeVisible();
+  await expect(toast).toHaveAttribute("data-mounted", "true");
+  await page.screenshot({
+    path: ".impeccable/review/toast-desktop.png",
+    fullPage: true,
+    animations: "disabled",
+  });
+  const bounds = await toast.boundingBox();
+  expect(bounds!.x + bounds!.width).toBeGreaterThan(1300);
+  expect(bounds!.y + bounds!.height).toBeGreaterThan(900);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({
+    path: ".impeccable/review/toast-mobile.png",
+    fullPage: true,
+    animations: "disabled",
+  });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+  await toast.getByRole("button", { name: "Đóng thông báo" }).click();
+  await expect(toast).not.toBeVisible();
   expect(posts).toBe(3);
 });
 

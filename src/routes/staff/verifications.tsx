@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { ErrorIcon, ArrowLeftIcon, ArrowRightIcon, RefreshIcon } from "@/components/icons";
 import { GuardianIllustration } from "@/components/GuardianIllustration";
 import { dossierDate as date } from "@/lib/dossier-date";
@@ -73,7 +74,6 @@ function AdminVerificationsPage() {
   const [decision, setDecision] = useState<"VERIFIED" | "REJECTED">("VERIFIED");
   const [reason, setReason] = useState("");
   const [saving, setSaving] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
   const [decisionError, setDecisionError] = useState<AdminApiError | null>(null);
   const [reload, setReload] = useState(0);
   const [mockMode, setMockMode] = useState(false);
@@ -179,7 +179,6 @@ function AdminVerificationsPage() {
   const retry = () => setReload((value) => value + 1);
   const choose = (item: AdminCompany) => {
     setSelected(item);
-    setNotice(null);
     setDecisionError(null);
   };
   const openDecision = (value: "VERIFIED" | "REJECTED") => {
@@ -202,7 +201,7 @@ function AdminVerificationsPage() {
     try {
       const updated = await decideAdminVerification(selected, decision, reason);
       setSelected(updated);
-      setNotice(
+      toast.success(
         decision === "VERIFIED" ? "Hồ sơ đã được xác minh." : "Đã từ chối hồ sơ và lưu lý do.",
       );
       setDialogOpen(false);
@@ -227,7 +226,7 @@ function AdminVerificationsPage() {
     setSelected(null);
     setDialogOpen(false);
     setDecisionError(null);
-    setNotice("Danh sách đang được tải lại để lấy trạng thái mới nhất.");
+    toast.info("Danh sách đang được tải lại để lấy trạng thái mới nhất.");
     retry();
   };
   return (
@@ -259,11 +258,6 @@ function AdminVerificationsPage() {
                 từ chối đã được tắt.
               </p>
             </div>
-          )}
-          {notice && (
-            <p role="status" className="admin-inline-notice">
-              {notice}
-            </p>
           )}
           <div className="admin-list-toolbar">
             <ListSearch
@@ -412,7 +406,6 @@ function AdminVerificationsPage() {
                 retry();
               }
               setSelected(null);
-              setNotice(null);
             }}
           >
             <ArrowLeftIcon size={16} />
@@ -435,11 +428,6 @@ function AdminVerificationsPage() {
                 quyết định không khả dụng.
               </p>
             </div>
-          )}
-          {notice && (
-            <p role="status" className="admin-inline-notice">
-              {notice}
-            </p>
           )}
           {decisionError && (
             <div className="admin-inline-error" role="alert">
