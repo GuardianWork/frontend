@@ -218,7 +218,7 @@ test("candidate phone is read from the shared profile API and can be cleared", a
     async () =>
       (
         await (
-          await fetch("/api/v1/candidates/profile", {
+          await fetch("/api/candidates/profile", {
             headers: {
               Authorization: `Bearer ${JSON.parse(sessionStorage.getItem("guardianwork_auth_session")!).accessToken}`,
             },

@@ -1,10 +1,4 @@
-/* Hallmark · page: candidate CV management · genre: modern-minimal
- * macrostructure: Workbench · tone: utilitarian · theme: GuardianWork (DESIGN.md locked)
- * anchor hue: Guardian Blue · enrichment: none (typography + functional states)
- * states: default · hover · focus · active · disabled · loading · error · success
- * pre-emit critique: P5 H5 E5 S5 R4 V4
- */
-
+/* Candidate CV management: old screen design wired to the GuardianWork backend. */
 import { useEffect, useRef, useState, type ChangeEvent, type DragEvent } from "react";
 import {
   AlertTriangle,
@@ -14,7 +8,6 @@ import {
   HardDrive,
   Info,
   Loader2,
-  Pencil,
   ShieldAlert,
   Star,
   Trash2,
@@ -31,20 +24,62 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { MAX_CV_COUNT, useCandidate, type CandidateCv } from "@/context/CandidateContext";
+import { MAX_CV_COUNT } from "@/context/CandidateContext";
+import { clearAuthSession } from "@/services/auth";
 import {
-  CV_ACCEPT_ATTRIBUTE,
-  CV_MIME_BY_FORMAT,
-  deriveCvLabel,
-  detectCvFormat,
-  formatCvDate,
-  formatFileSize,
-  validateCvFile,
-} from "@/lib/cv-file";
+  getCandidateCvs,
+  deleteCandidateCv,
+  getCvDownloadUrl,
+  registerCv,
+  requestCvUploadUrl,
+  setDefaultCandidateCv,
+  uploadToCloudinary,
+  type CandidateCv,
+} from "@/services/candidateCv";
+import { ApiError } from "@/services/api";
+import { deriveCvLabel, formatCvDate, formatFileSize, validateCvFile } from "@/lib/cv-file";
 
 type NoticeTone = "success" | "info" | "error";
 
-type UploadState = "idle" | "uploading";
+type Phase = "idle" | "requesting" | "uploading" | "registering";
+
+function redirectToLogin() {
+  clearAuthSession();
+  window.location.assign("/login?role=candidate");
+}
+
+function mapCvError(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.status === 401) {
+      redirectToLogin();
+      return "Phiên đăng nhập đã hết hạn.";
+    }
+    switch (error.code) {
+      case 40000:
+        return "Vui lòng kiểm tra lại thông tin.";
+      case 40020:
+        return "Vui lòng xác nhận nội dung cảnh báo trước khi tải lên.";
+      case 40021:
+        return "Chỉ hỗ trợ tệp PDF, DOC hoặc DOCX tối đa 10 MB.";
+      case 40022:
+        return "Bạn đã đạt số lượng hồ sơ tối đa.";
+      case 40023:
+        return "Không thể xác minh tệp đã tải lên. Vui lòng thử lại.";
+      case 40405:
+        return "Không tìm thấy hồ sơ xin việc.";
+      case 40902:
+        return "Hồ sơ này đã được đăng ký.";
+      case 50300:
+        return "Dịch vụ lưu trữ tạm thời không khả dụng. Vui lòng thử lại sau.";
+    }
+    if (error.status === 403) return "Bạn không có quyền thực hiện thao tác này.";
+    if (error.status === 404) return "Không tìm thấy hồ sơ xin việc.";
+    if (error.status === 409) return "Hồ sơ này đã được đăng ký.";
+    if (error.status === 503)
+      return "Dịch vụ lưu trữ tạm thời không khả dụng. Vui lòng thử lại sau.";
+  }
+  return "Đã xảy ra lỗi. Vui lòng thử lại.";
+}
 
 const focusRing =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2";
@@ -52,216 +87,207 @@ const primaryButton = `inline-flex min-h-10 items-center justify-center gap-2 wh
 const secondaryButton = `inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-rule bg-paper px-4 text-sm font-semibold text-ink transition-colors hover:bg-paper-2 active:bg-paper-3 ${focusRing}`;
 const iconButton = `inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-ink-2 transition-colors hover:bg-paper-2 hover:text-ink active:bg-paper-3 disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:w-10 ${focusRing}`;
 
+function cvFormat(cv: CandidateCv): string {
+  const extension = cv.fileName.split(".").pop()?.toLowerCase();
+  if (extension === "pdf") return "PDF";
+  if (extension === "doc") return "DOC";
+  if (extension === "docx") return "DOCX";
+  if (cv.contentType.includes("pdf")) return "PDF";
+  if (cv.contentType.includes("word")) return cv.contentType.includes("openxml") ? "DOCX" : "DOC";
+  return extension?.toUpperCase() || "FILE";
+}
+
 export function CvManagerView() {
-  const { cvs, addCv, removeCv, renameCv, setDefaultCv } = useCandidate();
+  const [cvs, setCvs] = useState<CandidateCv[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [notice, setNotice] = useState<{ message: string; tone: NoticeTone } | null>(null);
+
   const [uploadOpen, setUploadOpen] = useState(false);
-  const [sensitiveConfirmed, setSensitiveConfirmed] = useState(false);
+  const [consent, setConsent] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState("");
-  const [isChecking, setIsChecking] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const [uploadState, setUploadState] = useState<UploadState>("idle");
+  const [phase, setPhase] = useState<Phase>("idle");
   const [progress, setProgress] = useState(0);
-  const [renameTarget, setRenameTarget] = useState<CandidateCv | null>(null);
-  const [renameValue, setRenameValue] = useState("");
-  const [renameError, setRenameError] = useState("");
-  const [deleteTarget, setDeleteTarget] = useState<CandidateCv | null>(null);
+  const [uploadError, setUploadError] = useState("");
+  const [defaultingId, setDefaultingId] = useState<string | null>(null);
+  const [confirmDeleteCv, setConfirmDeleteCv] = useState<CandidateCv | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const progressTimer = useRef<number | null>(null);
-  const finishTimer = useRef<number | null>(null);
-  const finishUploadRef = useRef<() => void>(() => {});
-  const validationId = useRef(0);
+  const progressRef = useRef<number | null>(null);
 
   const atLimit = cvs.length >= MAX_CV_COUNT;
+  const busy = phase !== "idle";
   const hasDefault = cvs.some((cv) => cv.isDefault);
   const orderedCvs = [...cvs].sort((a, b) => Number(b.isDefault) - Number(a.isDefault));
 
   useEffect(
     () => () => {
-      if (progressTimer.current) window.clearInterval(progressTimer.current);
-      if (finishTimer.current) window.clearTimeout(finishTimer.current);
+      if (progressRef.current) window.clearInterval(progressRef.current);
     },
     [],
   );
 
-  const resetUploadForm = () => {
-    validationId.current += 1;
-    if (progressTimer.current) window.clearInterval(progressTimer.current);
-    if (finishTimer.current) window.clearTimeout(finishTimer.current);
-    progressTimer.current = null;
-    finishTimer.current = null;
-    setSensitiveConfirmed(false);
+  const load = async () => {
+    setLoading(true);
+    setLoadError("");
+    try {
+      setCvs(await getCandidateCvs());
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        redirectToLogin();
+        return;
+      }
+      setLoadError(mapCvError(error));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void load();
+  }, []);
+
+  const resetUpload = () => {
+    setConsent(false);
     setSelectedFile(null);
     setFileError("");
-    setUploadState("idle");
+    setPhase("idle");
     setProgress(0);
-    setIsChecking(false);
-    setIsDragging(false);
+    setUploadError("");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleUploadOpenChange = (open: boolean) => {
-    if (!open && uploadState === "uploading") return;
-    if (!open) resetUploadForm();
+    if (!open && busy) return;
+    if (!open) resetUpload();
     setUploadOpen(open);
   };
 
-  const validateAndSelectFile = async (file: File) => {
-    const currentValidation = ++validationId.current;
+  const handleFilePick = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
     setFileError("");
     setSelectedFile(null);
-
-    setIsChecking(true);
-    const check = await validateCvFile(file);
-    if (currentValidation !== validationId.current) return;
-    setIsChecking(false);
-
-    if (!check.ok) {
-      setFileError(check.message);
+    const result = await validateCvFile(file);
+    if (!result.ok) {
+      setFileError(result.message);
       return;
     }
     setSelectedFile(file);
   };
 
-  const handleFilePick = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-    if (file) void validateAndSelectFile(file);
-  };
-
-  const handleDrop = (event: DragEvent<HTMLLabelElement>) => {
+  const handleDrop = async (event: DragEvent<HTMLLabelElement>) => {
     event.preventDefault();
-    setIsDragging(false);
-    if (uploadState === "uploading") return;
+    if (busy) return;
     const file = event.dataTransfer.files?.[0];
-    if (file) void validateAndSelectFile(file);
-  };
-
-  const finishUpload = () => {
-    if (!selectedFile) return;
-    const format = detectCvFormat(selectedFile.name);
-    if (!format) {
-      setFileError("Chỉ nhận tệp PDF, DOC hoặc DOCX.");
+    if (!file) return;
+    setFileError("");
+    setSelectedFile(null);
+    const result = await validateCvFile(file);
+    if (!result.ok) {
+      setFileError(result.message);
       return;
     }
-
-    const added = addCv({
-      fileName: selectedFile.name,
-      label: deriveCvLabel(selectedFile.name),
-      format,
-      mimeType: selectedFile.type || CV_MIME_BY_FORMAT[format],
-      sizeBytes: selectedFile.size,
-      previewUrl: URL.createObjectURL(selectedFile),
-    });
-
-    if (!added) {
-      setFileError("Bạn đã đạt giới hạn 5 hồ sơ. Xóa một hồ sơ cũ trước khi tải lên.");
-      setUploadState("idle");
-      setProgress(0);
-      return;
-    }
-
-    setUploadState("idle");
-    setProgress(0);
-    setNotice({
-      message: `Đã thêm “${selectedFile.name}” vào danh sách hồ sơ.`,
-      tone: "success",
-    });
-    setUploadOpen(false);
-    resetUploadForm();
+    setSelectedFile(file);
   };
-  finishUploadRef.current = finishUpload;
 
-  const startUpload = () => {
-    if (!selectedFile || !sensitiveConfirmed || uploadState === "uploading" || isChecking) return;
-    if (atLimit) {
-      setFileError("Bạn đã đạt giới hạn 5 hồ sơ. Xóa một hồ sơ cũ trước khi tải lên.");
+  const startUpload = async () => {
+    if (!selectedFile || busy || atLimit) return;
+    if (!consent) {
+      setUploadError("Vui lòng xác nhận nội dung cảnh báo trước khi tải lên.");
       return;
     }
 
     setFileError("");
-    setUploadState("uploading");
-    setProgress(6);
+    setUploadError("");
+    setPhase("requesting");
+    setProgress(0);
 
-    let current = 6;
-    progressTimer.current = window.setInterval(() => {
-      current = Math.min(100, current + 14);
-      setProgress(current);
-
-      if (current >= 100) {
-        if (progressTimer.current) window.clearInterval(progressTimer.current);
-        progressTimer.current = null;
-        finishTimer.current = window.setTimeout(() => finishUploadRef.current(), 320);
+    try {
+      const signature = await requestCvUploadUrl();
+      setPhase("uploading");
+      let cloudinaryResponse: { public_id?: string };
+      try {
+        cloudinaryResponse = await uploadToCloudinary(selectedFile, signature, (percent) => {
+          setProgress(percent);
+        });
+      } catch {
+        setPhase("idle");
+        setUploadError("Dịch vụ lưu trữ tạm thời không khả dụng. Vui lòng thử lại sau.");
+        return;
       }
-    }, 90);
+      const publicId = cloudinaryResponse?.public_id || signature.publicId;
+      setPhase("registering");
+      const created = await registerCv(selectedFile.name, publicId);
+      setCvs((current) => [created, ...current]);
+      setNotice({ message: "Tải lên hồ sơ xin việc thành công.", tone: "success" });
+      setUploadOpen(false);
+      resetUpload();
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        redirectToLogin();
+        return;
+      }
+      setPhase("idle");
+      setUploadError(mapCvError(error));
+      if (error instanceof ApiError && error.code === 40902) {
+        void load();
+      }
+    }
   };
 
-  const handleSetDefault = (cv: CandidateCv) => {
-    const result = setDefaultCv(cv.id);
-    if (result === "already") {
-      setNotice({ message: "Hồ sơ này đã là hồ sơ mặc định.", tone: "info" });
-      return;
+  const handleSetDefault = async (cv: CandidateCv) => {
+    if (cv.isDefault || defaultingId) return;
+    setDefaultingId(cv.id);
+    try {
+      const updated = await setDefaultCandidateCv(cv.id);
+      setCvs((current) => current.map((item) => ({ ...item, isDefault: item.id === updated.id })));
+      setNotice({ message: "Đã đặt hồ sơ mặc định thành công.", tone: "success" });
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        redirectToLogin();
+        return;
+      }
+      setNotice({ message: mapCvError(error), tone: "error" });
+      if (error instanceof ApiError && error.status === 404) void load();
+    } finally {
+      setDefaultingId(null);
     }
-    if (result === "missing") {
-      setNotice({ message: "Không tìm thấy hồ sơ để đặt mặc định.", tone: "error" });
-      return;
-    }
-    setNotice({
-      message: `Đã đặt “${cv.fileName}” làm hồ sơ mặc định. Hồ sơ này sẽ được đính kèm tự động khi ứng tuyển.`,
-      tone: "success",
-    });
   };
 
-  const openRename = (cv: CandidateCv) => {
-    setRenameTarget(cv);
-    setRenameValue(cv.label);
-    setRenameError("");
+  const handleConfirmDelete = async () => {
+    if (!confirmDeleteCv) return;
+    setDeleting(true);
+    try {
+      await deleteCandidateCv(confirmDeleteCv.id);
+      setCvs((current) => current.filter((item) => item.id !== confirmDeleteCv.id));
+      setNotice({ message: "Đã xóa hồ sơ xin việc thành công.", tone: "success" });
+      setConfirmDeleteCv(null);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        redirectToLogin();
+        return;
+      }
+      setNotice({ message: mapCvError(error), tone: "error" });
+      if (error instanceof ApiError && error.status === 404) void load();
+    } finally {
+      setDeleting(false);
+    }
   };
 
-  const handleRename = () => {
-    if (!renameTarget) return;
-    const nextLabel = renameValue.trim();
-    if (!nextLabel) {
-      setRenameError("Nhập tên hiển thị cho hồ sơ.");
-      return;
+  const handleDownload = async (cv: CandidateCv) => {
+    try {
+      const result = await getCvDownloadUrl(cv.id);
+      window.open(result.url, "_blank", "noopener");
+    } catch (error) {
+      setNotice({ message: mapCvError(error), tone: "error" });
+      if (error instanceof ApiError && error.status === 404) {
+        void load();
+      }
     }
-    if (nextLabel.length > 60) {
-      setRenameError("Tên hiển thị tối đa 60 ký tự.");
-      return;
-    }
-    renameCv(renameTarget.id, nextLabel);
-    setNotice({ message: "Đã cập nhật tên hiển thị của hồ sơ.", tone: "success" });
-    setRenameTarget(null);
-  };
-
-  const handleDelete = () => {
-    if (!deleteTarget) return;
-    const wasDefault = deleteTarget.isDefault;
-    const fileName = deleteTarget.fileName;
-    removeCv(deleteTarget.id);
-    setDeleteTarget(null);
-    setNotice({
-      message: wasDefault
-        ? `Đã xóa “${fileName}”. Bạn chưa có hồ sơ mặc định — hãy chọn một hồ sơ khác.`
-        : `Đã xóa “${fileName}” khỏi danh sách hồ sơ.`,
-      tone: wasDefault ? "info" : "success",
-    });
-  };
-
-  const handleDownload = (cv: CandidateCv) => {
-    if (!cv.previewUrl) {
-      setNotice({
-        message: "Bản xem thử chưa có tệp gốc để tải xuống. Hồ sơ mẫu chỉ hiển thị thông tin.",
-        tone: "info",
-      });
-      return;
-    }
-    const anchor = document.createElement("a");
-    anchor.href = cv.previewUrl;
-    anchor.download = cv.fileName;
-    anchor.click();
   };
 
   return (
@@ -270,11 +296,10 @@ export function CvManagerView() {
         <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0">
             <h1 className="text-2xl font-extrabold tracking-[-0.03em] text-ink md:text-3xl">
-              Hồ sơ xin việc
+              Quản lý hồ sơ xin việc
             </h1>
             <p className="mt-1.5 max-w-2xl text-sm leading-6 text-ink-2">
-              Quản lý các bản CV dùng khi ứng tuyển. Hồ sơ mặc định được đính kèm tự động vào mỗi
-              đơn, và bạn vẫn có thể chọn hồ sơ khác tại bước nộp đơn.
+              Tải lên, xem và tải xuống các hồ sơ dùng khi ứng tuyển.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -286,22 +311,16 @@ export function CvManagerView() {
               className={primaryButton}
             >
               <UploadCloud size={18} aria-hidden="true" />
-              Tải hồ sơ mới
+              Tải lên hồ sơ mới
             </button>
           </div>
         </header>
-        <p className="workspace-inline-note">
-          Danh sách có hồ sơ minh họa. CV mới và thay đổi hiện lưu trong phiên xem trên trình duyệt;
-          tệp chưa được lưu lên máy chủ.
-        </p>
-
         {atLimit && (
           <p
             id="cv-limit-hint"
             className="mb-4 rounded-lg border border-rule bg-paper px-4 py-3 text-sm text-ink-2"
           >
-            Bạn đã dùng <strong className="text-ink">5/5</strong> hồ sơ. Xóa một hồ sơ cũ để tải lên
-            tệp mới.
+            Bạn đã đạt số lượng hồ sơ tối đa. Vui lòng xóa bớt hồ sơ cũ.
           </p>
         )}
 
@@ -337,8 +356,7 @@ export function CvManagerView() {
           <div className="mb-4 flex items-start gap-3 rounded-lg border border-rule bg-paper px-4 py-3">
             <Info size={18} className="mt-0.5 shrink-0 text-accent" aria-hidden="true" />
             <p className="text-sm leading-6 text-ink-2">
-              Chưa có hồ sơ mặc định. Chọn <strong className="text-ink">Đặt mặc định</strong> để hệ
-              thống tự đính kèm hồ sơ khi bạn ứng tuyển.
+              Chưa có hồ sơ mặc định. Hồ sơ đầu tiên tải lên sẽ tự động thành mặc định.
             </p>
           </div>
         )}
@@ -359,26 +377,44 @@ export function CvManagerView() {
               </span>
             </div>
 
-            <div className="overflow-hidden rounded-xl border border-rule bg-paper">
-              {cvs.length === 0 ? (
-                <div className="px-5 py-12 text-center sm:px-8">
-                  <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-accent-subtle text-accent">
-                    <FileText size={24} aria-hidden="true" />
-                  </span>
-                  <h3 className="mt-4 text-base font-bold text-ink">Chưa có hồ sơ xin việc</h3>
-                  <p className="mx-auto mt-1 max-w-sm text-sm leading-6 text-ink-2">
-                    Tải lên CV đầu tiên để bắt đầu ứng tuyển. Tệp PDF, DOC hoặc DOCX, tối đa 10 MB.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setUploadOpen(true)}
-                    className={`mt-5 ${primaryButton}`}
-                  >
-                    <UploadCloud size={18} aria-hidden="true" />
-                    Tải hồ sơ đầu tiên
-                  </button>
-                </div>
-              ) : (
+            {loading ? (
+              <div className="rounded-xl border border-rule bg-paper px-5 py-10 text-center text-sm text-ink-3">
+                <Loader2 className="mx-auto mb-2 animate-spin" size={20} aria-hidden="true" />
+                Đang tải danh sách hồ sơ…
+              </div>
+            ) : loadError ? (
+              <div className="rounded-xl border border-error/25 bg-error-container/50 px-5 py-6 text-sm text-on-error-container">
+                <p role="alert">{loadError}</p>
+                <button
+                  type="button"
+                  onClick={() => void load()}
+                  className="mt-3 text-sm font-semibold text-accent"
+                >
+                  Thử lại
+                </button>
+              </div>
+            ) : cvs.length === 0 ? (
+              <div className="px-5 py-12 text-center sm:px-8 rounded-xl border border-dashed border-rule bg-paper">
+                <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-accent-subtle text-accent">
+                  <FileText size={24} aria-hidden="true" />
+                </span>
+                <h3 className="mt-4 text-base font-bold text-ink">
+                  Bạn chưa tải lên hồ sơ xin việc nào.
+                </h3>
+                <p className="mx-auto mt-1 max-w-sm text-sm leading-6 text-ink-2">
+                  Tải lên CV đầu tiên để bắt đầu ứng tuyển. Tệp PDF, DOC hoặc DOCX, tối đa 10 MB.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setUploadOpen(true)}
+                  className={`mt-5 ${primaryButton}`}
+                >
+                  <UploadCloud size={18} aria-hidden="true" />
+                  Tải lên hồ sơ mới
+                </button>
+              </div>
+            ) : (
+              <div className="overflow-hidden rounded-xl border border-rule bg-paper">
                 <ul className="divide-y divide-rule">
                   {orderedCvs.map((cv) => (
                     <li key={cv.id}>
@@ -392,7 +428,7 @@ export function CvManagerView() {
                         <div className="flex min-w-0 flex-1 items-start gap-3.5">
                           <span
                             className={`flex h-12 w-10 shrink-0 flex-col items-center justify-center rounded-md border ${
-                              cv.format === "PDF"
+                              cvFormat(cv) === "PDF"
                                 ? "border-accent/25 bg-accent-subtle text-accent"
                                 : "border-rule bg-paper-2 text-ink-2"
                             }`}
@@ -400,7 +436,7 @@ export function CvManagerView() {
                           >
                             <FileText size={18} />
                             <span className="mt-0.5 text-[10px] font-extrabold tracking-[0.06em]">
-                              {cv.format}
+                              {cvFormat(cv)}
                             </span>
                           </span>
 
@@ -410,10 +446,10 @@ export function CvManagerView() {
                                 className="min-w-0 text-[15px] font-bold leading-6 text-ink"
                                 style={{ overflowWrap: "anywhere" }}
                               >
-                                {cv.label}
+                                {deriveCvLabel(cv.fileName)}
                               </h3>
                               {cv.isDefault && (
-                                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold  tracking-[0.06em] text-accent-ink">
+                                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-accent-ink">
                                   <Star size={10} fill="currentColor" aria-hidden="true" />
                                   Mặc định
                                 </span>
@@ -423,15 +459,9 @@ export function CvManagerView() {
                               {cv.fileName}
                             </p>
                             <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-3">
-                              <span>{formatFileSize(cv.sizeBytes)}</span>
+                              <span>{formatFileSize(cv.fileSize)}</span>
                               <span aria-hidden="true">·</span>
-                              <span>Tải lên {formatCvDate(cv.uploadedAt)}</span>
-                              {cv.usedInApplications > 0 && (
-                                <>
-                                  <span aria-hidden="true">·</span>
-                                  <span>Đã dùng cho {cv.usedInApplications} đơn ứng tuyển</span>
-                                </>
-                              )}
+                              <span>Tải lên {formatCvDate(cv.createdAt)}</span>
                             </div>
                           </div>
                         </div>
@@ -440,16 +470,22 @@ export function CvManagerView() {
                           {!cv.isDefault && (
                             <button
                               type="button"
-                              onClick={() => handleSetDefault(cv)}
-                              className={`inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-md border border-accent/30 bg-accent-subtle px-2.5 text-[11px] font-bold text-accent transition-colors hover:border-accent hover:bg-accent hover:text-accent-ink active:bg-accent-deep sm:flex-none sm:px-3 sm:text-xs ${focusRing}`}
+                              onClick={() => void handleSetDefault(cv)}
+                              disabled={defaultingId === cv.id}
+                              aria-label={`Đặt ${cv.fileName} làm mặc định`}
+                              title="Đặt làm mặc định"
+                              className={iconButton}
                             >
-                              <Star size={14} aria-hidden="true" />
-                              Đặt mặc định
+                              {defaultingId === cv.id ? (
+                                <Loader2 size={18} className="animate-spin" aria-hidden="true" />
+                              ) : (
+                                <Star size={18} aria-hidden="true" />
+                              )}
                             </button>
                           )}
                           <button
                             type="button"
-                            onClick={() => handleDownload(cv)}
+                            onClick={() => void handleDownload(cv)}
                             aria-label={`Tải xuống ${cv.fileName}`}
                             title="Tải xuống"
                             className={iconButton}
@@ -458,19 +494,11 @@ export function CvManagerView() {
                           </button>
                           <button
                             type="button"
-                            onClick={() => openRename(cv)}
-                            aria-label={`Đổi tên hiển thị ${cv.label}`}
-                            title="Đổi tên hiển thị"
-                            className={iconButton}
-                          >
-                            <Pencil size={17} aria-hidden="true" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setDeleteTarget(cv)}
+                            onClick={() => setConfirmDeleteCv(cv)}
+                            disabled={deleting}
                             aria-label={`Xóa ${cv.fileName}`}
-                            title="Xóa hồ sơ"
-                            className={`${iconButton} text-error hover:bg-error-container hover:text-on-error-container`}
+                            title="Xóa"
+                            className={iconButton}
                           >
                             <Trash2 size={18} aria-hidden="true" />
                           </button>
@@ -479,12 +507,8 @@ export function CvManagerView() {
                     </li>
                   ))}
                 </ul>
-              )}
-            </div>
-
-            <p className="mt-3 text-xs leading-5 text-ink-3">
-              Bản xem thử lưu hồ sơ trong phiên trình duyệt; tệp chưa được tải lên máy chủ.
-            </p>
+              </div>
+            )}
           </section>
 
           <aside className="flex flex-col gap-4">
@@ -508,7 +532,7 @@ export function CvManagerView() {
               </div>
               <p className="mt-2 text-xs leading-5 text-ink-3">
                 {atLimit
-                  ? "Đã đạt giới hạn. Xóa bớt một hồ sơ để tải lên tệp mới."
+                  ? "Đã đạt giới hạn. Vui lòng xóa bớt hồ sơ cũ để tải lên tệp mới."
                   : `Bạn còn ${MAX_CV_COUNT - cvs.length} chỗ trống.`}
               </p>
             </section>
@@ -519,8 +543,8 @@ export function CvManagerView() {
                 <li className="flex gap-2.5">
                   <Star size={17} className="mt-1 shrink-0 text-accent" aria-hidden="true" />
                   <span>
-                    <strong className="text-ink">Mặc định:</strong> hồ sơ được tự động đính kèm khi
-                    bạn ứng tuyển; bạn vẫn đổi được ở bước nộp đơn.
+                    <strong className="text-ink">Mặc định:</strong> hồ sơ đầu tiên tải lên sẽ tự
+                    động là hồ sơ mặc định và được đính kèm khi bạn ứng tuyển.
                   </span>
                 </li>
                 <li className="flex gap-2.5">
@@ -540,6 +564,7 @@ export function CvManagerView() {
               </ul>
             </section>
 
+            {/*
             <section className="rounded-xl border border-rule border-l-4 border-l-accent-2 bg-paper-2 p-5">
               <div className="flex items-start gap-2.5">
                 <ShieldAlert
@@ -556,14 +581,7 @@ export function CvManagerView() {
                 </div>
               </div>
             </section>
-
-            <section className="rounded-xl border border-rule bg-paper p-5">
-              <h2 className="text-sm font-bold text-ink">Hồ sơ đã dùng để ứng tuyển</h2>
-              <p className="mt-1 text-xs leading-5 text-ink-2">
-                Khi bạn nộp đơn, hệ thống giữ một bản sao của hồ sơ đã gửi. Xóa hồ sơ ở đây không
-                làm thay đổi đơn đã nộp hay bản sao nhà tuyển dụng đang xem.
-              </p>
-            </section>
+*/}
           </aside>
         </div>
       </div>
@@ -571,9 +589,11 @@ export function CvManagerView() {
       <Dialog open={uploadOpen} onOpenChange={handleUploadOpenChange}>
         <DialogContent className="flex max-h-[92vh] max-w-xl flex-col gap-0 overflow-hidden border-rule bg-paper p-0">
           <DialogHeader className="shrink-0 border-b border-rule px-6 pb-4 pt-6 text-left">
-            <DialogTitle className="text-lg font-bold text-ink">Tải hồ sơ xin việc mới</DialogTitle>
+            <DialogTitle className="text-lg font-bold text-ink">
+              Tải lên hồ sơ xin việc mới
+            </DialogTitle>
             <DialogDescription className="mt-1 text-sm leading-6 text-ink-2">
-              Thêm một bản CV để dùng khi ứng tuyển. Hồ sơ đầu tiên sẽ tự động thành mặc định.
+              Chọn tệp CV của bạn. Tối đa 10 MB, định dạng PDF, DOC hoặc DOCX.
             </DialogDescription>
           </DialogHeader>
 
@@ -590,26 +610,41 @@ export function CvManagerView() {
               </p>
             </div>
 
+            <div className="mt-4 flex items-start gap-3 rounded-lg border border-rule bg-paper-2 p-3.5">
+              <Checkbox
+                id="cv-consent"
+                checked={consent}
+                onCheckedChange={(value) => setConsent(value === true)}
+                disabled={busy}
+                className="mt-0.5 border-rule-2 bg-paper data-[state=checked]:border-accent data-[state=checked]:bg-accent data-[state=checked]:text-accent-ink focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+              />
+              <label htmlFor="cv-consent" className="cursor-pointer text-xs leading-5 text-ink-2">
+                Tôi xác nhận tệp hồ sơ không chứa thông tin nhạy cảm.
+              </label>
+            </div>
+
             <label
               htmlFor="cv-file-input"
               onDragOver={(event) => {
                 event.preventDefault();
-                if (uploadState !== "uploading") setIsDragging(true);
+                if (!busy) {
+                  /* drag hover styling handled by class below is minimal */
+                }
               }}
-              onDragLeave={() => setIsDragging(false)}
-              onDrop={handleDrop}
+              onDragLeave={() => {}}
+              onDrop={(event) => void handleDrop(event)}
               className={`mt-4 flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed px-4 py-7 text-center transition-colors focus-within:ring-2 focus-within:ring-accent focus-within:ring-offset-2 ${
-                isDragging
-                  ? "border-accent bg-accent-subtle"
+                busy
+                  ? "pointer-events-none opacity-60"
                   : "border-rule-2 bg-paper-2 hover:border-accent hover:bg-accent-subtle/60"
-              } ${uploadState === "uploading" ? "pointer-events-none opacity-60" : ""}`}
+              }`}
             >
               <span className="flex h-11 w-11 items-center justify-center rounded-full bg-paper text-accent">
                 <UploadCloud size={22} aria-hidden="true" />
               </span>
               <span className="mt-2 text-sm font-bold text-ink">
-                {isChecking
-                  ? "Đang kiểm tra tệp…"
+                {busy
+                  ? "Đang xử lý…"
                   : selectedFile
                     ? "Chọn tệp khác"
                     : "Kéo thả tệp vào đây hoặc chọn tệp"}
@@ -619,9 +654,9 @@ export function CvManagerView() {
                 ref={fileInputRef}
                 id="cv-file-input"
                 type="file"
-                accept={CV_ACCEPT_ATTRIBUTE}
-                onChange={handleFilePick}
-                disabled={uploadState === "uploading" || isChecking}
+                accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                onChange={(event) => void handleFilePick(event)}
+                disabled={busy}
                 className="sr-only"
               />
             </label>
@@ -636,11 +671,9 @@ export function CvManagerView() {
                   >
                     {selectedFile.name}
                   </p>
-                  <p className="mt-0.5 text-xs text-ink-3">
-                    {formatFileSize(selectedFile.size)} · {detectCvFormat(selectedFile.name)}
-                  </p>
+                  <p className="mt-0.5 text-xs text-ink-3">{formatFileSize(selectedFile.size)}</p>
                 </div>
-                {uploadState !== "uploading" && (
+                {!busy && (
                   <button
                     type="button"
                     onClick={() => {
@@ -666,35 +699,39 @@ export function CvManagerView() {
               </p>
             )}
 
-            <div className="mt-4 flex items-start gap-3 rounded-lg border border-rule bg-paper-2 p-3.5">
-              <Checkbox
-                id="cv-sensitive-confirm"
-                checked={sensitiveConfirmed}
-                onCheckedChange={(value) => setSensitiveConfirmed(value === true)}
-                disabled={uploadState === "uploading"}
-                className="mt-0.5 border-rule-2 bg-paper data-[state=checked]:border-accent data-[state=checked]:bg-accent data-[state=checked]:text-accent-ink focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
-              />
-              <label
-                htmlFor="cv-sensitive-confirm"
-                className="cursor-pointer text-xs leading-5 text-ink-2"
+            {uploadError && (
+              <p
+                role="alert"
+                className="mt-3 flex items-start gap-2 rounded-lg border border-error/25 bg-error-container px-3.5 py-2.5 text-xs font-medium leading-5 text-on-error-container"
               >
-                Tôi xác nhận tệp này không chứa số căn cước công dân, thông tin tài khoản ngân hàng
-                hoặc mật khẩu.
-              </label>
-            </div>
+                <AlertTriangle size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
+                {uploadError}
+              </p>
+            )}
 
-            {uploadState === "uploading" && (
+            {(phase === "uploading" || phase === "requesting" || phase === "registering") && (
               <div className="mt-3">
-                <div className="flex items-center justify-between gap-3 text-xs">
-                  <span className="font-semibold text-ink-2">Đang tải lên…</span>
-                  <span className="text-ink-3">{progress}%</span>
-                </div>
-                <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-paper-3">
-                  <div
-                    className="h-full rounded-full bg-accent transition-[width] duration-150"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
+                {phase === "requesting" && (
+                  <p className="text-sm text-ink-2">Đang chuẩn bị tải lên…</p>
+                )}
+                {phase === "uploading" && (
+                  <>
+                    <p className="mb-2 text-sm text-ink-2">Đang tải lên… {progress}%</p>
+                    <div
+                      role="progressbar"
+                      aria-valuenow={progress}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      className="h-2 w-full overflow-hidden rounded-full bg-paper-3"
+                    >
+                      <div
+                        className="h-full bg-accent transition-all"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                  </>
+                )}
+                {phase === "registering" && <p className="text-sm text-ink-2">Đang lưu hồ sơ…</p>}
               </div>
             )}
           </div>
@@ -703,153 +740,66 @@ export function CvManagerView() {
             <button
               type="button"
               onClick={() => handleUploadOpenChange(false)}
-              disabled={uploadState === "uploading"}
+              disabled={busy}
               className={secondaryButton}
             >
               Hủy
             </button>
             <button
               type="button"
-              onClick={startUpload}
-              disabled={
-                !selectedFile || !sensitiveConfirmed || isChecking || uploadState === "uploading"
-              }
+              onClick={() => void startUpload()}
+              disabled={!selectedFile || !consent || busy || atLimit}
               className={primaryButton}
             >
-              {uploadState === "uploading" ? (
-                <>
-                  <Loader2
-                    size={17}
-                    className="animate-spin motion-reduce:animate-none"
-                    aria-hidden="true"
-                  />
-                  Đang tải lên {progress}%
-                </>
+              {busy ? (
+                <Loader2
+                  size={17}
+                  className="animate-spin motion-reduce:animate-none"
+                  aria-hidden="true"
+                />
               ) : (
-                <>
-                  <UploadCloud size={17} aria-hidden="true" />
-                  Tải lên hồ sơ
-                </>
+                <UploadCloud size={17} aria-hidden="true" />
               )}
+              Tải lên
             </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog
-        open={Boolean(renameTarget)}
+        open={!!confirmDeleteCv}
         onOpenChange={(open) => {
-          if (!open) setRenameTarget(null);
+          if (!open && !deleting) setConfirmDeleteCv(null);
         }}
       >
-        <DialogContent className="max-w-md gap-0 border-rule bg-paper p-0">
+        <DialogContent className="max-w-md border-rule bg-paper p-0">
           <DialogHeader className="border-b border-rule px-6 pb-4 pt-6 text-left">
-            <DialogTitle className="text-lg font-bold text-ink">Đổi tên hiển thị</DialogTitle>
+            <DialogTitle className="text-lg font-bold text-ink">Xóa hồ sơ xin việc</DialogTitle>
             <DialogDescription className="mt-1 text-sm leading-6 text-ink-2">
-              Tên này chỉ dùng để bạn phân biệt các hồ sơ. Tên tệp gốc được giữ nguyên.
+              {confirmDeleteCv?.fileName}
             </DialogDescription>
           </DialogHeader>
-
-          <div className="px-6 py-5">
-            <label htmlFor="cv-rename-input" className="text-xs font-semibold   text-ink-3">
-              Tên hiển thị
-            </label>
-            <input
-              id="cv-rename-input"
-              type="text"
-              value={renameValue}
-              maxLength={60}
-              onChange={(event) => {
-                setRenameValue(event.target.value);
-                setRenameError("");
-              }}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") handleRename();
-              }}
-              aria-invalid={Boolean(renameError)}
-              aria-describedby={renameError ? "cv-rename-error" : "cv-rename-hint"}
-              className={`mt-2 w-full rounded-md border bg-paper px-3 py-2.5 text-sm text-ink outline-none transition-colors focus:ring-2 focus:ring-accent/20 ${
-                renameError ? "border-error" : "border-rule focus:border-accent"
-              }`}
-            />
-            {renameError ? (
-              <p id="cv-rename-error" role="alert" className="mt-1 text-xs font-medium text-error">
-                {renameError}
-              </p>
-            ) : (
-              <p id="cv-rename-hint" className="mt-1 text-xs text-ink-3">
-                Tối đa 60 ký tự.
-              </p>
-            )}
+          <div className="px-6 py-5 text-sm leading-6 text-ink-2">
+            Thao tác này không thể hoàn tác. Các đơn ứng tuyển đã nộp trước đó vẫn giữ bản hồ sơ đã
+            gửi.
           </div>
-
           <DialogFooter className="flex-row justify-end gap-2 border-t border-rule px-6 py-4">
-            <button type="button" onClick={() => setRenameTarget(null)} className={secondaryButton}>
-              Hủy
-            </button>
-            <button type="button" onClick={handleRename} className={primaryButton}>
-              Lưu tên mới
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
-        open={Boolean(deleteTarget)}
-        onOpenChange={(open) => {
-          if (!open) setDeleteTarget(null);
-        }}
-      >
-        <DialogContent className="max-w-md gap-0 border-rule bg-paper p-0">
-          <DialogHeader className="border-b border-rule px-6 pb-4 pt-6 text-left">
-            <div className="flex items-start gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-error-container text-error">
-                <Trash2 size={19} aria-hidden="true" />
-              </span>
-              <div className="min-w-0">
-                <DialogTitle className="text-lg font-bold text-ink">Xóa hồ sơ này?</DialogTitle>
-                <DialogDescription className="mt-1 text-sm leading-6 text-ink-2">
-                  Hồ sơ sẽ bị xóa khỏi danh sách của bạn. Hành động này không thể hoàn tác.
-                </DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-
-          <div className="px-6 py-5">
-            <div className="rounded-lg border border-rule bg-paper-2 px-3.5 py-3">
-              <p className="text-sm font-semibold text-ink" style={{ overflowWrap: "anywhere" }}>
-                {deleteTarget?.fileName}
-              </p>
-              <p className="mt-0.5 text-xs text-ink-3">{deleteTarget?.label}</p>
-            </div>
-
-            {deleteTarget?.isDefault && (
-              <p className="mt-3 flex items-start gap-2 text-xs leading-5 text-ink-2">
-                <Info size={15} className="mt-0.5 shrink-0 text-accent" aria-hidden="true" />
-                Đây đang là hồ sơ mặc định. Sau khi xóa, bạn cần chọn một hồ sơ khác làm mặc định.
-              </p>
-            )}
-
-            {deleteTarget && deleteTarget.usedInApplications > 0 && (
-              <p className="mt-3 flex items-start gap-2 text-xs leading-5 text-ink-2">
-                <Info size={15} className="mt-0.5 shrink-0 text-accent" aria-hidden="true" />
-                Hồ sơ này đã được dùng cho {deleteTarget.usedInApplications} đơn ứng tuyển. Bản sao
-                đã gửi nhà tuyển dụng vẫn được giữ nguyên.
-              </p>
-            )}
-          </div>
-
-          <DialogFooter className="flex-row justify-end gap-2 border-t border-rule px-6 py-4">
-            <button type="button" onClick={() => setDeleteTarget(null)} className={secondaryButton}>
+            <button
+              type="button"
+              onClick={() => setConfirmDeleteCv(null)}
+              disabled={deleting}
+              className={secondaryButton}
+            >
               Hủy
             </button>
             <button
               type="button"
-              onClick={handleDelete}
-              className={`inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-error px-5 text-sm font-bold text-paper transition-colors hover:bg-on-error-container active:bg-on-error-container ${focusRing}`}
+              onClick={() => void handleConfirmDelete()}
+              disabled={deleting}
+              className={primaryButton}
             >
-              <Trash2 size={17} aria-hidden="true" />
-              Xóa hồ sơ
+              {deleting && <Loader2 size={17} className="animate-spin" aria-hidden="true" />}
+              Xóa
             </button>
           </DialogFooter>
         </DialogContent>

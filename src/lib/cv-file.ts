@@ -63,20 +63,25 @@ export type CvFileCheck = { ok: true; format: CandidateCvFormat } | { ok: false;
  */
 export async function validateCvFile(file: File): Promise<CvFileCheck> {
   const format = detectCvFormat(file.name);
-  if (!format) {
-    return { ok: false, message: "Chỉ nhận tệp PDF, DOC hoặc DOCX. Hãy chọn tệp khác." };
+  const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
+  if (!format || !["pdf", "doc", "docx"].includes(extension)) {
+    return { ok: false, message: "Chỉ hỗ trợ tệp PDF, DOC hoặc DOCX." };
   }
-  if (file.size > MAX_CV_SIZE_BYTES) {
-    return {
-      ok: false,
-      message: `Tệp vượt quá 10 MB (${formatFileSize(file.size)}). Hãy chọn tệp nhỏ hơn hoặc nén lại.`,
-    };
+  if (file.type) {
+    const expected = new Map([
+      ["application/pdf", "pdf"],
+      ["application/msword", "doc"],
+      ["application/vnd.openxmlformats-officedocument.wordprocessingml.document", "docx"],
+    ]).get(file.type);
+    if (!expected || expected !== extension) {
+      return { ok: false, message: "Định dạng tệp không khớp với phần mở rộng." };
+    }
+  }
+  if (file.size <= 0 || file.size > MAX_CV_SIZE_BYTES) {
+    return { ok: false, message: "Tệp phải lớn hơn 0 và không vượt quá 10 MB." };
   }
   if (file.type && !ALLOWED_MIME.has(file.type)) {
-    return {
-      ok: false,
-      message: "Kiểu tệp không hợp lệ. Hệ thống chỉ nhận PDF, DOC hoặc DOCX.",
-    };
+    return { ok: false, message: "Kiểu tệp không hợp lệ. Hệ thống chỉ nhận PDF, DOC hoặc DOCX." };
   }
   try {
     if (!(await matchesSignature(file, format))) {

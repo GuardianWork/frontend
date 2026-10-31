@@ -1,8 +1,8 @@
-import { CandidateContact } from "@/components/CandidateContact";
 import { useEffect, useState, type FormEvent, type KeyboardEvent } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AdminShell } from "@/components/AdminShell";
 import { FloatingPanel } from "@/components/FloatingPanel";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +18,17 @@ import {
   type CandidateExperience,
   type CandidateProfileDetails,
 } from "@/context/CandidateContext";
+import { getCandidateCvs, type CandidateCv as CandidateCvRecord } from "@/services/candidateCv";
+import { ApiError } from "@/services/api";
+import { clearAuthSession } from "@/services/auth";
+import {
+  loadCandidateProfile as loadApiProfile,
+  updateCandidateProfile as saveApiProfile,
+  toLocalPhone,
+  type ExperienceEntry as ApiExperienceEntry,
+  type EducationEntry as ApiEducationEntry,
+  type CandidateProfile as ApiCandidateProfile,
+} from "@/services/candidateProfile";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import {
   ArrowRight,
@@ -27,6 +38,7 @@ import {
   Eye,
   EyeOff,
   FileText,
+  Info,
   Mail,
   MapPin,
   Pencil,
@@ -39,6 +51,21 @@ import {
 type ExperienceEntry = CandidateExperience;
 type EducationEntry = CandidateEducation;
 type EditSection = "all" | "basics" | "about" | "experience" | "education" | "skills";
+
+const PROFILE_ROLE_OPTIONS = [
+  "Kỹ sư phần mềm",
+  "Senior Software Engineer",
+  "Full-stack Developer",
+  "Backend Developer",
+  "Frontend Developer",
+  "Tech Lead",
+  "Project Manager",
+  "Product Manager",
+  "UI/UX Designer",
+  "Data Engineer",
+  "DevOps Engineer",
+  "QA Engineer",
+];
 
 const MAX_NAME_LENGTH = 150;
 const MAX_EMAIL_LENGTH = 50;
@@ -63,11 +90,77 @@ export const Route = createFileRoute("/candidate/profile")({
   component: CandidateProfilePage,
 });
 
+function mapApiProfileToDetails(
+  api: ApiCandidateProfile,
+  current: CandidateProfileDetails,
+): CandidateProfileDetails {
+  return {
+    ...current,
+    fullName: api.fullName,
+    email: api.email,
+    phone: toLocalPhone(api.phoneNumber),
+    avatarUrl: api.avatarUrl,
+    isPublic: api.isPublic,
+    skills: api.skills,
+    experiences: api.experience.map((entry: ApiExperienceEntry, index) => ({
+      title: entry.role,
+      company: entry.company,
+      from: entry.startDate,
+      to: entry.endDate || "",
+      description: entry.description || "",
+    })),
+    education: api.education.map((entry: ApiEducationEntry, index) => ({
+      degree: entry.degree,
+      school: entry.institution,
+      from: entry.startYear,
+      to: entry.endYear || "",
+      description: entry.description || "",
+    })),
+  };
+}
+
+function toApiExperience(entry: CandidateExperience): ApiExperienceEntry {
+  return {
+    company: entry.company,
+    role: entry.title,
+    startDate: entry.from,
+    endDate: entry.to || null,
+    description: entry.description || null,
+  };
+}
+
+function toApiEducation(entry: CandidateEducation): ApiEducationEntry {
+  return {
+    institution: entry.school,
+    degree: entry.degree,
+    startYear: entry.from,
+    endYear: entry.to || null,
+    description: entry.description?.trim() ? entry.description.trim() : null,
+  };
+}
+
+function apiProfileExperiences(entries: CandidateExperience[]): ApiExperienceEntry[] {
+  return entries.map(toApiExperience);
+}
+
+function apiProfileEducation(entries: CandidateEducation[]): ApiEducationEntry[] {
+  return entries.map(toApiEducation);
+}
+
+function currentAvatarUrl(profile: CandidateProfileDetails): string | undefined {
+  return profile.avatarUrl ? profile.avatarUrl : undefined;
+}
+
 function CandidateProfilePage() {
   const user = useAuthUser();
-  const { profileDetails: profile, setProfileDetails, cvs } = useCandidate();
-  const defaultCv = cvs.find((cv) => cv.isDefault);
+  const { profileDetails: profile, setProfileDetails } = useCandidate();
+  const [candidateCvs, setCandidateCvs] = useState<CandidateCvRecord[]>([]);
+  const defaultCv = candidateCvs.find((cv) => cv.isDefault);
+  const [customRoleIndexes, setCustomRoleIndexes] = useState<Record<number, boolean>>({});
   const [isEditing, setIsEditing] = useState(false);
+  const [isApiLoading, setIsApiLoading] = useState(true);
+  const [apiError, setApiError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
   const [draft, setDraft] = useState(profile);
   const [skillsDraft, setSkillsDraft] = useState<string[]>(profile.skills);
   const [skillInput, setSkillInput] = useState("");
@@ -88,6 +181,60 @@ function CandidateProfilePage() {
     setSkillInput("");
     setSkillNotice("");
   }, [isEditing, profile]);
+
+  useEffect(() => {
+    let active = true;
+    setIsApiLoading(true);
+    setApiError("");
+    void loadApiProfile()
+      .then((apiProfile) => {
+        if (!active) return;
+        setProfileDetails((current) => mapApiProfileToDetails(apiProfile, current));
+      })
+      .catch((cause) => {
+        if (!active) return;
+        const error = cause as { status?: number };
+        if (error.status === 401) {
+          window.location.assign("/login?role=candidate");
+          return;
+        }
+        setApiError("Không tải được hồ sơ. Vui lòng thử lại.");
+      })
+      .finally(() => {
+        if (active) setIsApiLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [setProfileDetails]);
+
+  useEffect(() => {
+    let active = true;
+    void getCandidateCvs()
+      .then((data) => {
+        if (active) setCandidateCvs(data);
+      })
+      .catch((cause) => {
+        if (!active) return;
+        if (cause instanceof ApiError && cause.status === 401) {
+          clearAuthSession();
+          window.location.assign("/login?role=candidate");
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isEditing) return;
+    const handler = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isEditing]);
 
   const openEditForm = (section: EditSection = "all", index: number | null = null) => {
     setDraft(profile);
@@ -151,7 +298,10 @@ function CandidateProfilePage() {
   const addEducation = () => {
     setDraft((current) => ({
       ...current,
-      education: [...current.education, { degree: "", school: "", from: "", to: "" }],
+      education: [
+        ...current.education,
+        { degree: "", school: "", from: "", to: "", description: "" },
+      ],
     }));
   };
 
@@ -247,12 +397,13 @@ function CandidateProfilePage() {
       ...entry,
       title: entry.title.trim(),
       company: entry.company.trim(),
-      description: entry.description.trim(),
+      description: (entry.description || "").trim(),
     }));
     const cleanEducation = draft.education.map((entry) => ({
       ...entry,
       degree: entry.degree.trim(),
       school: entry.school.trim(),
+      description: (entry.description || "").trim(),
     }));
 
     // Each edit mode writes back only the group it owns; everything else stays untouched.
@@ -284,15 +435,71 @@ function CandidateProfilePage() {
       education,
     };
 
-    setProfileDetails(nextProfile);
-    setDraft(nextProfile);
-    setSkillsDraft(nextProfile.skills);
-    setSkillInput("");
-    setSkillNotice("");
-    setFieldErrors({});
-    setSuccessMessage(getSuccessMessage(editSection));
-    setIsSuccessDialogOpen(true);
-    setIsEditing(false);
+    const apiExperience = touches("experience")
+      ? profile.experiences === experiences
+        ? apiProfileExperiences(nextProfile.experiences)
+        : apiProfileExperiences(experiences)
+      : apiProfileExperiences(profile.experiences);
+    const apiEducation = touches("education")
+      ? apiProfileEducation(education)
+      : apiProfileEducation(profile.education);
+
+    const phoneValue = nextProfile.phone.replace(/\D/g, "");
+    setIsSaving(true);
+    try {
+      const saved = await saveApiProfile({
+        fullName: nextProfile.fullName,
+        phoneNumber: phoneValue ? phoneValue : undefined,
+        avatarUrl: currentAvatarUrl(draft),
+        skills: nextProfile.skills,
+        experience: apiExperience,
+        education: apiEducation,
+        isPublic: touches("basics") ? draft.isPublic : profile.isPublic,
+      });
+      const merged = mapApiProfileToDetails(saved, nextProfile);
+      const finalProfile: CandidateProfileDetails = {
+        ...merged,
+        experience: nextProfile.experience,
+      };
+      setProfileDetails(finalProfile);
+      setDraft(finalProfile);
+      setSkillsDraft(finalProfile.skills);
+      setSkillInput("");
+      setSkillNotice("");
+      setFieldErrors({});
+      setSuccessMessage(getSuccessMessage(editSection));
+      setIsSuccessDialogOpen(true);
+      setIsEditing(false);
+    } catch (cause) {
+      const error = cause as {
+        status?: number;
+        code?: number;
+        fieldErrors?: Record<string, string>;
+      };
+      if (error.status === 401) {
+        window.location.assign("/login?role=candidate");
+        return;
+      }
+      if (error.code === 40930 || error.status === 409) {
+        setFieldErrors({ phone: "Số điện thoại này đã được sử dụng." });
+      } else if (error.code === 40030 || error.status === 400) {
+        const backendErrors =
+          error.fieldErrors && typeof error.fieldErrors === "object" ? error.fieldErrors : {};
+        const mapped: Record<string, string> = {};
+        for (const [key, value] of Object.entries(backendErrors)) {
+          mapped[key] = String(value);
+        }
+        if (Object.keys(mapped).length) setFieldErrors(mapped);
+        else if (error.status === 400) {
+          // Keep a generic field-friendly error when the code is 40030.
+          if (error.code === 40030) setFieldErrors({ phone: "Số điện thoại không hợp lệ." });
+        }
+      } else {
+        setFieldErrors({});
+      }
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const readinessItems = [
@@ -308,7 +515,7 @@ function CandidateProfilePage() {
     { label: "Kinh nghiệm", done: profile.experiences.length > 0 },
     { label: "Học vấn", done: profile.education.length > 0 },
     { label: "Kỹ năng", done: profile.skills.length > 0 },
-    { label: "Hồ sơ xin việc", done: cvs.length > 0 },
+    { label: "Hồ sơ xin việc", done: candidateCvs.length > 0 },
   ];
   const completedCount = readinessItems.filter((item) => item.done).length;
   const missingLabels = readinessItems.filter((item) => !item.done).map((item) => item.label);
@@ -336,10 +543,6 @@ function CandidateProfilePage() {
           </button>
         </header>
 
-        <p className="workspace-inline-note">
-          Kinh nghiệm, học vấn và kỹ năng hiện là dữ liệu trong phiên xem. Thông tin liên hệ được
-          tải và lưu qua dịch vụ hồ sơ.
-        </p>
         {isEditing && (
           <FloatingPanel isOpen={true} onClose={closeEditForm} labelledBy="edit-profile-title">
             <form onSubmit={handleSave} noValidate className="flex min-h-0 flex-1 flex-col">
@@ -357,7 +560,6 @@ function CandidateProfilePage() {
                     </p>
                     <p className="mt-2 text-xs leading-4 font-medium text-ink-3">
                       Trường đánh dấu <span className="font-bold text-error">*</span> là bắt buộc.
-                      Các thông tin khác trong hồ sơ được giữ nguyên.
                     </p>
                   </div>
                   <button
@@ -439,41 +641,35 @@ function CandidateProfilePage() {
                         <FieldError id="profile-full-name-error" message={fieldErrors.fullName} />
                       </div>
                       <div>
-                        <FieldHeader
-                          htmlFor="profile-email"
-                          label="Email liên hệ"
-                          required
-                          counter={`${draft.email.length}/${MAX_EMAIL_LENGTH}`}
-                        />
-                        <input
-                          id="profile-email"
-                          maxLength={MAX_EMAIL_LENGTH}
-                          type="email"
-                          autoComplete="email"
-                          value={draft.email}
-                          onChange={(event) => updateDraft("email", event.target.value)}
-                          aria-required="true"
-                          aria-invalid={Boolean(fieldErrors.email)}
-                          aria-describedby={
-                            fieldErrors.email ? "profile-email-error" : "profile-email-hint"
-                          }
-                          className={fieldClass(fieldErrors.email)}
-                        />
-                        <p
-                          id="profile-email-hint"
-                          className="mt-1 text-xs leading-4 font-normal text-ink-3"
-                        >
-                          Nhà tuyển dụng dùng email này để phản hồi hồ sơ.
-                        </p>
-                        <FieldError id="profile-email-error" message={fieldErrors.email} />
-                      </div>
-                      <div>
-                        <FieldHeader
-                          htmlFor="profile-phone"
-                          label="Số điện thoại"
-                          required
-                          counter={`${draft.phone.length}/10`}
-                        />
+                        <div className="flex items-baseline justify-between gap-3">
+                          <div className="flex items-center gap-1.5">
+                            <label
+                              htmlFor="profile-phone"
+                              className="text-sm font-semibold text-ink-2"
+                            >
+                              Số điện thoại
+                            </label>
+                            <TooltipProvider delayDuration={0}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    type="button"
+                                    aria-label="Việc thay đổi số điện thoại áp dụng cho cả tài khoản tuyển dụng"
+                                    className="inline-flex h-5 w-5 items-center justify-center rounded-full text-ink-3 transition-colors hover:text-ink-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                                  >
+                                    <Info size={14} aria-hidden="true" />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom">
+                                  Việc thay đổi số điện thoại áp dụng cho cả tài khoản tuyển dụng
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
+                          <span className="text-xs font-medium tabular-nums text-ink-3">
+                            {draft.phone.length}/10
+                          </span>
+                        </div>
                         <input
                           id="profile-phone"
                           inputMode="numeric"
@@ -498,6 +694,68 @@ function CandidateProfilePage() {
                           10 chữ số, bắt đầu bằng 0. Ví dụ 0987654321.
                         </p>
                         <FieldError id="profile-phone-error" message={fieldErrors.phone} />
+                      </div>
+                      <div className="md:col-span-2">
+                        <FieldHeader
+                          htmlFor="profile-avatar"
+                          label="Ảnh đại diện"
+                          counter={`${(draft.avatarUrl ?? "").length}/512`}
+                        />
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                          <input
+                            id="profile-avatar"
+                            type="url"
+                            autoComplete="url"
+                            placeholder="https://example.com/avatar.jpg"
+                            value={draft.avatarUrl ?? ""}
+                            maxLength={512}
+                            onChange={(event) => updateDraft("avatarUrl", event.target.value)}
+                            aria-invalid={Boolean(fieldErrors.avatarUrl)}
+                            aria-describedby={
+                              fieldErrors.avatarUrl
+                                ? "profile-avatar-error profile-avatar-hint"
+                                : "profile-avatar-hint"
+                            }
+                            className={fieldClass(fieldErrors.avatarUrl)}
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              updateDraft(
+                                "avatarUrl",
+                                `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(
+                                  draft.fullName.trim() || "GuardianWork",
+                                )}`,
+                              )
+                            }
+                            className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-md border border-rule bg-paper px-4 text-xs font-semibold text-ink transition-colors hover:bg-paper-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                          >
+                            Dùng ảnh mặc định
+                          </button>
+                        </div>
+                        <p
+                          id="profile-avatar-hint"
+                          className="mt-1 text-xs leading-4 font-normal text-ink-3"
+                        >
+                          Dán liên kết ảnh hoặc dùng ảnh mặc định.
+                        </p>
+                        <FieldError id="profile-avatar-error" message={fieldErrors.avatarUrl} />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="flex items-center gap-3 text-sm font-semibold text-ink-2">
+                          <input
+                            type="checkbox"
+                            checked={draft.isPublic}
+                            onChange={(event) =>
+                              setDraft((current) => ({
+                                ...current,
+                                isPublic: event.target.checked,
+                              }))
+                            }
+                            className="h-4 w-4"
+                          />
+                          Cho phép nhà tuyển dụng xem hồ sơ của tôi
+                        </label>
                       </div>
                     </>
                   )}
@@ -631,11 +889,93 @@ function CandidateProfilePage() {
                                 </button>
                               </div>
                               <div className="grid gap-3 md:grid-cols-2">
+                                <div>
+                                  <FieldHeader
+                                    htmlFor={`experience-${index}-title`}
+                                    label="Chức danh"
+                                    required
+                                  />
+                                  {customRoleIndexes[index] ||
+                                  (!PROFILE_ROLE_OPTIONS.includes(entry.title) &&
+                                    entry.title.trim() !== "") ? (
+                                    <div className="flex items-center gap-2">
+                                      <input
+                                        id={`experience-${index}-title`}
+                                        type="text"
+                                        maxLength={100}
+                                        value={entry.title}
+                                        placeholder="Nhập chức danh khác"
+                                        onChange={(event) =>
+                                          updateExperience(index, "title", event.target.value)
+                                        }
+                                        aria-required="true"
+                                        aria-invalid={Boolean(
+                                          fieldErrors[`experiences.${index}.title`],
+                                        )}
+                                        className={fieldClass(
+                                          fieldErrors[`experiences.${index}.title`],
+                                        )}
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setCustomRoleIndexes((current) => ({
+                                            ...current,
+                                            [index]: false,
+                                          }));
+                                          updateExperience(index, "title", "");
+                                        }}
+                                        className="shrink-0 text-xs font-semibold text-accent underline-offset-2 hover:underline"
+                                      >
+                                        Chọn từ danh sách
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <select
+                                      id={`experience-${index}-title`}
+                                      value={entry.title}
+                                      onChange={(event) => {
+                                        const value = event.target.value;
+                                        if (value === "custom") {
+                                          setCustomRoleIndexes((current) => ({
+                                            ...current,
+                                            [index]: true,
+                                          }));
+                                          updateExperience(index, "title", "");
+                                        } else {
+                                          setCustomRoleIndexes((current) => ({
+                                            ...current,
+                                            [index]: false,
+                                          }));
+                                          updateExperience(index, "title", value);
+                                        }
+                                      }}
+                                      aria-required="true"
+                                      aria-invalid={Boolean(
+                                        fieldErrors[`experiences.${index}.title`],
+                                      )}
+                                      className={fieldClass(
+                                        fieldErrors[`experiences.${index}.title`],
+                                      )}
+                                    >
+                                      <option value="" disabled>
+                                        Chọn chức danh
+                                      </option>
+                                      {PROFILE_ROLE_OPTIONS.map((role) => (
+                                        <option key={role} value={role}>
+                                          {role}
+                                        </option>
+                                      ))}
+                                      <option value="custom">Khác (tự nhập)</option>
+                                    </select>
+                                  )}
+                                  <FieldError
+                                    id={`experience-${index}-title-error`}
+                                    message={fieldErrors[`experiences.${index}.title`]}
+                                  />
+                                </div>
                                 {(
-                                  [
-                                    ["title", "Chức danh", "Nhập chức danh."],
-                                    ["company", "Công ty / Địa điểm", "Nhập công ty."],
-                                  ] as const
+                                  [["company", "Công ty / Địa điểm", "Nhập công ty."]] as const
                                 ).map(([field, label, requiredMessage]) => (
                                   <div key={field}>
                                     <FieldHeader
@@ -683,7 +1023,6 @@ function CandidateProfilePage() {
                                   <FieldHeader
                                     htmlFor={`experience-${index}-description`}
                                     label="Mô tả công việc"
-                                    required
                                     counter={`${entry.description.length}/1000`}
                                   />
                                   <textarea
@@ -803,6 +1142,29 @@ function CandidateProfilePage() {
                                   idPrefix={`education-${index}`}
                                   toHint="Bỏ trống nếu bạn vẫn đang theo học."
                                 />
+                                <div className="md:col-span-2">
+                                  <FieldHeader
+                                    htmlFor={`education-${index}-description`}
+                                    label="Mô tả học vấn"
+                                    counter={`${(education.description || "").length}/1000`}
+                                  />
+                                  <textarea
+                                    id={`education-${index}-description`}
+                                    rows={3}
+                                    maxLength={1000}
+                                    value={education.description || ""}
+                                    onChange={(event) =>
+                                      updateEducation(index, "description", event.target.value)
+                                    }
+                                    className={fieldClass(
+                                      fieldErrors[`education.${index}.description`],
+                                    )}
+                                  />
+                                  <FieldError
+                                    id={`education-${index}-description-error`}
+                                    message={fieldErrors[`education.${index}.description`]}
+                                  />
+                                </div>
                               </div>
                             </div>
                           ) : null,
@@ -824,9 +1186,7 @@ function CandidateProfilePage() {
               </div>
 
               <div className="flex shrink-0 flex-col-reverse gap-3 border-t border-rule bg-paper px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-7">
-                <p className="text-xs leading-4 text-ink-3">
-                  Hồ sơ cập nhật sẽ hiển thị ngay với nhà tuyển dụng.
-                </p>
+                <p className="text-xs leading-4 text-ink-3"></p>
                 <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                   <button
                     type="button"
@@ -835,8 +1195,8 @@ function CandidateProfilePage() {
                   >
                     Hủy
                   </button>
-                  <button type="submit" className="btn min-h-11 px-5 text-sm">
-                    Lưu thay đổi
+                  <button type="submit" disabled={isSaving} className="btn min-h-11 px-5 text-sm">
+                    {isSaving ? "Đang lưu…" : "Lưu thay đổi"}
                   </button>
                 </div>
               </div>
@@ -875,12 +1235,20 @@ function CandidateProfilePage() {
           <aside className="border-b border-rule bg-paper-2 px-5 py-6 sm:px-6 lg:border-b-0 lg:border-r lg:px-7 lg:py-8">
             <div>
               <div className="relative w-fit">
-                <div
-                  aria-hidden="true"
-                  className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-accent text-2xl font-extrabold text-accent-ink sm:h-20 sm:w-20 sm:text-3xl"
-                >
-                  {initial}
-                </div>
+                {profile.avatarUrl ? (
+                  <img
+                    src={profile.avatarUrl}
+                    alt="Ảnh đại diện"
+                    className="h-[72px] w-[72px] rounded-full object-cover ring-1 ring-rule sm:h-20 sm:w-20"
+                  />
+                ) : (
+                  <div
+                    aria-hidden="true"
+                    className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-accent text-2xl font-extrabold text-accent-ink sm:h-20 sm:w-20 sm:text-3xl"
+                  >
+                    {initial}
+                  </div>
+                )}
                 <span className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-paper-2 bg-paper text-mint">
                   <BadgeCheck size={18} strokeWidth={2.4} aria-hidden="true" />
                 </span>
@@ -899,10 +1267,6 @@ function CandidateProfilePage() {
             </div>
 
             <div className="mt-5 flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-md border border-mint/20 bg-mint/10 px-2.5 py-1 text-xs font-semibold text-mint">
-                <BadgeCheck size={14} aria-hidden="true" />
-                Hồ sơ cá nhân
-              </span>
               <span className="inline-flex items-center gap-1.5 rounded-md border border-accent/15 bg-accent-subtle px-2.5 py-1 text-xs font-semibold text-accent-deep">
                 <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-accent" />
                 Ứng viên đang hoạt động
@@ -949,7 +1313,7 @@ function CandidateProfilePage() {
                   Hồ sơ xin việc
                 </h2>
                 <span className="rounded-md border border-rule bg-paper px-2 py-0.5 text-xs font-bold tabular-nums text-ink-2">
-                  {cvs.length}/{MAX_CV_COUNT}
+                  {candidateCvs.length}/{MAX_CV_COUNT}
                 </span>
               </div>
               <p className="mt-2 text-xs leading-5 text-ink-2" style={{ overflowWrap: "anywhere" }}>
@@ -996,7 +1360,6 @@ function CandidateProfilePage() {
                 {profile.isPublic ? "Đang hiển thị" : "Riêng tư"}
               </span>
             </div>
-            <CandidateContact />
           </aside>
 
           <div className="min-w-0 divide-y divide-rule">
@@ -1134,18 +1497,25 @@ function validateDraft(
       errors.fullName = `Họ tên tối đa ${MAX_NAME_LENGTH} ký tự.`;
     }
 
-    const email = draft.email.trim();
-    if (!email) errors.email = "Nhập email liên hệ.";
-    else if (email.length > MAX_EMAIL_LENGTH) {
-      errors.email = `Email tối đa ${MAX_EMAIL_LENGTH} ký tự.`;
-    } else if (!EMAIL_PATTERN.test(email)) {
-      errors.email = "Email chưa đúng định dạng, ví dụ ten@congty.vn.";
+    const phone = draft.phone.replace(/\D/g, "");
+    if (phone && !PHONE_PATTERN.test(phone)) {
+      errors.phone = "Số điện thoại gồm 10 chữ số và bắt đầu bằng 0.";
     }
 
-    const phone = draft.phone.replace(/\D/g, "");
-    if (!phone) errors.phone = "Nhập số điện thoại.";
-    else if (!PHONE_PATTERN.test(phone)) {
-      errors.phone = "Số điện thoại gồm 10 chữ số và bắt đầu bằng 0.";
+    const avatarUrl = draft.avatarUrl?.trim() ?? "";
+    if (avatarUrl) {
+      if (avatarUrl.length > 512) {
+        errors.avatarUrl = "Ảnh đại diện phải là đường dẫn HTTPS hợp lệ.";
+      } else {
+        try {
+          const parsed = new URL(avatarUrl);
+          if (parsed.protocol !== "https:") {
+            errors.avatarUrl = "Ảnh đại diện phải là đường dẫn HTTPS hợp lệ.";
+          }
+        } catch {
+          errors.avatarUrl = "Ảnh đại diện phải là đường dẫn HTTPS hợp lệ.";
+        }
+      }
     }
   }
 
@@ -1173,9 +1543,6 @@ function validateDraft(
       if (!entry.title.trim()) errors[`experiences.${index}.title`] = "Nhập chức danh.";
       if (!entry.company.trim()) errors[`experiences.${index}.company`] = "Nhập công ty.";
       if (!entry.from) errors[`experiences.${index}.from`] = "Chọn ngày bắt đầu.";
-      if (!entry.description.trim()) {
-        errors[`experiences.${index}.description`] = "Mô tả ngắn công việc bạn đã làm.";
-      }
       if (entry.description.length > 1000) {
         errors[`experiences.${index}.description`] = "Mô tả công việc tối đa 1.000 ký tự.";
       }
@@ -1199,6 +1566,9 @@ function validateDraft(
         errors[`education.${index}.school`] = "Nhập trường hoặc cơ sở đào tạo.";
       }
       if (!education.from) errors[`education.${index}.from`] = "Chọn ngày bắt đầu.";
+      if (education.description && education.description.length > 1000) {
+        errors[`education.${index}.description`] = "Mô tả tối đa 1.000 ký tự.";
+      }
       if (education.from && education.to && education.to < education.from) {
         errors[`education.${index}.to`] = "Ngày kết thúc phải sau ngày bắt đầu.";
       }
