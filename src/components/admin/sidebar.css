@@ -125,3 +125,41 @@
     transition: none;
   }
 }
+
+/* A larger, stable icon tile makes workspace navigation feedback easier to scan. */
+.workspace-shell .workspace-navigation .workspace-nav-link {
+  min-height: 56px;
+  padding: 7px 8px;
+  gap: 8px;
+}
+.workspace-shell .workspace-navigation .workspace-nav-link .workspace-nav-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+}
+.workspace-shell .workspace-navigation .workspace-nav-link .workspace-nav-icon svg {
+  width: 22px;
+  height: 22px;
+}
+.workspace-shell .workspace-navigation .workspace-nav-link:focus-visible .workspace-nav-icon {
+  background: var(--color-accent-subtle);
+  color: var(--color-accent-deep);
+}
+.workspace-shell .workspace-navigation .workspace-nav-link[aria-current="page"] .workspace-nav-icon,
+.workspace-shell .workspace-navigation a.workspace-nav-link:active .workspace-nav-icon {
+  background: var(--color-accent);
+  color: var(--color-paper);
+}
+@media (hover: hover) and (pointer: fine) {
+  .workspace-shell .workspace-navigation a.workspace-nav-link:hover .workspace-nav-icon {
+    background: var(--color-accent-subtle);
+    color: var(--color-accent-deep);
+  }
+  .workspace-shell
+    .workspace-navigation
+    a.workspace-nav-link[aria-current="page"]:hover
+    .workspace-nav-icon {
+    background: var(--color-accent-hover);
+    color: var(--color-paper);
+  }
+}

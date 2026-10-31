@@ -10,6 +10,7 @@ export interface StaffJobReview {
   companyId: number;
   revisionNumber: number;
   state: ReviewState;
+  publicationStatus?: JobStatus;
   jobVersion: number;
   revisionVersion: number;
   content: JobContent;
@@ -119,7 +120,9 @@ export async function decideStaffJobReview(
     receipt.outcome !== outcome ||
     !version(receipt.jobVersion) ||
     !version(receipt.revisionVersion) ||
-    !["DRAFT", "PUBLISHED", "PAUSED", "CLOSED", "EXPIRED"].includes(receipt.publicationStatus)
+    !["DRAFT", "PUBLISHED", "PAUSED", "SUSPENDED", "CLOSED", "EXPIRED"].includes(
+      receipt.publicationStatus,
+    )
   )
     throw invalidResponse();
   return receipt;
@@ -137,4 +140,76 @@ export function staffJobError(error: unknown) {
       return "Thông tin quyết định chưa hợp lệ. Lý do từ chối cần từ 10 đến 1.000 ký tự. Hãy tải lại bản tin trước khi thử lại.";
   }
   return "Không thể xác nhận kết quả từ hệ thống. Hãy kiểm tra kết nối và tải lại dữ liệu trước khi tiếp tục.";
+}
+
+export interface PostingEvent {
+  createdAt: string;
+  actorUserId: number | null;
+  eventType: string;
+  previousStatus: JobStatus | null;
+  status: JobStatus | null;
+  reason: string | null;
+}
+export interface PostingHistory extends ApiPage<PostingEvent> {
+  first: boolean;
+  last: boolean;
+}
+export async function getPostingHistory(jobId: number, page = 0): Promise<PostingHistory> {
+  const result = (await authenticatedRequest(`/staff/jobs/${jobId}/history?page=${page}&size=20`, {
+    cache: "no-store",
+  })) as PostingHistory;
+  if (
+    !result ||
+    !Array.isArray(result.content) ||
+    !version(result.pageNumber) ||
+    !positiveId(result.pageSize) ||
+    !version(result.totalElements) ||
+    !version(result.totalPages) ||
+    typeof result.first !== "boolean" ||
+    typeof result.last !== "boolean" ||
+    !result.content.every(
+      (e) =>
+        e &&
+        typeof e.eventType === "string" &&
+        Number.isFinite(Date.parse(e.createdAt)) &&
+        (e.actorUserId === null || positiveId(e.actorUserId)),
+    )
+  )
+    throw invalidResponse();
+  return result;
+}
+export async function hideStaffJob(review: StaffJobReview, reason: string) {
+  const trimmed = reason.trim();
+  if (Array.from(trimmed).length < 1 || Array.from(trimmed).length > 1000)
+    throw new ApiError("Lý do cần từ 1 đến 1.000 ký tự.", 400);
+  const result = (await authenticatedRequest(`/staff/jobs/${review.jobId}/hide`, {
+    method: "PUT",
+    cache: "no-store",
+    body: JSON.stringify({ expectedJobVersion: review.jobVersion, reason: trimmed }),
+  })) as {
+    jobId: number;
+    publicationStatus: JobStatus;
+    jobVersion: number;
+    actorUserId: number;
+    suspendedAt: string;
+    reason: string;
+  };
+  if (
+    !result ||
+    result.jobId !== review.jobId ||
+    result.publicationStatus !== "SUSPENDED" ||
+    !version(result.jobVersion)
+  )
+    throw invalidResponse();
+  return result;
+}
+export function postingError(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.status === 400) return "Thông tin chưa hợp lệ. Nhập lý do từ 1 đến 1.000 ký tự.";
+    if (error.status === 401) return "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
+    if (error.status === 403) return "Bạn không có quyền thực hiện thao tác này.";
+    if (error.status === 409)
+      return "Tin đã thay đổi. Lý do được giữ lại. Kiểm tra trạng thái mới và xác nhận lại.";
+  }
+  return "Không thể tải hoặc xác nhận dữ liệu. Vui lòng tải lại hoặc thử lại.";
 }

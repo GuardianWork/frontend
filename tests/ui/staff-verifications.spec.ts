@@ -8,8 +8,9 @@ async function openDossier(page: import("@playwright/test").Page) {
 }
 test("legacy dossier remains reviewable and rejection refreshes queue and details", async ({
   page,
-}) => {
+}, info) => {
   await openDossier(page);
+  await page.screenshot({ path: info.outputPath("verification-detail.png"), fullPage: true });
   await expect(page.getByText(/Không có lịch sử nộp hồ sơ được lưu giữ/)).toBeVisible();
   await page.getByRole("button", { name: "Từ chối hồ sơ", exact: true }).click();
   const dialog = page.getByRole("dialog");

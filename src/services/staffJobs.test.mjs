@@ -108,3 +108,54 @@ test("server conflicts propagate without pretending to save a decision", async (
     (error) => error.status === 409,
   );
 });
+
+test("hide uses jobVersion and accepts 1000 astral Unicode code points after trimming", async () => {
+  const { hideStaffJob } = await import("./staffJobs.ts");
+  globalThis.fetch = async (url, init) => {
+    assert.equal(url, "/api/staff/jobs/83/hide");
+    assert.equal(init.method, "PUT");
+    assert.equal(init.headers.Authorization, "Bearer staff-access");
+    assert.deepEqual(JSON.parse(init.body), { expectedJobVersion: 5, reason: "😀".repeat(1000) });
+    return Response.json({
+      status: 200,
+      message: "OK",
+      data: { jobId: 83, publicationStatus: "SUSPENDED", jobVersion: 6 },
+    });
+  };
+  assert.equal(
+    (await hideStaffJob(review, `  ${"😀".repeat(1000)}  `)).publicationStatus,
+    "SUSPENDED",
+  );
+  await assert.rejects(hideStaffJob(review, "  "), { status: 400 });
+  await assert.rejects(hideStaffJob(review, "😀".repeat(1001)), { status: 400 });
+});
+test("posting history remains separate from revisions and retains server pagination", async () => {
+  const { getPostingHistory } = await import("./staffJobs.ts");
+  globalThis.fetch = async (url, init) => {
+    assert.equal(url, "/api/staff/jobs/83/history?page=2&size=20");
+    assert.equal(init.headers.Authorization, "Bearer staff-access");
+    return Response.json({
+      data: {
+        content: [
+          {
+            createdAt: "2026-10-31T03:00:00Z",
+            actorUserId: null,
+            eventType: "JOB_EXPIRED",
+            previousStatus: "PUBLISHED",
+            status: "EXPIRED",
+            reason: null,
+          },
+        ],
+        pageNumber: 2,
+        pageSize: 20,
+        totalElements: 41,
+        totalPages: 3,
+        first: false,
+        last: true,
+      },
+    });
+  };
+  const result = await getPostingHistory(83, 2);
+  assert.equal(result.last, true);
+  assert.equal(result.content[0].actorUserId, null);
+});
