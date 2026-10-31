@@ -18,6 +18,14 @@ import {
   type CandidateExperience,
   type CandidateProfileDetails,
 } from "@/context/CandidateContext";
+import {
+  loadCandidateProfile as loadApiProfile,
+  updateCandidateProfile as saveApiProfile,
+  toLocalPhone,
+  type ExperienceEntry as ApiExperienceEntry,
+  type EducationEntry as ApiEducationEntry,
+  type CandidateProfile as ApiCandidateProfile,
+} from "@/services/candidateProfile";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import {
   ArrowRight,
@@ -63,11 +71,73 @@ export const Route = createFileRoute("/candidate/profile")({
   component: CandidateProfilePage,
 });
 
+function mapApiProfileToDetails(
+  api: ApiCandidateProfile,
+  current: CandidateProfileDetails,
+): CandidateProfileDetails {
+  return {
+    ...current,
+    fullName: api.fullName,
+    email: api.email,
+    phone: toLocalPhone(api.phoneNumber),
+    avatarUrl: api.avatarUrl,
+    isPublic: api.isPublic,
+    skills: api.skills,
+    experiences: api.experience.map((entry: ApiExperienceEntry, index) => ({
+      title: entry.role,
+      company: entry.company,
+      from: entry.startDate,
+      to: entry.endDate || "",
+      description: entry.description || "",
+    })),
+    education: api.education.map((entry: ApiEducationEntry, index) => ({
+      degree: entry.degree,
+      school: entry.institution,
+      from: entry.startYear,
+      to: entry.endYear || "",
+    })),
+  };
+}
+
+function toApiExperience(entry: CandidateExperience): ApiExperienceEntry {
+  return {
+    company: entry.company,
+    role: entry.title,
+    startDate: entry.from,
+    endDate: entry.to || null,
+    description: entry.description || null,
+  };
+}
+
+function toApiEducation(entry: CandidateEducation): ApiEducationEntry {
+  return {
+    institution: entry.school,
+    degree: entry.degree,
+    startYear: entry.from,
+    endYear: entry.to || null,
+  };
+}
+
+function apiProfileExperiences(entries: CandidateExperience[]): ApiExperienceEntry[] {
+  return entries.map(toApiExperience);
+}
+
+function apiProfileEducation(entries: CandidateEducation[]): ApiEducationEntry[] {
+  return entries.map(toApiEducation);
+}
+
+function currentAvatarUrl(profile: CandidateProfileDetails): string | undefined {
+  return profile.avatarUrl ? profile.avatarUrl : undefined;
+}
+
 function CandidateProfilePage() {
   const user = useAuthUser();
   const { profileDetails: profile, setProfileDetails, cvs } = useCandidate();
   const defaultCv = cvs.find((cv) => cv.isDefault);
   const [isEditing, setIsEditing] = useState(false);
+  const [isApiLoading, setIsApiLoading] = useState(true);
+  const [apiError, setApiError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
   const [draft, setDraft] = useState(profile);
   const [skillsDraft, setSkillsDraft] = useState<string[]>(profile.skills);
   const [skillInput, setSkillInput] = useState("");
@@ -88,6 +158,32 @@ function CandidateProfilePage() {
     setSkillInput("");
     setSkillNotice("");
   }, [isEditing, profile]);
+
+  useEffect(() => {
+    let active = true;
+    setIsApiLoading(true);
+    setApiError("");
+    void loadApiProfile()
+      .then((apiProfile) => {
+        if (!active) return;
+        setProfileDetails((current) => mapApiProfileToDetails(apiProfile, current));
+      })
+      .catch((cause) => {
+        if (!active) return;
+        const error = cause as { status?: number };
+        if (error.status === 401) {
+          window.location.assign("/login?role=candidate");
+          return;
+        }
+        setApiError("Không tải được hồ sơ. Vui lòng thử lại.");
+      })
+      .finally(() => {
+        if (active) setIsApiLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const openEditForm = (section: EditSection = "all", index: number | null = null) => {
     setDraft(profile);
@@ -284,15 +380,71 @@ function CandidateProfilePage() {
       education,
     };
 
-    setProfileDetails(nextProfile);
-    setDraft(nextProfile);
-    setSkillsDraft(nextProfile.skills);
-    setSkillInput("");
-    setSkillNotice("");
-    setFieldErrors({});
-    setSuccessMessage(getSuccessMessage(editSection));
-    setIsSuccessDialogOpen(true);
-    setIsEditing(false);
+    const apiExperience = touches("experience")
+      ? profile.experiences === experiences
+        ? apiProfileExperiences(nextProfile.experiences)
+        : apiProfileExperiences(experiences)
+      : apiProfileExperiences(profile.experiences);
+    const apiEducation = touches("education")
+      ? apiProfileEducation(education)
+      : apiProfileEducation(profile.education);
+
+    const phoneValue = nextProfile.phone.replace(/\D/g, "");
+    setIsSaving(true);
+    try {
+      const saved = await saveApiProfile({
+        fullName: nextProfile.fullName,
+        phoneNumber: phoneValue ? phoneValue : undefined,
+        avatarUrl: currentAvatarUrl(profile),
+        skills: nextProfile.skills,
+        experience: apiExperience,
+        education: apiEducation,
+        isPublic: profile.isPublic,
+      });
+      const merged = mapApiProfileToDetails(saved, nextProfile);
+      const finalProfile: CandidateProfileDetails = {
+        ...merged,
+        experience: nextProfile.experience,
+      };
+      setProfileDetails(finalProfile);
+      setDraft(finalProfile);
+      setSkillsDraft(finalProfile.skills);
+      setSkillInput("");
+      setSkillNotice("");
+      setFieldErrors({});
+      setSuccessMessage(getSuccessMessage(editSection));
+      setIsSuccessDialogOpen(true);
+      setIsEditing(false);
+    } catch (cause) {
+      const error = cause as {
+        status?: number;
+        code?: number;
+        fieldErrors?: Record<string, string>;
+      };
+      if (error.status === 401) {
+        window.location.assign("/login?role=candidate");
+        return;
+      }
+      if (error.code === 40930 || error.status === 409) {
+        setFieldErrors({ phone: "Số điện thoại này đã được sử dụng." });
+      } else if (error.code === 40030 || error.status === 400) {
+        const backendErrors =
+          error.fieldErrors && typeof error.fieldErrors === "object" ? error.fieldErrors : {};
+        const mapped: Record<string, string> = {};
+        for (const [key, value] of Object.entries(backendErrors)) {
+          mapped[key] = String(value);
+        }
+        if (Object.keys(mapped).length) setFieldErrors(mapped);
+        else if (error.status === 400) {
+          // Keep a generic field-friendly error when the code is 40030.
+          if (error.code === 40030) setFieldErrors({ phone: "Số điện thoại không hợp lệ." });
+        }
+      } else {
+        setFieldErrors({});
+      }
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const readinessItems = [
@@ -451,7 +603,8 @@ function CandidateProfilePage() {
                           type="email"
                           autoComplete="email"
                           value={draft.email}
-                          onChange={(event) => updateDraft("email", event.target.value)}
+                          readOnly
+                          onChange={() => {}}
                           aria-required="true"
                           aria-invalid={Boolean(fieldErrors.email)}
                           aria-describedby={
@@ -835,8 +988,8 @@ function CandidateProfilePage() {
                   >
                     Hủy
                   </button>
-                  <button type="submit" className="btn min-h-11 px-5 text-sm">
-                    Lưu thay đổi
+                  <button type="submit" disabled={isSaving} className="btn min-h-11 px-5 text-sm">
+                    {isSaving ? "Đang lưu…" : "Lưu thay đổi"}
                   </button>
                 </div>
               </div>

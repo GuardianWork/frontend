@@ -10,6 +10,7 @@ export const MOCK_ACCOUNTS = [
     firstName: "An",
     lastName: "Nguyễn",
     role: "USER",
+    phone: "+84987654321",
   },
   {
     id: 2,
@@ -45,6 +46,8 @@ export function createMockApiServer() {
     password: MOCK_PASSWORD,
   }));
   const candidateProfiles = new Map();
+  const candidateCvs = new Map();
+  const cvAssets = new Map();
   const accessTokens = new Map();
   const refreshTokens = new Map();
   const companies = [
@@ -134,8 +137,19 @@ export function createMockApiServer() {
         const form = await new Response(raw, {
           headers: { "Content-Type": req.headers["content-type"] },
         }).formData();
-        body = JSON.parse(await form.get("dossier").text());
-        body.file = form.get("file");
+        if (form.has("dossier")) {
+          try {
+            body = JSON.parse(await form.get("dossier").text());
+          } catch {
+            body = {};
+          }
+        } else {
+          body = {};
+        }
+        for (const [key, value] of form.entries()) {
+          if (key !== "dossier" && key !== "file") body[key] = value;
+        }
+        if (form.has("file")) body.file = form.get("file");
       } else if (raw) body = JSON.parse(raw);
     } catch {
       send(400, "Invalid JSON");
@@ -216,7 +230,7 @@ export function createMockApiServer() {
     const session = accessTokens.get(token);
     const user =
       session && session.expiresAt > Date.now() && users.find((user) => user.id === session.userId);
-    if (!user) {
+    if (!user && !path.startsWith("/api/mock/")) {
       send(401, "Vui lòng đăng nhập để tiếp tục.");
       return;
     }
@@ -239,44 +253,298 @@ export function createMockApiServer() {
       return;
     }
     if (path === "/api/v1/candidates/profile" && ["GET", "PUT"].includes(req.method)) {
+      const seededExperience = [
+        {
+          company: "GuardianWork VN • TP. Hồ Chí Minh",
+          role: "Senior Tech Lead & Systems Engineer",
+          startDate: "2023-01",
+          endDate: null,
+          description: "Dẫn dắt kiến trúc bảo mật tuân thủ Bộ luật Lao động 2019.",
+        },
+        {
+          company: "Apex Cloud Services • Remote APAC",
+          role: "Lead Frontend Systems Architect",
+          startDate: "2020-01",
+          endDate: "2023-01",
+          description: "Thiết kế design system token và tối ưu hóa thời gian tải.",
+        },
+      ];
+      const seededEducation = [
+        {
+          institution: "Đại học Quốc gia TP.HCM",
+          degree: "Cử nhân Khoa học Máy tính",
+          startYear: "2017-09",
+          endYear: "2021-06",
+          description: "Chuyên ngành Hệ thống thông tin.",
+        },
+      ];
+      const seededSkills = [
+        "Go",
+        "Kubernetes",
+        "TypeScript",
+        "React / Next.js",
+        "Distributed Systems",
+        "PostgreSQL",
+        "Tailwind CSS",
+        "SOC2 Security",
+        "gRPC / REST",
+      ];
       const previous = candidateProfiles.get(user.id) || {
         id: randomUUID(),
         userId: user.id,
-        fullName: `${user.lastName} ${user.firstName}`.trim(),
-        avatarUrl: null,
-        skills: [],
-        experienceSummary: null,
-        educationSummary: null,
-        isPublic: false,
+        email: user.email,
+        fullName: `${user.lastName} ${user.firstName}`.trim() || "Nguyễn An",
+        avatarUrl: "https://api.dicebear.com/7.x/notionists/svg?seed=Nguyen Van An (Alex)",
+        phoneNumber: user.phone || null,
+        skills: seededSkills,
+        experience: seededExperience,
+        education: seededEducation,
+        isPublic: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
       if (req.method === "PUT") {
-        const phone =
-          body.phoneNumber
-            ?.trim()
-            .replace(/[\s.-]/g, "")
-            .replace(/^0/, "+84") || null;
-        if (!body.fullName?.trim() || (phone && !/^\+84\d{9,10}$/.test(phone))) {
-          send(400, "Thông tin không hợp lệ.");
+        let phone = undefined;
+        if (Object.prototype.hasOwnProperty.call(body, "phoneNumber")) {
+          const normalized =
+            body.phoneNumber === null
+              ? null
+              : String(body.phoneNumber)
+                  .trim()
+                  .replace(/[\s.-]/g, "")
+                  .replace(/^0/, "+84");
+          if (normalized && !/^\+84\d{9,10}$/.test(normalized)) {
+            send(400, "40030 INVALID_PHONE_NUMBER: A Vietnamese mobile number is required");
+            return;
+          }
+          if (
+            normalized &&
+            users.some((account) => account.id !== user.id && account.phone === normalized)
+          ) {
+            send(409, "40930 IDENTIFIER_UNAVAILABLE: Contact information is unavailable");
+            return;
+          }
+          phone = normalized;
+        }
+        if (!body.fullName?.trim()) {
+          res.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
+          res.end(
+            JSON.stringify({
+              status: 40000,
+              message: "Vui lòng kiểm tra lại thông tin.",
+              errors: { fullName: "Full name must not be blank" },
+            }),
+          );
           return;
         }
-        if (phone && users.some((account) => account.id !== user.id && account.phone === phone)) {
-          send(409, "Số điện thoại đã được sử dụng.");
-          return;
-        }
-        user.phone = phone;
+        user.phone = phone === undefined ? user.phone : phone;
         Object.assign(previous, {
-          fullName: body.fullName,
-          avatarUrl: body.avatarUrl,
-          skills: body.skills,
-          experienceSummary: body.experienceSummary,
-          educationSummary: body.educationSummary,
-          isPublic: body.isPublic,
+          fullName: String(body.fullName).trim().replace(/\s+/g, " "),
+          avatarUrl: body.avatarUrl === undefined ? previous.avatarUrl : body.avatarUrl,
+          skills: body.skills === undefined ? previous.skills : body.skills,
+          experience: body.experience === undefined ? previous.experience : body.experience,
+          education: body.education === undefined ? previous.education : body.education,
+          isPublic: body.isPublic === undefined ? previous.isPublic : body.isPublic,
+          email: user.email,
+          phoneNumber: phone === undefined ? user.phone || null : phone,
+          updatedAt: new Date().toISOString(),
         });
         candidateProfiles.set(user.id, previous);
       }
-      send(200, "Candidate profile", { ...previous, phoneNumber: user.phone || null });
+      const responseProfile = {
+        ...previous,
+        email: user.email,
+        phoneNumber: previous.phoneNumber || null,
+      };
+      previous.phoneNumber = responseProfile.phoneNumber;
+      send(200, "Candidate profile", responseProfile);
       return;
     }
+
+    const cvMatch = /^\/api\/v1\/candidate\/cvs\/([^/]+)\/download-url$/.exec(path);
+    if (req.method === "GET" && path === "/api/v1/candidate/cvs") {
+      const profile = candidateProfiles.get(user.id) || {
+        id: randomUUID(),
+        userId: user.id,
+        email: user.email,
+        fullName: `${user.lastName} ${user.firstName}`.trim(),
+        avatarUrl: null,
+        phoneNumber: user.phone || null,
+        skills: [],
+        experience: [],
+        education: [],
+        isPublic: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      candidateProfiles.set(user.id, profile);
+      const cvs = candidateCvs.get(user.id) || [];
+      send(200, "CVs", cvs);
+      return;
+    }
+
+    if (req.method === "POST" && path === "/api/v1/candidate/cvs/upload-url") {
+      const profile = candidateProfiles.get(user.id) || {
+        id: randomUUID(),
+        userId: user.id,
+        email: user.email,
+        fullName: `${user.lastName} ${user.firstName}`.trim(),
+        avatarUrl: null,
+        phoneNumber: user.phone || null,
+        skills: [],
+        experience: [],
+        education: [],
+        isPublic: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      candidateProfiles.set(user.id, profile);
+      const cvs = candidateCvs.get(user.id) || [];
+      if (cvs.length >= 5) {
+        send(400, "40022 CV quota exceeded");
+        return;
+      }
+      if (!body.consentGiven) {
+        send(400, "40020 Consent required");
+        return;
+      }
+      const publicId = `candidates/${profile.id}/cvs/${randomUUID()}`;
+      send(200, "Upload URL", {
+        url: "/api/mock/cloudinary-upload",
+        apiKey: "mock-api-key",
+        timestamp: "1234567890",
+        signature: "mock-signature",
+        publicId,
+      });
+      return;
+    }
+
+    if (req.method === "POST" && path === "/api/mock/cloudinary-upload") {
+      const file = body.file;
+      if (!file) {
+        send(400, "40021 Invalid CV file");
+        return;
+      }
+      const publicId = body.public_id || body.publicId;
+      if (!publicId) {
+        send(400, "40021 Missing public id");
+        return;
+      }
+      const bytes = Buffer.from(await file.arrayBuffer());
+      const fileName = file.name || "upload.bin";
+      const extension = fileName.split(".").pop()?.toLowerCase() || "pdf";
+      const contentTypes = {
+        pdf: "application/pdf",
+        doc: "application/msword",
+        docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      };
+      const contentType =
+        file.type && contentTypes[extension] === file.type
+          ? file.type
+          : contentTypes[extension] || "application/octet-stream";
+      cvAssets.set(publicId, {
+        publicId,
+        fileName,
+        bytes,
+        size: file.size || bytes.length,
+        contentType,
+        extension,
+      });
+      send(200, "uploaded", { public_id: publicId, bytes: file.size || bytes.length });
+      return;
+    }
+
+    if (req.method === "POST" && path === "/api/v1/candidate/cvs") {
+      const profile = candidateProfiles.get(user.id);
+      if (!profile) {
+        send(404, "40401 Not found");
+        return;
+      }
+      if (!body.fileName || !body.publicId) {
+        send(400, "40000 Validation failed");
+        return;
+      }
+      const asset = cvAssets.get(body.publicId);
+      if (!asset) {
+        send(400, "40023 Cannot verify uploaded file");
+        return;
+      }
+      const expectedFolder = `candidates/${profile.id}/cvs/`;
+      if (!body.publicId.startsWith(expectedFolder)) {
+        send(400, "40023 Cannot verify uploaded file");
+        return;
+      }
+      const cvs = candidateCvs.get(user.id) || [];
+      if (cvs.length >= 5) {
+        send(400, "40022 CV quota exceeded");
+        return;
+      }
+      if (cvs.some((cv) => cv.publicId === body.publicId)) {
+        send(409, "40902 CV already registered");
+        return;
+      }
+      const format = body.fileName.split(".").pop()?.toLowerCase();
+      const contentTypes = {
+        pdf: "application/pdf",
+        doc: "application/msword",
+        docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      };
+      if (!contentTypes[format]) {
+        send(400, "40021 Invalid CV file");
+        return;
+      }
+      const cv = {
+        id: randomUUID(),
+        candidateId: profile.id,
+        fileName: body.fileName,
+        fileSize: asset.size,
+        contentType: asset.contentType || contentTypes[format],
+        publicId: body.publicId,
+        isDefault: cvs.length === 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      cvs.unshift(cv);
+      candidateCvs.set(user.id, cvs);
+      send(201, "CV uploaded successfully", cv);
+      return;
+    }
+
+    if (req.method === "GET" && cvMatch) {
+      const profile = candidateProfiles.get(user.id);
+      if (!profile) {
+        send(404, "40401 Not found");
+        return;
+      }
+      const cvs = candidateCvs.get(user.id) || [];
+      const cv = cvs.find((item) => item.id === cvMatch[1]);
+      if (!cv) {
+        send(404, "40405 CV not found");
+        return;
+      }
+      const url = `/api/mock/cloudinary-download?publicId=${encodeURIComponent(cv.publicId)}`;
+      send(200, "Download URL", {
+        url,
+        apiKey: null,
+        timestamp: null,
+        signature: null,
+        publicId: cv.publicId,
+      });
+      return;
+    }
+
+    if (req.method === "GET" && path === "/api/mock/cloudinary-download") {
+      const publicId = url.searchParams.get("publicId");
+      const asset = cvAssets.get(publicId);
+      if (!asset) {
+        send(404, "File not found");
+        return;
+      }
+      res.writeHead(200, { "Content-Type": asset.contentType });
+      res.end(asset.bytes);
+      return;
+    }
+
     if (req.method === "POST" && path === "/api/companies/verification-request") {
       if (!body.file) {
         send(410, "41030 ONBOARDING_RETIRED");
