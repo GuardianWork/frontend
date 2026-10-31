@@ -76,6 +76,9 @@ async function mockJobs(page: Page, initial: Job[] = [makeJob()]) {
       },
     }),
   );
+  await page.route("**/api/companies/me", (route) =>
+    route.fulfill({ json: { status: 200, data: { companyId: 101, companyRole: "RECRUITER" } } }),
+  );
   const jobs = structuredClone(initial);
   let conflict = false;
   const writes: { path: string; method: string; body: Record<string, unknown> | null }[] = [];
@@ -242,6 +245,9 @@ async function mockJobs(page: Page, initial: Job[] = [makeJob()]) {
   });
   return {
     writes,
+    clearConflict: () => {
+      conflict = false;
+    },
     setConflict: () => {
       conflict = true;
     },
@@ -260,7 +266,7 @@ async function noOverflow(page: Page) {
   ).toBe(false);
 }
 
-test("owner creates an incomplete draft, sees validation, completes and submits the persisted revision", async ({
+test("owner creates a guided draft, resumes progress, recovers failed save and submits the persisted revision", async ({
   page,
 }, info) => {
   const mock = await mockJobs(page, []);
@@ -273,30 +279,52 @@ test("owner creates an incomplete draft, sees validation, completes and submits 
   await page.getByLabel("Chức danh công việc", { exact: true }).fill("Chuyên viên kinh doanh");
   await page.getByRole("button", { name: "Lưu bản nháp", exact: true }).click();
   await expect(page).toHaveURL(/jobId=83/);
-  await page.getByRole("button", { name: "Lưu và xem trước" }).click();
-  await expect(page.getByText("Cần hoàn tất trước khi gửi", { exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Xác nhận gửi duyệt" })).toBeDisabled();
-  await page.getByRole("button", { name: "Tiếp tục chỉnh sửa" }).click();
-  for (const [label, value] of [
-    ["Mô tả công việc", completeContent.description],
-    ["Địa điểm làm việc", completeContent.location],
-  ])
-    await page.getByRole("textbox", { name: label!, exact: true }).fill(value!);
+  await expect(page.getByRole("textbox", { name: "Mô tả công việc", exact: true })).toBeHidden();
+  await page.getByRole("button", { name: "Lưu và tiếp tục", exact: true }).click();
+  await expect(page.getByRole("alert")).toContainText("cần bổ sung");
+  await page
+    .getByRole("textbox", { name: "Địa điểm làm việc", exact: true })
+    .fill(completeContent.location!);
   await page
     .getByRole("combobox", { name: "Loại công việc", exact: true })
     .selectOption("FULL_TIME");
   await page
     .getByRole("combobox", { name: "Hình thức làm việc", exact: true })
     .selectOption("ONSITE");
-  await page.getByLabel("Hạn ứng tuyển", { exact: true }).fill("2099-12-01T17:00");
+  const deadline = page.getByLabel("Hạn ứng tuyển", { exact: true });
+  await deadline.fill("2000-01-01");
+  expect(await deadline.evaluate((input: HTMLInputElement) => input.validity.rangeUnderflow)).toBe(
+    true,
+  );
+  await deadline.fill("2099-12-01");
+  await page.getByRole("button", { name: "Lưu và tiếp tục", exact: true }).click();
+  await expect(page.getByRole("textbox", { name: "Mô tả công việc", exact: true })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("textbox", { name: "Mô tả công việc", exact: true })).toBeVisible();
+  await page
+    .getByRole("textbox", { name: "Mô tả công việc", exact: true })
+    .fill(completeContent.description!);
+  mock.setConflict();
+  await page.getByRole("button", { name: "Lưu và tiếp tục", exact: true }).click();
+  await expect(page.getByRole("alert")).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Mô tả công việc", exact: true })).toHaveText(
+    completeContent.description!.replace(/\n/g, ""),
+  );
+  mock.clearConflict();
+  await page.getByRole("button", { name: "Lưu và tiếp tục", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Bỏ qua và xem trước" })).toBeVisible();
   await expect(page.getByLabel("Trách nhiệm công việc", { exact: true })).toHaveCount(0);
   await expect(page.getByLabel("Yêu cầu bắt buộc", { exact: true })).toHaveCount(0);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await noOverflow(page);
+  await page.screenshot({ path: "/tmp/job-creation-mobile.png", fullPage: true });
+  await page.setViewportSize({ width: 1440, height: 1000 });
   await page.screenshot({
     path: `/tmp/job-publishing-${info.project.name}-editor.png`,
     fullPage: true,
   });
   await noOverflow(page);
-  await page.getByRole("button", { name: "Lưu và xem trước" }).click();
+  await page.getByRole("button", { name: "Bỏ qua và xem trước" }).click();
   await expect(page.getByRole("button", { name: "Xác nhận gửi duyệt" })).toBeEnabled();
   await page.screenshot({
     path: `/tmp/job-publishing-${info.project.name}-preview.png`,
@@ -310,7 +338,7 @@ test("owner creates an incomplete draft, sees validation, completes and submits 
   await page.getByRole("button", { name: "Rút bản gửi duyệt", exact: true }).click();
   await page.getByRole("button", { name: "Xác nhận rút bản gửi" }).click();
   await expect(page.getByRole("button", { name: "Tạo bản chỉnh sửa" })).toBeVisible();
-  const saved = mock.writes.find(
+  const saved = mock.writes.findLast(
     (write) => write.method === "PUT" && write.path.endsWith("/draft"),
   );
   expect(Object.keys(saved!.body!.content as JobContent).sort()).toEqual(
@@ -521,4 +549,65 @@ test("remote jobs keep multiline descriptions and optional values can be added t
   expect(saved.body!.content).not.toHaveProperty("compensation");
   expect(saved.body!.content).not.toHaveProperty("headcount");
   expect((saved.body!.content as JobContent).screeningQuestions).toEqual([]);
+});
+
+test("description formatting survives save, refresh and review without interpreting legacy HTML", async ({
+  page,
+}) => {
+  const mock = await mockJobs(page);
+  await login(page, "owner_demo", true);
+  await page.goto("/recruiter/jobs?jobId=83");
+  const editor = page.getByRole("textbox", { name: "Mô tả công việc", exact: true });
+  await editor.fill("Công việc mới");
+  await editor.press("ControlOrMeta+a");
+  await page.getByRole("button", { name: "In đậm", exact: true }).click();
+  await page.getByRole("button", { name: "In nghiêng", exact: true }).click();
+  await page.getByRole("button", { name: "Danh sách dấu đầu dòng", exact: true }).click();
+  await page.getByRole("button", { name: "Lưu và xem trước" }).click();
+  await expect(
+    page.locator(".jp-content-view .job-description :is(strong em, em strong)"),
+  ).toHaveText("Công việc mới");
+  await expect(page.locator(".jp-content-view .job-description li")).toHaveCount(1);
+  expect(mock.getJobs()[0].workingRevision!.content.description).toContain("guardwork:markdown:v1");
+  await page.reload();
+  await expect(editor.locator(":is(strong em, em strong)")).toHaveText("Công việc mới");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await noOverflow(page);
+  await editor.scrollIntoViewIfNeeded();
+  await page.screenshot({ path: "/tmp/job-description-editor-mobile.png", fullPage: true });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await editor.scrollIntoViewIfNeeded();
+  await page.screenshot({ path: "/tmp/job-description-editor-desktop.png", fullPage: true });
+  await editor.fill(" ");
+  await page.getByRole("button", { name: "Lưu và xem trước" }).click();
+  await expect(page.getByRole("button", { name: "Xác nhận gửi duyệt" })).toBeDisabled();
+  await page.getByRole("button", { name: "Tiếp tục chỉnh sửa" }).click();
+  await editor.fill('<script>alert("x")</script>');
+  await page.getByRole("button", { name: "Lưu và xem trước" }).click();
+  await expect(page.locator(".job-description")).toContainText('<script>alert("x")</script>');
+  await expect(page.locator(".job-description script")).toHaveCount(0);
+});
+
+test("public descriptions render saved formatting and ignore executable markup", async ({
+  page,
+}) => {
+  await page.route("**/api/jobs/42", (route) =>
+    route.fulfill({
+      json: {
+        status: 200,
+        data: {
+          content: {
+            ...completeContent,
+            description:
+              "<!-- guardwork:markdown:v1 -->\n**Công việc** và *quyền lợi*\n\n- Đào tạo\n\n<script>alert(1)</script><img src=x onerror=alert(1)>",
+          },
+        },
+      },
+    }),
+  );
+  await page.goto("/jobs?job=42");
+  await expect(page.locator(".job-description strong")).toHaveText("Công việc");
+  await expect(page.locator(".job-description em")).toHaveText("quyền lợi");
+  await expect(page.locator(".job-description li")).toHaveText("Đào tạo");
+  await expect(page.locator(".job-description script, .job-description img")).toHaveCount(0);
 });

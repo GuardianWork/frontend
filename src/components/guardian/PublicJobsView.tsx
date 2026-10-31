@@ -1,3 +1,4 @@
+import { JobDescription } from "@/components/recruiter/JobDescription";
 /* Hallmark · page: public job discovery · genre: modern-minimal
  * macrostructure: Catalogue · tone: utilitarian · theme: GuardianWork (DESIGN.md locked)
  * anchor hue: Guardian Blue · enrichment: none (typography + functional states)
@@ -579,7 +580,7 @@ function JobDetail({
           <div className="career-detail__main">
             <section aria-labelledby="detail-description">
               <h2 id="detail-description">Mô tả công việc</h2>
-              <p>{job.description}</p>
+              <JobDescription value={job.description} />
             </section>
 
             <section aria-labelledby="detail-requirements">

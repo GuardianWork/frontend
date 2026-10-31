@@ -713,3 +713,85 @@
     scroll-behavior: auto !important;
   }
 }
+
+.jp-creation-steps {
+  margin-block: 24px;
+}
+.jp-creation-steps ol {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  border-bottom: 1px solid var(--jp-rule);
+}
+.jp-creation-steps button {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  min-height: 64px;
+  padding: 12px;
+  text-align: left;
+  color: var(--jp-muted);
+  border-bottom: 3px solid transparent;
+}
+.jp-creation-steps button > span:first-child {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border: 1px solid var(--jp-rule);
+  border-radius: 50%;
+}
+.jp-creation-steps button[aria-current] {
+  color: var(--jp-blue);
+  border-bottom-color: var(--jp-blue);
+  font-weight: 700;
+  background: var(--color-accent-subtle);
+}
+.jp-creation-steps button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.jp-creation-steps p {
+  margin-top: 12px;
+}
+.jp-guided {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 900px;
+}
+.jp-guided-writing .jp-workspace-side,
+.jp-tabs[hidden],
+.jp-form-section[hidden] {
+  display: none;
+}
+.jp-step-heading {
+  padding: 24px 24px 0;
+}
+.jp-review-edits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-block: 16px;
+}
+@media (max-width: 640px) {
+  .jp-creation-steps ol {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .jp-creation-steps button {
+    font-size: 14px;
+  }
+  .jp-guided input,
+  .jp-guided select,
+  .jp-guided textarea {
+    font-size: 16px;
+  }
+}
+
+.jp-required {
+  color: var(--color-error);
+  font-weight: 700;
+  margin-inline-start: 3px;
+}
