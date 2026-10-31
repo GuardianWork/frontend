@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCandidate } from "@/context/CandidateContext";
+import { listApplications } from "@/services/candidateApplications";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import {
@@ -155,6 +156,22 @@ export function JobsView() {
   const [inspectingJob, setInspectingJob] = useState<JobItem | null>(null);
   const [inspectingCompany, setInspectingCompany] = useState<JobItem | null>(null);
   const [applyingJobId, setApplyingJobId] = useState<string | null>(null);
+  const [backendAppliedIds, setBackendAppliedIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    let mounted = true;
+    listApplications()
+      .then((applications) => {
+        if (!mounted) return;
+        setBackendAppliedIds(new Set(applications.map((application) => String(application.jobId))));
+      })
+      .catch(() => {
+        // Keep the local fallback when the backend application list is unavailable.
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const categories = [
     { id: "all", label: "Tất cả vai trò" },
@@ -522,7 +539,7 @@ export function JobsView() {
                 >
                   Đóng
                 </button>
-                {isApplied(inspectingJob.id) ? (
+                {isApplied(inspectingJob.id) || backendAppliedIds.has(inspectingJob.id) ? (
                   <span className="px-5 py-2 rounded-full font-mono text-xs font-bold bg-emerald/20 text-emerald flex items-center gap-1">
                     <CheckCircle className="w-3.5 h-3.5" />
                     Đã nộp đơn
