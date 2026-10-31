@@ -298,7 +298,10 @@ function CandidateProfilePage() {
   const addEducation = () => {
     setDraft((current) => ({
       ...current,
-      education: [...current.education, { degree: "", school: "", from: "", to: "", description: "" }],
+      education: [
+        ...current.education,
+        { degree: "", school: "", from: "", to: "", description: "" },
+      ],
     }));
   };
 
@@ -744,7 +747,10 @@ function CandidateProfilePage() {
                             type="checkbox"
                             checked={draft.isPublic}
                             onChange={(event) =>
-                              setDraft((current) => ({ ...current, isPublic: event.target.checked }))
+                              setDraft((current) => ({
+                                ...current,
+                                isPublic: event.target.checked,
+                              }))
                             }
                             className="h-4 w-4"
                           />
@@ -1150,7 +1156,9 @@ function CandidateProfilePage() {
                                     onChange={(event) =>
                                       updateEducation(index, "description", event.target.value)
                                     }
-                                    className={fieldClass(fieldErrors[`education.${index}.description`])}
+                                    className={fieldClass(
+                                      fieldErrors[`education.${index}.description`],
+                                    )}
                                   />
                                   <FieldError
                                     id={`education-${index}-description-error`}

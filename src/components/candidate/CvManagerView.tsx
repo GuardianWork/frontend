@@ -244,9 +244,7 @@ export function CvManagerView() {
     setDefaultingId(cv.id);
     try {
       const updated = await setDefaultCandidateCv(cv.id);
-      setCvs((current) =>
-        current.map((item) => ({ ...item, isDefault: item.id === updated.id })),
-      );
+      setCvs((current) => current.map((item) => ({ ...item, isDefault: item.id === updated.id })));
       setNotice({ message: "Đã đặt hồ sơ mặc định thành công.", tone: "success" });
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
@@ -566,7 +564,7 @@ export function CvManagerView() {
               </ul>
             </section>
 
-{/*
+            {/*
             <section className="rounded-xl border border-rule border-l-4 border-l-accent-2 bg-paper-2 p-5">
               <div className="flex items-start gap-2.5">
                 <ShieldAlert
