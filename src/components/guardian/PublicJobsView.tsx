@@ -22,14 +22,16 @@ import {
   SlidersHorizontal,
   X,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { PublicApiJob } from "./PublicApiJob";
+import { searchPublicJobs } from "../../services/publicJobs";
+import type { PublicJobSearchResult } from "../../services/publicJobs";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
 import { useCandidate } from "@/context/CandidateContext";
-import { buildCandidateJobs } from "@/lib/candidate-jobs";
-import { JOBS, badgeLabel, isSampleListing, type JobItem } from "@/lib/job-listings";
+import { badgeLabel, isSampleListing, type JobItem } from "@/lib/job-listings";
 import { paginateItems } from "@/lib/pagination";
 import {
   EXPERIENCE_BANDS,
@@ -64,6 +66,35 @@ function CompanyMark({ name }: { name: string }) {
   );
 }
 
+function toPublicJobItem(job: PublicJobSearchResult): JobItem {
+  const content = job.content ?? {};
+  const compensation = content.compensation;
+  const hasSalary =
+    Boolean(compensation?.disclosed) &&
+    typeof compensation?.minimum === "number" &&
+    typeof compensation?.maximum === "number";
+  const salaryRange = hasSalary
+    ? `${Math.round(compensation!.minimum!).toLocaleString("vi-VN").replace(/,/g, ".")} - ${Math.round(compensation!.maximum!).toLocaleString("vi-VN").replace(/,/g, ".")} ${compensation!.currency ?? "VND"} / ${(compensation!.payPeriod ?? "MONTH").toLowerCase()}`
+    : "Thỏa thuận";
+  return {
+    id: String(job.id),
+    title: content.title ?? "Tin tuyển dụng",
+    company: job.company?.name ?? "Doanh nghiệp",
+    location: content.location ?? "Chưa cập nhật",
+    salaryRange,
+    badge: "Công ty đã xác thực",
+    badgeTone: "success",
+    time: "Đang tuyển",
+    department: content.employmentType ?? "Việc làm",
+    matchScore: 0,
+    description: content.description ?? "",
+    requirements: [],
+    statutoryBase: "Thông tin công khai từ tin tuyển dụng",
+    statutoryNote: "Kiểm tra kỹ điều khoản và điều kiện làm việc trước khi ứng tuyển.",
+    suggestedRevision: "Xem chi tiết để biết đầy đủ thông tin tuyển dụng.",
+  };
+}
+
 function badgeClass(job: JobItem) {
   if (job.badgeTone === "success") return "career-badge career-badge--success";
   if (job.badgeTone === "warning") return "career-badge career-badge--warning";
@@ -79,10 +110,59 @@ export function PublicJobsView({ search }: { search: JobSearchParams }) {
   const navigate = useNavigate({ from: "/jobs" });
   const user = useAuthUser();
   const { isApplied } = useCandidate();
-  const { workspace, company } = useCompanyWorkspace();
-  const { jobs: candidateJobs } = buildCandidateJobs(workspace, company);
-  // Signed-in candidates also see published company jobs; guests keep the public set.
-  const jobs = user ? candidateJobs : JOBS;
+  const { workspace } = useCompanyWorkspace();
+  const salaryBandBounds = (band?: string): { min?: number; max?: number } => {
+    switch (band) {
+      case "duoi-15":
+        return { max: 15_000_000 };
+      case "15-30":
+        return { min: 15_000_000, max: 30_000_000 };
+      case "30-50":
+        return { min: 30_000_000, max: 50_000_000 };
+      case "tren-50":
+        return { min: 50_000_000 };
+      default:
+        return {};
+    }
+  };
+  const salaryBounds = salaryBandBounds(search.salary);
+  const publicJobSearch = useQuery({
+    queryKey: [
+      "public-job-search",
+      search.q ?? "",
+      search.location ?? "",
+      search.salary ?? "",
+      search.mode ?? "",
+      search.employmentType ?? "",
+      search.page ?? "",
+    ],
+    queryFn: () =>
+      searchPublicJobs({
+        keyword: search.q?.trim() || undefined,
+        location: search.location?.trim() || undefined,
+        employmentType: search.employmentType || undefined,
+        workArrangement: (search.mode || "").toUpperCase() || undefined,
+        salaryMin: salaryBounds.min,
+        salaryMax: salaryBounds.max,
+        page: Number.isFinite(Number(search.page)) ? Number(search.page) : 0,
+        size: PAGE_SIZE,
+      }),
+    placeholderData: {
+      content: [],
+      pageNumber: 0,
+      pageSize: PAGE_SIZE,
+      totalElements: 0,
+      totalPages: 0,
+      first: true,
+      last: true,
+    },
+  });
+  const publicApiJobs =
+    publicJobSearch.data?.content
+      .map(toPublicJobItem)
+      .filter((job): job is JobItem => Boolean(job)) ?? [];
+  // UC-CAN-07: guest and candidate job search use the same backend postings.
+  const jobs = publicApiJobs;
 
   const [draftQuery, setDraftQuery] = useState(search.q ?? "");
   const [draftLocation, setDraftLocation] = useState(search.location ?? "");
@@ -202,6 +282,15 @@ export function PublicJobsView({ search }: { search: JobSearchParams }) {
               jobs={jobs}
               signedIn={Boolean(user)}
               applied={appliedFor}
+              remotePagination={
+                user
+                  ? undefined
+                  : {
+                      pageNumber: publicJobSearch.data?.pageNumber ?? 0,
+                      totalPages: publicJobSearch.data?.totalPages ?? 1,
+                      totalElements: publicJobSearch.data?.totalElements ?? jobs.length,
+                    }
+              }
             />
           </>
         )}
@@ -271,6 +360,7 @@ function Results({
   jobs,
   signedIn,
   applied,
+  remotePagination,
 }: {
   search: JobSearchParams;
   update: (patch: JobSearchParams) => void;
@@ -278,19 +368,31 @@ function Results({
   jobs: JobItem[];
   signedIn: boolean;
   applied: (jobId: string) => boolean;
+  remotePagination?: {
+    pageNumber: number;
+    totalPages: number;
+    totalElements: number;
+  };
 }) {
-  const filtered = filterJobs(jobs, search);
+  const filtered = signedIn ? filterJobs(jobs, search) : jobs;
   const requestedPage = Number.parseInt(search.page ?? "0", 10);
-  const pagination = paginateItems(
+  const clientPagination = paginateItems(
     filtered,
     Number.isFinite(requestedPage) ? requestedPage : 0,
     PAGE_SIZE,
   );
+  const pagination = remotePagination
+    ? {
+        page: remotePagination.pageNumber ?? 0,
+        totalPages: Math.max(1, remotePagination.totalPages ?? 1),
+        totalItems: remotePagination.totalElements ?? jobs.length,
+        items: filtered,
+        start: 0,
+      }
+    : clientPagination;
   const filtersActive = hasActiveFilters(search);
-  const panelFiltersActive = Boolean(
-    search.industry || search.salary || search.mode || search.experience,
-  );
-  const industries = industryOptions(jobs);
+  const panelFiltersActive = Boolean(search.salary || search.mode || search.employmentType);
+  // Backend postings do not carry industry/experience metadata, so those sample-only filters are hidden.
   // The guest catalogue is the default; a keyword opens the list + detail layout,
   // and the filter panel only joins once there is a keyword to refine.
   const splitView = Boolean(search.q?.trim());
@@ -323,20 +425,6 @@ function Results({
             Lọc
           </span>
           <label className="career-filter">
-            <span>Ngành nghề</span>
-            <select
-              value={search.industry ?? ""}
-              onChange={(event) => update({ industry: event.target.value, job: "", page: "" })}
-            >
-              <option value="">Mọi ngành nghề</option>
-              {industries.map((industry) => (
-                <option key={industry} value={industry}>
-                  {industry}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="career-filter">
             <span>Mức lương</span>
             <select
               value={search.salary ?? ""}
@@ -350,7 +438,7 @@ function Results({
             </select>
           </label>
           <label className="career-filter">
-            <span>Hình thức</span>
+            <span>Hình thức làm việc từ xa</span>
             <select
               value={search.mode ?? ""}
               onChange={(event) => update({ mode: event.target.value, job: "", page: "" })}
@@ -363,16 +451,19 @@ function Results({
             </select>
           </label>
           <label className="career-filter">
-            <span>Kinh nghiệm</span>
+            <span>Loại công việc</span>
             <select
-              value={search.experience ?? ""}
-              onChange={(event) => update({ experience: event.target.value, job: "", page: "" })}
+              value={search.employmentType ?? ""}
+              onChange={(event) =>
+                update({ employmentType: event.target.value, job: "", page: "" })
+              }
             >
-              {EXPERIENCE_BANDS.map((band) => (
-                <option key={band.value} value={band.value}>
-                  {band.label}
-                </option>
-              ))}
+              <option value="">Mọi loại</option>
+              <option value="FULL_TIME">Toàn thời gian</option>
+              <option value="PART_TIME">Bán thời gian</option>
+              <option value="CONTRACT">Hợp đồng</option>
+              <option value="INTERNSHIP">Thực tập</option>
+              <option value="TEMPORARY">Tạm thời</option>
             </select>
           </label>
           {filtersActive && pagination.items.length > 0 && (
@@ -392,11 +483,6 @@ function Results({
           {pagination.totalItems} tin tuyển dụng
           {filtersActive ? " phù hợp với bộ lọc" : " đang hoạt động"}
         </p>
-        {pagination.totalItems > 0 && (
-          <p className="career-data-note">
-            Danh sách có tin minh họa. Huy hiệu mẫu không phải kết quả kiểm định thực tế.
-          </p>
-        )}
       </div>
 
       {pagination.items.length > 0 ? (

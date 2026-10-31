@@ -7,6 +7,7 @@ export interface JobSearchParams {
   industry?: string;
   salary?: string;
   mode?: string;
+  employmentType?: string;
   experience?: string;
   job?: string;
   page?: string;
@@ -18,6 +19,7 @@ export const JOB_SEARCH_KEYS = [
   "industry",
   "salary",
   "mode",
+  "employmentType",
   "experience",
   "job",
   "page",
