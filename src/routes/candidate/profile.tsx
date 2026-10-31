@@ -114,6 +114,7 @@ function mapApiProfileToDetails(
       school: entry.institution,
       from: entry.startYear,
       to: entry.endYear || "",
+      description: entry.description || "",
     })),
   };
 }
@@ -134,6 +135,7 @@ function toApiEducation(entry: CandidateEducation): ApiEducationEntry {
     degree: entry.degree,
     startYear: entry.from,
     endYear: entry.to || null,
+    description: entry.description?.trim() ? entry.description.trim() : null,
   };
 }
 
@@ -224,6 +226,16 @@ function CandidateProfilePage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!isEditing) return;
+    const handler = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isEditing]);
+
   const openEditForm = (section: EditSection = "all", index: number | null = null) => {
     setDraft(profile);
     setSkillsDraft(profile.skills);
@@ -286,7 +298,7 @@ function CandidateProfilePage() {
   const addEducation = () => {
     setDraft((current) => ({
       ...current,
-      education: [...current.education, { degree: "", school: "", from: "", to: "" }],
+      education: [...current.education, { degree: "", school: "", from: "", to: "", description: "" }],
     }));
   };
 
@@ -382,12 +394,13 @@ function CandidateProfilePage() {
       ...entry,
       title: entry.title.trim(),
       company: entry.company.trim(),
-      description: entry.description.trim(),
+      description: (entry.description || "").trim(),
     }));
     const cleanEducation = draft.education.map((entry) => ({
       ...entry,
       degree: entry.degree.trim(),
       school: entry.school.trim(),
+      description: (entry.description || "").trim(),
     }));
 
     // Each edit mode writes back only the group it owns; everything else stays untouched.
@@ -438,7 +451,7 @@ function CandidateProfilePage() {
         skills: nextProfile.skills,
         experience: apiExperience,
         education: apiEducation,
-        isPublic: profile.isPublic,
+        isPublic: touches("basics") ? draft.isPublic : profile.isPublic,
       });
       const merged = mapApiProfileToDetails(saved, nextProfile);
       const finalProfile: CandidateProfileDetails = {
@@ -544,7 +557,6 @@ function CandidateProfilePage() {
                     </p>
                     <p className="mt-2 text-xs leading-4 font-medium text-ink-3">
                       Trường đánh dấu <span className="font-bold text-error">*</span> là bắt buộc.
-
                     </p>
                   </div>
                   <button
@@ -633,9 +645,6 @@ function CandidateProfilePage() {
                               className="text-sm font-semibold text-ink-2"
                             >
                               Số điện thoại
-                              <span className="ml-0.5 text-error" aria-hidden="true">
-                                *
-                              </span>
                             </label>
                             <TooltipProvider delayDuration={0}>
                               <Tooltip>
@@ -728,6 +737,19 @@ function CandidateProfilePage() {
                           Dán liên kết ảnh hoặc dùng ảnh mặc định.
                         </p>
                         <FieldError id="profile-avatar-error" message={fieldErrors.avatarUrl} />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="flex items-center gap-3 text-sm font-semibold text-ink-2">
+                          <input
+                            type="checkbox"
+                            checked={draft.isPublic}
+                            onChange={(event) =>
+                              setDraft((current) => ({ ...current, isPublic: event.target.checked }))
+                            }
+                            className="h-4 w-4"
+                          />
+                          Cho phép nhà tuyển dụng xem hồ sơ của tôi
+                        </label>
                       </div>
                     </>
                   )}
@@ -995,7 +1017,6 @@ function CandidateProfilePage() {
                                   <FieldHeader
                                     htmlFor={`experience-${index}-description`}
                                     label="Mô tả công việc"
-                                    required
                                     counter={`${entry.description.length}/1000`}
                                   />
                                   <textarea
@@ -1115,6 +1136,27 @@ function CandidateProfilePage() {
                                   idPrefix={`education-${index}`}
                                   toHint="Bỏ trống nếu bạn vẫn đang theo học."
                                 />
+                                <div className="md:col-span-2">
+                                  <FieldHeader
+                                    htmlFor={`education-${index}-description`}
+                                    label="Mô tả học vấn"
+                                    counter={`${(education.description || "").length}/1000`}
+                                  />
+                                  <textarea
+                                    id={`education-${index}-description`}
+                                    rows={3}
+                                    maxLength={1000}
+                                    value={education.description || ""}
+                                    onChange={(event) =>
+                                      updateEducation(index, "description", event.target.value)
+                                    }
+                                    className={fieldClass(fieldErrors[`education.${index}.description`])}
+                                  />
+                                  <FieldError
+                                    id={`education-${index}-description-error`}
+                                    message={fieldErrors[`education.${index}.description`]}
+                                  />
+                                </div>
                               </div>
                             </div>
                           ) : null,
@@ -1136,9 +1178,7 @@ function CandidateProfilePage() {
               </div>
 
               <div className="flex shrink-0 flex-col-reverse gap-3 border-t border-rule bg-paper px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-7">
-                <p className="text-xs leading-4 text-ink-3">
-          
-                </p>
+                <p className="text-xs leading-4 text-ink-3"></p>
                 <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                   <button
                     type="button"
@@ -1449,17 +1489,8 @@ function validateDraft(
       errors.fullName = `Họ tên tối đa ${MAX_NAME_LENGTH} ký tự.`;
     }
 
-    const email = draft.email.trim();
-    if (!email) errors.email = "Nhập email liên hệ.";
-    else if (email.length > MAX_EMAIL_LENGTH) {
-      errors.email = `Email tối đa ${MAX_EMAIL_LENGTH} ký tự.`;
-    } else if (!EMAIL_PATTERN.test(email)) {
-      errors.email = "Email chưa đúng định dạng, ví dụ ten@congty.vn.";
-    }
-
     const phone = draft.phone.replace(/\D/g, "");
-    if (!phone) errors.phone = "Nhập số điện thoại.";
-    else if (!PHONE_PATTERN.test(phone)) {
+    if (phone && !PHONE_PATTERN.test(phone)) {
       errors.phone = "Số điện thoại gồm 10 chữ số và bắt đầu bằng 0.";
     }
 
@@ -1504,9 +1535,6 @@ function validateDraft(
       if (!entry.title.trim()) errors[`experiences.${index}.title`] = "Nhập chức danh.";
       if (!entry.company.trim()) errors[`experiences.${index}.company`] = "Nhập công ty.";
       if (!entry.from) errors[`experiences.${index}.from`] = "Chọn ngày bắt đầu.";
-      if (!entry.description.trim()) {
-        errors[`experiences.${index}.description`] = "Mô tả ngắn công việc bạn đã làm.";
-      }
       if (entry.description.length > 1000) {
         errors[`experiences.${index}.description`] = "Mô tả công việc tối đa 1.000 ký tự.";
       }
@@ -1530,6 +1558,9 @@ function validateDraft(
         errors[`education.${index}.school`] = "Nhập trường hoặc cơ sở đào tạo.";
       }
       if (!education.from) errors[`education.${index}.from`] = "Chọn ngày bắt đầu.";
+      if (education.description && education.description.length > 1000) {
+        errors[`education.${index}.description`] = "Mô tả tối đa 1.000 ký tự.";
+      }
       if (education.from && education.to && education.to < education.from) {
         errors[`education.${index}.to`] = "Ngày kết thúc phải sau ngày bắt đầu.";
       }
