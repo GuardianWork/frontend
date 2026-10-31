@@ -230,7 +230,7 @@ Illustrations are supporting content, not evidence of verification, safety, or l
 
 ### Shared workspace navigation
 
-Staff, recruiter, and candidate sidebars use the same `.workspace-navigation` / `.workspace-nav-link` pattern from `components/admin/sidebar.css`: 50px minimum rows, 12px corners, 32px icon wells, 20px semantic glyphs, and 6px row gaps. Selection uses blue wash, deep-blue text, a quiet border, and a blue icon well. Hover uses the page ground; it does not mark an item current or move the row. Focus has a visible blue outline. Locked recruiter rows remain non-interactive and retain their permission explanation. Footer links have 44px minimum hit areas. Labels may wrap.
+Staff, recruiter, and candidate sidebars use the same `.workspace-navigation` / `.workspace-nav-link` pattern from `components/admin/sidebar.css`: 56px minimum rows, 12px corners, 40px icon wells, 22px semantic glyphs, and 6px row gaps. Selection uses blue wash, deep-blue text, a quiet border, and a blue icon well. Hover uses the page ground; it does not mark an item current or move the row. Focus has a visible blue outline. Locked recruiter rows remain non-interactive and retain their permission explanation. Footer links have 44px minimum hit areas. Labels may wrap.
 
 Overview routes must use exact router matching (`activeOptions.exact`); section routes remain selected on their child pages. Only the destination matching the current route receives `aria-current="page"`. Mobile keeps explicit open/close controls and Escape dismissal. This convention preserves each portal's routes, role visibility, and actions.
 

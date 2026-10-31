@@ -67,25 +67,25 @@
 }
 .staff-jobs-eligibility li,
 .staff-jobs-eligibility p,
-.staff-jobs-history p {
+:is(.staff-jobs-history, .staff-posting-history) p {
   font-size: 14px;
   line-height: 1.6;
   color: var(--color-ink-2);
   overflow-wrap: anywhere;
 }
-.staff-jobs-history {
+:is(.staff-jobs-history, .staff-posting-history) {
   margin-top: 24px;
 }
-.staff-jobs-history ol {
+:is(.staff-jobs-history, .staff-posting-history) ol {
   margin: 0;
   padding: 0;
   list-style: none;
 }
-.staff-jobs-history li {
+:is(.staff-jobs-history, .staff-posting-history) li {
   padding: 16px 24px;
   border-top: 1px solid var(--color-rule);
 }
-.staff-jobs-history p {
+:is(.staff-jobs-history, .staff-posting-history) p {
   margin-top: 6px;
 }
 .staff-jobs .job-detail-title {
@@ -109,5 +109,251 @@
   }
   .staff-jobs select {
     font-size: 16px;
+  }
+}
+
+.posting-event-reason {
+  white-space: pre-wrap;
+}
+
+.posting-hide-dialog {
+  width: calc(100vw - 32px);
+  max-width: 512px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.posting-hide-dialog > * {
+  min-width: 0;
+}
+
+/* Color carries content hierarchy, review conditions, and action severity. */
+.staff-job-detail .compliance-jd > .admin-panel-heading,
+.staff-job-detail :is(.staff-jobs-history, .staff-posting-history) > .admin-panel-heading {
+  background: var(--color-accent-subtle);
+}
+.staff-job-detail
+  :is(.admin-panel-heading h2, .staff-jobs-eligibility h2, .compliance-handling h2) {
+  color: var(--color-accent-deep);
+}
+.staff-job-detail .jp-content-view > section > h4 {
+  color: var(--color-accent-deep);
+}
+.staff-job-detail .staff-review-conditions {
+  list-style: none;
+  padding: 0;
+  gap: 0;
+}
+.staff-job-detail .staff-review-conditions li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-rule);
+}
+.staff-job-detail .staff-review-conditions .admin-record-status {
+  font-size: 13px;
+}
+.staff-job-detail .compliance-handling {
+  background: var(--color-accent-subtle);
+}
+.staff-job-detail .compliance-handling > p {
+  color: var(--color-accent-deep);
+}
+.staff-job-detail .job-reject-action {
+  color: var(--error);
+  border-color: var(--error);
+  background: var(--color-paper);
+}
+.staff-job-detail .job-reject-action:hover:not(:disabled) {
+  background: var(--error-container);
+  color: var(--on-error-container);
+}
+.staff-job-detail :is(.staff-jobs-history, .staff-posting-history) li:nth-child(even) {
+  background: var(--color-paper-2);
+}
+.staff-job-detail .posting-event-reason {
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--color-paper-2);
+  color: var(--color-ink);
+}
+
+/* Read the revision, inspect its conditions, decide, then consult history. */
+.staff-job-detail .compliance-detail-layout {
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+}
+.staff-job-detail .compliance-detail-layout > * {
+  min-width: 0;
+}
+.staff-job-detail .compliance-handling > div {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+}
+.staff-job-detail .compliance-handling button {
+  width: 100%;
+  justify-content: center;
+  white-space: normal;
+}
+.staff-job-detail :is(.staff-posting-history, .staff-jobs-history) > p,
+.staff-job-detail .staff-posting-history > div:not(.admin-panel-heading) {
+  padding: 20px 24px;
+}
+.staff-job-detail .staff-posting-history > nav {
+  padding: 16px 24px;
+  margin-top: 0;
+  border-top: 1px solid var(--color-rule);
+  align-items: center;
+}
+.staff-job-detail .staff-posting-history > nav > span {
+  flex: 1 1 220px;
+}
+.staff-job-detail [id] {
+  scroll-margin-top: 24px;
+}
+@media (max-width: 1100px) {
+  .staff-job-detail .compliance-detail-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .staff-job-detail .compliance-inspector {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+@media (max-width: 640px) {
+  .staff-job-detail .compliance-inspector {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .staff-job-detail .staff-posting-history > nav {
+    padding: 16px 20px;
+  }
+}
+
+.staff-detail-tab-scroll {
+  overflow-x: auto;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--color-rule);
+}
+.staff-detail-tabs .staff-detail-tab-list {
+  display: flex;
+  justify-content: flex-start;
+  width: max-content;
+  min-width: 100%;
+  height: auto;
+  gap: 4px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.staff-detail-tab-list [role="tab"] {
+  min-height: 48px;
+  padding: 12px 16px;
+  border-radius: 8px 8px 0 0;
+  border-bottom: 2px solid transparent;
+  color: var(--color-ink-2);
+  box-shadow: none;
+}
+.staff-detail-tab-list [role="tab"]:hover {
+  background: var(--color-paper-2);
+  color: var(--color-accent-deep);
+}
+.staff-detail-tab-list [role="tab"][data-state="active"] {
+  border-bottom-color: var(--color-accent);
+  background: var(--color-accent-subtle);
+  color: var(--color-accent-deep);
+  font-weight: 650;
+  box-shadow: none;
+}
+.staff-detail-tab-list [role="tab"]:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -4px;
+}
+.staff-detail-tab-panels > [role="tabpanel"] {
+  margin: 0;
+  min-width: 0;
+}
+.staff-detail-tab-panels > [role="tabpanel"][data-state="inactive"] {
+  display: none;
+}
+.staff-job-detail .staff-detail-tab-panels :is(.staff-posting-history, .staff-jobs-history) {
+  margin-top: 0;
+}
+@media (max-width: 1100px) {
+  .staff-detail-tabs .compliance-inspector {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* History is an inspection task; use the canvas for the record itself. */
+.staff-job-detail .compliance-detail-layout:not([data-detail-tab="content"]) {
+  grid-template-columns: minmax(0, 1fr);
+}
+.staff-job-detail
+  .compliance-detail-layout:not([data-detail-tab="content"])
+  > .compliance-inspector {
+  display: none;
+}
+.staff-job-detail .staff-event-list .staff-event-entry {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 24px;
+  padding: 24px;
+}
+.staff-event-date {
+  color: var(--color-ink-2);
+  font-size: 14px;
+  line-height: 1.6;
+  font-variant-numeric: tabular-nums;
+}
+.staff-event-body {
+  min-width: 0;
+}
+.staff-event-body > p:first-child {
+  margin-top: 0;
+  color: var(--color-ink);
+}
+.staff-revision-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 12px;
+}
+.staff-revision-heading > button {
+  min-height: 44px;
+}
+.staff-job-detail .staff-revision-entry[aria-current="true"] .admin-text-link:disabled {
+  color: var(--color-accent-deep);
+  opacity: 1;
+  cursor: default;
+}
+.staff-revision-current {
+  color: var(--color-accent-deep);
+  font-size: 13px;
+  margin-left: auto;
+}
+.staff-job-detail .staff-history-empty {
+  padding: 32px 24px;
+}
+.staff-history-empty h3 {
+  color: var(--color-ink);
+  font-size: 16px;
+  font-weight: 600;
+}
+.staff-job-detail .staff-jobs-history .admin-list-pagination {
+  padding: 16px 24px;
+  margin-top: 0;
+  border-top: 1px solid var(--color-rule);
+}
+@media (max-width: 640px) {
+  .staff-job-detail .staff-event-list .staff-event-entry {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    padding: 20px;
+  }
+  .staff-revision-current {
+    margin-left: 0;
   }
 }

@@ -18,6 +18,8 @@ import {
   type StaffJobReview,
   type StaffDecisionReceipt,
 } from "@/services/staffJobs";
+import { PostingControls } from "./PostingControls";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import "./compliance.css";
 import "../recruiter/job-publishing.css";
 import "./staff-jobs.css";
@@ -219,6 +221,7 @@ function StaffJobDetail({
   }, []);
   const cache = useQueryClient();
   const [historyPage, setHistoryPage] = useState(0);
+  const [detailTab, setDetailTab] = useState("content");
   const [outcome, setOutcome] = useState<StaffDecisionReceipt["outcome"] | null>(null);
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
@@ -279,7 +282,7 @@ function StaffJobDetail({
   }
   const locked = busy || mustReload || detail.isFetching || detail.isError;
   return (
-    <div className="staff-jobs">
+    <div className="staff-jobs staff-job-detail">
       <button className="admin-text-link compliance-back" disabled={busy} onClick={onBack}>
         <ArrowLeft size={16} aria-hidden="true" /> Quay lại danh sách
       </button>
@@ -318,152 +321,222 @@ function StaffJobDetail({
                 <RotateCw size={16} aria-hidden="true" /> Tải lại bản tin
               </button>
             </div>
-            <div className="compliance-detail-layout">
-              <section className="admin-panel compliance-jd" aria-labelledby="review-content-title">
-                <div className="admin-panel-heading">
-                  <h2 id="review-content-title">Nội dung gửi duyệt</h2>
-                  <StaffStatusBadge tone={tone(review.state)}>
-                    {revisionLabels[review.state]}
-                  </StaffStatusBadge>
-                </div>
-                <div className="staff-jobs-content">
-                  <JobContentView content={review.content} />
-                </div>
-              </section>
-              <aside className="compliance-inspector">
-                <section
-                  className="admin-panel staff-jobs-eligibility"
-                  aria-labelledby="review-eligibility-title"
+            <Tabs value={detailTab} onValueChange={setDetailTab} className="staff-detail-tabs">
+              <div className="staff-detail-tab-scroll">
+                <TabsList
+                  onFocusCapture={(event) => {
+                    if (event.target instanceof HTMLElement)
+                      event.target.scrollIntoView({ block: "nearest", inline: "nearest" });
+                  }}
+                  className="staff-detail-tab-list"
+                  aria-label="Chi tiết tin tuyển dụng"
                 >
-                  <h2 id="review-eligibility-title">Điều kiện xét duyệt</h2>
-                  <ul>
-                    <li>Công ty: {review.companyVerified ? "Đã xác thực" : "Chưa xác thực"}</li>
-                    <li>Đình chỉ công ty: {review.companySuspended ? "Có" : "Không"}</li>
-                    <li>
-                      Người phụ trách: {review.needsReassignment ? "Cần phân công lại" : "Đã có"}
-                    </li>
-                  </ul>
-                  {!!review.validationIssues.length && (
-                    <>
-                      <h3>Nội dung cần kiểm tra</h3>
-                      <ul>
-                        {review.validationIssues.map((issue, index) => (
-                          <li key={index}>
-                            {issue.field}: {issue.code}
-                          </li>
-                        ))}
-                      </ul>
-                    </>
-                  )}
-                  {review.state === "PENDING_REVIEW" && !review.approvalEligible && (
-                    <p>
-                      Chưa đủ điều kiện phê duyệt. Kiểm tra các điều kiện và nội dung trước khi tải
-                      lại bản tin.
-                    </p>
-                  )}
-                </section>
-                <section
-                  className="admin-panel compliance-handling"
-                  aria-labelledby="review-actions-title"
-                >
-                  <h2 id="review-actions-title">Xử lý tin tuyển dụng</h2>
-                  <p>Đã gửi: {dateTime(review.submittedAt)}</p>
-                  {review.state === "PENDING_REVIEW" ? (
-                    <div>
-                      <button
-                        className="admin-primary-action"
-                        disabled={locked || !review.approvalEligible}
-                        onClick={() => {
-                          setError(null);
-                          setOutcome("APPROVED");
-                        }}
-                      >
-                        <Check size={16} aria-hidden="true" /> Đồng ý đăng tin
-                      </button>
-                      <button
-                        className="admin-secondary-action job-reject-action"
-                        disabled={locked}
-                        onClick={() => {
-                          setError(null);
-                          setOutcome("REJECTED");
-                        }}
-                      >
-                        Từ chối đăng tin
-                      </button>
-                    </div>
-                  ) : (
-                    <p>Phiên bản đã kết thúc xét duyệt. Quyết định không thể thay đổi tại đây.</p>
-                  )}
-                  {mustReload && (
-                    <p role="alert">
-                      Cần tải lại bản tin để xác nhận trạng thái trước khi tiếp tục.
-                    </p>
-                  )}
-                  {review.rejectionReason && <p>Lý do từ chối: {review.rejectionReason}</p>}
-                </section>
-              </aside>
-            </div>
-            <section
-              className="admin-panel staff-jobs-history"
-              aria-labelledby="review-history-title"
-            >
-              <div className="admin-panel-heading">
-                <div>
-                  <h2 id="review-history-title">Lịch sử phiên bản của tin #{review.jobId}</h2>
-                  <p>Phiên bản đã duyệt không đồng nghĩa với tin đang công khai.</p>
-                </div>
+                  <TabsTrigger value="content">Nội dung và điều kiện</TabsTrigger>
+                  <TabsTrigger value="activity">Hoạt động và trạng thái</TabsTrigger>
+                  <TabsTrigger value="revisions">Lịch sử phiên bản</TabsTrigger>
+                </TabsList>
               </div>
-              {history.isFetching ? (
-                <p role="status" className="staff-jobs-message">
-                  Đang tải lịch sử…
-                </p>
-              ) : history.isError ? (
-                <ReviewError error={history.error} retry={() => void history.refetch()} />
-              ) : history.data?.content.length ? (
-                <ol>
-                  {history.data.content.map((item) => (
-                    <li key={item.id}>
-                      <button
-                        className="admin-text-link"
-                        disabled={busy || item.id === id}
-                        onClick={() => onSelect(item.id)}
-                      >
-                        Phiên bản {item.revisionNumber} · {revisionLabels[item.state]}
-                      </button>
+              <div className="compliance-detail-layout" data-detail-tab={detailTab}>
+                <div className="staff-detail-tab-panels">
+                  <TabsContent value="content" forceMount>
+                    <section
+                      className="admin-panel compliance-jd"
+                      aria-labelledby="review-content-title"
+                    >
+                      <div className="admin-panel-heading">
+                        <h2 id="review-content-title">Nội dung gửi duyệt</h2>
+                        <StaffStatusBadge tone={tone(review.state)}>
+                          {revisionLabels[review.state]}
+                        </StaffStatusBadge>
+                      </div>
+                      <div className="staff-jobs-content">
+                        <JobContentView content={review.content} />
+                      </div>
+                    </section>
+                  </TabsContent>
+                  <TabsContent value="activity" forceMount>
+                    <PostingControls review={review} scope={scope} />
+                  </TabsContent>
+                  <TabsContent value="revisions" forceMount>
+                    <section
+                      className="admin-panel staff-jobs-history"
+                      aria-labelledby="review-history-title"
+                    >
+                      <div className="admin-panel-heading">
+                        <div>
+                          <h2 id="review-history-title">
+                            Lịch sử phiên bản của tin #{review.jobId}
+                          </h2>
+                          <p>Phiên bản đã duyệt không đồng nghĩa với tin đang công khai.</p>
+                        </div>
+                      </div>
+                      {history.isFetching ? (
+                        <p role="status" className="staff-jobs-message">
+                          Đang tải lịch sử…
+                        </p>
+                      ) : history.isError ? (
+                        <ReviewError error={history.error} retry={() => void history.refetch()} />
+                      ) : history.data?.content.length ? (
+                        <ol>
+                          {history.data.content.map((item) => (
+                            <li
+                              key={item.id}
+                              className="staff-revision-entry"
+                              aria-current={item.id === id ? "true" : undefined}
+                            >
+                              <div className="staff-revision-heading">
+                                <button
+                                  className="admin-text-link"
+                                  disabled={busy || item.id === id}
+                                  aria-label={`Xem phiên bản ${item.revisionNumber}`}
+                                  onClick={() => onSelect(item.id)}
+                                >
+                                  Phiên bản {item.revisionNumber}
+                                </button>
+                                <StaffStatusBadge tone={tone(item.state)}>
+                                  {revisionLabels[item.state]}
+                                </StaffStatusBadge>
+                                {item.id === id && (
+                                  <span className="staff-revision-current">Đang xem</span>
+                                )}
+                              </div>
+                              <p>
+                                Gửi: {dateTime(item.submittedAt)} · Người gửi:{" "}
+                                {item.submitterUserId ?? "Chưa có"}
+                              </p>
+                              {item.decidedAt && (
+                                <p>
+                                  Quyết định: {dateTime(item.decidedAt)} · Người duyệt:{" "}
+                                  {item.reviewerUserId ?? "Chưa có"}
+                                </p>
+                              )}
+                              {item.withdrawnAt && (
+                                <p>
+                                  Đã rút: {dateTime(item.withdrawnAt)} · Người rút:{" "}
+                                  {item.withdrawerUserId ?? "Chưa có"}
+                                </p>
+                              )}
+                              {item.rejectionReason && (
+                                <p className="posting-event-reason">
+                                  Lý do từ chối: {item.rejectionReason}
+                                </p>
+                              )}
+                            </li>
+                          ))}
+                        </ol>
+                      ) : (
+                        <p className="staff-jobs-message">Chưa có lịch sử phiên bản.</p>
+                      )}
+                      {!history.isFetching && !history.isError && history.data && (
+                        <AdminPagination
+                          totalItems={history.data.totalElements}
+                          page={historyPage}
+                          pageSize={REVIEW_PAGE_SIZE}
+                          onPageChange={setHistoryPage}
+                          itemLabel="phiên bản"
+                          label="Phân trang lịch sử phiên bản"
+                        />
+                      )}
+                    </section>
+                  </TabsContent>
+                </div>
+                <aside className="compliance-inspector">
+                  <section
+                    className="admin-panel staff-jobs-eligibility"
+                    aria-labelledby="review-eligibility-title"
+                  >
+                    <h2 id="review-eligibility-title">Điều kiện xét duyệt</h2>
+                    <ul className="staff-review-conditions">
+                      <li>
+                        <span>Công ty</span>
+                        <StaffStatusBadge tone={review.companyVerified ? "verified" : "pending"}>
+                          {review.companyVerified ? "Đã xác thực" : "Chưa xác thực"}
+                        </StaffStatusBadge>
+                      </li>
+                      <li>
+                        <span>Đình chỉ công ty</span>
+                        <StaffStatusBadge tone={review.companySuspended ? "rejected" : "verified"}>
+                          {review.companySuspended ? "Có" : "Không"}
+                        </StaffStatusBadge>
+                      </li>
+                      <li>
+                        <span>Người phụ trách</span>
+                        <StaffStatusBadge tone={review.needsReassignment ? "pending" : "verified"}>
+                          {review.needsReassignment ? "Cần phân công lại" : "Đã có"}
+                        </StaffStatusBadge>
+                      </li>
+                    </ul>
+                    {!!review.validationIssues.length && (
+                      <>
+                        <h3>Nội dung cần kiểm tra</h3>
+                        <ul>
+                          {review.validationIssues.map((issue, index) => (
+                            <li key={index}>
+                              {issue.field}: {issue.code}
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
+                    {review.state === "PENDING_REVIEW" && !review.approvalEligible && (
                       <p>
-                        Gửi: {dateTime(item.submittedAt)} · Người gửi:{" "}
-                        {item.submitterUserId ?? "Chưa có"}
+                        Chưa đủ điều kiện phê duyệt. Kiểm tra các điều kiện và nội dung trước khi
+                        tải lại bản tin.
                       </p>
-                      {item.decidedAt && (
-                        <p>
-                          Quyết định: {dateTime(item.decidedAt)} · Người duyệt:{" "}
-                          {item.reviewerUserId ?? "Chưa có"}
-                        </p>
-                      )}
-                      {item.withdrawnAt && (
-                        <p>
-                          Đã rút: {dateTime(item.withdrawnAt)} · Người rút:{" "}
-                          {item.withdrawerUserId ?? "Chưa có"}
-                        </p>
-                      )}
-                      {item.rejectionReason && <p>Lý do từ chối: {item.rejectionReason}</p>}
-                    </li>
-                  ))}
-                </ol>
-              ) : (
-                <p className="staff-jobs-message">Chưa có lịch sử phiên bản.</p>
-              )}
-              {!history.isFetching && !history.isError && history.data && (
-                <AdminPagination
-                  totalItems={history.data.totalElements}
-                  page={historyPage}
-                  pageSize={REVIEW_PAGE_SIZE}
-                  onPageChange={setHistoryPage}
-                  itemLabel="phiên bản"
-                  label="Phân trang lịch sử phiên bản"
-                />
-              )}
-            </section>
+                    )}
+                  </section>
+                  <section
+                    className="admin-panel compliance-handling"
+                    aria-labelledby="review-actions-title"
+                  >
+                    <h2 id="review-actions-title">Xử lý tin tuyển dụng</h2>
+                    <StaffStatusBadge tone={tone(review.state)}>
+                      {revisionLabels[review.state]}
+                    </StaffStatusBadge>
+                    {review.state === "PENDING_REVIEW" && (
+                      <p>
+                        {review.approvalEligible
+                          ? "Đủ điều kiện phê duyệt."
+                          : "Cần kiểm tra điều kiện trước khi phê duyệt."}
+                      </p>
+                    )}
+                    <p>Đã gửi: {dateTime(review.submittedAt)}</p>
+                    {review.state === "PENDING_REVIEW" ? (
+                      <div>
+                        <button
+                          className="admin-primary-action"
+                          disabled={locked || !review.approvalEligible}
+                          onClick={() => {
+                            setError(null);
+                            setOutcome("APPROVED");
+                          }}
+                        >
+                          <Check size={16} aria-hidden="true" /> Đồng ý đăng tin
+                        </button>
+                        <button
+                          className="admin-secondary-action job-reject-action"
+                          disabled={locked}
+                          onClick={() => {
+                            setError(null);
+                            setOutcome("REJECTED");
+                          }}
+                        >
+                          Từ chối đăng tin
+                        </button>
+                      </div>
+                    ) : (
+                      <p>Phiên bản đã kết thúc xét duyệt. Quyết định không thể thay đổi tại đây.</p>
+                    )}
+                    {mustReload && (
+                      <p role="alert">
+                        Cần tải lại bản tin để xác nhận trạng thái trước khi tiếp tục.
+                      </p>
+                    )}
+                    {review.rejectionReason && <p>Lý do từ chối: {review.rejectionReason}</p>}
+                  </section>
+                </aside>
+              </div>
+            </Tabs>
           </>
         )
       )}

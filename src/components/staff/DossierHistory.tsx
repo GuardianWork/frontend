@@ -17,6 +17,8 @@ import {
 } from "@/services/staffDossiers";
 import { AdminApiError } from "@/services/adminCompanies";
 
+import { StaffStatusBadge } from "@/components/admin/StaffStatusBadge";
+
 import { dossierDate } from "@/lib/dossier-date";
 
 export function EvidenceDownload({ documentId }: { documentId: string }) {
@@ -88,7 +90,7 @@ export function DossierHistory({ companyId, revision }: { companyId: number; rev
     return () => controller.abort();
   }, [companyId, revision, retry]);
   return (
-    <section className="admin-panel mt-6" aria-labelledby="history-title">
+    <section className="admin-panel verification-history mt-6" aria-labelledby="history-title">
       <div className="admin-panel-heading">
         <h2 id="history-title" className="flex items-center gap-2">
           <SubmissionHistoryIcon size={20} /> Lịch sử gửi hồ sơ
@@ -112,7 +114,7 @@ export function DossierHistory({ companyId, revision }: { companyId: number; rev
       ) : (
         <ol className="space-y-6 p-6">
           {attempts.map((attempt) => (
-            <li key={attempt.attemptId} className="border-l-2 border-warm-border pl-4">
+            <li key={attempt.attemptId} className="verification-history-attempt">
               <h3 className="font-semibold">Hồ sơ gửi lúc {dossierDate(attempt.submittedAt)}</h3>
               <dl className="admin-company-fields">
                 <div>
@@ -156,7 +158,15 @@ export function DossierHistory({ companyId, revision }: { companyId: number; rev
                 <div>
                   <dt>Kết quả</dt>
                   <dd>
-                    <span className="inline-flex items-center gap-2">
+                    <StaffStatusBadge
+                      tone={
+                        attempt.outcome === "VERIFIED"
+                          ? "verified"
+                          : attempt.outcome === "REJECTED"
+                            ? "rejected"
+                            : "pending"
+                      }
+                    >
                       {attempt.outcome === "VERIFIED" ? (
                         <CompanyIcon size={16} />
                       ) : attempt.outcome === "REJECTED" ? (
@@ -169,7 +179,7 @@ export function DossierHistory({ companyId, revision }: { companyId: number; rev
                         : attempt.outcome === "REJECTED"
                           ? "Đã từ chối"
                           : "Chờ duyệt"}
-                    </span>
+                    </StaffStatusBadge>
                   </dd>
                 </div>
                 <div>
@@ -185,7 +195,7 @@ export function DossierHistory({ companyId, revision }: { companyId: number; rev
                   <dd>{dossierDate(attempt.reviewedAt)}</dd>
                 </div>
                 {attempt.rejectionReason && (
-                  <div className="admin-company-fields-wide">
+                  <div className="admin-company-fields-wide verification-rejection">
                     <dt>Lý do từ chối</dt>
                     <dd>{attempt.rejectionReason}</dd>
                   </div>

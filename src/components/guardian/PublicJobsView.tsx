@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
+import { PublicApiJob } from "./PublicApiJob";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
 import { useCandidate } from "@/context/CandidateContext";
@@ -122,7 +123,9 @@ export function PublicJobsView({ search }: { search: JobSearchParams }) {
       </a>
       <Header variant="landing" />
       <main id="main-content">
-        {activeJob ? (
+        {search.job && /^[1-9]\d*$/.test(search.job) ? (
+          <PublicApiJob key={search.job} id={search.job} />
+        ) : activeJob ? (
           <JobDetail
             job={activeJob}
             search={search}
@@ -739,10 +742,8 @@ function MissingJob({ search, jobs }: { search: JobSearchParams; jobs: JobItem[]
       </Link>
       <div className="career-empty">
         <SearchX size={40} aria-hidden="true" />
-        <h1>Tin tuyển dụng này không còn tồn tại hoặc đã hết hạn nộp hồ sơ</h1>
-        <p>
-          Tin có thể đã được nhà tuyển dụng đóng hoặc gỡ khỏi hệ thống. Dưới đây là việc làm khác.
-        </p>
+        <h1>Tin tuyển dụng không còn khả dụng</h1>
+        <p>Bạn có thể tiếp tục tìm kiếm các việc làm khác.</p>
         <div className="career-empty__actions">
           <Link
             to="/jobs"

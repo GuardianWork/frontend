@@ -43,11 +43,13 @@ test("candidate navigation shares Staff styling and follows selection on mobile 
   await expect(selected).toHaveAttribute("aria-current", "page");
   await expect(nav.locator('a[aria-current="page"]')).toHaveCount(1);
   await page.mouse.move(600, 300);
-  await expect(selected).toHaveCSS("border-radius", "6px");
-  await expect(selected.locator(".workspace-nav-icon")).toHaveCSS(
+  await expect(selected).toHaveCSS("border-radius", "12px");
+  await expect(selected.locator(".workspace-nav-icon")).not.toHaveCSS(
     "background-color",
     "rgba(0, 0, 0, 0)",
   );
+  await expect(selected.locator(".workspace-nav-icon")).toHaveCSS("width", "40px");
+  await expect(selected.locator(".workspace-nav-icon svg")).toHaveCSS("width", "22px");
   await selected.focus();
   await expect(selected).toBeFocused();
   if (info.project.name === "desktop") {
@@ -85,6 +87,7 @@ test("recruiter navigation shares Staff styling without selecting overview on jo
   if (info.project.name === "mobile")
     await page.getByRole("button", { name: "Mở menu", exact: true }).click();
   await nav.getByRole("link", { name: "Tin tuyển dụng", exact: true }).click();
+  await expect(page).toHaveURL(/\/recruiter\/jobs/);
   if (info.project.name === "mobile")
     await page.getByRole("button", { name: "Mở menu", exact: true }).click();
   const selected = nav.getByRole("link", { name: "Tin tuyển dụng", exact: true });
@@ -95,11 +98,13 @@ test("recruiter navigation shares Staff styling without selecting overview on jo
   );
   await expect(nav.locator('a[aria-current="page"]')).toHaveCount(1);
   await page.mouse.move(600, 300);
-  await expect(selected).toHaveCSS("border-radius", "6px");
-  await expect(selected.locator(".workspace-nav-icon")).toHaveCSS(
+  await expect(selected).toHaveCSS("border-radius", "12px");
+  await expect(selected.locator(".workspace-nav-icon")).not.toHaveCSS(
     "background-color",
     "rgba(0, 0, 0, 0)",
   );
+  await expect(selected.locator(".workspace-nav-icon")).toHaveCSS("width", "40px");
+  await expect(selected.locator(".workspace-nav-icon svg")).toHaveCSS("width", "22px");
   await page.screenshot({
     path: `/tmp/guardianwork-refinement/${info.project.name}-recruiter-sidebar.png`,
   });

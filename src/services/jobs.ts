@@ -1,7 +1,7 @@
 import { ApiError } from "./api.ts";
 import { authenticatedRequest } from "./auth.ts";
 
-export type JobStatus = "DRAFT" | "PUBLISHED" | "PAUSED" | "CLOSED" | "EXPIRED";
+export type JobStatus = "DRAFT" | "PUBLISHED" | "PAUSED" | "SUSPENDED" | "CLOSED" | "EXPIRED";
 export type RevisionState = "DRAFT" | "PENDING_REVIEW" | "APPROVED" | "REJECTED" | "WITHDRAWN";
 export interface ScreeningQuestion {
   key: string;
@@ -100,7 +100,7 @@ function parseJob(value: unknown): Job {
     job.id <= 0 ||
     !Number.isSafeInteger(job.version) ||
     job.version < 0 ||
-    !["DRAFT", "PUBLISHED", "PAUSED", "CLOSED", "EXPIRED"].includes(job.status) ||
+    !["DRAFT", "PUBLISHED", "PAUSED", "SUSPENDED", "CLOSED", "EXPIRED"].includes(job.status) ||
     typeof job.ownerResponsible !== "boolean" ||
     typeof job.needsReassignment !== "boolean" ||
     !Array.isArray(job.assignments) ||
@@ -229,6 +229,7 @@ export const jobStatusLabels: Record<JobStatus, string> = {
   DRAFT: "Chưa xuất bản",
   PUBLISHED: "Đang công khai",
   PAUSED: "Tạm dừng",
+  SUSPENDED: "Đã ẩn bởi nhân viên",
   CLOSED: "Đã đóng",
   EXPIRED: "Hết hạn",
 };

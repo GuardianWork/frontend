@@ -127,6 +127,42 @@ test("queue failure, empty results and history retry stay separate from review e
   await expect(page.getByRole("button", { name: "Đồng ý đăng tin", exact: true })).toBeDisabled();
   await expect(page.getByRole("button", { name: "Từ chối đăng tin", exact: true })).toBeEnabled();
   api.failHistory = false;
+  await page.getByRole("tab", { name: "Lịch sử phiên bản", exact: true }).click();
   await page.getByRole("button", { name: "Thử tải lại", exact: true }).click();
   await expect(page.locator(".staff-jobs-history")).toContainText("Người gửi: 22");
+});
+
+test("detail tabs show one section and give histories full width", async ({ page }, info) => {
+  await staffJobApi(page);
+  await login(page, "admin_demo");
+  await openReview(page);
+  const content = page.getByRole("tab", { name: "Nội dung và điều kiện", exact: true });
+  await expect(content).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByRole("tabpanel")).toHaveCount(1);
+  await expect(
+    page.getByRole("heading", { name: "Điều kiện xét duyệt", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Nội dung gửi duyệt", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("tab")).toHaveCount(3);
+  await page.screenshot({ path: info.outputPath("content-conditions-tab.png") });
+  await content.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(
+    page.getByRole("tab", { name: "Hoạt động và trạng thái", exact: true }),
+  ).toHaveAttribute("aria-selected", "true");
+  await expect(
+    page.getByRole("heading", { name: "Nội dung gửi duyệt", exact: true }),
+  ).not.toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Đồng ý đăng tin", exact: true }),
+  ).not.toBeVisible();
+  await page.getByRole("tab", { name: "Lịch sử phiên bản", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Lịch sử phiên bản của tin #83" })).toBeVisible();
+  await expect(page.getByRole("tabpanel")).toHaveCount(1);
+  await page.screenshot({ path: info.outputPath("detail-tabs.png") });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(
+    false,
+  );
 });

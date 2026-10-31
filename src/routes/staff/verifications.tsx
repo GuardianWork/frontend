@@ -6,6 +6,7 @@ import { DossierHistory, LegacyEvidence } from "@/components/staff/DossierHistor
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Database } from "lucide-react";
+import "@/components/admin/verification-detail.css";
 import { StaffStatusBadge } from "@/components/admin/StaffStatusBadge";
 import { AdminShell } from "@/components/AdminShell";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -395,7 +396,7 @@ function AdminVerificationsPage() {
           )}
         </>
       ) : (
-        <>
+        <div className="staff-verification-detail">
           <button
             type="button"
             className="admin-text-link mb-5"
@@ -482,7 +483,7 @@ function AdminVerificationsPage() {
                 </dd>
               </div>
               {selected.verificationStatus === "REJECTED" && (
-                <div className="admin-company-fields-wide">
+                <div className="admin-company-fields-wide verification-rejection">
                   <dt>Lý do từ chối</dt>
                   <dd>{selected.rejectionReason || "Không có lý do trong hồ sơ."}</dd>
                 </div>
@@ -524,7 +525,8 @@ function AdminVerificationsPage() {
             >
               <DialogContent
                 aria-describedby="decision-description"
-                className="admin-decision-dialog"
+                className="admin-decision-dialog verification-decision-dialog"
+                data-decision={decision}
               >
                 <div className="admin-panel-heading">
                   <DialogTitle>
@@ -588,7 +590,7 @@ function AdminVerificationsPage() {
               </DialogContent>
             </Dialog>
           )}
-        </>
+        </div>
       )}
     </AdminShell>
   );

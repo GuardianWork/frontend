@@ -125,7 +125,7 @@ export function StaffShell({
               onClick={() => setOpen(false)}
             >
               <span className="workspace-nav-icon">
-                <Icon size={20} aria-hidden="true" />
+                <Icon size={22} aria-hidden="true" />
               </span>
               <span className="workspace-nav-label">{label}</span>
             </Link>
