@@ -28,14 +28,18 @@ function ApplicationsPage() {
   });
   return (
     <RecruiterShell title="Đơn ứng tuyển">
-      <h1 className="mb-3 text-3xl font-bold">Đơn ứng tuyển</h1>
-      <p className="mb-6 text-sm text-charcoal-83">
-        Các đơn nộp vào tin của bạn và của thành viên đã cấp quyền cho bạn.
-      </p>
+      <div className="workspace-heading">
+        <div>
+          <h1>Đơn ứng tuyển</h1>
+          <p className="mb-6 text-sm text-charcoal-83">
+            Các đơn nộp vào tin của bạn và của thành viên đã cấp quyền cho bạn.
+          </p>
+        </div>
+      </div>
       <ListSearch
         value={query}
         onChange={setQuery}
-        label="Tìm ứng viên, thư điện tử hoặc vị trí ứng tuyển"
+        label="Tìm tên, email hoặc vị trí ứng tuyển"
         count={applications.length}
       />
       {error ? (

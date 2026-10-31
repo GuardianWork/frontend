@@ -82,6 +82,12 @@ test("Company verification status alone gates recruiter features", async ({ page
   await login(page, "owner_demo", true);
   await page.goto("/recruiter/jobs?create=true");
   await expect(page.getByRole("heading", { name: "Hồ sơ công ty đang chờ duyệt" })).toBeVisible();
+  await expect(page.getByRole("list", { name: "Các bước bắt đầu tuyển dụng" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Xem hồ sơ đã gửi", exact: true })).toHaveAttribute(
+    "href",
+    "/recruiter/verification",
+  );
+  await expect(page.getByText("Trong lúc chờ xét duyệt", { exact: true })).toBeVisible();
   status = "REJECTED";
   await page.getByRole("button", { name: "Tải lại trạng thái" }).click();
   await expect(page.getByRole("heading", { name: "Hồ sơ công ty cần bổ sung" })).toBeVisible();

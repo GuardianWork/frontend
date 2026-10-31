@@ -290,7 +290,7 @@ export function JobWorkspace({
           <h1 ref={headingRef} tabIndex={-1}>
             {job
               ? content.title || latest.data?.content.title || `Tin tuyển dụng #${job.id}`
-              : "Tạo tin tuyển dụng"}
+              : "Đăng tin tuyển dụng"}
           </h1>
           <p>
             {job

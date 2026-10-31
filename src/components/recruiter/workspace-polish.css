@@ -1,0 +1,43 @@
+/* Recruiter-only refinements; shared candidate and staff layouts retain their rules. */
+.recruiter-workspace .recruiter-setup h1 {
+  font-size: 28px;
+  line-height: 1.3;
+  letter-spacing: -0.025em;
+}
+.recruiter-workspace .recruiter-setup > p,
+.recruiter-workspace .recruiter-setup > div > p {
+  max-width: 68ch;
+}
+.recruiter-workspace .recruiter-stage-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.recruiter-workspace .recruiter-stage-controls button {
+  min-height: 44px;
+  padding: 8px;
+}
+.recruiter-workspace .recruiter-members-table td {
+  vertical-align: top;
+}
+.recruiter-workspace .recruiter-setup-actions :is(a, button):focus-visible,
+.recruiter-workspace .recruiter-stage-controls button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+@media (min-width: 640px) {
+  .recruiter-workspace .recruiter-stage-controls {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .recruiter-workspace .recruiter-setup h1 {
+    font-size: 25px;
+  }
+  .recruiter-workspace .recruiter-setup-actions {
+    align-items: stretch;
+  }
+  .recruiter-workspace .recruiter-setup-actions :is(a, button) {
+    justify-content: center;
+  }
+}

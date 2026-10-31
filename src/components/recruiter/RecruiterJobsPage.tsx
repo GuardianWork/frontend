@@ -119,7 +119,7 @@ export function RecruiterJobsPage() {
               </div>
               <Link className="jp-button jp-primary" to="/recruiter/jobs" search={{ create: true }}>
                 <Plus size={18} aria-hidden="true" />
-                Tạo tin tuyển dụng
+                Đăng tin tuyển dụng
               </Link>
             </header>
             <div className="jp-list-panel">
@@ -216,7 +216,7 @@ export function RecruiterJobsPage() {
                       to="/recruiter/jobs"
                       search={{ create: true }}
                     >
-                      Tạo tin tuyển dụng
+                      Đăng tin tuyển dụng
                     </Link>
                   )}
                 </div>

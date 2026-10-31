@@ -275,7 +275,7 @@ test("owner creates a guided draft, resumes progress, recovers failed save and s
   await expect(
     page.getByRole("heading", { name: "Bắt đầu với tin tuyển dụng đầu tiên" }),
   ).toBeVisible();
-  await page.getByRole("link", { name: "Tạo tin tuyển dụng" }).first().click();
+  await page.getByRole("link", { name: "Đăng tin tuyển dụng" }).first().click();
   await page.getByLabel("Chức danh công việc", { exact: true }).fill("Chuyên viên kinh doanh");
   await page.getByRole("button", { name: "Lưu bản nháp", exact: true }).click();
   await expect(page).toHaveURL(/jobId=83/);

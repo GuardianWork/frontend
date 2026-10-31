@@ -9,11 +9,10 @@ export const Route = createFileRoute("/recruiter/")({
   head: () => ({
     meta: [
       { name: "robots", content: "noindex, nofollow" },
-      { title: "Recruiter Hub & Sourcing — GuardianWork" },
+      { title: "Tổng quan tuyển dụng — GuardianWork" },
       {
         name: "description",
-        content:
-          "AI Sourcing agent, talent pipeline, and legally-audited job management for employers.",
+        content: "Quản lý tin tuyển dụng, hồ sơ công ty và xem danh sách ứng viên minh họa.",
       },
     ],
   }),
@@ -107,6 +106,14 @@ const CANDIDATES: CandidateItem[] = [
   },
 ];
 
+const fitLabels = { "STRONG FIT": "Phù hợp cao", "GOOD FIT": "Phù hợp tốt", MATCH: "Phù hợp" };
+const stageLabels = {
+  Applied: "Đã ứng tuyển",
+  Audited: "Đã đánh giá",
+  Interview: "Phỏng vấn",
+  Offer: "Đã gửi đề nghị",
+};
+
 function fitBadgeClass(fit: CandidateItem["fit"]) {
   if (fit === "STRONG FIT") return "bg-green-50 text-green-700 border border-green-200";
   if (fit === "GOOD FIT")
@@ -119,7 +126,7 @@ function RecruiterIndexPage() {
   const [selectedId, setSelectedId] = useState(CANDIDATES[0].id);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "strong" | "interview">("all");
-  const [pitchSent, setPitchSent] = useState(false);
+  const [pitchedCandidateId, setPitchedCandidateId] = useState<string | null>(null);
 
   const filteredCandidates = candidates.filter((c) => {
     if (!matchesSearch(query, c.role, c.location, c.experience, ...c.skills)) return false;
@@ -128,9 +135,12 @@ function RecruiterIndexPage() {
     return true;
   });
 
-  const activeCandidate = candidates.find((c) => c.id === selectedId) || candidates[0];
+  const activeCandidate =
+    filteredCandidates.find((c) => c.id === selectedId) || filteredCandidates[0];
+  const pitchSent = pitchedCandidateId === activeCandidate?.id;
 
   const handleUpdateStage = (newStage: CandidateItem["stage"]) => {
+    if (!activeCandidate) return;
     setCandidates((prev) =>
       prev.map((c) => (c.id === activeCandidate.id ? { ...c, stage: newStage } : c)),
     );
@@ -145,10 +155,11 @@ function RecruiterIndexPage() {
         offers={candidates.filter((c) => c.stage === "Offer").length}
       />
       <details open className="workspace-data-note">
-        <summary>Ứng viên minh họa · hồ sơ công ty từ API</summary>
+        <summary>Danh sách ứng viên minh họa</summary>
         <p>
-          Danh sách ứng viên và tiến độ dưới đây là dữ liệu minh họa. Cập nhật tiến độ chỉ áp dụng
-          trong phiên xem; hồ sơ công ty sử dụng dịch vụ xác minh riêng.
+          Thử gửi lời mời chỉ ghi nhận thao tác, không gửi tin nhắn tới ứng viên. Danh sách ứng viên
+          và tiến độ dưới đây là dữ liệu minh họa. Cập nhật tiến độ chỉ áp dụng trong phiên xem; hồ
+          sơ công ty sử dụng dịch vụ xác minh riêng.
         </p>
       </details>
       <div className="mb-4 flex items-center justify-between">
@@ -189,7 +200,7 @@ function RecruiterIndexPage() {
                     : "bg-surface-container text-charcoal-text"
                 }`}
               >
-                Strong Fit
+                Phù hợp cao
               </button>
               <button
                 aria-pressed={filter === "interview"}
@@ -200,10 +211,10 @@ function RecruiterIndexPage() {
                     : "bg-surface-container text-charcoal-text"
                 }`}
               >
-                Phỏng vấn & Offer
+                Phỏng vấn & đề nghị
               </button>
             </div>
-            <span className="text-sm text-charcoal-40">AI Sourced</span>
+            <span className="text-sm text-charcoal-40">Dữ liệu minh họa</span>
           </div>
 
           {filteredCandidates.length === 0 && (
@@ -212,7 +223,7 @@ function RecruiterIndexPage() {
             </p>
           )}
           {filteredCandidates.map((c) => {
-            const isActive = c.id === selectedId;
+            const isActive = c.id === activeCandidate?.id;
             return (
               <div
                 key={c.id}
@@ -223,12 +234,12 @@ function RecruiterIndexPage() {
                   if (event.key === "Enter" || event.key === " ") {
                     event.preventDefault();
                     setSelectedId(c.id);
-                    setPitchSent(false);
+                    setPitchedCandidateId(null);
                   }
                 }}
                 onClick={() => {
                   setSelectedId(c.id);
-                  setPitchSent(false);
+                  setPitchedCandidateId(null);
                 }}
                 className={isActive ? "workspace-result is-selected" : "workspace-result"}
               >
@@ -242,7 +253,7 @@ function RecruiterIndexPage() {
                   <span
                     className={`text-xs font-bold px-2 py-0.5 rounded shrink-0 ${fitBadgeClass(c.fit)}`}
                   >
-                    {c.fit}
+                    {fitLabels[c.fit]}
                   </span>
                 </div>
 
@@ -255,7 +266,7 @@ function RecruiterIndexPage() {
                     Kinh nghiệm: {c.experience}
                   </span>
                   <span className="text-xs font-bold text-charcoal-40 bg-surface-container px-2 py-0.5 rounded">
-                    Stage: {c.stage}
+                    Tiến độ: {stageLabels[c.stage]}
                   </span>
                 </div>
               </div>
@@ -264,122 +275,130 @@ function RecruiterIndexPage() {
         </div>
 
         {/* Right Pane: Candidate Inspector & Pipeline Tracker */}
-        <div className="workspace-detail-column">
-          <div className="workspace-detail">
-            {/* Header */}
-            <div className="workspace-detail-header">
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="px-2 py-0.5 rounded text-xs font-bold bg-green-50 text-green-700 border border-green-200">
-                    MATCH RATE: {activeCandidate.matchRate}%
-                  </span>
-                  <span className="text-sm text-charcoal-40">
-                    ID: #{activeCandidate.id.toUpperCase()}
-                  </span>
-                </div>
-                <h3 className="text-xl font-bold text-charcoal-text mt-1">
-                  {activeCandidate.role}
-                </h3>
-                <p className="text-sm text-charcoal-83 font-medium">{activeCandidate.location}</p>
-              </div>
-
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  onClick={() => setPitchSent(true)}
-                  className="px-4 py-2 bg-primary text-on-primary text-sm font-bold rounded-lg hover:opacity-90 transition-colors flex items-center gap-1.5 shadow-sm"
-                >
-                  <Icon name="send" className="!text-base" />
-                  <span>{pitchSent ? "Đã gửi Pitch " : "Gửi Outreach Pitch"}</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Scrollable details */}
-            <div className="workspace-prose">
-              {/* Pipeline Stage Control */}
-              <div className="p-4 rounded-xl bg-surface-container-low border border-warm-border">
-                <span className="text-sm font-semibold text-charcoal-40 block mb-2">
-                  Tiến độ Tuyển dụng (Pipeline Stage)
-                </span>
-                <div className="grid grid-cols-4 gap-2">
-                  {(["Applied", "Audited", "Interview", "Offer"] as const).map((st) => (
-                    <button
-                      key={st}
-                      onClick={() => handleUpdateStage(st)}
-                      className={`py-2 rounded-lg text-sm font-semibold transition-colors ${
-                        activeCandidate.stage === st
-                          ? "bg-primary text-on-primary shadow-sm"
-                          : "bg-paper-white border border-warm-border text-charcoal-83 hover:bg-surface-container"
-                      }`}
-                    >
-                      {st}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* AI Verification Note */}
-              <div className="workspace-reference-note flex gap-4">
-                <Icon name="verified_user" className="text-primary mt-0.5 !text-2xl shrink-0" />
+        {activeCandidate && (
+          <div className="workspace-detail-column">
+            <div className="workspace-detail">
+              {/* Header */}
+              <div className="workspace-detail-header">
                 <div>
-                  <h4 className="text-sm font-semibold text-charcoal-text mb-1">
-                    AI Sourcing & Legal Shield Guarantee
-                  </h4>
-                  <p className="text-sm text-charcoal-83 leading-relaxed mb-2">
-                    Ứng viên được bảo vệ quyền ẩn danh trước nhà tuyển dụng cho đến khi được gửi
-                    pitch chính thức. Thỏa ước tuyển dụng tuân thủ điều khoản thử việc và chế độ làm
-                    thêm giờ theo Bộ luật Lao động 2019.
-                  </p>
-                  <div className="text-sm font-semibold text-green-700 flex items-center gap-1">
-                    <Icon name="check" className="!text-sm" /> CV đã trích xuất tự động và đối chiếu
-                    kỹ năng thực tế
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="px-2 py-0.5 rounded text-xs font-bold bg-green-50 text-green-700 border border-green-200">
+                      Mức độ phù hợp: {activeCandidate.matchRate}%
+                    </span>
+                    <span className="text-sm text-charcoal-40">
+                      ID: #{activeCandidate.id.toUpperCase()}
+                    </span>
+                  </div>
+                  <h3 className="text-xl font-bold text-charcoal-text mt-1">
+                    {activeCandidate.role}
+                  </h3>
+                  <p className="text-sm text-charcoal-83 font-medium">{activeCandidate.location}</p>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => setPitchedCandidateId(activeCandidate.id)}
+                    className="px-4 py-2 bg-primary text-on-primary text-sm font-bold rounded-lg hover:opacity-90 transition-colors flex items-center gap-1.5 shadow-sm"
+                  >
+                    <Icon name="send" className="!text-base" />
+                    <span aria-live="polite">
+                      {pitchSent ? "Đã thử gửi lời mời" : "Thử gửi lời mời"}
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Scrollable details */}
+              <div className="workspace-prose">
+                {/* Pipeline Stage Control */}
+                <div className="p-4 rounded-xl bg-surface-container-low border border-warm-border">
+                  <span className="text-sm font-semibold text-charcoal-40 block mb-2">
+                    Tiến độ tuyển dụng · chỉ lưu trong phiên này
+                  </span>
+                  <div
+                    role="group"
+                    aria-label="Tiến độ tuyển dụng"
+                    className="recruiter-stage-controls"
+                  >
+                    {(["Applied", "Audited", "Interview", "Offer"] as const).map((st) => (
+                      <button
+                        key={stageLabels[st]}
+                        aria-pressed={activeCandidate.stage === st}
+                        onClick={() => handleUpdateStage(st)}
+                        className={`py-2 rounded-lg text-sm font-semibold transition-colors ${
+                          activeCandidate.stage === st
+                            ? "bg-primary text-on-primary shadow-sm"
+                            : "bg-paper-white border border-warm-border text-charcoal-83 hover:bg-surface-container"
+                        }`}
+                      >
+                        {stageLabels[st]}
+                      </button>
+                    ))}
                   </div>
                 </div>
-              </div>
 
-              {/* Candidate Experience */}
-              <div>
-                <h4 className="font-semibold text-sm text-charcoal-40 mb-2 flex items-center gap-2">
-                  <Icon name="account_box" className="!text-[18px]" />
-                  Tổng quan Năng lực Ứng viên
-                </h4>
-                <div className="text-[15px] leading-7 text-charcoal-text">
-                  {activeCandidate.description}
+                {/* AI Verification Note */}
+                <div className="workspace-reference-note flex gap-4">
+                  <Icon name="verified_user" className="text-primary mt-0.5 !text-2xl shrink-0" />
+                  <div>
+                    <h4 className="text-sm font-semibold text-charcoal-text mb-1">
+                      Thông tin ứng viên minh họa
+                    </h4>
+                    <p className="text-sm text-charcoal-83 leading-relaxed mb-2">
+                      Hồ sơ, kỹ năng và mức độ phù hợp là dữ liệu mẫu, chưa được xác thực. Thao tác
+                      trên trang này không gửi tin nhắn tới ứng viên.
+                    </p>
+                    <div className="text-sm text-charcoal-83 flex items-center gap-1">
+                      <Icon name="info" className="!text-sm" /> Tiến độ chỉ được lưu trong phiên xem
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              {/* Skills Tags */}
-              <div>
-                <h4 className="font-semibold text-sm text-charcoal-40 mb-2">Kỹ năng Xác thực</h4>
-                <div className="flex flex-wrap gap-2">
-                  {activeCandidate.skills.map((s) => (
-                    <span
-                      key={s}
-                      className="px-3 py-1 bg-surface-container border border-warm-border rounded-md text-sm font-semibold text-charcoal-text"
-                    >
-                      {s}
-                    </span>
-                  ))}
+                {/* Candidate Experience */}
+                <div>
+                  <h4 className="font-semibold text-sm text-charcoal-40 mb-2 flex items-center gap-2">
+                    <Icon name="account_box" className="!text-[18px]" />
+                    Tổng quan năng lực ứng viên
+                  </h4>
+                  <div className="text-[15px] leading-7 text-charcoal-text">
+                    {activeCandidate.description}
+                  </div>
                 </div>
-              </div>
 
-              {/* Automated Outreach Pitch Draft */}
-              <div>
-                <h4 className="font-semibold text-sm text-charcoal-40 mb-2 flex items-center gap-2">
-                  <Icon name="mark_email_read" className="!text-[18px] text-primary" />
-                  Mẫu Tin nhắn Tiếp cận Đã tạo Tự động (Pitch Template)
-                </h4>
-                <div className="text-[15px] leading-7 text-charcoal-text">
-                  Chào bạn, chúng tôi theo dõi hồ sơ {activeCandidate.role} của bạn với chuyên môn
-                  nổi bật về {activeCandidate.skills.slice(0, 3).join(", ")}. Công ty chúng tôi có
-                  vị trí tương ứng với mức lương minh bạch, cam kết hợp đồng lao động chuẩn Bộ luật
-                  2019 (bảo đảm lương OT Điều 98 & đóng đủ 100% BHXH). Bạn có sẵn sàng trao đổi ngắn
-                  15 phút tuần này không?
+                {/* Skills Tags */}
+                <div>
+                  <h4 className="font-semibold text-sm text-charcoal-40 mb-2">
+                    Kỹ năng trong hồ sơ mẫu
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {activeCandidate.skills.map((s) => (
+                      <span
+                        key={s}
+                        className="px-3 py-1 bg-surface-container border border-warm-border rounded-md text-sm font-semibold text-charcoal-text"
+                      >
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Automated Outreach Pitch Draft */}
+                <div>
+                  <h4 className="font-semibold text-sm text-charcoal-40 mb-2 flex items-center gap-2">
+                    <Icon name="mark_email_read" className="!text-[18px] text-primary" />
+                    Mẫu tin nhắn mời trao đổi
+                  </h4>
+                  <div className="text-[15px] leading-7 text-charcoal-text">
+                    Chào bạn, chúng tôi theo dõi hồ sơ {activeCandidate.role} của bạn với chuyên môn
+                    nổi bật về {activeCandidate.skills.slice(0, 3).join(", ")}. Công ty chúng tôi có
+                    vị trí tương ứng với chuyên môn của bạn. Bạn có sẵn sàng trao đổi ngắn 15 phút
+                    tuần này không?
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Post Job Modal with AI Compliance Guard */}

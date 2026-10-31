@@ -8,10 +8,10 @@ export const Route = createFileRoute("/recruiter/talent")({
   head: () => ({
     meta: [
       { name: "robots", content: "noindex, nofollow" },
-      { title: "Hồ sơ ứng viên — GuardianWork Recruiter" },
+      { title: "Tìm kiếm ứng viên — GuardianWork" },
       {
         name: "description",
-        content: "Danh sách hồ sơ ứng viên minh họa theo chuyên môn và địa điểm.",
+        content: "Tìm kiếm ứng viên minh họa theo chuyên môn và địa điểm.",
       },
     ],
   }),
@@ -62,12 +62,12 @@ function RecruiterTalentPage() {
   const current = candidatesList.find((c) => c.id === selectedCandidateId) || candidatesList[0];
 
   return (
-    <AdminShell title="Hồ sơ ứng viên" role="recruiter">
+    <AdminShell title="Tìm kiếm ứng viên" role="recruiter">
       {/* Header */}
       <div className="workspace-heading">
         <div>
           <h1 className="text-3xl md:text-3xl font-bold text-charcoal-text mb-2 tracking-tight">
-            Danh sách hồ sơ ứng viên
+            Tìm kiếm ứng viên
           </h1>
           <p className="text-base text-charcoal-83 max-w-2xl">
             Khám phá danh sách hồ sơ minh họa theo chuyên môn, kinh nghiệm và địa điểm.
@@ -87,11 +87,7 @@ function RecruiterTalentPage() {
             className="px-4 py-2 bg-primary text-on-primary text-sm font-medium rounded-lg hover:opacity-90 transition-colors flex items-center gap-2 shadow-sm"
           >
             <Icon name="mail" className="!text-base" />
-            <span>
-              {pitchSent
-                ? `Đã ghi nhận thao tác mẫu: ${current.name}`
-                : "Gửi Outreach Pitch (Bảo Mật)"}
-            </span>
+            <span aria-live="polite">{pitchSent ? "Đã thử gửi lời mời" : "Thử gửi lời mời"}</span>
           </button>
         </div>
       </div>
@@ -111,15 +107,12 @@ function RecruiterTalentPage() {
           </span>
           <div className="font-semibold text-2xl text-charcoal-text ">{current.salary}</div>
           <div className="mt-2 text-sm text-charcoal-83 flex items-center gap-1 font-medium">
-            <Icon name="payments" className="!text-[15px] text-primary" /> Cam kết hợp đồng chính
-            thức
+            <Icon name="payments" className="!text-[15px] text-primary" /> Thông tin lương minh họa
           </div>
         </div>
 
         <div className="workspace-summary__item">
-          <span className="font-semibold text-charcoal-40 text-sm block mb-2">
-            Kinh nghiệm Tích lũy
-          </span>
+          <span className="font-semibold text-charcoal-40 text-sm block mb-2">Kinh nghiệm</span>
           <div className="font-semibold text-2xl text-charcoal-text ">{current.experience}</div>
           <div className="mt-2 text-sm text-charcoal-83 flex items-center gap-1 font-medium">
             <Icon name="history_edu" className="!text-[15px] text-primary" /> Backend, K8s & Design
@@ -131,7 +124,7 @@ function RecruiterTalentPage() {
           <span className="font-semibold text-charcoal-40 text-sm block mb-2">Nguồn hồ sơ</span>
           <div className="font-semibold text-2xl ">Hồ sơ minh họa</div>
           <div className="mt-2 text-sm text-charcoal-83 flex items-center gap-1 font-medium">
-            <Icon name="shield" className="!text-[15px]" /> Bảo vệ theo Điều 98 & Điều 25
+            <Icon name="shield" className="!text-[15px]" /> Chưa xác thực thông tin hồ sơ
           </div>
         </div>
       </div>
@@ -153,7 +146,9 @@ function RecruiterTalentPage() {
             <span className="text-xs font-bold text-charcoal-40 px-1">Chọn hồ sơ ứng viên</span>
             <div className="flex flex-col gap-1.5">
               {!candidatesList.some((c) => matchesSearch(query, c.name, c.role, c.location)) && (
-                <p className="p-3 text-sm text-charcoal-83">Không tìm thấy hồ sơ phù hợp.</p>
+                <p className="p-3 text-sm text-charcoal-83">
+                  Không tìm thấy hồ sơ phù hợp. Hãy thử tên, chuyên môn hoặc địa điểm khác.
+                </p>
               )}
               {candidatesList
                 .filter((c) => matchesSearch(query, c.name, c.role, c.location))
@@ -219,9 +214,7 @@ function RecruiterTalentPage() {
                 <p className="text-sm font-medium text-charcoal-83 mt-0.5">{current.role}</p>
                 <div className="flex items-center gap-2 mt-1.5">
                   <span className="w-2 h-2 rounded-full bg-green-500" />
-                  <span className="text-sm font-semibold text-green-700">
-                    Verified Active Candidate
-                  </span>
+                  <span className="text-sm font-semibold text-green-700">Hồ sơ minh họa</span>
                 </div>
               </div>
             </div>
@@ -234,7 +227,7 @@ function RecruiterTalentPage() {
               <div className="flex justify-between items-center">
                 <span className="text-charcoal-40 text-sm font-semibold ">Định danh:</span>
                 <span className="text-charcoal-text font-medium text-sm">
-                  Đã xác thực CCCD điện tử
+                  Chưa xác thực · dữ liệu mẫu
                 </span>
               </div>
               <div className="flex justify-between items-center">
@@ -251,21 +244,22 @@ function RecruiterTalentPage() {
             <div className="flex items-center justify-between mb-2">
               <span className="font-semibold text-sm text-charcoal-text flex items-center gap-2">
                 <Icon name="description" className="!text-base text-primary" />
-                CV Thẩm Định Đính Kèm
+                CV minh họa
               </span>
               <span className="px-2 py-0.5 bg-primary text-on-primary text-xs font-bold rounded">
                 PDF
               </span>
             </div>
             <p className="text-sm text-charcoal-83 break-words mb-3">
-              {current.name.replace(/[^a-zA-Z]/g, "_")}_CV_2026_Verified.pdf
+              {current.name.replace(/[^a-zA-Z]/g, "_")}_CV_minh_hoa.pdf
             </p>
+            <p className="mb-3 text-sm text-charcoal-83">Hồ sơ mẫu chưa có tệp CV để tải.</p>
             <button
               disabled
               title="Tệp CV trong hồ sơ minh họa chưa có tài liệu để tải về"
               className="w-full py-2 bg-surface-container border border-warm-border rounded-lg text-sm font-semibold text-charcoal-83 flex items-center justify-center gap-1.5 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <Icon name="download" className="!text-base" /> Tải tệp CV bản đã thẩm định
+              <Icon name="download" className="!text-base" /> Chưa có tệp CV để tải
             </button>
           </div>
         </div>
@@ -276,15 +270,13 @@ function RecruiterTalentPage() {
             {/* Header */}
             <div className="workspace-detail-header">
               <div>
-                <h3 className="text-lg font-bold text-charcoal-text">
-                  Chi tiết Năng lực & Đánh giá Sourcing
-                </h3>
+                <h3 className="text-lg font-bold text-charcoal-text">Chi tiết năng lực ứng viên</h3>
                 <p className="text-sm text-charcoal-83 font-medium">
-                  Hồ sơ ID: #{current.id.toUpperCase()}-VERIFIED
+                  Mã hồ sơ mẫu: #{current.id.toUpperCase()}
                 </p>
               </div>
               <span className="px-3 py-1 bg-green-50 text-green-700 border border-green-200 rounded-full text-sm font-bold flex items-center gap-1">
-                <Icon name="verified" className="!text-sm" /> 100% Verified
+                <Icon name="verified" className="!text-sm" /> Dữ liệu mẫu
               </span>
             </div>
 
@@ -295,15 +287,14 @@ function RecruiterTalentPage() {
                 <Icon name="shield" className="text-primary mt-0.5 !text-2xl shrink-0" />
                 <div>
                   <h4 className="text-sm font-semibold text-charcoal-text mb-1">
-                    Bảo vệ Ẩn danh & Quyền tác giả theo Luật Lao động VN
+                    Hồ sơ dùng để trải nghiệm giao diện
                   </h4>
                   <p className="text-sm text-charcoal-83 leading-relaxed mb-2">
-                    Thông tin liên hệ của ứng viên chỉ được mở cho Nhà tuyển dụng sau khi ứng viên
-                    đồng ý tiếp nhận Outreach Pitch. Hợp đồng tuyển dụng phải cam kết thử việc tối
-                    đa 60 ngày theo Điều 25 và tính đủ lương làm thêm giờ theo Điều 98.
+                    Danh tính, kinh nghiệm, kỹ năng và chứng chỉ trên trang này là dữ liệu mẫu, chưa
+                    được xác thực. Lời mời chỉ mô phỏng thao tác, không gửi tới ứng viên.
                   </p>
-                  <div className="flex items-center gap-2 text-sm font-semibold text-primary">
-                    <Icon name="policy" className="!text-sm" /> Tuân thủ Bộ luật Lao động 2019
+                  <div className="flex items-center gap-2 text-sm text-charcoal-83">
+                    <Icon name="info" className="!text-sm" /> Không có tài liệu xác thực đính kèm
                   </div>
                 </div>
               </div>
@@ -311,7 +302,7 @@ function RecruiterTalentPage() {
               {/* Bio summary */}
               <div>
                 <h4 className="font-semibold text-sm text-charcoal-40 mb-2">
-                  Tóm Tắt Năng Lực Ứng Viên
+                  Tóm tắt năng lực ứng viên
                 </h4>
                 <p className="text-sm text-charcoal-text leading-relaxed">
                   Kỹ sư có bề dày chuyên môn về hệ thống phân tán và ứng dụng hiệu năng cao. Có kinh
@@ -323,7 +314,7 @@ function RecruiterTalentPage() {
               {/* Core Skills */}
               <div>
                 <h4 className="font-semibold text-sm text-charcoal-40 mb-3">
-                  Kỹ Năng Đã Thẩm Định Thực Tế
+                  Kỹ năng trong hồ sơ mẫu
                 </h4>
                 <div className="flex flex-wrap gap-2">
                   {[
@@ -350,7 +341,7 @@ function RecruiterTalentPage() {
               {/* Work history */}
               <div>
                 <h4 className="font-semibold text-sm text-charcoal-40 mb-3">
-                  Kinh Nghiệm Thực Tế Xác Thực
+                  Kinh nghiệm trong hồ sơ mẫu
                 </h4>
                 <div className="space-y-4">
                   <div className="p-4 rounded-lg bg-surface-container-low border border-warm-border">
@@ -366,8 +357,8 @@ function RecruiterTalentPage() {
                       <span className="text-sm font-semibold text-primary">2023 – Hiện tại</span>
                     </div>
                     <p className="text-sm text-charcoal-83 mt-2 leading-relaxed">
-                      Dẫn dắt kiến trúc bảo mật tuân thủ Bộ luật Lao động 2019, điều phối vi dịch vụ
-                      và triển khai hệ thống xác thực tức thì cho hơn 5.000 ứng viên.
+                      Nội dung kinh nghiệm minh họa: dẫn dắt kiến trúc hệ thống, điều phối vi dịch
+                      vụ và triển khai tính năng xác thực người dùng.
                     </p>
                   </div>
 
@@ -395,10 +386,10 @@ function RecruiterTalentPage() {
               <div className="p-5 rounded-xl bg-surface-container-low border border-warm-border flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div>
                   <h5 className="font-bold text-sm text-charcoal-text">
-                    Gửi lời mời phỏng vấn đến ứng viên
+                    Thử thao tác mời ứng viên
                   </h5>
                   <p className="text-sm text-charcoal-83 mt-0.5">
-                    Lời mời được gắn nhãn hợp đồng bảo vệ Điều 98
+                    Thao tác minh họa, không gửi tin nhắn tới ứng viên.
                   </p>
                 </div>
                 <button
@@ -406,7 +397,9 @@ function RecruiterTalentPage() {
                   className="px-5 py-2.5 bg-primary text-on-primary text-sm font-bold rounded-lg hover:opacity-90 transition-colors shadow-sm shrink-0 flex items-center gap-1.5"
                 >
                   <Icon name="send" className="!text-base" />
-                  <span>{pitchSent ? "Đã gửi Pitch " : "Gửi Lời Mời Ngay"}</span>
+                  <span aria-live="polite">
+                    {pitchSent ? "Đã thử gửi lời mời" : "Thử gửi lời mời"}
+                  </span>
                 </button>
               </div>
             </div>
