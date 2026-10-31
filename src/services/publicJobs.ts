@@ -46,7 +46,7 @@ export interface ApiPage<T> {
 export interface PublicJobSearchParams {
   keyword?: string;
   location?: string;
-  experience?: string;
+  industry?: string;
   employmentType?: string;
   workArrangement?: string;
   deadline?: string;
@@ -76,7 +76,7 @@ export async function searchPublicJobs(
   const query = new URLSearchParams();
   if (params.keyword) query.set("keyword", params.keyword);
   if (params.location) query.set("location", params.location);
-  if (params.experience) query.set("experience", params.experience);
+  if (params.industry) query.set("industry", params.industry);
   if (params.employmentType) query.set("employmentType", params.employmentType);
   if (params.workArrangement) query.set("workArrangement", params.workArrangement);
   if (params.deadline) query.set("deadline", params.deadline);
