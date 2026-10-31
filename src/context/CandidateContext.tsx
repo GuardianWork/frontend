@@ -30,6 +30,7 @@ export interface CandidateEducation {
   school: string;
   from: string;
   to: string;
+  description?: string;
 }
 
 export interface CandidateProfileDetails {

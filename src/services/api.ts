@@ -6,10 +6,18 @@ export function getApiBaseUrl() {
 
 export class ApiError extends Error {
   status: number;
+  code?: number;
+  fieldErrors: Record<string, string>;
   retryAfterSeconds?: number;
-  constructor(message: string, status = 0) {
+  constructor(
+    message: string,
+    status = 0,
+    details?: { code?: number; fieldErrors?: Record<string, string> },
+  ) {
     super(message);
     this.status = status;
+    this.code = details?.code;
+    this.fieldErrors = details?.fieldErrors ?? {};
   }
 }
 
@@ -42,10 +50,20 @@ export async function parseApiResponse(response: Response): Promise<unknown> {
   }
   const status = !response.ok ? response.status : (body?.status ?? response.status);
   if (status >= 400) {
-    const error = new ApiError(
-      body?.message || "Không thể hoàn tất yêu cầu. Vui lòng thử lại.",
-      status,
-    );
+    const message = body?.message || "Không thể hoàn tất yêu cầu. Vui lòng thử lại.";
+    const prefixedCode = /^(\d{5})\b/.exec(message)?.[1];
+    const code =
+      typeof body?.status === "number" && body.status >= 10_000
+        ? body.status
+        : prefixedCode
+          ? Number(prefixedCode)
+          : undefined;
+    const responseErrors = (body as { errors?: unknown } | null)?.errors;
+    const fieldErrors =
+      responseErrors && typeof responseErrors === "object"
+        ? (responseErrors as Record<string, string>)
+        : {};
+    const error = new ApiError(message, status, { code, fieldErrors });
     const retryAfter = response.headers.get("Retry-After");
     if (retryAfter && /^\d+$/.test(retryAfter)) error.retryAfterSeconds = Number(retryAfter);
     throw error;
