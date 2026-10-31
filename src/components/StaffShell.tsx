@@ -1,7 +1,12 @@
 import { useNavigationFocus } from "@/hooks/useNavigationFocus";
 import "./workspace.css";
+import { Toaster } from "./ui/sonner";
+import "./admin/staff-toasts.css";
 import {
   GlobeIcon,
+  CheckIcon,
+  ErrorIcon,
+  InformationIcon,
   MenuIcon,
   CloseIcon,
   JobIcon,
@@ -9,6 +14,7 @@ import {
   ViolationReportIcon,
   RecruitmentOverviewIcon,
   CandidateProfileIcon,
+  SubmissionHistoryIcon,
 } from "@/components/icons";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
@@ -24,6 +30,7 @@ const NAVIGATION = [
   { to: "/staff/jobs", label: "Quản lý tin tuyển dụng", icon: JobIcon },
   { to: "/staff/reports", label: "Báo cáo vi phạm", icon: ViolationReportIcon },
   { to: "/staff/accounts", label: "Quản lý tài khoản", icon: CandidateProfileIcon },
+  { to: "/staff/audit-logs", label: "Nhật ký hoạt động", icon: SubmissionHistoryIcon },
 ];
 
 export function StaffShell({
@@ -47,6 +54,22 @@ export function StaffShell({
   }, []);
   return (
     <div className="admin-workspace workspace-shell flex h-dvh w-full overflow-hidden bg-background text-charcoal-text">
+      <Toaster
+        position="bottom-right"
+        closeButton
+        duration={6000}
+        offset={24}
+        mobileOffset={16}
+        gap={12}
+        visibleToasts={3}
+        containerAriaLabel="Thông báo"
+        icons={{
+          success: <CheckIcon size={20} />,
+          error: <ErrorIcon size={20} />,
+          info: <InformationIcon size={20} />,
+        }}
+        toastOptions={{ className: "staff-toast", closeButtonAriaLabel: "Đóng thông báo" }}
+      />
       {open && (
         <button
           type="button"

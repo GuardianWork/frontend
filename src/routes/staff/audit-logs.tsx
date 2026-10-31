@@ -1,6 +1,11 @@
 import { Fragment, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowRight, ChevronDown, Database, Search } from "lucide-react";
+import {
+  ArrowRightIcon as ArrowRight,
+  ChevronDownIcon as ChevronDown,
+  InformationIcon as Database,
+  SearchIcon as Search,
+} from "@/components/icons";
 import { AdminShell } from "@/components/AdminShell";
 import { AdminPagination } from "@/components/admin/AdminPagination";
 import { ListSearch } from "@/components/ListSearch";
@@ -13,7 +18,7 @@ export const Route = createFileRoute("/staff/audit-logs")({
   head: () => ({
     meta: [
       { name: "robots", content: "noindex, nofollow" },
-      { title: "Audit logs — Platform staff GuardianWork" },
+      { title: "Nhật ký hoạt động — Platform staff GuardianWork" },
     ],
   }),
   component: AuditLogsPage,
@@ -69,10 +74,10 @@ function AuditLogsPage() {
   }
 
   return (
-    <AdminShell title="Audit logs" role="admin">
+    <AdminShell title="Nhật ký hoạt động" role="admin">
       <div className="admin-page-heading">
         <div>
-          <h1>Audit logs</h1>
+          <h1>Nhật ký hoạt động</h1>
           <p>Tra cứu ai đã thực hiện thay đổi, thời điểm thực hiện và nội dung thay đổi.</p>
         </div>
         <span className="admin-draft-label admin-sample-label">
@@ -246,7 +251,7 @@ function AuditLogsPage() {
           page={pagination.page}
           onPageChange={pagination.onPageChange}
           itemLabel="bản ghi"
-          label="Phân trang audit logs"
+          label="Phân trang nhật ký hoạt động"
         />
       </section>
     </AdminShell>
