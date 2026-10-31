@@ -1,12 +1,15 @@
-/* Candidate CV management wired to the GuardianWork backend. */
+/* Candidate CV management: old screen design wired to the GuardianWork backend. */
 import { useEffect, useRef, useState, type ChangeEvent, type DragEvent } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
   Download,
   FileText,
+  HardDrive,
   Info,
   Loader2,
+  ShieldAlert,
+  Star,
   UploadCloud,
   X,
 } from "lucide-react";
@@ -20,7 +23,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { MAX_CV_COUNT, type CandidateCv as ContextCv } from "@/context/CandidateContext";
+import { MAX_CV_COUNT } from "@/context/CandidateContext";
 import { clearAuthSession } from "@/services/auth";
 import {
   getCandidateCvs,
@@ -31,7 +34,7 @@ import {
   type CandidateCv,
 } from "@/services/candidateCv";
 import { ApiError } from "@/services/api";
-import { formatCvDate, formatFileSize, validateCvFile } from "@/lib/cv-file";
+import { deriveCvLabel, formatCvDate, formatFileSize, validateCvFile } from "@/lib/cv-file";
 
 type NoticeTone = "success" | "info" | "error";
 
@@ -81,12 +84,14 @@ const primaryButton = `inline-flex min-h-10 items-center justify-center gap-2 wh
 const secondaryButton = `inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-rule bg-paper px-4 text-sm font-semibold text-ink transition-colors hover:bg-paper-2 active:bg-paper-3 ${focusRing}`;
 const iconButton = `inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-ink-2 transition-colors hover:bg-paper-2 hover:text-ink active:bg-paper-3 disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:w-10 ${focusRing}`;
 
-function detectFormat(fileName: string) {
-  const extension = fileName.split(".").pop()?.toLowerCase() ?? "";
+function cvFormat(cv: CandidateCv): string {
+  const extension = cv.fileName.split(".").pop()?.toLowerCase();
   if (extension === "pdf") return "PDF";
   if (extension === "doc") return "DOC";
   if (extension === "docx") return "DOCX";
-  return "PDF";
+  if (cv.contentType.includes("pdf")) return "PDF";
+  if (cv.contentType.includes("word")) return cv.contentType.includes("openxml") ? "DOCX" : "DOC";
+  return extension?.toUpperCase() || "FILE";
 }
 
 export function CvManagerView() {
@@ -105,10 +110,18 @@ export function CvManagerView() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const progressRef = useRef<number | null>(null);
-  const abortRef = useRef(false);
 
-  const busy = phase !== "idle";
   const atLimit = cvs.length >= MAX_CV_COUNT;
+  const busy = phase !== "idle";
+  const hasDefault = cvs.some((cv) => cv.isDefault);
+  const orderedCvs = [...cvs].sort((a, b) => Number(b.isDefault) - Number(a.isDefault));
+
+  useEffect(
+    () => () => {
+      if (progressRef.current) window.clearInterval(progressRef.current);
+    },
+    [],
+  );
 
   const load = async () => {
     setLoading(true);
@@ -128,9 +141,6 @@ export function CvManagerView() {
 
   useEffect(() => {
     void load();
-    return () => {
-      if (progressRef.current) window.clearInterval(progressRef.current);
-    };
   }, []);
 
   const resetUpload = () => {
@@ -155,9 +165,9 @@ export function CvManagerView() {
     if (!file) return;
     setFileError("");
     setSelectedFile(null);
-    const validationError = await validateCvFile(file);
-    if (!validationError.ok) {
-      setFileError(validationError.message);
+    const result = await validateCvFile(file);
+    if (!result.ok) {
+      setFileError(result.message);
       return;
     }
     setSelectedFile(file);
@@ -170,23 +180,26 @@ export function CvManagerView() {
     if (!file) return;
     setFileError("");
     setSelectedFile(null);
-    const validationError = await validateCvFile(file);
-    if (!validationError.ok) {
-      setFileError(validationError.message);
+    const result = await validateCvFile(file);
+    if (!result.ok) {
+      setFileError(result.message);
       return;
     }
     setSelectedFile(file);
   };
 
   const startUpload = async () => {
-    if (!selectedFile || !consent || busy || atLimit) {
-      if (!consent) setUploadError("Vui lòng xác nhận nội dung cảnh báo trước khi tải lên.");
+    if (!selectedFile || busy || atLimit) return;
+    if (!consent) {
+      setUploadError("Vui lòng xác nhận nội dung cảnh báo trước khi tải lên.");
       return;
     }
+
     setFileError("");
     setUploadError("");
     setPhase("requesting");
     setProgress(0);
+
     try {
       const signature = await requestCvUploadUrl(true);
       setPhase("uploading");
@@ -214,6 +227,9 @@ export function CvManagerView() {
       }
       setPhase("idle");
       setUploadError(mapCvError(error));
+      if (error instanceof ApiError && error.code === 40902) {
+        void load();
+      }
     }
   };
 
@@ -228,8 +244,6 @@ export function CvManagerView() {
       }
     }
   };
-
-  const orderedCvs = [...cvs].sort((a, b) => Number(b.isDefault) - Number(a.isDefault));
 
   return (
     <AdminShell title="Quản lý hồ sơ" role="candidate">
@@ -256,11 +270,6 @@ export function CvManagerView() {
             </button>
           </div>
         </header>
-
-        <p className="mb-4 rounded-lg border border-rule bg-paper px-4 py-3 text-sm text-ink-2">
-          Đã dùng {cvs.length}/{MAX_CV_COUNT} hồ sơ
-        </p>
-
         {atLimit && (
           <p
             id="cv-limit-hint"
@@ -298,216 +307,393 @@ export function CvManagerView() {
           </div>
         )}
 
-        {loading ? (
-          <div className="rounded-xl border border-rule bg-paper px-5 py-10 text-center text-sm text-ink-3">
-            <Loader2 className="mx-auto mb-2 animate-spin" size={20} aria-hidden="true" />
-            Đang tải danh sách hồ sơ…
-          </div>
-        ) : loadError ? (
-          <div className="rounded-xl border border-error/25 bg-error-container/50 px-5 py-6 text-sm text-on-error-container">
-            <p role="alert">{loadError}</p>
-            <button
-              type="button"
-              onClick={() => void load()}
-              className="mt-3 text-sm font-semibold text-accent"
-            >
-              Thử lại
-            </button>
-          </div>
-        ) : cvs.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-rule bg-paper px-5 py-12 text-center">
-            <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-accent-subtle text-accent">
-              <FileText size={24} aria-hidden="true" />
-            </span>
-            <h2 className="mt-4 text-base font-bold text-ink">
-              Bạn chưa tải lên hồ sơ xin việc nào.
-            </h2>
-            <p className="mx-auto mt-1 max-w-sm text-sm leading-6 text-ink-2">
-              Tải lên CV đầu tiên để bắt đầu ứng tuyển. Tệp PDF, DOC hoặc DOCX, tối đa 10 MB.
+        {!hasDefault && cvs.length > 0 && (
+          <div className="mb-4 flex items-start gap-3 rounded-lg border border-rule bg-paper px-4 py-3">
+            <Info size={18} className="mt-0.5 shrink-0 text-accent" aria-hidden="true" />
+            <p className="text-sm leading-6 text-ink-2">
+              Chưa có hồ sơ mặc định. Hồ sơ đầu tiên tải lên sẽ tự động thành mặc định.
             </p>
-            <button
-              type="button"
-              onClick={() => setUploadOpen(true)}
-              className={`mt-5 ${primaryButton}`}
-            >
-              <UploadCloud size={18} aria-hidden="true" />
-              Tải lên hồ sơ mới
-            </button>
           </div>
-        ) : (
-          <ul className="divide-y divide-rule overflow-hidden rounded-xl border border-rule bg-paper">
-            {orderedCvs.map((cv) => (
-              <li key={cv.id}>
-                <article className="flex flex-col gap-4 px-4 py-4 sm:px-5 lg:flex-row lg:items-center">
-                  <div className="flex min-w-0 flex-1 items-start gap-3.5">
-                    <span
-                      className="flex h-12 w-10 shrink-0 flex-col items-center justify-center rounded-md border border-accent/25 bg-accent-subtle text-accent"
-                      aria-hidden="true"
-                    >
-                      <FileText size={18} />
-                      <span className="mt-0.5 text-[10px] font-extrabold tracking-[0.06em]">
-                        {cv.contentType.includes("pdf")
-                          ? "PDF"
-                          : cv.fileName.split(".").pop()?.toUpperCase()}
-                      </span>
-                    </span>
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                        <h2
-                          className="text-[15px] font-bold leading-6 text-ink"
-                          style={{ overflowWrap: "anywhere" }}
-                        >
-                          {cv.fileName}
-                        </h2>
-                        {cv.isDefault && (
-                          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold tracking-[0.06em] text-accent-ink">
-                            Mặc định
-                          </span>
-                        )}
-                      </div>
-                      <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-3">
-                        <span>{formatFileSize(cv.fileSize)}</span>
-                        <span aria-hidden="true">·</span>
-                        <span>Tải lên {formatCvDate(cv.createdAt)}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex w-full flex-wrap items-center gap-1.5 lg:w-auto lg:shrink-0 lg:justify-end">
-                    <button
-                      type="button"
-                      onClick={() => void handleDownload(cv)}
-                      aria-label={`Tải xuống ${cv.fileName}`}
-                      title="Tải xuống"
-                      className={iconButton}
-                    >
-                      <Download size={18} aria-hidden="true" />
-                    </button>
-                  </div>
-                </article>
-              </li>
-            ))}
-          </ul>
         )}
 
-        <Dialog open={uploadOpen} onOpenChange={handleUploadOpenChange}>
-          <DialogContent hideClose={false} className="max-w-xl border-rule bg-paper p-0">
-            <DialogHeader className="gap-4 border-b border-rule px-6 pb-5 pt-6 text-left">
-              <DialogTitle className="text-lg font-bold text-ink">
-                Tải lên hồ sơ xin việc mới
-              </DialogTitle>
-              <DialogDescription className="mt-1 text-sm leading-6 text-ink-2">
-                Chọn tệp CV của bạn. Tối đa 10 MB, định dạng PDF, DOC hoặc DOCX.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="px-6 py-5">
-              <div
-                role="alert"
-                className="mb-4 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
-              >
-                <AlertTriangle size={18} className="mt-0.5 shrink-0" aria-hidden="true" />
-                <p className="leading-6">
-                  Không đưa số căn cước công dân, thông tin tài khoản ngân hàng hoặc mật khẩu vào
-                  tệp hồ sơ.
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
+          <section aria-labelledby="cv-list-title" className="min-w-0">
+            <div className="mb-3 flex items-end justify-between gap-3">
+              <div>
+                <h2 id="cv-list-title" className="text-base font-bold text-ink">
+                  Danh sách hồ sơ
+                </h2>
+                <p className="mt-0.5 text-xs text-ink-3">
+                  Hồ sơ mặc định được đưa lên đầu danh sách.
                 </p>
               </div>
-
-              <div className="mb-4 flex items-start gap-3">
-                <Checkbox
-                  id="cv-consent"
-                  checked={consent}
-                  onCheckedChange={(value) => setConsent(value === true)}
-                  disabled={busy}
-                />
-                <label htmlFor="cv-consent" className="text-sm leading-6 text-ink-2">
-                  Tôi xác nhận tệp hồ sơ không chứa thông tin nhạy cảm.
-                </label>
-              </div>
-
-              <label
-                onDragOver={(event) => {
-                  event.preventDefault();
-                }}
-                onDrop={(event) => void handleDrop(event)}
-                className="flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-rule bg-paper-2/60 px-4 py-8 text-center"
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".pdf,.doc,.docx"
-                  onChange={(event) => void handleFilePick(event)}
-                  disabled={busy}
-                  className="sr-only"
-                />
-                <UploadCloud size={24} className="text-accent" aria-hidden="true" />
-                <span className="mt-2 text-sm font-semibold text-ink">
-                  {selectedFile ? selectedFile.name : "Chọn hoặc kéo thả tệp CV"}
-                </span>
-                {selectedFile && (
-                  <span className="mt-1 text-xs text-ink-3">
-                    {formatFileSize(selectedFile.size)}
-                  </span>
-                )}
-              </label>
-
-              {fileError && (
-                <p role="alert" className="mt-3 text-sm font-medium text-error">
-                  {fileError}
-                </p>
-              )}
-              {uploadError && (
-                <p role="alert" className="mt-3 text-sm font-medium text-error">
-                  {uploadError}
-                </p>
-              )}
-
-              {(phase === "uploading" || phase === "requesting" || phase === "registering") && (
-                <div className="mt-4">
-                  {phase === "requesting" && (
-                    <p className="text-sm text-ink-2">Đang chuẩn bị tải lên…</p>
-                  )}
-                  {phase === "uploading" && (
-                    <>
-                      <p className="mb-2 text-sm text-ink-2">Đang tải lên… {progress}%</p>
-                      <div
-                        role="progressbar"
-                        aria-valuenow={progress}
-                        aria-valuemin={0}
-                        aria-valuemax={100}
-                        className="h-2 w-full overflow-hidden rounded-full bg-paper-3"
-                      >
-                        <div
-                          className="h-full bg-accent transition-all"
-                          style={{ width: `${progress}%` }}
-                        />
-                      </div>
-                    </>
-                  )}
-                  {phase === "registering" && <p className="text-sm text-ink-2">Đang lưu hồ sơ…</p>}
-                </div>
-              )}
+              <span className="shrink-0 text-xs font-semibold text-ink-2">
+                {cvs.length}/{MAX_CV_COUNT} tệp
+              </span>
             </div>
-            <DialogFooter className="px-6 py-4">
-              <button
-                type="button"
-                onClick={() => handleUploadOpenChange(false)}
-                disabled={busy}
-                className={secondaryButton}
-              >
-                Hủy
-              </button>
-              <button
-                type="button"
-                onClick={() => void startUpload()}
-                disabled={!selectedFile || !consent || busy || atLimit}
-                className={primaryButton}
-              >
-                {busy ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : null}
-                Tải lên
-              </button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+
+            {loading ? (
+              <div className="rounded-xl border border-rule bg-paper px-5 py-10 text-center text-sm text-ink-3">
+                <Loader2 className="mx-auto mb-2 animate-spin" size={20} aria-hidden="true" />
+                Đang tải danh sách hồ sơ…
+              </div>
+            ) : loadError ? (
+              <div className="rounded-xl border border-error/25 bg-error-container/50 px-5 py-6 text-sm text-on-error-container">
+                <p role="alert">{loadError}</p>
+                <button
+                  type="button"
+                  onClick={() => void load()}
+                  className="mt-3 text-sm font-semibold text-accent"
+                >
+                  Thử lại
+                </button>
+              </div>
+            ) : cvs.length === 0 ? (
+              <div className="px-5 py-12 text-center sm:px-8 rounded-xl border border-dashed border-rule bg-paper">
+                <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-accent-subtle text-accent">
+                  <FileText size={24} aria-hidden="true" />
+                </span>
+                <h3 className="mt-4 text-base font-bold text-ink">
+                  Bạn chưa tải lên hồ sơ xin việc nào.
+                </h3>
+                <p className="mx-auto mt-1 max-w-sm text-sm leading-6 text-ink-2">
+                  Tải lên CV đầu tiên để bắt đầu ứng tuyển. Tệp PDF, DOC hoặc DOCX, tối đa 10 MB.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setUploadOpen(true)}
+                  className={`mt-5 ${primaryButton}`}
+                >
+                  <UploadCloud size={18} aria-hidden="true" />
+                  Tải lên hồ sơ mới
+                </button>
+              </div>
+            ) : (
+              <div className="overflow-hidden rounded-xl border border-rule bg-paper">
+                <ul className="divide-y divide-rule">
+                  {orderedCvs.map((cv) => (
+                    <li key={cv.id}>
+                      <article
+                        className={`flex flex-col gap-4 border-l-4 px-4 py-4 sm:px-5 lg:flex-row lg:items-center ${
+                          cv.isDefault
+                            ? "border-l-accent bg-accent-subtle/40"
+                            : "border-l-transparent"
+                        }`}
+                      >
+                        <div className="flex min-w-0 flex-1 items-start gap-3.5">
+                          <span
+                            className={`flex h-12 w-10 shrink-0 flex-col items-center justify-center rounded-md border ${
+                              cvFormat(cv) === "PDF"
+                                ? "border-accent/25 bg-accent-subtle text-accent"
+                                : "border-rule bg-paper-2 text-ink-2"
+                            }`}
+                            aria-hidden="true"
+                          >
+                            <FileText size={18} />
+                            <span className="mt-0.5 text-[10px] font-extrabold tracking-[0.06em]">
+                              {cvFormat(cv)}
+                            </span>
+                          </span>
+
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                              <h3
+                                className="min-w-0 text-[15px] font-bold leading-6 text-ink"
+                                style={{ overflowWrap: "anywhere" }}
+                              >
+                                {deriveCvLabel(cv.fileName)}
+                              </h3>
+                              {cv.isDefault && (
+                                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-accent-ink">
+                                  <Star size={10} fill="currentColor" aria-hidden="true" />
+                                  Mặc định
+                                </span>
+                              )}
+                            </div>
+                            <p className="mt-0.5 truncate text-sm text-ink-2" title={cv.fileName}>
+                              {cv.fileName}
+                            </p>
+                            <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-3">
+                              <span>{formatFileSize(cv.fileSize)}</span>
+                              <span aria-hidden="true">·</span>
+                              <span>Tải lên {formatCvDate(cv.createdAt)}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex w-full flex-wrap items-center gap-1.5 lg:w-auto lg:shrink-0 lg:justify-end">
+                          <button
+                            type="button"
+                            onClick={() => void handleDownload(cv)}
+                            aria-label={`Tải xuống ${cv.fileName}`}
+                            title="Tải xuống"
+                            className={iconButton}
+                          >
+                            <Download size={18} aria-hidden="true" />
+                          </button>
+                        </div>
+                      </article>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </section>
+
+          <aside className="flex flex-col gap-4">
+            <section className="rounded-xl border border-rule bg-paper p-5">
+              <div className="flex items-baseline justify-between gap-3">
+                <h2 className="text-base font-bold text-ink">Số lượng hồ sơ</h2>
+                <p className="text-sm font-bold text-ink">
+                  {cvs.length}
+                  <span className="font-semibold text-ink-3">/{MAX_CV_COUNT}</span>
+                </p>
+              </div>
+              <div className="mt-3 flex gap-1.5" aria-hidden="true">
+                {Array.from({ length: MAX_CV_COUNT }).map((_, index) => (
+                  <span
+                    key={index}
+                    className={`h-1.5 flex-1 rounded-full ${
+                      index < cvs.length ? "bg-accent" : "bg-paper-3"
+                    }`}
+                  />
+                ))}
+              </div>
+              <p className="mt-2 text-xs leading-5 text-ink-3">
+                {atLimit
+                  ? "Đã đạt giới hạn. Vui lòng xóa bớt hồ sơ cũ để tải lên tệp mới."
+                  : `Bạn còn ${MAX_CV_COUNT - cvs.length} chỗ trống.`}
+              </p>
+            </section>
+
+            <section className="rounded-xl border border-rule bg-paper p-5">
+              <h2 className="text-base font-bold text-ink">Cách hoạt động</h2>
+              <ul className="mt-3 flex flex-col gap-3 text-sm leading-6 text-ink-2">
+                <li className="flex gap-2.5">
+                  <Star size={17} className="mt-1 shrink-0 text-accent" aria-hidden="true" />
+                  <span>
+                    <strong className="text-ink">Mặc định:</strong> hồ sơ đầu tiên tải lên sẽ tự
+                    động là hồ sơ mặc định và được đính kèm khi bạn ứng tuyển.
+                  </span>
+                </li>
+                <li className="flex gap-2.5">
+                  <HardDrive size={17} className="mt-1 shrink-0 text-accent" aria-hidden="true" />
+                  <span>
+                    <strong className="text-ink">Giới hạn:</strong> tối đa {MAX_CV_COUNT} hồ sơ, mỗi
+                    tệp không quá 10 MB.
+                  </span>
+                </li>
+                <li className="flex gap-2.5">
+                  <FileText size={17} className="mt-1 shrink-0 text-accent" aria-hidden="true" />
+                  <span>
+                    <strong className="text-ink">Định dạng:</strong> PDF, DOC hoặc DOCX. Hệ thống
+                    kiểm tra cả nội dung tệp, không chỉ phần mở rộng.
+                  </span>
+                </li>
+              </ul>
+            </section>
+
+{/*
+            <section className="rounded-xl border border-rule border-l-4 border-l-accent-2 bg-paper-2 p-5">
+              <div className="flex items-start gap-2.5">
+                <ShieldAlert
+                  size={19}
+                  className="mt-0.5 shrink-0 text-accent-2"
+                  aria-hidden="true"
+                />
+                <div className="min-w-0">
+                  <h2 className="text-sm font-bold text-ink">Trước khi tải lên</h2>
+                  <p className="mt-1 text-xs leading-5 text-ink-2">
+                    Không đưa số căn cước công dân, thông tin tài khoản ngân hàng hoặc mật khẩu vào
+                    tệp CV. Bạn sẽ xác nhận điều này trước mỗi lần tải lên.
+                  </p>
+                </div>
+              </div>
+            </section>
+*/}
+          </aside>
+        </div>
       </div>
+
+      <Dialog open={uploadOpen} onOpenChange={handleUploadOpenChange}>
+        <DialogContent className="flex max-h-[92vh] max-w-xl flex-col gap-0 overflow-hidden border-rule bg-paper p-0">
+          <DialogHeader className="shrink-0 border-b border-rule px-6 pb-4 pt-6 text-left">
+            <DialogTitle className="text-lg font-bold text-ink">
+              Tải lên hồ sơ xin việc mới
+            </DialogTitle>
+            <DialogDescription className="mt-1 text-sm leading-6 text-ink-2">
+              Chọn tệp CV của bạn. Tối đa 10 MB, định dạng PDF, DOC hoặc DOCX.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+            <div className="flex gap-3 rounded-lg border border-rule border-l-4 border-l-accent-2 bg-paper-2 p-3.5">
+              <AlertTriangle
+                size={19}
+                className="mt-0.5 shrink-0 text-accent-2"
+                aria-hidden="true"
+              />
+              <p className="text-xs leading-5 text-ink-2">
+                <strong className="text-ink">Không đưa thông tin nhạy cảm vào tệp.</strong> Bao gồm
+                số căn cước công dân, thông tin tài khoản ngân hàng hoặc mật khẩu.
+              </p>
+            </div>
+
+            <div className="mt-4 flex items-start gap-3 rounded-lg border border-rule bg-paper-2 p-3.5">
+              <Checkbox
+                id="cv-consent"
+                checked={consent}
+                onCheckedChange={(value) => setConsent(value === true)}
+                disabled={busy}
+                className="mt-0.5 border-rule-2 bg-paper data-[state=checked]:border-accent data-[state=checked]:bg-accent data-[state=checked]:text-accent-ink focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+              />
+              <label htmlFor="cv-consent" className="cursor-pointer text-xs leading-5 text-ink-2">
+                Tôi xác nhận tệp hồ sơ không chứa thông tin nhạy cảm.
+              </label>
+            </div>
+
+            <label
+              htmlFor="cv-file-input"
+              onDragOver={(event) => {
+                event.preventDefault();
+                if (!busy) {
+                  /* drag hover styling handled by class below is minimal */
+                }
+              }}
+              onDragLeave={() => {}}
+              onDrop={(event) => void handleDrop(event)}
+              className={`mt-4 flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed px-4 py-7 text-center transition-colors focus-within:ring-2 focus-within:ring-accent focus-within:ring-offset-2 ${
+                busy
+                  ? "pointer-events-none opacity-60"
+                  : "border-rule-2 bg-paper-2 hover:border-accent hover:bg-accent-subtle/60"
+              }`}
+            >
+              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-paper text-accent">
+                <UploadCloud size={22} aria-hidden="true" />
+              </span>
+              <span className="mt-2 text-sm font-bold text-ink">
+                {busy
+                  ? "Đang xử lý…"
+                  : selectedFile
+                    ? "Chọn tệp khác"
+                    : "Kéo thả tệp vào đây hoặc chọn tệp"}
+              </span>
+              <span className="mt-1 text-xs text-ink-3">PDF, DOC hoặc DOCX · tối đa 10 MB</span>
+              <input
+                ref={fileInputRef}
+                id="cv-file-input"
+                type="file"
+                accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                onChange={(event) => void handleFilePick(event)}
+                disabled={busy}
+                className="sr-only"
+              />
+            </label>
+
+            {selectedFile && (
+              <div className="mt-3 flex items-start gap-3 rounded-lg border border-rule bg-paper px-3.5 py-3">
+                <FileText size={18} className="mt-0.5 shrink-0 text-accent" aria-hidden="true" />
+                <div className="min-w-0 flex-1">
+                  <p
+                    className="text-sm font-semibold text-ink"
+                    style={{ overflowWrap: "anywhere" }}
+                  >
+                    {selectedFile.name}
+                  </p>
+                  <p className="mt-0.5 text-xs text-ink-3">{formatFileSize(selectedFile.size)}</p>
+                </div>
+                {!busy && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedFile(null);
+                      if (fileInputRef.current) fileInputRef.current.value = "";
+                    }}
+                    aria-label="Bỏ chọn tệp"
+                    className={`-mr-1 -mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-ink-3 transition-colors hover:bg-paper-2 hover:text-ink ${focusRing}`}
+                  >
+                    <X size={16} aria-hidden="true" />
+                  </button>
+                )}
+              </div>
+            )}
+
+            {fileError && (
+              <p
+                role="alert"
+                className="mt-3 flex items-start gap-2 rounded-lg border border-error/25 bg-error-container px-3.5 py-2.5 text-xs font-medium leading-5 text-on-error-container"
+              >
+                <AlertTriangle size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
+                {fileError}
+              </p>
+            )}
+
+            {uploadError && (
+              <p
+                role="alert"
+                className="mt-3 flex items-start gap-2 rounded-lg border border-error/25 bg-error-container px-3.5 py-2.5 text-xs font-medium leading-5 text-on-error-container"
+              >
+                <AlertTriangle size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
+                {uploadError}
+              </p>
+            )}
+
+            {(phase === "uploading" || phase === "requesting" || phase === "registering") && (
+              <div className="mt-3">
+                {phase === "requesting" && (
+                  <p className="text-sm text-ink-2">Đang chuẩn bị tải lên…</p>
+                )}
+                {phase === "uploading" && (
+                  <>
+                    <p className="mb-2 text-sm text-ink-2">Đang tải lên… {progress}%</p>
+                    <div
+                      role="progressbar"
+                      aria-valuenow={progress}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      className="h-2 w-full overflow-hidden rounded-full bg-paper-3"
+                    >
+                      <div
+                        className="h-full bg-accent transition-all"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                  </>
+                )}
+                {phase === "registering" && <p className="text-sm text-ink-2">Đang lưu hồ sơ…</p>}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="shrink-0 flex-row justify-end gap-2 border-t border-rule px-6 py-4">
+            <button
+              type="button"
+              onClick={() => handleUploadOpenChange(false)}
+              disabled={busy}
+              className={secondaryButton}
+            >
+              Hủy
+            </button>
+            <button
+              type="button"
+              onClick={() => void startUpload()}
+              disabled={!selectedFile || !consent || busy || atLimit}
+              className={primaryButton}
+            >
+              {busy ? (
+                <Loader2
+                  size={17}
+                  className="animate-spin motion-reduce:animate-none"
+                  aria-hidden="true"
+                />
+              ) : (
+                <UploadCloud size={17} aria-hidden="true" />
+              )}
+              Tải lên
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminShell>
   );
 }

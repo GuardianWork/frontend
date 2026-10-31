@@ -18,6 +18,9 @@ import {
   type CandidateExperience,
   type CandidateProfileDetails,
 } from "@/context/CandidateContext";
+import { getCandidateCvs, type CandidateCv as CandidateCvRecord } from "@/services/candidateCv";
+import { ApiError } from "@/services/api";
+import { clearAuthSession } from "@/services/auth";
 import {
   loadCandidateProfile as loadApiProfile,
   updateCandidateProfile as saveApiProfile,
@@ -132,8 +135,9 @@ function currentAvatarUrl(profile: CandidateProfileDetails): string | undefined 
 
 function CandidateProfilePage() {
   const user = useAuthUser();
-  const { profileDetails: profile, setProfileDetails, cvs } = useCandidate();
-  const defaultCv = cvs.find((cv) => cv.isDefault);
+  const { profileDetails: profile, setProfileDetails } = useCandidate();
+  const [candidateCvs, setCandidateCvs] = useState<CandidateCvRecord[]>([]);
+  const defaultCv = candidateCvs.find((cv) => cv.isDefault);
   const [isEditing, setIsEditing] = useState(false);
   const [isApiLoading, setIsApiLoading] = useState(true);
   const [apiError, setApiError] = useState("");
@@ -179,6 +183,24 @@ function CandidateProfilePage() {
       })
       .finally(() => {
         if (active) setIsApiLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [setProfileDetails]);
+
+  useEffect(() => {
+    let active = true;
+    void getCandidateCvs()
+      .then((data) => {
+        if (active) setCandidateCvs(data);
+      })
+      .catch((cause) => {
+        if (!active) return;
+        if (cause instanceof ApiError && cause.status === 401) {
+          clearAuthSession();
+          window.location.assign("/login?role=candidate");
+        }
       });
     return () => {
       active = false;
@@ -460,7 +482,7 @@ function CandidateProfilePage() {
     { label: "Kinh nghiệm", done: profile.experiences.length > 0 },
     { label: "Học vấn", done: profile.education.length > 0 },
     { label: "Kỹ năng", done: profile.skills.length > 0 },
-    { label: "Hồ sơ xin việc", done: cvs.length > 0 },
+    { label: "Hồ sơ xin việc", done: candidateCvs.length > 0 },
   ];
   const completedCount = readinessItems.filter((item) => item.done).length;
   const missingLabels = readinessItems.filter((item) => !item.done).map((item) => item.label);
@@ -1102,7 +1124,7 @@ function CandidateProfilePage() {
                   Hồ sơ xin việc
                 </h2>
                 <span className="rounded-md border border-rule bg-paper px-2 py-0.5 text-xs font-bold tabular-nums text-ink-2">
-                  {cvs.length}/{MAX_CV_COUNT}
+                  {candidateCvs.length}/{MAX_CV_COUNT}
                 </span>
               </div>
               <p className="mt-2 text-xs leading-5 text-ink-2" style={{ overflowWrap: "anywhere" }}>
