@@ -252,7 +252,7 @@ export function createMockApiServer() {
       });
       return;
     }
-    if (path === "/api/v1/candidates/profile" && ["GET", "PUT"].includes(req.method)) {
+    if (path === "/api/candidates/profile" && ["GET", "PUT"].includes(req.method)) {
       const seededExperience = [
         {
           company: "GuardianWork VN • TP. Hồ Chí Minh",
@@ -362,7 +362,7 @@ export function createMockApiServer() {
     }
 
     const cvMatch = /^\/api\/v1\/candidate\/cvs\/([^/]+)\/download-url$/.exec(path);
-    if (req.method === "GET" && path === "/api/v1/candidate/cvs") {
+    if (req.method === "GET" && path === "/api/candidate/cvs") {
       const profile = candidateProfiles.get(user.id) || {
         id: randomUUID(),
         userId: user.id,
@@ -383,7 +383,7 @@ export function createMockApiServer() {
       return;
     }
 
-    if (req.method === "POST" && path === "/api/v1/candidate/cvs/upload-url") {
+    if (req.method === "POST" && path === "/api/candidate/cvs/upload-url") {
       const profile = candidateProfiles.get(user.id) || {
         id: randomUUID(),
         userId: user.id,
@@ -454,7 +454,7 @@ export function createMockApiServer() {
       return;
     }
 
-    if (req.method === "POST" && path === "/api/v1/candidate/cvs") {
+    if (req.method === "POST" && path === "/api/candidate/cvs") {
       const profile = candidateProfiles.get(user.id);
       if (!profile) {
         send(404, "40401 Not found");

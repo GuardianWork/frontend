@@ -94,7 +94,7 @@ export function parseCandidateProfile(value: unknown): CandidateProfile {
 
 export async function loadCandidateProfile(): Promise<CandidateProfile> {
   return parseCandidateProfile(
-    await authenticatedRequest("/v1/candidates/profile", { cache: "no-store" }),
+    await authenticatedRequest("/candidates/profile", { cache: "no-store" }),
   );
 }
 
@@ -109,7 +109,7 @@ export async function updateCandidateProfile(
   if (input.education !== undefined) body.education = input.education;
   if (input.isPublic !== undefined) body.isPublic = input.isPublic;
   return parseCandidateProfile(
-    await authenticatedRequest("/v1/candidates/profile", {
+    await authenticatedRequest("/candidates/profile", {
       method: "PUT",
       body: JSON.stringify(body),
     }),

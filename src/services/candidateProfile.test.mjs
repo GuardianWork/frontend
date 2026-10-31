@@ -32,7 +32,7 @@ test("candidate contact updates preserve profile fields and clearing sends null"
   try {
     for (const phone of ["0909876543", ""]) {
       globalThis.fetch = async (url, init) => {
-        assert.equal(url, "/api/v1/candidates/profile");
+        assert.equal(url, "/api/candidates/profile");
         assert.equal(init.method, "PUT");
         assert.equal(init.headers.Authorization, "Bearer access");
         const sent = JSON.parse(init.body);

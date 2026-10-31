@@ -48,13 +48,13 @@ function mapCv(value: unknown): CandidateCv {
 }
 
 export async function listCandidateCvs(): Promise<CandidateCv[]> {
-  const data = await authenticatedRequest("/v1/candidate/cvs");
+  const data = await authenticatedRequest("/candidate/cvs");
   if (!Array.isArray(data)) return [];
   return data.map(mapCv);
 }
 
 export async function requestCvUploadUrl(): Promise<UploadSignature> {
-  const data = await authenticatedRequest("/v1/candidate/cvs/upload-url", {
+  const data = await authenticatedRequest("/candidate/cvs/upload-url", {
     method: "POST",
     body: JSON.stringify({}),
   });
@@ -75,7 +75,7 @@ export async function registerCandidateCv(
   fileName: string,
   publicId: string,
 ): Promise<CandidateCv> {
-  const data = await authenticatedRequest("/v1/candidate/cvs", {
+  const data = await authenticatedRequest("/candidate/cvs", {
     method: "POST",
     body: JSON.stringify({ fileName, publicId }),
   });
@@ -119,7 +119,7 @@ export function uploadToCloudinary(
 }
 
 export async function getCvDownloadUrl(id: string): Promise<DownloadUrl> {
-  const data = await authenticatedRequest(`/v1/candidate/cvs/${id}/download-url`);
+  const data = await authenticatedRequest(`/candidate/cvs/${id}/download-url`);
   const value = data as Partial<DownloadUrl>;
   if (!value?.url) throw new ApiError("Không tạo được liên kết tải xuống.", 500);
   return {
@@ -132,11 +132,11 @@ export async function getCvDownloadUrl(id: string): Promise<DownloadUrl> {
 }
 
 export async function deleteCandidateCv(id: string): Promise<void> {
-  await authenticatedRequest(`/v1/candidate/cvs/${id}`, { method: "DELETE" });
+  await authenticatedRequest(`/candidate/cvs/${id}`, { method: "DELETE" });
 }
 
 export async function setDefaultCandidateCv(id: string): Promise<CandidateCv> {
-  const data = await authenticatedRequest(`/v1/candidate/cvs/${id}/default`, { method: "PATCH" });
+  const data = await authenticatedRequest(`/candidate/cvs/${id}/default`, { method: "PATCH" });
   return mapCv(data);
 }
 
