@@ -663,7 +663,7 @@ p {
 
 /* Discovery results are an app list: truthful, compact, and readable at real density. */
 .career-site:not(.guardian-discovery) .career-job {
-  border-radius: var(--gw-radius);
+  border-radius: 12px;
   box-shadow: none;
 }
 .career-site:not(.guardian-discovery) .career-search {
@@ -1009,40 +1009,60 @@ p {
 }
 /* Keep the public frame symmetric in browsers reserving scrollbar space. */
 html { scrollbar-gutter: auto; }
+
+/* Coarse-pointer adaptation: raise tap targets to 44px on touch devices. */
+@media (pointer: coarse) {
+  .career-brand,
+  .career-header__login,
+  .career-header__toggle,
+  .career-icon-button,
+  .career-popular button,
+  .footer-ft5__meta,
+  .career-job__link {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+  /* Keep responsive visibility rules authoritative for the employer CTA. */
+  .career-header__employer {
+    min-height: 44px;
+  }
+  .career-icon-button,
+  .career-header__toggle {
+    min-width: 44px;
+    justify-content: center;
+  }
+  .career-popular button {
+    padding-inline: 10px;
+  }
+  .career-job__link {
+    padding-block: 8px;
+    margin-block: -8px;
+  }
+}
 .guardian-discovery .career-employer .career-button,
 .guardian-discovery .career-search .career-button { font-size: 16px; }
 /* Full recruitment collection: rows share a single surface and give the title most width. */
 .guardian-job-browser .career-discovery__head { padding-block: 28px; background: var(--color-paper-2); }
 .guardian-job-browser .career-discovery__intro h1 { font-size: 32px; line-height: 1.25; }
-.guardian-job-browser .career-discovery__lede { font-size: 16px; color: var(--color-ink); max-width: 68ch; }
-.guardian-job-browser .career-job-grid { grid-template-columns: 1fr; gap: 0; }
-.guardian-job-browser .career-job-grid .career-job {
-  display: grid; grid-template-columns: 1.2fr 1.6fr 1fr; gap: 12px 24px;
-  border: 0; border-bottom: 1px solid var(--color-rule); border-radius: 0; padding: 24px 0;
-}
-.guardian-job-browser .career-job-grid .career-job h3 { grid-column: 2; grid-row: 1; margin: 0; font-size: 18px; }
-.guardian-job-browser .career-job-grid .career-job__company { grid-column: 1; grid-row: 1 / 3; align-self: start; flex-wrap: wrap; margin: 0; }
-.guardian-job-browser .career-job-grid .career-job__company .career-job__arrow { display: none; }
-.guardian-job-browser .career-job-grid .career-job__salary { grid-column: 3; grid-row: 1; margin: 0; font-size: 14px; text-align: right; font-variant-numeric: tabular-nums; }
-.guardian-job-browser .career-job-grid .career-job__location { grid-column: 2; grid-row: 2; margin: 0; }
-.guardian-job-browser .career-job-grid .career-job__bottom { grid-column: 2 / 4; border: 0; padding: 0; margin: 0; }
-.guardian-job-browser .career-job-grid .career-job:hover { background: var(--color-paper-2); }
+.guardian-job-browser .career-discovery__lede { font-size: 15px; color: var(--color-ink); max-width: 68ch; }
+/* Job items now render as individual cells in the shared grid. */
 .guardian-job-browser .career-split__stack { border: 1px solid var(--color-rule); border-radius: var(--gw-radius); gap: 0; overflow: hidden; }
 .guardian-job-browser .career-split__stack .career-job { border: 0; border-bottom: 1px solid var(--color-rule); border-radius: 0; }
 .guardian-job-browser .career-split__stack .career-job.is-active { background: var(--color-paper-2); }
 .guardian-job-browser .career-results-meta { margin-block: 20px; }
 .guardian-job-browser .career-data-note { font-size: 13px; color: var(--color-ink-2); }
 .guardian-job-browser .career-job__salary { font-variant-numeric: tabular-nums; }
+.guardian-job-browser .career-results-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; margin-block: 24px 12px; padding-bottom: 10px; border-bottom: 2px solid var(--color-ink); }
+.guardian-job-browser .career-results-head h2 { margin: 0; font-size: clamp(24px, 2.4vw, 30px); line-height: 1.25; letter-spacing: -0.025em; font-weight: 750; }
+.guardian-job-browser .career-results-head .career-results-count { margin: 0; color: var(--color-ink-2); font-size: 13px; font-variant-numeric: tabular-nums; }
+.guardian-job-browser .career-job-grid .career-job { transition: background-color 160ms ease, border-color 160ms ease; }
+.guardian-job-browser .career-job-grid .career-job:hover { background: var(--color-paper-2); }
+.guardian-job-browser .career-job-grid .career-job.is-active { background: var(--color-accent-subtle); }
 @media (max-width: 640px) {
   .guardian-job-browser .career-discovery__head { padding-block: 20px; }
   .guardian-job-browser .career-discovery__lede { display: block; font-size: 14px; }
   .guardian-job-browser .career-discovery__intro h1 { font-size: 28px; }
-  .guardian-job-browser .career-job-grid .career-job { grid-template-columns: 1fr; gap: 8px; padding: 20px 0; }
-  .guardian-job-browser .career-job-grid .career-job__company,
-  .guardian-job-browser .career-job-grid .career-job h3,
-  .guardian-job-browser .career-job-grid .career-job__salary,
-  .guardian-job-browser .career-job-grid .career-job__location,
-  .guardian-job-browser .career-job-grid .career-job__bottom { grid-column: 1; grid-row: auto; text-align: left; }
-  .guardian-job-browser .career-job-grid .career-company-mark { display: none; }
+  /* Mobile keeps the shared grid fallback from career.css. */
   .guardian-job-browser .career-results-meta { align-items: start; gap: 8px; }
 }

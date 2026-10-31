@@ -1,6 +1,6 @@
 /* Hallmark · page: public job discovery · genre: modern-minimal
- * macrostructure: Catalogue · tone: utilitarian · theme: GuardianWork (DESIGN.md locked)
- * anchor hue: Guardian Blue · enrichment: none (typography + functional states)
+ * macrostructure: Workbench · tone: utilitarian · theme: GuardianWork (DESIGN.md locked)
+ * anchor hue: Guardian Blue · enrichment: none (typography + functional states) · job-list focus
  * states: default · hover · focus · active · disabled · loading · error · success
  * pre-emit critique: P5 H5 E5 S5 R5 V4
  */
@@ -384,23 +384,40 @@ export function PublicJobsView({ search }: { search: JobSearchParams }) {
               </div>
             </section>
 
-            <Results
-              search={search}
-              update={update}
-              resetFilters={resetFilters}
-              jobs={jobs}
-              signedIn={Boolean(user)}
-              applied={appliedFor}
-              remotePagination={
-                user
-                  ? undefined
-                  : {
-                      pageNumber: publicJobSearch.data?.pageNumber ?? 0,
-                      totalPages: publicJobSearch.data?.totalPages ?? 1,
-                      totalElements: publicJobSearch.data?.totalElements ?? jobs.length,
-                    }
-              }
-            />
+            {publicJobSearch.isError && jobs.length === 0 ? (
+              <section className="career-empty" role="alert">
+                <SearchX size={40} aria-hidden="true" />
+                <h2>Không thể tải danh sách việc làm</h2>
+                <p>Vui lòng kiểm tra kết nối và thử lại.</p>
+                <div className="career-empty__actions">
+                  <button
+                    type="button"
+                    className="career-button"
+                    onClick={() => void publicJobSearch.refetch()}
+                  >
+                    Thử tải lại
+                  </button>
+                </div>
+              </section>
+            ) : (
+              <Results
+                search={search}
+                update={update}
+                resetFilters={resetFilters}
+                jobs={jobs}
+                signedIn={Boolean(user)}
+                applied={appliedFor}
+                remotePagination={
+                  user
+                    ? undefined
+                    : {
+                        pageNumber: publicJobSearch.data?.pageNumber ?? 0,
+                        totalPages: publicJobSearch.data?.totalPages ?? 1,
+                        totalElements: publicJobSearch.data?.totalElements ?? jobs.length,
+                      }
+                }
+              />
+            )}
           </>
         )}
       </main>
@@ -426,37 +443,39 @@ function JobCard({
 }) {
   return (
     <article
-      className={`career-job career-job--interactive${active ? " is-active" : ""}`}
+      className={`career-job career-job--interactive${active ? " is-active" : ""} min-w-0`}
       aria-current={active ? "true" : undefined}
       onClick={onSelect}
     >
-      <div className="career-job__company">
+      <div className="career-job__company min-w-0">
         <CompanyMark name={job.company} />
-        <span>{job.company}</span>
-        <span className={badgeClass(job)}>{badgeLabel(job.badge)}</span>
-        <ArrowRight size={18} className="career-job__arrow" aria-hidden="true" />
+        <span className="min-w-0 truncate">{job.company}</span>
+        <span className={`${badgeClass(job)} shrink-0`}>{badgeLabel(job.badge)}</span>
+        <ArrowRight size={18} className="career-job__arrow shrink-0" aria-hidden="true" />
       </div>
-      <h3>
+      <h3 className="min-w-0">
         <Link
           to="/jobs"
           search={jobSearch({ ...search, job: job.id })}
-          className="career-job__link"
+          className="career-job__link line-clamp-2 break-words"
           aria-label={`${job.title} — ${job.company}`}
           onClick={(event) => event.stopPropagation()}
         >
           {job.title}
         </Link>
       </h3>
-      <p className="career-job__salary">{job.salaryRange}</p>
-      <p className="career-job__location">
-        <MapPin size={15} aria-hidden="true" />
+      <p className="career-job__salary break-words">{job.salaryRange}</p>
+      <p className="career-job__location min-w-0 break-words">
+        <MapPin size={15} aria-hidden="true" className="shrink-0" />
         {job.location}
       </p>
-      <div className="career-job__bottom">
-        <span>
+      <div className="career-job__bottom min-w-0">
+        <span className="min-w-0 truncate">
           {job.department} · {WORK_MODE_LABELS[workModeOf(job)]}
         </span>
-        <span aria-hidden="true">Xem chi tiết</span>
+        <span className="shrink-0" aria-hidden="true">
+          Xem chi tiết
+        </span>
       </div>
     </article>
   );
@@ -548,9 +567,12 @@ function Results({
 
   return (
     <section className="career-container career-discovery" aria-labelledby="results-title">
-      <h2 id="results-title" className="sr-only">
-        Kết quả tìm kiếm việc làm
-      </h2>
+      <div className="career-results-head">
+        <h2 id="results-title">Danh sách việc làm</h2>
+        <p className="career-results-count" aria-live="polite">
+          {pagination.totalItems} tin đang hoạt động
+        </p>
+      </div>
 
       {showFilters && (
         <div className="career-discovery__filters" role="group" aria-label="Bộ lọc việc làm">
@@ -699,8 +721,9 @@ function Results({
           className={pagination.totalItems > 0 ? "career-results-count" : "sr-only"}
           aria-live="polite"
         >
-          {pagination.totalItems} tin tuyển dụng
-          {filtersActive ? " phù hợp với bộ lọc" : " đang hoạt động"}
+          {pagination.items.length > 0
+            ? `Đang hiển thị ${pagination.items.length} trên ${pagination.totalItems} tin tuyển dụng${filtersActive ? " phù hợp bộ lọc" : ""}`
+            : `${pagination.totalItems} tin tuyển dụng đang hoạt động`}
         </p>
       </div>
 
@@ -860,11 +883,11 @@ function JobDetail({
                 <span className={badgeClass(job)}>{badgeLabel(job.badge)}</span>
               </div>
             </div>
-            <h1>{job.title}</h1>
+            <h1 className="break-words">{job.title}</h1>
             <ul className="career-detail__meta">
               <li>
                 <Banknote size={17} aria-hidden="true" />
-                <strong>{job.salaryRange}</strong>
+                <strong className="break-words">{job.salaryRange}</strong>
               </li>
               <li>
                 <MapPin size={17} aria-hidden="true" />
