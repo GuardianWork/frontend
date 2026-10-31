@@ -1,8 +1,8 @@
-import { CandidateContact } from "@/components/CandidateContact";
 import { useEffect, useState, type FormEvent, type KeyboardEvent } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AdminShell } from "@/components/AdminShell";
 import { FloatingPanel } from "@/components/FloatingPanel";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Dialog,
   DialogContent,
@@ -38,6 +38,7 @@ import {
   Eye,
   EyeOff,
   FileText,
+  Info,
   Mail,
   MapPin,
   Pencil,
@@ -50,6 +51,21 @@ import {
 type ExperienceEntry = CandidateExperience;
 type EducationEntry = CandidateEducation;
 type EditSection = "all" | "basics" | "about" | "experience" | "education" | "skills";
+
+const PROFILE_ROLE_OPTIONS = [
+  "Kỹ sư phần mềm",
+  "Senior Software Engineer",
+  "Full-stack Developer",
+  "Backend Developer",
+  "Frontend Developer",
+  "Tech Lead",
+  "Project Manager",
+  "Product Manager",
+  "UI/UX Designer",
+  "Data Engineer",
+  "DevOps Engineer",
+  "QA Engineer",
+];
 
 const MAX_NAME_LENGTH = 150;
 const MAX_EMAIL_LENGTH = 50;
@@ -138,6 +154,7 @@ function CandidateProfilePage() {
   const { profileDetails: profile, setProfileDetails } = useCandidate();
   const [candidateCvs, setCandidateCvs] = useState<CandidateCvRecord[]>([]);
   const defaultCv = candidateCvs.find((cv) => cv.isDefault);
+  const [customRoleIndexes, setCustomRoleIndexes] = useState<Record<number, boolean>>({});
   const [isEditing, setIsEditing] = useState(false);
   const [isApiLoading, setIsApiLoading] = useState(true);
   const [apiError, setApiError] = useState("");
@@ -417,7 +434,7 @@ function CandidateProfilePage() {
       const saved = await saveApiProfile({
         fullName: nextProfile.fullName,
         phoneNumber: phoneValue ? phoneValue : undefined,
-        avatarUrl: currentAvatarUrl(profile),
+        avatarUrl: currentAvatarUrl(draft),
         skills: nextProfile.skills,
         experience: apiExperience,
         education: apiEducation,
@@ -510,10 +527,6 @@ function CandidateProfilePage() {
           </button>
         </header>
 
-        <p className="workspace-inline-note">
-          Kinh nghiệm, học vấn và kỹ năng hiện là dữ liệu trong phiên xem. Thông tin liên hệ được
-          tải và lưu qua dịch vụ hồ sơ.
-        </p>
         {isEditing && (
           <FloatingPanel isOpen={true} onClose={closeEditForm} labelledBy="edit-profile-title">
             <form onSubmit={handleSave} noValidate className="flex min-h-0 flex-1 flex-col">
@@ -531,7 +544,7 @@ function CandidateProfilePage() {
                     </p>
                     <p className="mt-2 text-xs leading-4 font-medium text-ink-3">
                       Trường đánh dấu <span className="font-bold text-error">*</span> là bắt buộc.
-                      Các thông tin khác trong hồ sơ được giữ nguyên.
+
                     </p>
                   </div>
                   <button
@@ -613,42 +626,38 @@ function CandidateProfilePage() {
                         <FieldError id="profile-full-name-error" message={fieldErrors.fullName} />
                       </div>
                       <div>
-                        <FieldHeader
-                          htmlFor="profile-email"
-                          label="Email liên hệ"
-                          required
-                          counter={`${draft.email.length}/${MAX_EMAIL_LENGTH}`}
-                        />
-                        <input
-                          id="profile-email"
-                          maxLength={MAX_EMAIL_LENGTH}
-                          type="email"
-                          autoComplete="email"
-                          value={draft.email}
-                          readOnly
-                          onChange={() => {}}
-                          aria-required="true"
-                          aria-invalid={Boolean(fieldErrors.email)}
-                          aria-describedby={
-                            fieldErrors.email ? "profile-email-error" : "profile-email-hint"
-                          }
-                          className={fieldClass(fieldErrors.email)}
-                        />
-                        <p
-                          id="profile-email-hint"
-                          className="mt-1 text-xs leading-4 font-normal text-ink-3"
-                        >
-                          Nhà tuyển dụng dùng email này để phản hồi hồ sơ.
-                        </p>
-                        <FieldError id="profile-email-error" message={fieldErrors.email} />
-                      </div>
-                      <div>
-                        <FieldHeader
-                          htmlFor="profile-phone"
-                          label="Số điện thoại"
-                          required
-                          counter={`${draft.phone.length}/10`}
-                        />
+                        <div className="flex items-baseline justify-between gap-3">
+                          <div className="flex items-center gap-1.5">
+                            <label
+                              htmlFor="profile-phone"
+                              className="text-sm font-semibold text-ink-2"
+                            >
+                              Số điện thoại
+                              <span className="ml-0.5 text-error" aria-hidden="true">
+                                *
+                              </span>
+                            </label>
+                            <TooltipProvider delayDuration={0}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    type="button"
+                                    aria-label="Việc thay đổi số điện thoại áp dụng cho cả tài khoản tuyển dụng"
+                                    className="inline-flex h-5 w-5 items-center justify-center rounded-full text-ink-3 transition-colors hover:text-ink-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                                  >
+                                    <Info size={14} aria-hidden="true" />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom">
+                                  Việc thay đổi số điện thoại áp dụng cho cả tài khoản tuyển dụng
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
+                          <span className="text-xs font-medium tabular-nums text-ink-3">
+                            {draft.phone.length}/10
+                          </span>
+                        </div>
                         <input
                           id="profile-phone"
                           inputMode="numeric"
@@ -673,6 +682,52 @@ function CandidateProfilePage() {
                           10 chữ số, bắt đầu bằng 0. Ví dụ 0987654321.
                         </p>
                         <FieldError id="profile-phone-error" message={fieldErrors.phone} />
+                      </div>
+                      <div className="md:col-span-2">
+                        <FieldHeader
+                          htmlFor="profile-avatar"
+                          label="Ảnh đại diện"
+                          counter={`${(draft.avatarUrl ?? "").length}/512`}
+                        />
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                          <input
+                            id="profile-avatar"
+                            type="url"
+                            autoComplete="url"
+                            placeholder="https://example.com/avatar.jpg"
+                            value={draft.avatarUrl ?? ""}
+                            maxLength={512}
+                            onChange={(event) => updateDraft("avatarUrl", event.target.value)}
+                            aria-invalid={Boolean(fieldErrors.avatarUrl)}
+                            aria-describedby={
+                              fieldErrors.avatarUrl
+                                ? "profile-avatar-error profile-avatar-hint"
+                                : "profile-avatar-hint"
+                            }
+                            className={fieldClass(fieldErrors.avatarUrl)}
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              updateDraft(
+                                "avatarUrl",
+                                `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(
+                                  draft.fullName.trim() || "GuardianWork",
+                                )}`,
+                              )
+                            }
+                            className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-md border border-rule bg-paper px-4 text-xs font-semibold text-ink transition-colors hover:bg-paper-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                          >
+                            Dùng ảnh mặc định
+                          </button>
+                        </div>
+                        <p
+                          id="profile-avatar-hint"
+                          className="mt-1 text-xs leading-4 font-normal text-ink-3"
+                        >
+                          Dán liên kết ảnh hoặc dùng ảnh mặc định.
+                        </p>
+                        <FieldError id="profile-avatar-error" message={fieldErrors.avatarUrl} />
                       </div>
                     </>
                   )}
@@ -806,11 +861,93 @@ function CandidateProfilePage() {
                                 </button>
                               </div>
                               <div className="grid gap-3 md:grid-cols-2">
+                                <div>
+                                  <FieldHeader
+                                    htmlFor={`experience-${index}-title`}
+                                    label="Chức danh"
+                                    required
+                                  />
+                                  {customRoleIndexes[index] ||
+                                  (!PROFILE_ROLE_OPTIONS.includes(entry.title) &&
+                                    entry.title.trim() !== "") ? (
+                                    <div className="flex items-center gap-2">
+                                      <input
+                                        id={`experience-${index}-title`}
+                                        type="text"
+                                        maxLength={100}
+                                        value={entry.title}
+                                        placeholder="Nhập chức danh khác"
+                                        onChange={(event) =>
+                                          updateExperience(index, "title", event.target.value)
+                                        }
+                                        aria-required="true"
+                                        aria-invalid={Boolean(
+                                          fieldErrors[`experiences.${index}.title`],
+                                        )}
+                                        className={fieldClass(
+                                          fieldErrors[`experiences.${index}.title`],
+                                        )}
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setCustomRoleIndexes((current) => ({
+                                            ...current,
+                                            [index]: false,
+                                          }));
+                                          updateExperience(index, "title", "");
+                                        }}
+                                        className="shrink-0 text-xs font-semibold text-accent underline-offset-2 hover:underline"
+                                      >
+                                        Chọn từ danh sách
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <select
+                                      id={`experience-${index}-title`}
+                                      value={entry.title}
+                                      onChange={(event) => {
+                                        const value = event.target.value;
+                                        if (value === "custom") {
+                                          setCustomRoleIndexes((current) => ({
+                                            ...current,
+                                            [index]: true,
+                                          }));
+                                          updateExperience(index, "title", "");
+                                        } else {
+                                          setCustomRoleIndexes((current) => ({
+                                            ...current,
+                                            [index]: false,
+                                          }));
+                                          updateExperience(index, "title", value);
+                                        }
+                                      }}
+                                      aria-required="true"
+                                      aria-invalid={Boolean(
+                                        fieldErrors[`experiences.${index}.title`],
+                                      )}
+                                      className={fieldClass(
+                                        fieldErrors[`experiences.${index}.title`],
+                                      )}
+                                    >
+                                      <option value="" disabled>
+                                        Chọn chức danh
+                                      </option>
+                                      {PROFILE_ROLE_OPTIONS.map((role) => (
+                                        <option key={role} value={role}>
+                                          {role}
+                                        </option>
+                                      ))}
+                                      <option value="custom">Khác (tự nhập)</option>
+                                    </select>
+                                  )}
+                                  <FieldError
+                                    id={`experience-${index}-title-error`}
+                                    message={fieldErrors[`experiences.${index}.title`]}
+                                  />
+                                </div>
                                 {(
-                                  [
-                                    ["title", "Chức danh", "Nhập chức danh."],
-                                    ["company", "Công ty / Địa điểm", "Nhập công ty."],
-                                  ] as const
+                                  [["company", "Công ty / Địa điểm", "Nhập công ty."]] as const
                                 ).map(([field, label, requiredMessage]) => (
                                   <div key={field}>
                                     <FieldHeader
@@ -1000,7 +1137,7 @@ function CandidateProfilePage() {
 
               <div className="flex shrink-0 flex-col-reverse gap-3 border-t border-rule bg-paper px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-7">
                 <p className="text-xs leading-4 text-ink-3">
-                  Hồ sơ cập nhật sẽ hiển thị ngay với nhà tuyển dụng.
+          
                 </p>
                 <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                   <button
@@ -1050,12 +1187,20 @@ function CandidateProfilePage() {
           <aside className="border-b border-rule bg-paper-2 px-5 py-6 sm:px-6 lg:border-b-0 lg:border-r lg:px-7 lg:py-8">
             <div>
               <div className="relative w-fit">
-                <div
-                  aria-hidden="true"
-                  className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-accent text-2xl font-extrabold text-accent-ink sm:h-20 sm:w-20 sm:text-3xl"
-                >
-                  {initial}
-                </div>
+                {profile.avatarUrl ? (
+                  <img
+                    src={profile.avatarUrl}
+                    alt="Ảnh đại diện"
+                    className="h-[72px] w-[72px] rounded-full object-cover ring-1 ring-rule sm:h-20 sm:w-20"
+                  />
+                ) : (
+                  <div
+                    aria-hidden="true"
+                    className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-accent text-2xl font-extrabold text-accent-ink sm:h-20 sm:w-20 sm:text-3xl"
+                  >
+                    {initial}
+                  </div>
+                )}
                 <span className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-paper-2 bg-paper text-mint">
                   <BadgeCheck size={18} strokeWidth={2.4} aria-hidden="true" />
                 </span>
@@ -1074,10 +1219,6 @@ function CandidateProfilePage() {
             </div>
 
             <div className="mt-5 flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-md border border-mint/20 bg-mint/10 px-2.5 py-1 text-xs font-semibold text-mint">
-                <BadgeCheck size={14} aria-hidden="true" />
-                Hồ sơ cá nhân
-              </span>
               <span className="inline-flex items-center gap-1.5 rounded-md border border-accent/15 bg-accent-subtle px-2.5 py-1 text-xs font-semibold text-accent-deep">
                 <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-accent" />
                 Ứng viên đang hoạt động
@@ -1171,7 +1312,6 @@ function CandidateProfilePage() {
                 {profile.isPublic ? "Đang hiển thị" : "Riêng tư"}
               </span>
             </div>
-            <CandidateContact />
           </aside>
 
           <div className="min-w-0 divide-y divide-rule">
@@ -1321,6 +1461,22 @@ function validateDraft(
     if (!phone) errors.phone = "Nhập số điện thoại.";
     else if (!PHONE_PATTERN.test(phone)) {
       errors.phone = "Số điện thoại gồm 10 chữ số và bắt đầu bằng 0.";
+    }
+
+    const avatarUrl = draft.avatarUrl?.trim() ?? "";
+    if (avatarUrl) {
+      if (avatarUrl.length > 512) {
+        errors.avatarUrl = "Ảnh đại diện phải là đường dẫn HTTPS hợp lệ.";
+      } else {
+        try {
+          const parsed = new URL(avatarUrl);
+          if (parsed.protocol !== "https:") {
+            errors.avatarUrl = "Ảnh đại diện phải là đường dẫn HTTPS hợp lệ.";
+          }
+        } catch {
+          errors.avatarUrl = "Ảnh đại diện phải là đường dẫn HTTPS hợp lệ.";
+        }
+      }
     }
   }
 
