@@ -53,10 +53,10 @@ export async function listCandidateCvs(): Promise<CandidateCv[]> {
   return data.map(mapCv);
 }
 
-export async function requestCvUploadUrl(consentGiven: boolean): Promise<UploadSignature> {
+export async function requestCvUploadUrl(): Promise<UploadSignature> {
   const data = await authenticatedRequest("/v1/candidate/cvs/upload-url", {
     method: "POST",
-    body: JSON.stringify({ consentGiven }),
+    body: JSON.stringify({}),
   });
   const value = data as Partial<UploadSignature>;
   if (!value?.url || !value?.publicId) {
@@ -129,6 +129,15 @@ export async function getCvDownloadUrl(id: string): Promise<DownloadUrl> {
     signature: null,
     publicId: value.publicId ?? "",
   };
+}
+
+export async function deleteCandidateCv(id: string): Promise<void> {
+  await authenticatedRequest(`/v1/candidate/cvs/${id}`, { method: "DELETE" });
+}
+
+export async function setDefaultCandidateCv(id: string): Promise<CandidateCv> {
+  const data = await authenticatedRequest(`/v1/candidate/cvs/${id}/default`, { method: "PATCH" });
+  return mapCv(data);
 }
 
 export function unwrapApiData<T>(payload: unknown): T {

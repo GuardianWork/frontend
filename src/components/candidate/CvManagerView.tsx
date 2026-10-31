@@ -10,6 +10,7 @@ import {
   Loader2,
   ShieldAlert,
   Star,
+  Trash2,
   UploadCloud,
   X,
 } from "lucide-react";
@@ -27,9 +28,11 @@ import { MAX_CV_COUNT } from "@/context/CandidateContext";
 import { clearAuthSession } from "@/services/auth";
 import {
   getCandidateCvs,
+  deleteCandidateCv,
   getCvDownloadUrl,
   registerCv,
   requestCvUploadUrl,
+  setDefaultCandidateCv,
   uploadToCloudinary,
   type CandidateCv,
 } from "@/services/candidateCv";
@@ -107,6 +110,9 @@ export function CvManagerView() {
   const [phase, setPhase] = useState<Phase>("idle");
   const [progress, setProgress] = useState(0);
   const [uploadError, setUploadError] = useState("");
+  const [defaultingId, setDefaultingId] = useState<string | null>(null);
+  const [confirmDeleteCv, setConfirmDeleteCv] = useState<CandidateCv | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const progressRef = useRef<number | null>(null);
@@ -201,7 +207,7 @@ export function CvManagerView() {
     setProgress(0);
 
     try {
-      const signature = await requestCvUploadUrl(true);
+      const signature = await requestCvUploadUrl();
       setPhase("uploading");
       let cloudinaryResponse: { public_id?: string };
       try {
@@ -230,6 +236,47 @@ export function CvManagerView() {
       if (error instanceof ApiError && error.code === 40902) {
         void load();
       }
+    }
+  };
+
+  const handleSetDefault = async (cv: CandidateCv) => {
+    if (cv.isDefault || defaultingId) return;
+    setDefaultingId(cv.id);
+    try {
+      const updated = await setDefaultCandidateCv(cv.id);
+      setCvs((current) =>
+        current.map((item) => ({ ...item, isDefault: item.id === updated.id })),
+      );
+      setNotice({ message: "Đã đặt hồ sơ mặc định thành công.", tone: "success" });
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        redirectToLogin();
+        return;
+      }
+      setNotice({ message: mapCvError(error), tone: "error" });
+      if (error instanceof ApiError && error.status === 404) void load();
+    } finally {
+      setDefaultingId(null);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!confirmDeleteCv) return;
+    setDeleting(true);
+    try {
+      await deleteCandidateCv(confirmDeleteCv.id);
+      setCvs((current) => current.filter((item) => item.id !== confirmDeleteCv.id));
+      setNotice({ message: "Đã xóa hồ sơ xin việc thành công.", tone: "success" });
+      setConfirmDeleteCv(null);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        redirectToLogin();
+        return;
+      }
+      setNotice({ message: mapCvError(error), tone: "error" });
+      if (error instanceof ApiError && error.status === 404) void load();
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -422,6 +469,22 @@ export function CvManagerView() {
                         </div>
 
                         <div className="flex w-full flex-wrap items-center gap-1.5 lg:w-auto lg:shrink-0 lg:justify-end">
+                          {!cv.isDefault && (
+                            <button
+                              type="button"
+                              onClick={() => void handleSetDefault(cv)}
+                              disabled={defaultingId === cv.id}
+                              aria-label={`Đặt ${cv.fileName} làm mặc định`}
+                              title="Đặt làm mặc định"
+                              className={iconButton}
+                            >
+                              {defaultingId === cv.id ? (
+                                <Loader2 size={18} className="animate-spin" aria-hidden="true" />
+                              ) : (
+                                <Star size={18} aria-hidden="true" />
+                              )}
+                            </button>
+                          )}
                           <button
                             type="button"
                             onClick={() => void handleDownload(cv)}
@@ -430,6 +493,16 @@ export function CvManagerView() {
                             className={iconButton}
                           >
                             <Download size={18} aria-hidden="true" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setConfirmDeleteCv(cv)}
+                            disabled={deleting}
+                            aria-label={`Xóa ${cv.fileName}`}
+                            title="Xóa"
+                            className={iconButton}
+                          >
+                            <Trash2 size={18} aria-hidden="true" />
                           </button>
                         </div>
                       </article>
@@ -690,6 +763,45 @@ export function CvManagerView() {
                 <UploadCloud size={17} aria-hidden="true" />
               )}
               Tải lên
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={!!confirmDeleteCv}
+        onOpenChange={(open) => {
+          if (!open && !deleting) setConfirmDeleteCv(null);
+        }}
+      >
+        <DialogContent className="max-w-md border-rule bg-paper p-0">
+          <DialogHeader className="border-b border-rule px-6 pb-4 pt-6 text-left">
+            <DialogTitle className="text-lg font-bold text-ink">Xóa hồ sơ xin việc</DialogTitle>
+            <DialogDescription className="mt-1 text-sm leading-6 text-ink-2">
+              {confirmDeleteCv?.fileName}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="px-6 py-5 text-sm leading-6 text-ink-2">
+            Thao tác này không thể hoàn tác. Các đơn ứng tuyển đã nộp trước đó vẫn giữ bản hồ sơ đã
+            gửi.
+          </div>
+          <DialogFooter className="flex-row justify-end gap-2 border-t border-rule px-6 py-4">
+            <button
+              type="button"
+              onClick={() => setConfirmDeleteCv(null)}
+              disabled={deleting}
+              className={secondaryButton}
+            >
+              Hủy
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleConfirmDelete()}
+              disabled={deleting}
+              className={primaryButton}
+            >
+              {deleting && <Loader2 size={17} className="animate-spin" aria-hidden="true" />}
+              Xóa
             </button>
           </DialogFooter>
         </DialogContent>
