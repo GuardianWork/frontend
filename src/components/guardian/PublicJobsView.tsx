@@ -1,7 +1,7 @@
 import { JobDescription } from "@/components/recruiter/JobDescription";
 /* Hallmark · page: public job discovery · genre: modern-minimal
- * macrostructure: Catalogue · tone: utilitarian · theme: GuardianWork (DESIGN.md locked)
- * anchor hue: Guardian Blue · enrichment: none (typography + functional states)
+ * macrostructure: Workbench · tone: utilitarian · theme: GuardianWork (DESIGN.md locked)
+ * anchor hue: Guardian Blue · enrichment: none (typography + functional states) · job-list focus
  * states: default · hover · focus · active · disabled · loading · error · success
  * pre-emit critique: P5 H5 E5 S5 R5 V4
  */
@@ -13,6 +13,7 @@ import {
   ArrowRight,
   Banknote,
   BriefcaseBusiness,
+  ChevronDown,
   Building2,
   CalendarClock,
   CheckCircle2,
@@ -23,14 +24,20 @@ import {
   SlidersHorizontal,
   X,
 } from "lucide-react";
+import { useMemo } from "react";
+import * as SliderPrimitive from "@radix-ui/react-slider";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useQuery } from "@tanstack/react-query";
+import { ApiError, apiRequest } from "@/services/api";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
-import { PublicApiJob } from "./PublicApiJob";
+import { searchPublicJobs } from "../../services/publicJobs";
+import type { JobContent } from "@/services/jobs";
+import type { PublicJobSearchResult } from "../../services/publicJobs";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
 import { useCandidate } from "@/context/CandidateContext";
-import { buildCandidateJobs } from "@/lib/candidate-jobs";
-import { JOBS, badgeLabel, isSampleListing, type JobItem } from "@/lib/job-listings";
+import { badgeLabel, isSampleListing, type JobItem } from "@/lib/job-listings";
 import { paginateItems } from "@/lib/pagination";
 import {
   EXPERIENCE_BANDS,
@@ -65,6 +72,53 @@ function CompanyMark({ name }: { name: string }) {
   );
 }
 
+function toPublicJobItem(job: PublicJobSearchResult): JobItem {
+  const content = job.content ?? {};
+  const compensation = content.compensation;
+  const hasSalary =
+    Boolean(compensation?.disclosed) &&
+    typeof compensation?.minimum === "number" &&
+    typeof compensation?.maximum === "number";
+  const salaryRange = hasSalary
+    ? `${Math.round(compensation!.minimum!).toLocaleString("vi-VN").replace(/,/g, ".")} - ${Math.round(compensation!.maximum!).toLocaleString("vi-VN").replace(/,/g, ".")} ${compensation!.currency ?? "VND"} / ${(compensation!.payPeriod ?? "MONTH").toLowerCase()}`
+    : "Thỏa thuận";
+  return {
+    id: String(job.id),
+    title: content.title ?? "Tin tuyển dụng",
+    company: job.company?.name ?? "Doanh nghiệp",
+    location: content.location ?? "Chưa cập nhật",
+    salaryRange,
+    badge: "Công ty đã xác thực",
+    badgeTone: "success",
+    time: "Đang tuyển",
+    department: employmentTypeLabel(content.employmentType),
+    industry: "Chưa cập nhật",
+    matchScore: 0,
+    description: content.description ?? "",
+    requirements: [],
+    statutoryBase: "Thông tin công khai từ tin tuyển dụng",
+    statutoryNote: "Kiểm tra kỹ điều khoản và điều kiện làm việc trước khi ứng tuyển.",
+    suggestedRevision: "Xem chi tiết để biết đầy đủ thông tin tuyển dụng.",
+  };
+}
+
+function employmentTypeLabel(value?: string) {
+  switch (value) {
+    case "FULL_TIME":
+      return "Toàn thời gian";
+    case "PART_TIME":
+      return "Bán thời gian";
+    case "CONTRACT":
+      return "Hợp đồng";
+    case "INTERNSHIP":
+      return "Thực tập";
+    case "TEMPORARY":
+      return "Thời vụ";
+    default:
+      return value ?? "Việc làm";
+  }
+}
+
 function badgeClass(job: JobItem) {
   if (job.badgeTone === "success") return "career-badge career-badge--success";
   if (job.badgeTone === "warning") return "career-badge career-badge--warning";
@@ -80,10 +134,110 @@ export function PublicJobsView({ search }: { search: JobSearchParams }) {
   const navigate = useNavigate({ from: "/jobs" });
   const user = useAuthUser();
   const { isApplied } = useCandidate();
-  const { workspace, company } = useCompanyWorkspace();
-  const { jobs: candidateJobs } = buildCandidateJobs(workspace, company);
-  // Signed-in candidates also see published company jobs; guests keep the public set.
-  const jobs = user ? candidateJobs : JOBS;
+  const { workspace } = useCompanyWorkspace();
+  const salaryBandBounds = (band?: string): { min?: number; max?: number } => {
+    switch (band) {
+      case "duoi-15":
+        return { max: 15_000_000 };
+      case "15-30":
+        return { min: 15_000_000, max: 30_000_000 };
+      case "30-50":
+        return { min: 30_000_000, max: 50_000_000 };
+      case "tren-50":
+        return { min: 50_000_000 };
+      default:
+        return {};
+    }
+  };
+  const salaryBounds = salaryBandBounds(search.salary);
+  const publicJobSearch = useQuery({
+    queryKey: [
+      "public-job-search",
+      search.q ?? "",
+      search.location ?? "",
+      search.salaryMin ?? "",
+      search.salaryMax ?? "",
+      search.mode ?? "",
+      search.employmentType ?? "",
+      search.page ?? "",
+    ],
+    queryFn: () =>
+      searchPublicJobs({
+        keyword: search.q?.trim() || undefined,
+        location: search.location?.trim() || undefined,
+        employmentType: search.employmentType || undefined,
+        workArrangement: (search.mode || "").toUpperCase() || undefined,
+        salaryMin: search.salaryMin ? Number(search.salaryMin) : undefined,
+        salaryMax: search.salaryMax ? Number(search.salaryMax) : undefined,
+        page: Number.isFinite(Number(search.page)) ? Number(search.page) : 0,
+        size: PAGE_SIZE,
+      }),
+    placeholderData: {
+      content: [],
+      pageNumber: 0,
+      pageSize: PAGE_SIZE,
+      totalElements: 0,
+      totalPages: 0,
+      first: true,
+      last: true,
+    },
+  });
+  const publicApiJobs =
+    publicJobSearch.data?.content
+      .map(toPublicJobItem)
+      .filter((job): job is JobItem => Boolean(job)) ?? [];
+  // UC-CAN-07: guest and candidate job search use the same backend postings.
+  const jobs = publicApiJobs;
+
+  const selectedBackendJobId =
+    search.job && /^[1-9]\\d*$/.test(search.job) ? search.job : undefined;
+  const backendDetail = useQuery({
+    queryKey: ["public-job", selectedBackendJobId ?? ""],
+    queryFn: () =>
+      apiRequest(`/jobs/${selectedBackendJobId}`, {
+        cache: "no-store",
+      }) as Promise<{ content: JobContent }>,
+    enabled: Boolean(selectedBackendJobId),
+    retry: false,
+    staleTime: 0,
+    gcTime: 0,
+  });
+
+  const backendJobItem = useMemo(() => {
+    const content = backendDetail.data?.content;
+    if (!selectedBackendJobId || !content) return undefined;
+    const searchable = jobs.find((job) => job.id === selectedBackendJobId);
+    const compensation = content.compensation;
+    const hasSalary =
+      Boolean(compensation?.disclosed) &&
+      typeof compensation?.minimum === "number" &&
+      typeof compensation?.maximum === "number";
+    const salaryRange = hasSalary
+      ? `${Math.round(compensation!.minimum!).toLocaleString("vi-VN").replace(/,/g, ".")} - ${Math.round(compensation!.maximum!).toLocaleString("vi-VN").replace(/,/g, ".")} ${compensation!.currency ?? "VND"} / ${(compensation!.payPeriod ?? "MONTH").toLowerCase()}`
+      : (searchable?.salaryRange ?? "Thỏa thuận");
+    const employmentType = employmentTypeLabel(content.employmentType);
+    return {
+      id: selectedBackendJobId,
+      title: content.title ?? searchable?.title ?? "Tin tuyển dụng",
+      company: searchable?.company ?? "Doanh nghiệp",
+      location: content.location ?? searchable?.location ?? "Chưa cập nhật",
+      salaryRange,
+      badge: searchable?.badge ?? "Công ty đã xác thực",
+      badgeTone: searchable?.badgeTone ?? "success",
+      time: "Đang tuyển",
+      department: employmentType,
+      industry: searchable?.industry ?? "Chưa cập nhật",
+      matchScore: 0,
+      description: content.description ?? searchable?.description ?? "",
+      requirements: [],
+      statutoryBase: searchable?.statutoryBase ?? "Thông tin công khai từ tin tuyển dụng",
+      statutoryNote:
+        searchable?.statutoryNote ??
+        "Kiểm tra kỹ điều khoản và điều kiện làm việc trước khi ứng tuyển.",
+      suggestedRevision:
+        searchable?.suggestedRevision ?? "Xem chi tiết để biết đầy đủ thông tin tuyển dụng.",
+    };
+  }, [backendDetail.data, jobs, selectedBackendJobId]);
 
   const [draftQuery, setDraftQuery] = useState(search.q ?? "");
   const [draftLocation, setDraftLocation] = useState(search.location ?? "");
@@ -102,7 +256,16 @@ export function PublicJobsView({ search }: { search: JobSearchParams }) {
     });
   };
   const resetFilters = () =>
-    update({ q: "", location: "", industry: "", salary: "", mode: "", experience: "", page: "" });
+    update({
+      q: "",
+      location: "",
+      industry: "",
+      salary: "",
+      salaryMin: "",
+      salaryMax: "",
+      mode: "",
+      page: "",
+    });
   const submitSearch = (event: FormEvent) => {
     event.preventDefault();
     update({ q: draftQuery.trim(), location: draftLocation, page: "" });
@@ -124,8 +287,34 @@ export function PublicJobsView({ search }: { search: JobSearchParams }) {
       </a>
       <Header variant="landing" />
       <main id="main-content">
-        {search.job && /^[1-9]\d*$/.test(search.job) ? (
-          <PublicApiJob key={search.job} id={search.job} />
+        {selectedBackendJobId ? (
+          backendDetail.isFetching ? (
+            <section className="career-container career-detail">
+              <p role="status">Đang tải tin tuyển dụng…</p>
+            </section>
+          ) : backendDetail.isError ? (
+            backendDetail.error instanceof ApiError && backendDetail.error.status === 404 ? (
+              <MissingJob search={search} jobs={jobs} />
+            ) : (
+              <section className="career-container career-detail">
+                <p role="alert">Không thể tải tin tuyển dụng. Vui lòng thử lại.</p>
+                <button className="career-button" onClick={() => void backendDetail.refetch()}>
+                  Thử tải lại
+                </button>
+              </section>
+            )
+          ) : backendJobItem ? (
+            <JobDetail
+              key={selectedBackendJobId}
+              job={backendJobItem}
+              search={search}
+              signedIn={Boolean(user)}
+              applied={appliedFor(backendJobItem.id)}
+              jobs={jobs}
+            />
+          ) : (
+            <MissingJob search={search} jobs={jobs} />
+          )
         ) : activeJob ? (
           <JobDetail
             job={activeJob}
@@ -196,14 +385,40 @@ export function PublicJobsView({ search }: { search: JobSearchParams }) {
               </div>
             </section>
 
-            <Results
-              search={search}
-              update={update}
-              resetFilters={resetFilters}
-              jobs={jobs}
-              signedIn={Boolean(user)}
-              applied={appliedFor}
-            />
+            {publicJobSearch.isError && jobs.length === 0 ? (
+              <section className="career-empty" role="alert">
+                <SearchX size={40} aria-hidden="true" />
+                <h2>Không thể tải danh sách việc làm</h2>
+                <p>Vui lòng kiểm tra kết nối và thử lại.</p>
+                <div className="career-empty__actions">
+                  <button
+                    type="button"
+                    className="career-button"
+                    onClick={() => void publicJobSearch.refetch()}
+                  >
+                    Thử tải lại
+                  </button>
+                </div>
+              </section>
+            ) : (
+              <Results
+                search={search}
+                update={update}
+                resetFilters={resetFilters}
+                jobs={jobs}
+                signedIn={Boolean(user)}
+                applied={appliedFor}
+                remotePagination={
+                  user
+                    ? undefined
+                    : {
+                        pageNumber: publicJobSearch.data?.pageNumber ?? 0,
+                        totalPages: publicJobSearch.data?.totalPages ?? 1,
+                        totalElements: publicJobSearch.data?.totalElements ?? jobs.length,
+                      }
+                }
+              />
+            )}
           </>
         )}
       </main>
@@ -229,37 +444,39 @@ function JobCard({
 }) {
   return (
     <article
-      className={`career-job career-job--interactive${active ? " is-active" : ""}`}
+      className={`career-job career-job--interactive${active ? " is-active" : ""} min-w-0`}
       aria-current={active ? "true" : undefined}
       onClick={onSelect}
     >
-      <div className="career-job__company">
+      <div className="career-job__company min-w-0">
         <CompanyMark name={job.company} />
-        <span>{job.company}</span>
-        <span className={badgeClass(job)}>{badgeLabel(job.badge)}</span>
-        <ArrowRight size={18} className="career-job__arrow" aria-hidden="true" />
+        <span className="min-w-0 truncate">{job.company}</span>
+        <span className={`${badgeClass(job)} shrink-0`}>{badgeLabel(job.badge)}</span>
+        <ArrowRight size={18} className="career-job__arrow shrink-0" aria-hidden="true" />
       </div>
-      <h3>
+      <h3 className="min-w-0">
         <Link
           to="/jobs"
           search={jobSearch({ ...search, job: job.id })}
-          className="career-job__link"
+          className="career-job__link line-clamp-2 break-words"
           aria-label={`${job.title} — ${job.company}`}
           onClick={(event) => event.stopPropagation()}
         >
           {job.title}
         </Link>
       </h3>
-      <p className="career-job__salary">{job.salaryRange}</p>
-      <p className="career-job__location">
-        <MapPin size={15} aria-hidden="true" />
+      <p className="career-job__salary break-words">{job.salaryRange}</p>
+      <p className="career-job__location min-w-0 break-words">
+        <MapPin size={15} aria-hidden="true" className="shrink-0" />
         {job.location}
       </p>
-      <div className="career-job__bottom">
-        <span>
+      <div className="career-job__bottom min-w-0">
+        <span className="min-w-0 truncate">
           {job.department} · {WORK_MODE_LABELS[workModeOf(job)]}
         </span>
-        <span aria-hidden="true">Xem chi tiết</span>
+        <span className="shrink-0" aria-hidden="true">
+          Xem chi tiết
+        </span>
       </div>
     </article>
   );
@@ -272,6 +489,7 @@ function Results({
   jobs,
   signedIn,
   applied,
+  remotePagination,
 }: {
   search: JobSearchParams;
   update: (patch: JobSearchParams) => void;
@@ -279,24 +497,61 @@ function Results({
   jobs: JobItem[];
   signedIn: boolean;
   applied: (jobId: string) => boolean;
+  remotePagination?: {
+    pageNumber: number;
+    totalPages: number;
+    totalElements: number;
+  };
 }) {
-  const filtered = filterJobs(jobs, search);
+  const filtered = signedIn ? filterJobs(jobs, search) : jobs;
   const requestedPage = Number.parseInt(search.page ?? "0", 10);
-  const pagination = paginateItems(
+  const clientPagination = paginateItems(
     filtered,
     Number.isFinite(requestedPage) ? requestedPage : 0,
     PAGE_SIZE,
   );
+  const pagination = remotePagination
+    ? {
+        page: remotePagination.pageNumber ?? 0,
+        totalPages: Math.max(1, remotePagination.totalPages ?? 1),
+        totalItems: remotePagination.totalElements ?? jobs.length,
+        items: filtered,
+        start: 0,
+      }
+    : clientPagination;
   const filtersActive = hasActiveFilters(search);
   const panelFiltersActive = Boolean(
-    search.industry || search.salary || search.mode || search.experience,
+    search.salaryMin || search.salaryMax || search.mode || search.employmentType || search.industry,
   );
-  const industries = industryOptions(jobs);
+  // Backend postings do not carry industry/experience metadata, so those sample-only filters are hidden.
   // The guest catalogue is the default; a keyword opens the list + detail layout,
   // and the filter panel only joins once there is a keyword to refine.
   const splitView = Boolean(search.q?.trim());
   const showFilters = splitView || panelFiltersActive;
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [salaryOpen, setSalaryOpen] = useState(false);
+  const salaryFilterActive = Boolean(search.salaryMin || search.salaryMax);
+  useEffect(() => {
+    if (salaryFilterActive) setSalaryOpen(true);
+  }, [salaryFilterActive]);
+
+  const salaryMinMillions = Math.min(
+    100,
+    Math.max(0, Math.round(Number(search.salaryMin ?? 0) / 1_000_000)),
+  );
+  const salaryRawMax = Number(search.salaryMax ?? 0) / 1_000_000;
+  const salaryUpperMillions =
+    salaryRawMax <= 0 ? 100 : Math.min(100, Math.max(0, Math.round(salaryRawMax)));
+  const salaryValueMin = Math.min(salaryMinMillions, salaryUpperMillions);
+  const salaryValueMax = Math.max(salaryMinMillions, salaryUpperMillions);
+  const salarySummary =
+    salaryValueMin === 0 && salaryValueMax >= 100
+      ? "Mọi mức lương"
+      : salaryValueMin > 0 && salaryValueMax >= 100
+        ? `Từ ${salaryValueMin} triệu trở lên`
+        : salaryValueMin === 0 && salaryValueMax < 100
+          ? `Đến ${salaryValueMax} triệu`
+          : `${salaryValueMin} – ${salaryValueMax} triệu`;
   const detailRef = useRef<HTMLDivElement>(null);
   const activeJob = splitView
     ? (pagination.items.find((job) => job.id === selectedId) ?? pagination.items[0])
@@ -313,9 +568,12 @@ function Results({
 
   return (
     <section className="career-container career-discovery" aria-labelledby="results-title">
-      <h2 id="results-title" className="sr-only">
-        Kết quả tìm kiếm việc làm
-      </h2>
+      <div className="career-results-head">
+        <h2 id="results-title">Danh sách việc làm</h2>
+        <p className="career-results-count" aria-live="polite">
+          {pagination.totalItems} tin đang hoạt động
+        </p>
+      </div>
 
       {showFilters && (
         <div className="career-discovery__filters" role="group" aria-label="Bộ lọc việc làm">
@@ -323,35 +581,106 @@ function Results({
             <SlidersHorizontal size={16} aria-hidden="true" />
             Lọc
           </span>
+          <div className="career-filter career-filter--salary">
+            <span>Mức lương (triệu VND)</span>
+            <Popover open={salaryOpen} onOpenChange={setSalaryOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="flex w-full min-h-[44px] items-center justify-between gap-2 border border-rule rounded-[8px] bg-paper-2 px-2.5 py-2 text-[14px] text-ink transition-colors hover:border-rule-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  aria-expanded={salaryOpen}
+                >
+                  <span className="inline-flex items-center gap-2 text-ink-2">
+                    <Banknote size={15} aria-hidden="true" className="text-accent" />
+                    {salarySummary}
+                  </span>
+                  <ChevronDown
+                    size={15}
+                    aria-hidden="true"
+                    className={`text-ink-3 transition-transform ${salaryOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent
+                align="start"
+                sideOffset={8}
+                className="w-80 border-rule bg-paper p-3 shadow-lg"
+              >
+                <div id="salary-slider-panel" className="career-salary-range space-y-2">
+                  {(() => {
+                    const minMillions = Math.min(
+                      100,
+                      Math.max(0, Math.round(Number(search.salaryMin ?? 0) / 1_000_000)),
+                    );
+                    const rawMax = Number(search.salaryMax ?? 0) / 1_000_000;
+                    const upperMillions =
+                      rawMax <= 0 ? 100 : Math.min(100, Math.max(0, Math.round(rawMax)));
+                    const valueMin = Math.min(minMillions, upperMillions);
+                    const valueMax = Math.max(minMillions, upperMillions);
+
+                    const commit = (next: number[]) => {
+                      const [nextMin, nextMax] = next;
+                      update({
+                        salaryMin: nextMin > 0 ? String(nextMin * 1_000_000) : "",
+                        salaryMax: nextMax >= 100 ? "" : String(nextMax * 1_000_000),
+                        job: "",
+                        page: "",
+                      });
+                    };
+
+                    return (
+                      <>
+                        <SliderPrimitive.Root
+                          className="relative flex w-full touch-none select-none items-center py-2"
+                          min={0}
+                          max={100}
+                          step={5}
+                          minStepsBetweenThumbs={1}
+                          value={[valueMin, valueMax]}
+                          onValueChange={commit}
+                          aria-label="Mức lương theo triệu VND"
+                        >
+                          <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full bg-rule">
+                            <SliderPrimitive.Range className="absolute h-full bg-accent" />
+                          </SliderPrimitive.Track>
+                          <SliderPrimitive.Thumb className="block h-5 w-5 rounded-full border-2 border-accent bg-paper shadow-md transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper" />
+                          <SliderPrimitive.Thumb className="block h-5 w-5 rounded-full border-2 border-accent bg-paper shadow-md transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper" />
+                        </SliderPrimitive.Root>
+                        <div
+                          className="flex justify-between text-[11px] font-medium tabular-nums text-ink-3"
+                          aria-hidden="true"
+                        >
+                          <span>0</span>
+                          <span>25</span>
+                          <span>50</span>
+                          <span>75</span>
+                          <span>100+</span>
+                        </div>
+                        <div
+                          className="flex items-center justify-between gap-2 text-xs font-semibold tabular-nums text-ink"
+                          aria-hidden="true"
+                        >
+                          <span className="rounded-md border border-rule bg-paper-2 px-2 py-0.5">
+                            {valueMin === 0 ? "0 tr" : `${valueMin} tr`}
+                          </span>
+                          <span className="text-ink-3">–</span>
+                          <span className="rounded-md border border-rule bg-paper-2 px-2 py-0.5">
+                            {valueMax >= 100 ? "100+ tr" : `${valueMax} tr`}
+                          </span>
+                        </div>
+                        <output className="inline-flex items-center gap-1.5 self-start rounded-full border border-rule bg-paper-2 px-3 py-1 text-xs font-semibold text-ink transition-colors">
+                          <Banknote size={13} aria-hidden="true" className="text-accent" />
+                          {salarySummary}
+                        </output>
+                      </>
+                    );
+                  })()}
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
           <label className="career-filter">
-            <span>Ngành nghề</span>
-            <select
-              value={search.industry ?? ""}
-              onChange={(event) => update({ industry: event.target.value, job: "", page: "" })}
-            >
-              <option value="">Mọi ngành nghề</option>
-              {industries.map((industry) => (
-                <option key={industry} value={industry}>
-                  {industry}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="career-filter">
-            <span>Mức lương</span>
-            <select
-              value={search.salary ?? ""}
-              onChange={(event) => update({ salary: event.target.value, job: "", page: "" })}
-            >
-              {SALARY_BANDS.map((band) => (
-                <option key={band.value} value={band.value}>
-                  {band.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="career-filter">
-            <span>Hình thức</span>
+            <span>Hình thức làm việc từ xa</span>
             <select
               value={search.mode ?? ""}
               onChange={(event) => update({ mode: event.target.value, job: "", page: "" })}
@@ -364,16 +693,19 @@ function Results({
             </select>
           </label>
           <label className="career-filter">
-            <span>Kinh nghiệm</span>
+            <span>Loại công việc</span>
             <select
-              value={search.experience ?? ""}
-              onChange={(event) => update({ experience: event.target.value, job: "", page: "" })}
+              value={search.employmentType ?? ""}
+              onChange={(event) =>
+                update({ employmentType: event.target.value, job: "", page: "" })
+              }
             >
-              {EXPERIENCE_BANDS.map((band) => (
-                <option key={band.value} value={band.value}>
-                  {band.label}
-                </option>
-              ))}
+              <option value="">Mọi loại</option>
+              <option value="FULL_TIME">Toàn thời gian</option>
+              <option value="PART_TIME">Bán thời gian</option>
+              <option value="CONTRACT">Hợp đồng</option>
+              <option value="INTERNSHIP">Thực tập</option>
+              <option value="TEMPORARY">Tạm thời</option>
             </select>
           </label>
           {filtersActive && pagination.items.length > 0 && (
@@ -390,14 +722,10 @@ function Results({
           className={pagination.totalItems > 0 ? "career-results-count" : "sr-only"}
           aria-live="polite"
         >
-          {pagination.totalItems} tin tuyển dụng
-          {filtersActive ? " phù hợp với bộ lọc" : " đang hoạt động"}
+          {pagination.items.length > 0
+            ? `Đang hiển thị ${pagination.items.length} trên ${pagination.totalItems} tin tuyển dụng${filtersActive ? " phù hợp bộ lọc" : ""}`
+            : `${pagination.totalItems} tin tuyển dụng đang hoạt động`}
         </p>
-        {pagination.totalItems > 0 && (
-          <p className="career-data-note">
-            Danh sách có tin minh họa. Huy hiệu mẫu không phải kết quả kiểm định thực tế.
-          </p>
-        )}
       </div>
 
       {pagination.items.length > 0 ? (
@@ -556,11 +884,11 @@ function JobDetail({
                 <span className={badgeClass(job)}>{badgeLabel(job.badge)}</span>
               </div>
             </div>
-            <h1>{job.title}</h1>
+            <h1 className="break-words">{job.title}</h1>
             <ul className="career-detail__meta">
               <li>
                 <Banknote size={17} aria-hidden="true" />
-                <strong>{job.salaryRange}</strong>
+                <strong className="break-words">{job.salaryRange}</strong>
               </li>
               <li>
                 <MapPin size={17} aria-hidden="true" />

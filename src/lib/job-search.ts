@@ -6,8 +6,10 @@ export interface JobSearchParams {
   location?: string;
   industry?: string;
   salary?: string;
+  salaryMin?: string;
+  salaryMax?: string;
   mode?: string;
-  experience?: string;
+  employmentType?: string;
   job?: string;
   page?: string;
 }
@@ -17,8 +19,10 @@ export const JOB_SEARCH_KEYS = [
   "location",
   "industry",
   "salary",
+  "salaryMin",
+  "salaryMax",
   "mode",
-  "experience",
+  "employmentType",
   "job",
   "page",
 ] as const;
@@ -147,8 +151,6 @@ export function jobMatchesSearch(job: JobItem, search: JobSearchParams): boolean
   if (search.industry && job.industry !== search.industry) return false;
   if (search.salary && salaryBandOf(job) !== search.salary) return false;
   if (search.mode && workModeOf(job) !== search.mode) return false;
-  if (search.experience && experienceBandOf(job) !== search.experience) return false;
-
   return true;
 }
 
@@ -165,8 +167,10 @@ export function hasActiveFilters(search: JobSearchParams): boolean {
     search.location ||
     search.industry ||
     search.salary ||
+    search.salaryMin ||
+    search.salaryMax ||
     search.mode ||
-    search.experience,
+    search.employmentType,
   );
 }
 
