@@ -99,7 +99,7 @@ export function EmployerOnboardingPanel() {
         )}
         {stage === "PENDING" && (
           <Link
-            to="/recruiter/verification"
+            to="/rec/verification"
             className="recruiter-primary inline-flex min-h-11 items-center gap-2"
           >
             Xem hồ sơ đã gửi
@@ -107,7 +107,7 @@ export function EmployerOnboardingPanel() {
         )}
         {stage === "VERIFIED" && (
           <Link
-            to="/recruiter/jobs"
+            to="/rec/jobs"
             search={{ create: true }}
             className="recruiter-primary inline-flex min-h-11 items-center gap-2"
           >

@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { parseJobSearch } from "@/lib/job-search";
 import { JobApplyPage } from "@/components/candidate/JobApplyPage";
 
 interface ApplySearch {
@@ -7,7 +8,7 @@ interface ApplySearch {
 
 export const Route = createFileRoute("/can/jobs_/apply")({
   validateSearch: (search: Record<string, unknown>): ApplySearch => ({
-    job: typeof search.job === "string" && search.job ? search.job : undefined,
+    job: parseJobSearch(search).job,
   }),
   head: () => ({
     meta: [

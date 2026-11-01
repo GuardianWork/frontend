@@ -217,6 +217,8 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
   const authUser = useAuthUser();
   const [cvs, setCvs] = useState<CandidateCv[]>([]);
   const [profileDetails, setProfileDetails] = useState<CandidateProfileDetails>({
+    firstName: "",
+    lastName: "",
     fullName: "",
     phone: "",
     email: "",
@@ -306,9 +308,11 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
         const profile = await loadCandidateProfile();
         if (!mounted) return;
         setProfileDetails({
+          firstName: profile.firstName,
+          lastName: profile.lastName,
           fullName: profile.fullName,
           phone: toLocalPhone(profile.phoneNumber),
-          email: profile.email,
+          email: profile.email || authUser?.email || "",
           avatarUrl: profile.avatarUrl,
           isPublic: profile.isPublic,
           skills: profile.skills,
@@ -318,7 +322,7 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
         });
         setContact({
           name: profile.fullName.trim(),
-          email: profile.email.trim() || authUser?.email || "",
+          email: profile.email?.trim() || authUser?.email || "",
           phone: toLocalPhone(profile.phoneNumber).trim(),
         });
       } catch {

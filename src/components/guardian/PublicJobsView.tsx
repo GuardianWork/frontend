@@ -203,8 +203,7 @@ export function PublicJobsView({
   // UC-CAN-07: guest and candidate job search use the same backend postings.
   const jobs = publicApiJobs;
 
-  const selectedBackendJobId =
-    search.job && /^[1-9]\\d*$/.test(search.job) ? search.job : undefined;
+  const selectedBackendJobId = search.job && /^[1-9]\d*$/.test(search.job) ? search.job : undefined;
   const backendDetail = useQuery({
     queryKey: ["public-job", selectedBackendJobId ?? ""],
     queryFn: () =>
@@ -300,8 +299,8 @@ export function PublicJobsView({
       <a className="skip-link" href="#main-content">
         Đến nội dung chính
       </a>
-      <Header variant="landing" />
-      <main id="main-content">
+      {!inWorkspace && <Header variant="landing" />}
+      <Content id="main-content">
         {selectedBackendJobId ? (
           backendDetail.isFetching ? (
             <section className="career-container career-detail">
