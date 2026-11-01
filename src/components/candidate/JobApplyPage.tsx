@@ -13,14 +13,29 @@ import {
   UploadCloud,
   X,
 } from "lucide-react";
-import { useCandidate, MAX_CV_COUNT, type CandidateCv } from "@/context/CandidateContext";
+import {
+  MAX_CV_COUNT,
+  type CandidateCv,
+  type CandidateCvFormat,
+  type CandidateProfileDetails,
+} from "@/context/CandidateContext";
+import { loadCandidateProfile, toLocalPhone } from "@/services/candidateProfile";
+import { toSalaryRange } from "@/services/publicJobs";
+import { apiRequest } from "@/services/api";
+import {
+  listCandidateCvs,
+  requestCvUploadUrl,
+  uploadToCloudinary,
+  registerCandidateCv,
+  type CandidateCv as BackendCandidateCv,
+} from "@/services/candidateCv";
+import { listApplications } from "@/services/candidateApplications";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
 import { badgeLabel, type JobItem } from "@/lib/job-listings";
 import { buildCandidateJobs, shortJobLocation } from "@/lib/candidate-jobs";
 import {
   CV_ACCEPT_ATTRIBUTE,
-  CV_MIME_BY_FORMAT,
   deriveCvLabel,
   detectCvFormat,
   formatCvDate,
@@ -28,6 +43,7 @@ import {
   validateCvFile,
 } from "@/lib/cv-file";
 import { submitCompanyApplication } from "@/services/companyMembers";
+import { submitApplication, type SubmittedApplication } from "@/services/candidateApplications";
 
 const MAX_NAME_LENGTH = 150;
 const MAX_COVER_LENGTH = 1000;
@@ -37,7 +53,7 @@ const PHONE_PATTERN = /^0\d{9}$/;
 const focusRing =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2";
 const fieldBase =
-  "block w-full min-h-11 rounded-lg border bg-paper px-3 text-[15px] text-ink caret-accent outline-none transition-colors placeholder:text-ink-3 focus:ring-2";
+  "block w-full min-h-11 rounded-lg border bg-paper px-3 text-base text-ink caret-accent outline-none transition-colors placeholder:text-ink-3 focus:ring-2";
 const fieldRing = (invalid: boolean) =>
   invalid
     ? "border-error focus:border-error focus:ring-error focus:ring-offset-1"
@@ -63,14 +79,14 @@ function contactFromProfile(
   return {
     name: profile.fullName.trim(),
     email: profile.email.trim() || sessionEmail || "",
-    phone: profile.phone.trim(),
+    phone: toLocalPhone(profile.phone.trim()),
   };
 }
 
 function SectionTitle({ id, children, aside }: { id: string; children: string; aside?: string }) {
   return (
     <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-      <h2 id={id} className="text-[17px] font-bold tracking-[-0.01em] text-ink">
+      <h2 id={id} className="text-lg font-bold tracking-[-0.01em] text-ink">
         {children}
         <span className="ml-1 text-error" aria-hidden="true">
           *
@@ -131,7 +147,7 @@ function BackBar({ jobId }: { jobId?: string }) {
         <Link
           to="/jobs"
           search={jobId ? { job: jobId } : {}}
-          className={`inline-flex min-w-0 items-center gap-1.5 justify-self-start rounded-md py-1 text-sm font-semibold text-paper/85 transition-colors hover:text-paper ${focusRing} focus-visible:ring-paper focus-visible:ring-offset-paper-inverse`}
+          className={`inline-flex min-w-0 items-center gap-1.5 justify-self-start rounded-md py-1.5 text-sm font-semibold min-h-11 text-paper/85 transition-colors hover:text-paper ${focusRing} focus-visible:ring-paper focus-visible:ring-offset-paper-inverse`}
         >
           <ArrowLeft size={18} aria-hidden="true" className="shrink-0" />
           <span className="truncate">
@@ -141,12 +157,12 @@ function BackBar({ jobId }: { jobId?: string }) {
         <Link
           to="/jobs"
           aria-label="GuardianWork — danh sách việc làm"
-          className={`inline-flex items-center gap-2 justify-self-center rounded-md ${focusRing} focus-visible:ring-paper focus-visible:ring-offset-paper-inverse`}
+          className={`inline-flex items-center gap-2 justify-self-center rounded-md min-h-11 ${focusRing} focus-visible:ring-paper focus-visible:ring-offset-paper-inverse`}
         >
           <span className="flex h-7 w-7 items-center justify-center rounded-md bg-accent text-paper">
             <ShieldCheck size={16} strokeWidth={2.25} aria-hidden="true" />
           </span>
-          <span className="text-[15px] font-extrabold tracking-[-0.02em]">GuardianWork</span>
+          <span className="text-base font-extrabold tracking-[-0.02em]">GuardianWork</span>
         </Link>
         <span aria-hidden="true" />
       </div>
@@ -176,14 +192,102 @@ function JobMeta({ job }: { job: JobItem }) {
   );
 }
 
+function toCandidateCvFormat(contentType: string): CandidateCvFormat {
+  if (contentType.includes("wordprocessingml")) return "DOCX";
+  if (contentType.includes("msword")) return "DOC";
+  return "PDF";
+}
+
+function mapBackendCv(cv: BackendCandidateCv): CandidateCv {
+  return {
+    id: cv.id,
+    fileName: cv.fileName,
+    label: deriveCvLabel(cv.fileName),
+    format: toCandidateCvFormat(cv.contentType),
+    mimeType: cv.contentType,
+    sizeBytes: cv.fileSize,
+    uploadedAt: cv.createdAt,
+    isDefault: cv.isDefault,
+    usedInApplications: 0,
+    previewUrl: undefined,
+  };
+}
+
 export function JobApplyPage({ jobId }: { jobId?: string }) {
   const { workspace, company } = useCompanyWorkspace();
   const authUser = useAuthUser();
-  const { cvs, addCv, profileDetails, isApplied, applyJob } = useCandidate();
+  const [cvs, setCvs] = useState<CandidateCv[]>([]);
+  const [profileDetails, setProfileDetails] = useState<CandidateProfileDetails>({
+    fullName: "",
+    phone: "",
+    email: "",
+    avatarUrl: null,
+    isPublic: true,
+    skills: [],
+    experience: "",
+    experiences: [],
+    education: [],
+  });
+  const [applied, setApplied] = useState(false);
+  const [appliedAtState, setAppliedAtState] = useState<string | undefined>(undefined);
 
   const { jobs, companyJobs } = buildCandidateJobs(workspace, company);
-  const job = jobId ? jobs.find((item) => item.id === jobId) : undefined;
-  const isCompanyJob = Boolean(job && companyJobs.some((item) => item.id === job.id));
+  const localJob = jobId ? jobs.find((item) => item.id === jobId) : undefined;
+  const isCompanyJob = Boolean(localJob && companyJobs.some((item) => item.id === localJob.id));
+  const [backendJob, setBackendJob] = useState<JobItem | null>(null);
+
+  useEffect(() => {
+    if (localJob || !jobId) return;
+    let mounted = true;
+    (async () => {
+      try {
+        const detail = (await apiRequest(`/jobs/${jobId}`)) as {
+          id: number;
+          company?: { name?: string };
+          content?: {
+            title?: string;
+            location?: string;
+            description?: string;
+            compensation?: {
+              disclosed?: boolean;
+              minimum?: number;
+              maximum?: number;
+              currency?: "VND" | "USD";
+              payPeriod?: "HOUR" | "DAY" | "MONTH" | "YEAR";
+            };
+          };
+        };
+        if (!mounted) return;
+        setBackendJob({
+          id: String(detail.id ?? jobId),
+          title: detail.content?.title || "Công việc",
+          company: detail.company?.name || "Nhà tuyển dụng",
+          location: detail.content?.location || "",
+          salaryRange: toSalaryRange(
+            detail.content?.compensation as Parameters<typeof toSalaryRange>[0],
+          ),
+          badge: "Công ty đã xác thực",
+          badgeTone: "success",
+          time: "",
+          department: "",
+          industry: undefined,
+          matchScore: 0,
+          description: detail.content?.description || "",
+          requirements: [],
+          statutoryBase: "",
+          statutoryNote: "",
+          suggestedRevision: "",
+        });
+      } catch {
+        // Keep the not-found state when the backend job cannot be loaded.
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [jobId, localJob]);
+
+  const job = localJob ?? backendJob;
 
   // The workspace reads localStorage after mount; hold the not-found state until then.
   const [hydrated, setHydrated] = useState(false);
@@ -195,6 +299,67 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
   );
   const [selectedCvId, setSelectedCvId] = useState(initialCv?.id ?? "");
   const selectedCv = cvs.find((cv) => cv.id === selectedCvId) ?? null;
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const profile = await loadCandidateProfile();
+        if (!mounted) return;
+        setProfileDetails({
+          fullName: profile.fullName,
+          phone: toLocalPhone(profile.phoneNumber),
+          email: profile.email,
+          avatarUrl: profile.avatarUrl,
+          isPublic: profile.isPublic,
+          skills: profile.skills,
+          experience: "",
+          experiences: [],
+          education: [],
+        });
+        setContact({
+          name: profile.fullName.trim(),
+          email: profile.email.trim() || authUser?.email || "",
+          phone: toLocalPhone(profile.phoneNumber).trim(),
+        });
+      } catch {
+        // Keep the local defaults when the backend profile is unavailable.
+      }
+
+      try {
+        const list = await listCandidateCvs();
+        if (!mounted) return;
+        const mapped = list.map(mapBackendCv);
+        setCvs(mapped);
+        setSelectedCvId(mapped.find((cv) => cv.isDefault)?.id ?? mapped[0]?.id ?? "");
+        setCvSource(mapped.length ? "existing" : "upload");
+      } catch {
+        // Keep local state when the backend CV list is unavailable.
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [authUser?.email]);
+
+  useEffect(() => {
+    if (!job?.id || isCompanyJob) return;
+    let mounted = true;
+    (async () => {
+      try {
+        const applications = await listApplications();
+        if (!mounted) return;
+        const match = applications.find((item) => String(item.jobId) === String(job.id));
+        setApplied(!!match);
+        setAppliedAtState(match?.appliedAt);
+      } catch {
+        // Fall back to not-applied when backend state cannot be loaded.
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [job?.id, isCompanyJob]);
 
   const [manualEntry, setManualEntry] = useState(false);
   const [contact, setContact] = useState<Contact>(() => contactFromProfile(profileDetails));
@@ -242,13 +407,15 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
           (application) =>
             application.jobId === job.id && application.email === authUser?.email.toLowerCase(),
         )
-      : isApplied(job.id)
+      : applied
     : false;
   const appliedAt = job
-    ? workspace.applications.find(
-        (application) =>
-          application.jobId === job.id && application.email === authUser?.email.toLowerCase(),
-      )?.submittedAt
+    ? isCompanyJob
+      ? workspace.applications.find(
+          (application) =>
+            application.jobId === job.id && application.email === authUser?.email.toLowerCase(),
+        )?.submittedAt
+      : appliedAtState
     : undefined;
 
   const updateContact = (key: keyof Contact, value: string) => {
@@ -288,7 +455,7 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
     setUploadFile(file);
   };
 
-  const finishUpload = () => {
+  const finishUpload = async () => {
     const file = uploadFile;
     if (!file) return;
     const format = detectCvFormat(file.name);
@@ -297,28 +464,26 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
       setUploading(false);
       return;
     }
-    const added = addCv({
-      fileName: file.name,
-      label: deriveCvLabel(file.name),
-      format,
-      mimeType: file.type || CV_MIME_BY_FORMAT[format],
-      sizeBytes: file.size,
-      previewUrl: URL.createObjectURL(file),
-    });
-    setUploading(false);
-    setUploadProgress(0);
-    if (!added) {
+    try {
+      const signature = await requestCvUploadUrl();
+      await uploadToCloudinary(file, signature, (percent) => setUploadProgress(percent));
+      const registered = await registerCandidateCv(file.name, signature.publicId);
+      const added = mapBackendCv(registered);
+      setCvs((prev) => [added, ...prev]);
+      setCvSource("existing");
+      setSelectedCvId(added.id);
+      setUploadFile(null);
+      setUploadConfirmed(false);
+      setErrors((current) => ({ ...current, cv: undefined }));
+      setUploadNotice(`Đã tải lên “${file.name}” và chọn làm hồ sơ đính kèm.`);
+    } catch (error) {
       setUploadError(
-        `Bạn đã có ${MAX_CV_COUNT} hồ sơ. Xóa bớt một hồ sơ trong mục Hồ sơ xin việc trước khi tải lên.`,
+        error instanceof Error ? error.message : "Không gửi được hồ sơ. Vui lòng thử lại.",
       );
-      return;
+    } finally {
+      setUploading(false);
+      setUploadProgress(0);
     }
-    setCvSource("existing");
-    setSelectedCvId(added.id);
-    setUploadFile(null);
-    setUploadConfirmed(false);
-    setErrors((current) => ({ ...current, cv: undefined }));
-    setUploadNotice(`Đã tải lên “${file.name}” và chọn làm hồ sơ đính kèm.`);
   };
   uploadDoneRef.current = finishUpload;
 
@@ -387,7 +552,7 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
     document.getElementById(ids[key])?.focus();
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!job || submitting || receipt) return;
     const next = validate();
@@ -409,20 +574,46 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
 
     setSubmitting(true);
     try {
-      if (isCompanyJob) submitCompanyApplication(job.id);
-      else applyJob(job.id);
+      const phone = toLocalPhone(contact.phone.trim()).replace(/^\+84/, "0");
+      let response: SubmittedApplication | null = null;
+      if (isCompanyJob) {
+        await submitCompanyApplication(job.id);
+      } else {
+        response = await submitApplication({
+          jobId: Number(job.id),
+          fullName: contact.name.trim(),
+          email: contact.email.trim(),
+          phoneNumber: phone,
+          coverLetter: cover.trim() || null,
+          cvId: cv.id,
+        });
+      }
+      setApplied(true);
+      setAppliedAtState(response?.appliedAt ?? new Date().toISOString());
       setReceipt({
-        at: new Date().toISOString(),
-        jobTitle: job.title,
-        company: job.company,
-        cv: { fileName: cv.fileName, format: cv.format, sizeBytes: cv.sizeBytes },
+        at: response?.appliedAt ?? new Date().toISOString(),
+        jobTitle: response?.jobTitle ?? job.title,
+        company: response?.companyName ?? job.company,
+        cv: {
+          fileName: response?.cvFileName ?? cv.fileName,
+          format: cv.format,
+          sizeBytes: cv.sizeBytes,
+        },
         email: contact.email.trim(),
-        phone: contact.phone.trim(),
+        phone,
       });
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo({
+        top: 0,
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      });
     } catch (error) {
+      const appError = error as { code?: number; message?: string };
       setFormError(
-        error instanceof Error ? error.message : "Không gửi được hồ sơ. Vui lòng thử lại.",
+        appError.code === 40903
+          ? "Bạn đã ứng tuyển vị trí này."
+          : error instanceof Error
+            ? error.message
+            : "Không gửi được hồ sơ. Vui lòng thử lại.",
       );
     } finally {
       setSubmitting(false);
@@ -596,17 +787,17 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
     <Shell>
       <div className="overflow-hidden rounded-xl border border-rule bg-paper">
         <header className="px-5 pb-5 pt-6 sm:px-8 sm:pb-6 sm:pt-7">
-          <h1 className="text-balance text-[clamp(1.375rem,2.4vw,1.9rem)] font-extrabold leading-[1.22] tracking-[-0.03em] text-ink">
+          <h1 className="text-balance text-[clamp(1.375rem,2.4vw,1.9rem)] font-extrabold leading-[1.22] tracking-[-0.03em] text-ink [overflow-wrap:anywhere]">
             {job.title}
           </h1>
-          <p className="mt-1.5 text-sm font-medium text-ink-2">
+          <p className="mt-1.5 text-sm font-medium text-ink-2 [overflow-wrap:anywhere]">
             {job.company}
             {job.location && <> · {shortJobLocation(job.location)}</>}
           </p>
           <div className="mt-3">
             <JobMeta job={job} />
           </div>
-          <p className="mt-5 text-[13px] leading-5 text-ink-3">
+          <p className="mt-5 text-sm leading-5 text-ink-3">
             Kiểm tra lại thông tin và hồ sơ đính kèm trước khi gửi. Trường có dấu{" "}
             <span className="font-bold text-error">*</span> là bắt buộc.
           </p>
@@ -638,7 +829,10 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
             )}
 
             {errors.cv && (
-              <p className="mt-3 flex items-start gap-2 rounded-lg border border-error/25 bg-error-container px-3 py-2.5 text-xs font-medium leading-5 text-on-error-container">
+              <p
+                id="apply-cv-error"
+                className="mt-3 flex items-start gap-2 rounded-lg border border-error/25 bg-error-container px-3 py-2.5 text-xs font-medium leading-5 text-on-error-container"
+              >
                 <CircleAlert size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
                 {errors.cv}
               </p>
@@ -671,10 +865,12 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
                         setCvSource("existing");
                         setErrors((current) => ({ ...current, cv: undefined }));
                       }}
-                      className="mt-0.5 h-5 w-5 shrink-0 accent-accent"
+                      className="mt-0.5 h-6 w-6 shrink-0 accent-accent"
+                      aria-required="true"
+                      aria-describedby={errors.cv ? "apply-cv-error" : undefined}
                     />
                     <span className="min-w-0">
-                      <span className="block text-[15px] font-bold leading-5 text-ink">
+                      <span className="block text-base font-bold leading-5 text-ink">
                         Dùng hồ sơ hiện có
                       </span>
                       <span className="mt-0.5 block text-xs leading-5 text-ink-2">
@@ -734,10 +930,12 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
                         setCvSource("upload");
                         setErrors((current) => ({ ...current, cv: undefined }));
                       }}
-                      className="mt-0.5 h-5 w-5 shrink-0 accent-accent"
+                      className="mt-0.5 h-6 w-6 shrink-0 accent-accent"
+                      aria-required="true"
+                      aria-describedby={errors.cv ? "apply-cv-error" : undefined}
                     />
                     <span className="min-w-0">
-                      <span className="block text-[15px] font-bold leading-5 text-ink">
+                      <span className="block text-base font-bold leading-5 text-ink">
                         Tải lên hồ sơ mới
                       </span>
                       <span className="mt-0.5 block text-xs leading-5 text-ink-2">
@@ -923,7 +1121,7 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
                 <button
                   type="button"
                   onClick={refillFromProfile}
-                  className={`rounded text-xs font-semibold text-accent underline-offset-2 hover:underline ${focusRing}`}
+                  className={`inline-flex min-h-9 items-center rounded px-1 py-1 text-xs font-semibold text-accent underline-offset-2 hover:underline ${focusRing}`}
                 >
                   Điền lại từ hồ sơ
                 </button>
@@ -931,7 +1129,7 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
                 <button
                   type="button"
                   onClick={startManualEntry}
-                  className={`rounded text-xs font-semibold text-accent underline-offset-2 hover:underline ${focusRing}`}
+                  className={`inline-flex min-h-9 items-center rounded px-1 py-1 text-xs font-semibold text-accent underline-offset-2 hover:underline ${focusRing}`}
                 >
                   Nhập thủ công
                 </button>
@@ -972,6 +1170,7 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
                     autoComplete="name"
                     placeholder="Ví dụ: Nguyễn Văn An"
                     aria-invalid={Boolean(errors.name)}
+                    aria-required="true"
                     aria-describedby={errors.name ? "apply-name-error" : "apply-name-hint"}
                     onChange={(event) => updateContact("name", event.target.value)}
                     className={`${fieldBase} ${fieldRing(Boolean(errors.name))}`}
@@ -983,10 +1182,12 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
                   id="apply-email"
                   type="email"
                   value={contact.email}
+                  maxLength={254}
                   autoComplete="email"
                   inputMode="email"
                   placeholder="ten@congty.vn"
                   aria-invalid={Boolean(errors.email)}
+                  aria-required="true"
                   aria-describedby={errors.email ? "apply-email-error" : undefined}
                   onChange={(event) => updateContact("email", event.target.value)}
                   className={`${fieldBase} ${fieldRing(Boolean(errors.email))}`}
@@ -1008,6 +1209,7 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
                   inputMode="numeric"
                   placeholder="0901234567"
                   aria-invalid={Boolean(errors.phone)}
+                  aria-required="true"
                   aria-describedby={errors.phone ? "apply-phone-error" : "apply-phone-hint"}
                   onChange={(event) =>
                     updateContact("phone", event.target.value.replace(/[^\d]/g, ""))
@@ -1023,7 +1225,7 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
             className="border-t border-rule px-5 py-6 sm:px-8 sm:py-7"
           >
             <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-              <h2 id="apply-cover-heading" className="text-[17px] font-bold text-ink">
+              <h2 id="apply-cover-heading" className="text-lg font-bold text-ink">
                 Thư giới thiệu
                 <span className="ml-1.5 text-sm font-medium text-ink-3">(tùy chọn)</span>
               </h2>
@@ -1111,7 +1313,7 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
             <button
               type="submit"
               disabled={submitting}
-              className={`inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-accent px-5 text-[15px] font-bold text-accent-ink transition-colors hover:bg-accent-hover active:bg-accent-deep disabled:cursor-not-allowed disabled:bg-accent/60 ${focusRing}`}
+              className={`inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-accent px-5 text-base font-bold text-accent-ink transition-colors hover:bg-accent-hover active:bg-accent-deep disabled:cursor-not-allowed disabled:bg-accent/60 ${focusRing}`}
             >
               {submitting ? (
                 <>
