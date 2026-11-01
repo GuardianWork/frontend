@@ -32,7 +32,13 @@ export function EmployerOnboardingPanel() {
   const [notice, setNotice] = useState("");
   if (!context) return null;
   const { stage } = context.onboarding;
-  const [title, description] = copy[stage];
+  const suspended = context.onboarding.companySuspended;
+  const [title, description] = suspended
+    ? [
+        "Công ty đã bị tạm ngưng hoạt động",
+        "Hoạt động tuyển dụng đang bị khóa. Chủ sở hữu có thể xem hồ sơ công ty và liên hệ bộ phận hỗ trợ để được hướng dẫn.",
+      ]
+    : copy[stage];
 
   async function refresh() {
     if (busy) return;
@@ -67,8 +73,8 @@ export function EmployerOnboardingPanel() {
         {title}
       </h1>
       <p className="mt-3 max-w-2xl text-base leading-7 text-charcoal-83">{description}</p>
-      <RecruiterSetupProgress stage={stage} />
-      {stage === "PENDING" && (
+      {!suspended && <RecruiterSetupProgress stage={stage} />}
+      {stage === "PENDING" && !suspended && (
         <div className="text-sm leading-6 text-charcoal-83">
           <h2 className="font-semibold text-charcoal-text">Trong lúc chờ xét duyệt</h2>
           <p className="mt-2">
@@ -88,7 +94,15 @@ export function EmployerOnboardingPanel() {
         </p>
       )}
       <div className="recruiter-setup-actions mt-6 flex flex-wrap items-center gap-3">
-        {(stage === "COMPANY_ACTION_REQUIRED" || stage === "REJECTED") && (
+        {suspended && (
+          <Link
+            to="/rec/verification"
+            className="recruiter-primary inline-flex min-h-11 items-center gap-2"
+          >
+            Xem hồ sơ công ty
+          </Link>
+        )}
+        {!suspended && (stage === "COMPANY_ACTION_REQUIRED" || stage === "REJECTED") && (
           <Link
             to="/rec/verification"
             className="recruiter-primary inline-flex min-h-11 items-center gap-2"
@@ -97,7 +111,7 @@ export function EmployerOnboardingPanel() {
             {stage === "REJECTED" ? "Xem và bổ sung hồ sơ" : "Thiết lập hồ sơ công ty"}
           </Link>
         )}
-        {stage === "PENDING" && (
+        {stage === "PENDING" && !suspended && (
           <Link
             to="/rec/verification"
             className="recruiter-primary inline-flex min-h-11 items-center gap-2"
@@ -105,7 +119,7 @@ export function EmployerOnboardingPanel() {
             Xem hồ sơ đã gửi
           </Link>
         )}
-        {stage === "VERIFIED" && (
+        {stage === "VERIFIED" && !suspended && (
           <Link
             to="/rec/jobs"
             search={{ create: true }}

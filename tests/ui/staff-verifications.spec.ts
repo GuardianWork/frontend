@@ -70,6 +70,7 @@ test("history errors retain summary, retry reveals submission and authenticated 
   await expect(page.getByRole("button", { name: "Thử tải lại lịch sử" })).toBeVisible();
   broken = false;
   await page.getByRole("button", { name: "Thử tải lại lịch sử" }).click();
+  await page.locator(".verification-history-summary").click();
   await expect(page.getByText("Tôi cam kết thông tin chính xác.")).toBeVisible();
   const downloaded = page.waitForEvent("download");
   await page.getByRole("button", { name: "Tải tài liệu xác minh", exact: true }).click();
@@ -115,4 +116,56 @@ test("approval updates the summary and reloads both queue and history", async ({
   await expect(page.getByRole("button", { name: "Phê duyệt", exact: true })).toHaveCount(0);
   await page.getByRole("button", { name: "Quay lại danh sách" }).click();
   await expect(page.getByRole("heading", { name: "Không có hồ sơ trong mục này" })).toBeVisible();
+});
+
+test("submission history sorts, expands, searches all pages and paginates", async ({
+  page,
+}, info) => {
+  await page.route("**/api/staff/companies/101/verification-history", (route) =>
+    route.fulfill({
+      json: {
+        data: Array.from({ length: 12 }, (_, index) => ({
+          attemptId: `attempt-${index}`,
+          companyId: 101,
+          companyName: name,
+          taxCode: "0101234567",
+          workAddress: `Địa chỉ lần ${index + 1}`,
+          submitterPosition: "Giám đốc",
+          representation: "LEGAL_REPRESENTATIVE",
+          declarationText: `Cam kết lần ${index + 1}`,
+          declarationVersion: "v1",
+          documentId: `doc-${index}`,
+          submittedAt: `2026-10-${String(index + 1).padStart(2, "0")}T02:00:00Z`,
+          outcome: index === 11 ? null : "REJECTED",
+          rejectionReason: index === 11 ? null : "Thiếu tài liệu",
+          reviewerId: null,
+          reviewedAt: null,
+        })),
+      },
+    }),
+  );
+  await openDossier(page);
+  const history = page.getByRole("region", { name: "Lịch sử gửi hồ sơ" });
+  const summaries = history.locator("summary");
+  await expect(summaries).toHaveCount(10);
+  await expect(summaries.first()).toContainText("Lần gửi 12");
+  await expect(history.getByText("Cam kết lần 12", { exact: true })).toBeHidden();
+  await summaries.first().focus();
+  await page.keyboard.press("Enter");
+  await expect(history.getByText("Cam kết lần 12", { exact: true })).toBeVisible();
+  await page.screenshot({ path: info.outputPath("history-expanded.png"), fullPage: true });
+  await page.keyboard.press("Enter");
+  await expect(history.getByText("Cam kết lần 12", { exact: true })).toBeHidden();
+  await history.getByRole("button", { name: "Trang sau" }).click();
+  await expect(summaries).toHaveCount(2);
+  await expect(summaries.first()).toContainText("Lần gửi 2");
+  const search = history.getByRole("searchbox");
+  await search.fill("cho duyet");
+  await expect(summaries).toHaveCount(1);
+  await expect(summaries.first()).toContainText("Lần gửi 12");
+  await search.fill("không tồn tại");
+  await expect(history.getByText("Không tìm thấy lần gửi phù hợp")).toBeVisible();
+  await search.fill("");
+  await expect(summaries).toHaveCount(10);
+  await page.screenshot({ path: info.outputPath("history-collapsed.png"), fullPage: true });
 });

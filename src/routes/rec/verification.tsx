@@ -1,8 +1,8 @@
 import { RecruiterSetupProgress } from "@/components/recruiter/RecruiterSetupProgress";
 import { useEmployerOnboarding } from "@/hooks/useEmployerOnboarding";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Building2, LoaderCircle, RefreshCw } from "lucide-react";
+import { ArrowRight, Building2, LoaderCircle, RefreshCw, ShieldAlert } from "lucide-react";
 import { RecruiterShell } from "@/components/RecruiterShell";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { loadCurrentUser } from "@/services/auth";
@@ -57,14 +57,49 @@ function CompanyVerificationPage() {
     setName(next.name);
     setTaxCode(next.taxCode);
   }, [stage]);
+  const suspended =
+    onboarding?.onboarding.companySuspended === true || record.companySuspended === true;
+  const refreshOnboarding = onboarding?.refresh;
+  useEffect(() => {
+    const update = () => setRecord(getStoredVerificationRecord());
+    window.addEventListener("guardianwork-company-workspace", update);
+    return () => window.removeEventListener("guardianwork-company-workspace", update);
+  }, []);
+  const refreshStatus = useCallback(async () => {
+    if (!refreshOnboarding) return;
+    setRefreshing(true);
+    try {
+      await refreshOnboarding();
+      setMembershipError("");
+    } catch {
+      setMembershipError("Chưa tải được trạng thái công ty mới nhất. Hãy thử tải lại.");
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshOnboarding]);
+  useEffect(() => {
+    const refreshVisible = () => {
+      if (document.visibilityState === "visible") void refreshStatus();
+    };
+    window.addEventListener("focus", refreshVisible);
+    document.addEventListener("visibilitychange", refreshVisible);
+    const interval = window.setInterval(refreshVisible, 30000);
+    void refreshStatus();
+    return () => {
+      window.removeEventListener("focus", refreshVisible);
+      document.removeEventListener("visibilitychange", refreshVisible);
+      window.clearInterval(interval);
+    };
+  }, [refreshStatus]);
   const hasCompany = Boolean(user?.activeMembership);
   const canEdit =
-    (stage === "COMPANY_ACTION_REQUIRED" &&
+    !suspended &&
+    ((stage === "COMPANY_ACTION_REQUIRED" &&
       !hasCompany &&
       record.verificationStatus === "REGISTERED") ||
-    (stage === "REJECTED" &&
-      user?.activeMembership?.companyRole === "OWNER" &&
-      record.verificationStatus === "REJECTED");
+      (stage === "REJECTED" &&
+        user?.activeMembership?.companyRole === "OWNER" &&
+        record.verificationStatus === "REJECTED"));
   const rejected = stage === "REJECTED";
 
   async function refreshMembership() {
@@ -145,18 +180,51 @@ function CompanyVerificationPage() {
             </p>
           </div>
           <span
-            className={`status-tag status-tag--${stage === "VERIFIED" ? "success" : stage === "REJECTED" ? "danger" : stage === "PENDING" ? "warning" : "neutral"}`}
+            className={`status-tag status-tag--${suspended ? "danger" : stage === "VERIFIED" ? "success" : stage === "REJECTED" ? "danger" : stage === "PENDING" ? "warning" : "neutral"}`}
           >
-            {stage === "PENDING"
-              ? "Chờ xác minh"
-              : stage === "REJECTED"
-                ? "Cần bổ sung hồ sơ"
-                : stage === "VERIFIED"
-                  ? "Đã xác minh"
-                  : statusLabels.REGISTERED}
+            {suspended
+              ? "Tạm ngưng hoạt động"
+              : stage === "PENDING"
+                ? "Chờ xác minh"
+                : stage === "REJECTED"
+                  ? "Cần bổ sung hồ sơ"
+                  : stage === "VERIFIED"
+                    ? "Đã xác minh"
+                    : statusLabels.REGISTERED}
           </span>
         </div>
-        {stage && stage !== "VERIFIED" && <RecruiterSetupProgress stage={stage} />}
+        {hasCompany && (
+          <div className="mb-5 flex items-center justify-between gap-4">
+            <p className="text-sm leading-6 text-charcoal-83">
+              Trạng thái xác minh: <strong>{statusLabels[record.verificationStatus]}</strong>
+            </p>
+            <button
+              type="button"
+              onClick={() => void refreshStatus()}
+              disabled={refreshing}
+              className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary disabled:opacity-60"
+            >
+              <RefreshCw size={16} aria-hidden="true" />
+              {refreshing ? "Đang tải…" : "Tải lại trạng thái"}
+            </button>
+          </div>
+        )}
+        {suspended && (
+          <div
+            role="status"
+            className="mb-6 flex items-start gap-3 rounded-lg bg-error-container p-5 text-on-error-container"
+          >
+            <ShieldAlert size={22} className="mt-1 shrink-0" aria-hidden="true" />
+            <div>
+              <h2 className="text-base font-semibold">Công ty đã bị tạm ngưng hoạt động</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6">
+                Hoạt động tuyển dụng và gửi lại hồ sơ đang bị khóa. Bạn vẫn có thể xem thông tin
+                doanh nghiệp. Vui lòng liên hệ bộ phận hỗ trợ để được hướng dẫn.
+              </p>
+            </div>
+          </div>
+        )}
+        {stage && stage !== "VERIFIED" && !suspended && <RecruiterSetupProgress stage={stage} />}
         {stage === "COMPANY_ACTION_REQUIRED" && (
           <p className="mb-5 text-sm leading-6 text-charcoal-83">
             Bạn được mời tham gia công ty có sẵn?{" "}
@@ -323,11 +391,13 @@ function CompanyVerificationPage() {
             </fieldset>
             <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-warm-border pt-5">
               <p className="max-w-lg text-sm leading-6 text-charcoal-83">
-                {stage === "PENDING"
-                  ? "Hồ sơ đã được gửi và đang chờ xét duyệt."
-                  : stage === "VERIFIED"
-                    ? "Công ty đã được xác minh."
-                    : "Kiểm tra thông tin trước khi gửi hồ sơ."}
+                {suspended
+                  ? "Hồ sơ hiện chỉ có thể xem trong thời gian công ty bị tạm ngưng."
+                  : stage === "PENDING"
+                    ? "Hồ sơ đã được gửi và đang chờ xét duyệt."
+                    : stage === "VERIFIED"
+                      ? "Công ty đã được xác minh."
+                      : "Kiểm tra thông tin trước khi gửi hồ sơ."}
               </p>
               {canEdit && (
                 <button

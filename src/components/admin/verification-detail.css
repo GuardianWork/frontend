@@ -10,14 +10,6 @@
 .staff-verification-detail .admin-company-fields dt {
   color: var(--color-ink-2);
 }
-.staff-verification-detail .verification-history-attempt {
-  padding-top: 20px;
-  border-top: 1px solid var(--color-rule);
-}
-.staff-verification-detail .verification-history-attempt:first-child {
-  border-top: 0;
-  padding-top: 0;
-}
 .staff-verification-detail .admin-record-status {
   gap: 6px;
 }
@@ -69,4 +61,59 @@
   .staff-verification-detail .admin-decision-actions {
     padding: 20px;
   }
+}
+
+.verification-history-toolbar {
+  padding: 20px 24px;
+  margin: 0;
+}
+.verification-history-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.verification-history-attempt {
+  border-top: 1px solid var(--color-rule);
+}
+.verification-history-summary {
+  display: grid;
+  grid-template-columns: 20px minmax(180px, 1fr) minmax(180px, 1fr) 140px;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  cursor: pointer;
+  list-style: none;
+}
+.verification-history-summary::-webkit-details-marker {
+  display: none;
+}
+.verification-history-summary:hover,
+.verification-history-attempt details[open] > summary {
+  background: var(--color-accent-subtle);
+}
+.verification-history-summary:focus-visible {
+  outline: 2px solid var(--color-accent-deep);
+  outline-offset: -2px;
+}
+.verification-history-version {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.verification-history-latest {
+  color: var(--color-accent-deep);
+  font-size: 14px;
+}
+.verification-history-date {
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.verification-history-summary .admin-record-status {
+  justify-self: start;
+}
+.verification-history-attempt details[open] .verification-history-chevron {
+  transform: rotate(180deg);
+}
+.verification-history-attempt .admin-company-fields dd {
+  overflow-wrap: anywhere;
 }
