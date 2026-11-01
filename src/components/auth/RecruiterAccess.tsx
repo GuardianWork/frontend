@@ -12,7 +12,8 @@ export function RecruiterAccess({ children }: { children: ReactNode }) {
   const invitationsPage = pathname === "/rec/members";
   const allowed =
     pathname === "/rec/account" ||
-    stage === "VERIFIED" ||
+    (stage === "VERIFIED" && !context?.onboarding.companySuspended) ||
+    (context?.onboarding.companySuspended && companyPage) ||
     (stage === "COMPANY_ACTION_REQUIRED" && (companyPage || invitationsPage)) ||
     ((stage === "PENDING" || stage === "REJECTED") && companyPage);
   return allowed ? children : <EmployerOnboardingPanel />;

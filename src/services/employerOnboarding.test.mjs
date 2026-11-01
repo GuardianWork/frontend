@@ -118,3 +118,27 @@ test("a recruiter checks current membership without requesting owner-only compan
     Response.json({ status: 404, message: "Company not found" }, { status: 404 });
   await assert.rejects(loadEmployerOnboarding());
 });
+
+test("a suspended owner's company remains identifiable without granting recruiting access", async () => {
+  const session = JSON.parse(sessionStorage.getItem(AUTH_SESSION_KEY));
+  session.user.activeMembership = {
+    companyId: 12,
+    companyName: "Alpha",
+    companyRole: "OWNER",
+    joinedAt: "2026-10-19T00:00:00Z",
+  };
+  sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+  globalThis.fetch = async () =>
+    Response.json({
+      status: 200,
+      data: {
+        id: 12,
+        name: "Alpha",
+        taxCode: "0100000001",
+        verificationStatus: "VERIFIED",
+        version: 3,
+        companySuspended: true,
+      },
+    });
+  assert.deepEqual(await loadEmployerOnboarding(), { stage: "VERIFIED", companySuspended: true });
+});

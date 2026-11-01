@@ -5,6 +5,7 @@ import { loadCompanyVerification } from "./companyVerification.ts";
 export type EmployerStage = "COMPANY_ACTION_REQUIRED" | "PENDING" | "REJECTED" | "VERIFIED";
 export interface EmployerOnboarding {
   stage: EmployerStage;
+  companySuspended?: boolean;
 }
 
 /** Recruiter access follows the authenticated Company membership and verification APIs. */
@@ -17,16 +18,21 @@ export async function loadEmployerOnboarding(): Promise<EmployerOnboarding> {
     const company = (await authenticatedRequest("/companies/me")) as {
       companyId: number;
       companyRole: string;
+      companySuspended?: boolean;
     } | null;
     if (!company) return { stage: "COMPANY_ACTION_REQUIRED" };
     if (company.companyId !== user.activeMembership.companyId)
       throw new ApiError("Hồ sơ công ty không khớp với tài khoản hiện tại.");
     // Recruiters join verified companies through invitations; dossiers are owner-only.
-    return { stage: "VERIFIED" };
+    return {
+      stage: "VERIFIED",
+      ...(company.companySuspended === true ? { companySuspended: true } : {}),
+    };
   }
 
   const company = await loadCompanyVerification();
   return {
+    ...(company.companySuspended === true ? { companySuspended: true } : {}),
     stage:
       company.verificationStatus === "REGISTERED"
         ? "COMPANY_ACTION_REQUIRED"

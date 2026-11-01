@@ -57,7 +57,7 @@ function RecruiterShellFrame({
 }) {
   const onboarding = useEmployerOnboarding();
   const stage = onboarding?.onboarding.stage;
-  const recruitingEnabled = stage === "VERIFIED";
+  const recruitingEnabled = stage === "VERIFIED" && !onboarding?.onboarding.companySuspended;
   const { member } = useCompanyWorkspace();
   const user = useAuthUser();
   const invitedRecruiter = user?.activeMembership?.companyRole === "RECRUITER";
