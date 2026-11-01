@@ -171,3 +171,8 @@ Run `npm run dev` with the real backend configured to use the staff portal at `h
 ```sh
 npx playwright test tests/ui/job-approvals.spec.ts
 ```
+
+
+Staff jobs also exposes the restored illustrative AI/legal review on the same screen below the approval queue. This reuses `JobManagementPanel` and local sample findings with official Labour Code reference links. The API-backed approval queue remains separate; the staff API still provides no live AI scan endpoint.
+
+Job details now include a revision-specific legal review panel. Until an AI result API is supplied, `reviewJobContent` performs explicitly labeled local keyword screening, not AI inference. It never declares legal compliance, sends approval decisions, or changes backend approval eligibility. Sample legal-review records remain separate from real revision results.

@@ -791,3 +791,35 @@ body
   color: var(--status-neutral-ink);
   background: var(--status-neutral-ground);
 }
+
+/* Logo blue uses dedicated light- and dark-surface tokens. */
+:root {
+  --color-brand-blue: #2557a7;
+  --color-brand-blue-on-dark: #91baff;
+}
+body .guardian-logo,
+body .auth-layout > header .guardian-logo,
+body .workspace-header-brand,
+body .career-site .career-brand,
+body .career-brand :is(.career-brand__name, .career-brand__accent),
+body .staff-login-page .staff-login-brand,
+body .staff-login-page .staff-login-brand > span {
+  color: var(--color-brand-blue);
+}
+body .career-brand .career-brand__symbol {
+  background: transparent;
+  color: var(--color-brand-blue);
+}
+.workspace-shell.workspace-shell
+  .workspace-sidebar
+  :is(.workspace-brand__identity, .workspace-sidebar-brand)
+  svg,
+.workspace-shell.workspace-shell
+  .workspace-sidebar
+  :is(
+    .workspace-brand__copy h2,
+    .workspace-brand__copy > span:first-child,
+    .workspace-sidebar-brand strong
+  ) {
+  color: var(--color-brand-blue-on-dark);
+}

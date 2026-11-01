@@ -1,3 +1,4 @@
+import { LEGAL_REFERENCES, LABOR_CODE_URL } from "@/lib/job-legal-review";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Eye, Flag, Search, ShieldOff } from "lucide-react";
 import { StaffStatusBadge, type StaffStatusTone } from "./StaffStatusBadge";
@@ -48,7 +49,7 @@ const statusTone = (job: ManagedJob): StaffStatusTone =>
     : job.visibility === "REJECTED"
       ? "rejected"
       : job.visibility === "HIDDEN"
-        ? "neutral"
+        ? "orange"
         : "verified";
 const queueLabel = (job: ManagedJob) =>
   job.visibility !== "PUBLIC"
@@ -434,6 +435,16 @@ export function JobManagementPanel() {
                     <h3>{finding.label}</h3>
                     <blockquote>{finding.excerpt}</blockquote>
                     <p>{finding.explanation}</p>
+                    {LEGAL_REFERENCES[finding.label] && (
+                      <a
+                        className="staff-legal-reference"
+                        href={LABOR_CODE_URL}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Căn cứ đối chiếu: {LEGAL_REFERENCES[finding.label]} (mở tab mới)
+                      </a>
+                    )}
                   </li>
                 ))}
               </ol>

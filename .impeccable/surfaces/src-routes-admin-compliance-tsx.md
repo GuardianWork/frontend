@@ -13,4 +13,4 @@ The list contains already-published JDs flagged by AI. Admins inspect the JD and
 
 AI findings and moderation actions are explicitly illustrative until a backend API is available. Never imply sample actions persist to the backend.
 
-All admin record lists use shared pagination with a default of 10 records per page, visible ranges, accessible previous/next controls, and disabled boundaries. Filters reset to the first page. Company verification uses API pagination; sample lists paginate locally. Phone controls preserve their touch targets and fit the viewport.
+All admin record lists use shared pagination with a default of 10 records per page, visible ranges, accessible previous/next controls, and disabled boundaries. Filters reset to the first page. Company verification uses API pagination; sample lists paginate locally. Verify desktop controls only.

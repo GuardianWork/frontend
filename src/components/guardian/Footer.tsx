@@ -13,9 +13,8 @@ export function Footer() {
         <div className="landing-footer__top flex flex-col md:flex-row justify-between items-start gap-8 pb-12 border-b border-rule">
           <div>
             <p className="footer-ft5__statement font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-ink leading-tight">
-              {locale === "en"
-                ? "GuardianWork. Your next step."
-                : "GuardianWork. Cùng bạn đi tiếp."}
+              <span className="guardian-logo">GuardianWork.</span>{" "}
+              {locale === "en" ? "Your next step." : "Cùng bạn đi tiếp."}
             </p>
           </div>
           <div className="landing-footer__cta-col shrink-0 flex flex-col items-start md:items-end">

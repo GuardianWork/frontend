@@ -353,7 +353,18 @@ The comprehensive route/data coverage matrix is [docs/design/surface-coverage.md
 
 Status labels share semantic colors across public listings, recruiter publishing/history, verification, membership and staff operations. Use dark green on #e7f5eb for verified/approved/active states, dark red on #fde9e7 for rejected/blocked states, dark blue on #e8f0ff for information, amber on #fff1d2 for pending/paused states, and slate on #edf0f3 for drafts/inactive/closed states. Keep explicit text, a current-color border and bold labels; color supplements the status wording. Tokens and shared selectors live in `src/site-polish.css`. Neutral drafts never imply failure.
 
-Staff content uses blue headings, tinted table headers, white panels with stronger boundaries, and blue primary/retry actions. `staff-colors.css` is scoped by the staff portal body attribute, including portalled dialogs. Staff error notifications use a full-width pale pink banner, a red exclamation icon and dark, left-aligned text. Destructive confirmation actions retain red.
+Staff content follows an open white layout with charcoal headings, white table headers, thin neutral dividers, and blue primary/retry actions. Avoid enclosing each section in a bordered card or tinted header; retain distinct colored status tags and pale pink error notices. The overview account summary uses spaced label/value rows. `staff-colors.css` is scoped by the staff portal body attribute, including portalled dialogs. Staff error notifications use a full-width pale pink banner, a red exclamation icon and dark, left-aligned text. Destructive confirmation actions retain red.
 
 
 Staff lists distinguish each category within the same collection rather than collapsing unrelated states into one positive/negative hue. Audit actions use green verification, red rejection, orange hiding, blue restoration, purple locking and teal unlocking. Review queues use amber pending, green approved, red rejected and purple withdrawn. Reports use blue received, amber reviewing and teal recorded. Account access and company verification retain separate status labels. Staff-only supplementary badge tones live in `staff-colors.css` and reuse `StaffStatusBadge`.
+
+
+### GuardianWork logo blue
+
+The GuardianWork wordmark and shield use dedicated brand blue (#2557a7) on light surfaces across public headers/footer wordmark, authentication, invitation pages and workspace headers. On charcoal workspace sidebars use #91baff for legibility. These logo-only blue tokens do not remap action blue, semantic statuses, supporting taglines, or the monochrome shell. Keep the existing brand name and shield geometry.
+
+
+Staff jobs displays API-backed revision approval and the existing `JobManagementPanel` for “Rà soát AI theo pháp luật” together on one scrollable screen, with in-page section links and no switching tabs. The latter uses illustrative records and local actions, with a visible source disclosure; it is not a live scan service. Findings show excerpts, explanations and links to the official Labour Code record for deposits, original documents, discriminatory conditions, overtime and probation. Approval decisions remain in the real review queue. Desktop-only verification applies.
+
+
+Each API-backed job detail includes `JobLegalReview` beside its decision controls. With no backend AI contract available, it displays an explicit AI-unavailable state plus a deterministic, local keyword screen of the current revision title, description and screening prompts. Findings include exact excerpts and official Labour Code links. Matching is advisory, includes negations and cannot certify compliance; no-match output says so explicitly. Recompute from fresh revision content on reload; never attach sample findings or inferred AI output to real reviews. Backend approval eligibility and version-checked decisions remain authoritative.

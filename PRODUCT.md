@@ -60,3 +60,11 @@ Audience priority, measurable success criteria, production readiness, and produc
 ## Staff portal
 
 Platform staff runs as a separate frontend surface on port 5138 (`staff` / `staff-mock` Vite modes), alongside the public app on 5137. It has a login-only entry with no registration or audience selector. The existing auth API and server-issued `STAFF` role remain authoritative. Tokens are scoped to each portal's origin; private routes restore `/auth/me` before rendering. Staff builds use `.output-staff`; public builds use `.output`.
+
+
+## Supported display and verification scope
+
+Desktop web only, as confirmed by the user. Impeccable work uses desktop review (1440×1000 by default); do not build or verify mobile/tablet versions, capture phone/tablet screenshots, or run mobile/responsive checks unless explicitly requested. This supersedes older mobile requirements in design records and surface briefs. Existing responsive styles are incidental implementation, not a supported product requirement.
+
+
+The user confirmed blue GuardianWork logos across all sites. Use dedicated logo blues on light and dark backgrounds while retaining the existing monochrome chrome and blue actions.

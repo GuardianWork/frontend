@@ -86,7 +86,7 @@ function InvitationPage() {
   }
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-10 sm:py-16">
-      <Link to="/vn" className="text-lg font-semibold text-primary">
+      <Link to="/vn" className="guardian-logo text-lg font-semibold text-primary">
         GuardianWork
       </Link>
       <h1 className="mb-3 mt-8 text-2xl font-bold">Lời mời tham gia công ty</h1>
