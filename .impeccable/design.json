@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-31T13:19:56Z",
+  "generatedAt": "2026-11-01T03:51:41.000Z",
   "title": "Design System: GuardianWork",
   "extensions": {
     "colorMeta": {
@@ -273,6 +273,174 @@
           "oklch(95.00% 0.15003 28.99)"
         ],
         "canonical": "#912018"
+      },
+      "recruiter-accent": {
+        "role": "primary",
+        "displayName": "Recruiter Blue",
+        "tonalRamp": [
+          "oklch(15% 0.14 260)",
+          "oklch(26% 0.14 260)",
+          "oklch(38% 0.14 260)",
+          "oklch(49% 0.14 260)",
+          "oklch(61% 0.14 260)",
+          "oklch(72% 0.14 260)",
+          "oklch(84% 0.14 260)",
+          "oklch(95% 0.14 260)"
+        ]
+      },
+      "recruiter-accent-hover": {
+        "role": "primary",
+        "displayName": "Recruiter Blue Hover",
+        "tonalRamp": [
+          "oklch(15% 0.13 260)",
+          "oklch(26% 0.13 260)",
+          "oklch(38% 0.13 260)",
+          "oklch(49% 0.13 260)",
+          "oklch(61% 0.13 260)",
+          "oklch(72% 0.13 260)",
+          "oklch(84% 0.13 260)",
+          "oklch(95% 0.13 260)"
+        ]
+      },
+      "recruiter-accent-deep": {
+        "role": "primary",
+        "displayName": "Recruiter Blue Deep",
+        "tonalRamp": [
+          "oklch(15% 0.12 260)",
+          "oklch(26% 0.12 260)",
+          "oklch(38% 0.12 260)",
+          "oklch(49% 0.12 260)",
+          "oklch(61% 0.12 260)",
+          "oklch(72% 0.12 260)",
+          "oklch(84% 0.12 260)",
+          "oklch(95% 0.12 260)"
+        ]
+      },
+      "recruiter-accent-subtle": {
+        "role": "primary",
+        "displayName": "Recruiter Blue Wash",
+        "tonalRamp": [
+          "oklch(15% 0.015 260)",
+          "oklch(26% 0.015 260)",
+          "oklch(38% 0.015 260)",
+          "oklch(49% 0.015 260)",
+          "oklch(61% 0.015 260)",
+          "oklch(72% 0.015 260)",
+          "oklch(84% 0.015 260)",
+          "oklch(95% 0.015 260)"
+        ]
+      },
+      "recruiter-paper": {
+        "role": "neutral",
+        "displayName": "Recruiter White Paper",
+        "tonalRamp": [
+          "oklch(15% 0.004 70)",
+          "oklch(26% 0.004 70)",
+          "oklch(38% 0.004 70)",
+          "oklch(49% 0.004 70)",
+          "oklch(61% 0.004 70)",
+          "oklch(72% 0.004 70)",
+          "oklch(84% 0.004 70)",
+          "oklch(95% 0.004 70)"
+        ]
+      },
+      "recruiter-ground": {
+        "role": "neutral",
+        "displayName": "Soft Warm Ground",
+        "tonalRamp": [
+          "oklch(15% 0.004 70)",
+          "oklch(26% 0.004 70)",
+          "oklch(38% 0.004 70)",
+          "oklch(49% 0.004 70)",
+          "oklch(61% 0.004 70)",
+          "oklch(72% 0.004 70)",
+          "oklch(84% 0.004 70)",
+          "oklch(95% 0.004 70)"
+        ]
+      },
+      "recruiter-inset": {
+        "role": "neutral",
+        "displayName": "Warm Inset",
+        "tonalRamp": [
+          "oklch(15% 0.004 70)",
+          "oklch(26% 0.004 70)",
+          "oklch(38% 0.004 70)",
+          "oklch(49% 0.004 70)",
+          "oklch(61% 0.004 70)",
+          "oklch(72% 0.004 70)",
+          "oklch(84% 0.004 70)",
+          "oklch(95% 0.004 70)"
+        ]
+      },
+      "recruiter-ink": {
+        "role": "neutral",
+        "displayName": "Recruiter Charcoal",
+        "tonalRamp": [
+          "oklch(15% 0.004 70)",
+          "oklch(26% 0.004 70)",
+          "oklch(38% 0.004 70)",
+          "oklch(49% 0.004 70)",
+          "oklch(61% 0.004 70)",
+          "oklch(72% 0.004 70)",
+          "oklch(84% 0.004 70)",
+          "oklch(95% 0.004 70)"
+        ]
+      },
+      "recruiter-muted": {
+        "role": "neutral",
+        "displayName": "Supporting Gray",
+        "tonalRamp": [
+          "oklch(15% 0.004 70)",
+          "oklch(26% 0.004 70)",
+          "oklch(38% 0.004 70)",
+          "oklch(49% 0.004 70)",
+          "oklch(61% 0.004 70)",
+          "oklch(72% 0.004 70)",
+          "oklch(84% 0.004 70)",
+          "oklch(95% 0.004 70)"
+        ]
+      },
+      "recruiter-muted-2": {
+        "role": "neutral",
+        "displayName": "Quiet Gray",
+        "tonalRamp": [
+          "oklch(15% 0.004 70)",
+          "oklch(26% 0.004 70)",
+          "oklch(38% 0.004 70)",
+          "oklch(49% 0.004 70)",
+          "oklch(61% 0.004 70)",
+          "oklch(72% 0.004 70)",
+          "oklch(84% 0.004 70)",
+          "oklch(95% 0.004 70)"
+        ]
+      },
+      "recruiter-border": {
+        "role": "neutral",
+        "displayName": "Warm Rule",
+        "tonalRamp": [
+          "oklch(15% 0.004 70)",
+          "oklch(26% 0.004 70)",
+          "oklch(38% 0.004 70)",
+          "oklch(49% 0.004 70)",
+          "oklch(61% 0.004 70)",
+          "oklch(72% 0.004 70)",
+          "oklch(84% 0.004 70)",
+          "oklch(95% 0.004 70)"
+        ]
+      },
+      "recruiter-border-strong": {
+        "role": "neutral",
+        "displayName": "Strong Gray Rule",
+        "tonalRamp": [
+          "oklch(15% 0.004 70)",
+          "oklch(26% 0.004 70)",
+          "oklch(38% 0.004 70)",
+          "oklch(49% 0.004 70)",
+          "oklch(61% 0.004 70)",
+          "oklch(72% 0.004 70)",
+          "oklch(84% 0.004 70)",
+          "oklch(95% 0.004 70)"
+        ]
       }
     },
     "typographyMeta": {
@@ -402,6 +570,36 @@
       "description": "Compact, collapsible role navigation inside the persistent Candidate/recruiter frame; Staff navigation remains separate. The 44×44 collapse control sits in the persistent header.",
       "html": "<aside class=\"ds-workspace\" aria-label=\"Điều hướng ứng viên\"><div class=\"ds-workspace-brand\">GuardianWork</div><nav aria-label=\"Điều hướng chính\"><a class=\"ds-workspace-link\" href=\"#jobs\" aria-label=\"Tìm việc làm\" aria-current=\"page\"><svg viewBox=\"0 0 20 20\" aria-hidden=\"true\"><path d=\"M3 4h14v12H3zM7 4v12\"/></svg><span>Tìm việc làm</span></a></nav><nav class=\"ds-workspace-footer\" aria-label=\"Điều hướng nhanh\"><a class=\"ds-workspace-link\" href=\"#account\" aria-label=\"Cài đặt tài khoản\"><span>Cài đặt tài khoản</span></a><a class=\"ds-workspace-link\" href=\"#switch\" aria-label=\"Chuyển phân hệ\"><span>Chuyển phân hệ</span></a><a class=\"ds-workspace-link\" href=\"#home\" aria-label=\"Trang chủ\"><span>Trang chủ</span></a></nav></aside>",
       "css": ".ds-workspace{display:flex;flex-direction:column;justify-content:space-between;box-sizing:border-box;width:244px;height:calc(100vh - 16px);margin:8px;padding:12px;border:1px solid var(--color-rule);border-radius:16px;background:var(--color-paper);color:var(--color-ink);font-family:var(--font-body)}.ds-workspace nav{display:grid;gap:6px}.ds-workspace-brand{padding:12px;color:var(--color-accent);font-weight:700}.ds-workspace-link{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 12px;border-radius:8px;color:var(--color-ink-2);font-size:14px;text-decoration:none}.ds-workspace-link svg{width:20px;height:20px;flex:0 0 20px;fill:none;stroke:currentColor;stroke-width:1.7}.ds-workspace-link:hover{background:var(--color-paper-2)}.ds-workspace-link[aria-current=\"page\"]{background:var(--color-accent-subtle);color:var(--color-accent-deep);font-weight:600}.ds-workspace-link:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}.ds-workspace-footer{border-top:1px solid var(--color-rule);padding-top:10px}.ds-workspace--collapsed{width:76px}.ds-workspace--collapsed .ds-workspace-link{justify-content:center;gap:0;padding-inline:0}.ds-workspace--collapsed .ds-workspace-link span,.ds-workspace--collapsed .ds-workspace-brand{max-width:0;overflow:hidden;opacity:0}"
+    },
+    {
+      "name": "Recruiter Rail Navigation",
+      "kind": "nav",
+      "description": "Dark recruiter destination rail with a white current-page row.",
+      "html": "<nav class=\"ds-recruiter-nav\" aria-label=\"Điều hướng nhà tuyển dụng\"><a href=\"#overview\" aria-current=\"page\"><svg aria-hidden=\"true\" viewBox=\"0 0 24 24\"><rect x=\"4\" y=\"4\" width=\"6\" height=\"6\" rx=\"1\"/><rect x=\"14\" y=\"4\" width=\"6\" height=\"6\" rx=\"1\"/><rect x=\"4\" y=\"14\" width=\"6\" height=\"6\" rx=\"1\"/><rect x=\"14\" y=\"14\" width=\"6\" height=\"6\" rx=\"1\"/></svg><span>Tổng quan</span></a><a href=\"#jobs\"><svg aria-hidden=\"true\" viewBox=\"0 0 24 24\"><path d=\"M6 4h12v16H6zM4 8h16M9 12h6M9 16h6\"/></svg><span>Tin tuyển dụng</span></a></nav>",
+      "css": ".ds-recruiter-nav{display:flex;flex-direction:column;gap:8px;width:280px;padding:20px 12px;background:#2d2d2d;color:#fff;font-family:'Hanken Grotesk',system-ui,sans-serif}.ds-recruiter-nav a{display:flex;align-items:center;gap:12px;min-height:56px;padding:8px 12px;border:1px solid transparent;border-radius:8px;color:#fff;font-size:14px;font-weight:600;text-decoration:none}.ds-recruiter-nav svg{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.ds-recruiter-nav a:hover{background:#424242;border-color:#666}.ds-recruiter-nav a[aria-current='page']{background:#fff;border-color:#fff;color:#2d2d2d}.ds-recruiter-nav a:focus-visible{outline:2px solid #a6c6ff;outline-offset:2px}"
+    },
+    {
+      "name": "Recruiter Primary Action",
+      "kind": "button",
+      "refersTo": "recruiter-primary-action",
+      "description": "Primary overview and recruiter setup action.",
+      "html": "<button class=\"ds-recruiter-action\">Đăng tin tuyển dụng</button>",
+      "css": ".ds-recruiter-action{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10.4px 16px;border:0;border-radius:6px;background:#2557a7;color:#fff;font-family:'Hanken Grotesk',system-ui,sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:background-color 160ms ease}.ds-recruiter-action:hover{background:#595959}.ds-recruiter-action:focus-visible{outline:2px solid #2557a7;outline-offset:3px}.ds-recruiter-action:disabled{opacity:.5;cursor:not-allowed}"
+    },
+    {
+      "name": "Recruiter Job Field",
+      "kind": "input",
+      "refersTo": "recruiter-job-field",
+      "description": "Labeled job-editor control with recruiter focus and validation states.",
+      "html": "<label class=\"ds-recruiter-field\"><span>Chức danh</span><input placeholder=\"Tên vị trí tuyển dụng\" /></label>",
+      "css": ".ds-recruiter-field{display:flex;flex-direction:column;gap:9px;color:#2d2d2d;font-family:'Hanken Grotesk',system-ui,sans-serif;font-size:16px;font-weight:600}.ds-recruiter-field input{width:100%;min-height:48px;padding:10px 12px;border:1px solid #949494;border-radius:8px;background:#fff;color:#2d2d2d;font:400 16px/1.5 'Hanken Grotesk',system-ui,sans-serif}.ds-recruiter-field input::placeholder{color:#666;opacity:1}.ds-recruiter-field input:focus-visible{outline:3px solid #2557a7;outline-offset:3px}.ds-recruiter-field input[aria-invalid='true']{border-color:#b42318}"
+    },
+    {
+      "name": "Recruiter Job Editor Section",
+      "kind": "custom",
+      "description": "One labeled group in the existing sectioned job editor.",
+      "html": "<section class=\"ds-recruiter-editor-section\" aria-labelledby=\"job-basic-heading\"><h3 id=\"job-basic-heading\">Thông tin cơ bản</h3><p>Thông tin giúp ứng viên hiểu về vị trí.</p><label>Chức danh<input value=\"Chuyên viên tuyển dụng\" /></label></section>",
+      "css": ".ds-recruiter-editor-section{display:flex;flex-direction:column;gap:20px;padding:32px;background:#fff;color:#2d2d2d;font-family:'Hanken Grotesk',system-ui,sans-serif}.ds-recruiter-editor-section+.ds-recruiter-editor-section{border-top:1px solid #e4e2e0}.ds-recruiter-editor-section h3{margin:0;font-size:18px;font-weight:700;line-height:1.4}.ds-recruiter-editor-section p{margin:0;color:#595959;font-size:14px}.ds-recruiter-editor-section label{display:flex;flex-direction:column;gap:9px;font-size:16px;font-weight:600}.ds-recruiter-editor-section input{min-height:48px;padding:10px 12px;border:1px solid #949494;border-radius:8px;color:#2d2d2d;font:400 16px/1.5 'Hanken Grotesk',system-ui,sans-serif}.ds-recruiter-editor-section input:focus-visible{outline:3px solid #2557a7;outline-offset:3px}"
     }
   ],
   "narrative": {

@@ -405,7 +405,7 @@ function AdminShellFrame({
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+        <main id="workspace-main" tabIndex={-1} className="flex-1 overflow-y-auto p-4 md:p-8">
           <div className="workspace-page max-w-7xl mx-auto">{children}</div>
         </main>
       </div>

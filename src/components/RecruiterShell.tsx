@@ -4,6 +4,7 @@ import { useNavigationFocus } from "@/hooks/useNavigationFocus";
 import { EmailVerificationPanel } from "@/components/auth/EmailVerification";
 import "./workspace.css";
 import "./admin/sidebar.css";
+import "./recruiter/workspace-polish.css";
 import {
   MenuIcon,
   CloseIcon,
@@ -240,7 +241,11 @@ function RecruiterShellFrame({
             <LogoutButton />
           </div>
         </header>
-        <main className="min-h-0 flex-1 overflow-y-auto p-4 md:p-8">
+        <main
+          id="recruiter-main"
+          tabIndex={-1}
+          className="min-h-0 flex-1 overflow-y-auto p-4 md:p-8"
+        >
           <div className="workspace-page mx-auto max-w-[1200px]">
             {user && !user.recruitingEmailEligible && pathname !== "/rec/account" && (
               <EmailVerificationPanel />

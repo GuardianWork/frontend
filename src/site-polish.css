@@ -1,0 +1,522 @@
+/* One recruitment visual system, shared by public pages and all three workspaces.
+   Desktop: 80px navigation + fluid content with equal 24–64px gutters.
+   Expanded navigation: 280px. At 1100px and below, use the existing focus-trapped drawer. */
+:root {
+  --gw-frame: var(--color-paper);
+  --gw-selected: var(--color-accent-subtle);
+  --gw-radius: 8px;
+  --gw-body: 15px;
+}
+body {
+  caret-color: var(--color-accent);
+  scrollbar-color: var(--color-rule-2) var(--color-paper-2);
+}
+::selection {
+  background: var(--color-accent-subtle);
+  color: var(--color-accent-deep);
+}
+.workspace-shell.workspace-shell .workspace-content {
+  background: var(--color-paper);
+}
+.workspace-shell.workspace-shell .workspace-content > header {
+  min-height: 76px;
+  height: auto;
+  gap: 20px;
+  padding-inline: 24px;
+  border-bottom: 1px solid var(--color-rule);
+  background: var(--color-paper);
+}
+.workspace-header-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-accent);
+  font-size: 23px;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  white-space: nowrap;
+}
+.workspace-shell.workspace-shell .workspace-page-title {
+  min-width: 0;
+  padding-inline-start: 20px;
+  border-inline-start: 1px solid var(--color-rule);
+  color: var(--color-ink-2);
+  font-size: 14px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.workspace-shell.workspace-shell .workspace-content > main {
+  min-height: 0;
+  margin: 0;
+  padding: 48px clamp(24px, 4vw, 64px) 64px;
+  border: 0;
+  border-radius: 0;
+  scroll-padding-block: 24px;
+}
+.workspace-shell.workspace-shell .workspace-page {
+  max-width: 1200px;
+  overflow-wrap: anywhere;
+  font-size: 15px;
+}
+.workspace-shell .workspace-page :is(h1, .workspace-heading h2),
+.workspace-shell .admin-page-heading h1 {
+  font-size: clamp(28px, 2.8vw, 38px);
+  line-height: 1.25;
+  font-weight: 750;
+  letter-spacing: -0.025em;
+}
+.workspace-shell.workspace-shell .workspace-sidebar {
+  width: 280px;
+  border: 0;
+  background: var(--color-rail);
+  color: var(--color-on-rail);
+}
+.workspace-shell.workspace-shell .workspace-sidebar .workspace-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 76px;
+  padding: 12px 18px;
+  gap: 8px;
+  border-bottom: 1px solid var(--color-rail-rule);
+}
+.workspace-shell .workspace-sidebar-brand {
+  display: none;
+}
+.workspace-shell .workspace-rail-toggle {
+  display: inline-flex;
+  min-height: 44px;
+  min-width: 44px;
+  color: var(--color-on-rail);
+}
+.workspace-shell .workspace-rail-toggle:hover {
+  background: var(--color-rail-hover);
+  color: var(--color-on-rail);
+}
+.workspace-shell.workspace-shell .workspace-sidebar .workspace-navigation {
+  gap: 8px;
+  padding: 20px 12px;
+}
+.workspace-shell.workspace-shell .workspace-navigation .workspace-nav-link {
+  min-height: 56px;
+  padding: 7px 8px;
+  gap: 8px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  color: var(--color-on-rail);
+  font-size: 14px;
+  font-weight: 500;
+}
+.workspace-shell.workspace-shell .workspace-nav-link .workspace-nav-icon {
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  color: inherit;
+}
+.workspace-shell.workspace-shell .workspace-nav-link .workspace-nav-icon svg {
+  width: 22px;
+  height: 22px;
+}
+.workspace-shell.workspace-shell .workspace-navigation .workspace-nav-link[aria-current="page"] {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-weight: 650;
+}
+.workspace-shell.workspace-shell
+  .workspace-navigation
+  .workspace-nav-link[aria-current="page"]
+  .workspace-nav-icon {
+  background: transparent;
+  color: var(--color-ink);
+}
+.workspace-shell.workspace-shell .workspace-navigation a.workspace-nav-link:hover {
+  background: var(--color-rail-hover);
+  color: var(--color-on-rail);
+  border-color: var(--color-rail-rule);
+}
+.workspace-shell.workspace-shell
+  .workspace-navigation
+  a.workspace-nav-link:hover
+  .workspace-nav-icon {
+  background: transparent;
+  color: inherit;
+}
+.workspace-shell.workspace-shell
+  .workspace-navigation
+  a.workspace-nav-link[aria-current="page"]:hover {
+  background: var(--color-paper-3);
+  color: var(--color-ink);
+}
+.workspace-shell.workspace-shell .workspace-navigation .workspace-nav-link--locked {
+  color: var(--color-on-rail-muted);
+}
+.workspace-shell.workspace-shell .workspace-sidebar :focus-visible {
+  outline: 2px solid var(--color-on-rail-focus);
+  outline-offset: 2px;
+}
+.workspace-shell.workspace-shell .workspace-sidebar-footer {
+  border-top: 1px solid var(--color-rail-rule);
+  padding: 16px 12px;
+}
+.workspace-shell.workspace-shell .workspace-footer-link {
+  min-height: 44px;
+  color: var(--color-on-rail-muted);
+}
+.workspace-shell.workspace-shell .workspace-footer-link:hover {
+  background: var(--color-rail-hover);
+  color: var(--color-on-rail);
+}
+.workspace-shell .workspace-footer-cta {
+  min-height: 44px;
+  background: var(--color-accent);
+  color: var(--color-paper);
+}
+.workspace-skip-link {
+  position: fixed;
+  inset-block-start: 8px;
+  inset-inline-start: 100px;
+  z-index: 60;
+  padding: 12px 18px;
+  border-radius: 8px;
+  background: var(--color-paper);
+  color: var(--color-accent);
+  transform: translateY(-200%);
+}
+.workspace-skip-link:focus {
+  transform: none;
+}
+.workspace-shell .workspace-result.is-selected,
+.workspace-shell .workspace-tabs button[aria-pressed="true"] {
+  background: var(--color-accent-subtle);
+  color: var(--color-accent-deep);
+}
+.workspace-shell .workspace-summary__item :is(strong, .text-2xl, .text-3xl) {
+  color: var(--color-accent-deep);
+  font-weight: 650;
+}
+.workspace-shell .workspace-detail,
+.workspace-shell .workspace-result-list,
+.workspace-shell .workspace-table-scroll {
+  border-radius: 12px;
+}
+.workspace-shell .workspace-data-table th {
+  background: var(--color-paper-2);
+  font-weight: 600;
+}
+.workspace-shell header button[aria-label="Đăng xuất"],
+.workspace-shell header button[aria-controls="workspace-navigation"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+/* Navigation labels stay available to assistive technology in compact mode. */
+@media (min-width: 1101px) {
+  .workspace-shell[data-navigation="compact"] .workspace-sidebar {
+    width: 80px;
+  }
+  .workspace-shell[data-navigation="compact"] .workspace-nav-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .workspace-shell[data-navigation="compact"] .workspace-nav-link {
+    justify-content: center;
+    gap: 0;
+    padding-inline: 0;
+  }
+  .workspace-shell[data-navigation="compact"] :is(.workspace-footer-link, .workspace-footer-cta) {
+    justify-content: center;
+    gap: 0;
+    padding-inline: 0;
+    font-size: 0;
+  }
+  .workspace-shell[data-navigation="compact"] .workspace-footer-link > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+}
+@media (max-width: 1100px) {
+  .workspace-shell.workspace-shell .workspace-sidebar {
+    width: min(280px, 88vw);
+  }
+  .workspace-shell .workspace-rail-toggle {
+    display: none;
+  }
+  .workspace-shell .workspace-sidebar-brand {
+    display: flex;
+    margin-inline-end: auto;
+  }
+  .workspace-shell .workspace-sidebar-brand :is(h2, strong, p) {
+    color: var(--color-on-rail);
+  }
+  .workspace-shell .workspace-sidebar .admin-navigation-close {
+    min-width: 44px;
+    min-height: 44px;
+    color: var(--color-on-rail);
+  }
+}
+@media (max-width: 767px) {
+  .workspace-shell.workspace-shell .workspace-content > header {
+    min-height: 68px;
+    padding-inline: 12px;
+    gap: 12px;
+  }
+  .workspace-header-brand {
+    font-size: 19px;
+  }
+  .workspace-header-brand svg {
+    width: 23px;
+    flex-shrink: 0;
+  }
+  .workspace-shell.workspace-shell .workspace-page-title {
+    display: none;
+  }
+  .workspace-shell.workspace-shell .workspace-content > main {
+    padding: 28px 20px 40px;
+  }
+  .workspace-shell .workspace-page :is(h1, .workspace-heading h2) {
+    font-size: 28px;
+  }
+}
+
+/* Public surfaces keep their content and browsing flows, with the same controls and palette. */
+.career-site .career-header {
+  border-bottom: 1px solid var(--color-rule);
+}
+.career-site .career-header__row {
+  min-height: 76px;
+}
+.career-site .career-brand {
+  color: var(--color-accent);
+}
+.career-site .career-header__nav a[aria-current="page"] {
+  color: var(--color-accent);
+  box-shadow: inset 0 -2px var(--color-accent);
+}
+.career-site .career-header__employer {
+  min-height: 44px;
+  border: 1px solid var(--color-rule);
+  border-radius: 8px;
+  background: var(--color-paper);
+  color: var(--color-accent);
+}
+.career-site :is(.career-button, .landing-footer__cta-btn) {
+  min-height: 48px;
+  border-radius: 8px;
+  font-weight: 700;
+}
+.guardian-discovery .career-hero {
+  padding-block: 48px 36px;
+}
+.guardian-discovery .career-hero h1 {
+  font-size: clamp(36px, 4vw, 56px);
+  line-height: 1.18;
+  font-weight: 750;
+  max-width: 19ch;
+}
+.guardian-discovery .career-hero__description {
+  color: var(--color-ink-2);
+  margin-top: 20px;
+}
+.guardian-discovery .career-search {
+  padding: 12px;
+  border: 1px solid var(--color-rule-2);
+  border-radius: 12px;
+  background: var(--color-paper);
+}
+.guardian-discovery .career-search label {
+  border-radius: 8px;
+}
+.guardian-discovery .landing-job-list {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+.guardian-discovery .landing-job-list .career-job {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  padding: 24px;
+  border: 1px solid var(--color-rule);
+  border-radius: 12px;
+  background: var(--color-paper);
+}
+.guardian-discovery .landing-job-list .career-job:nth-child(even) {
+  background: var(--color-paper);
+}
+.guardian-discovery .landing-job-list .career-job:hover {
+  border-color: var(--color-accent);
+  background: var(--color-paper-2);
+}
+.guardian-discovery .landing-job-list .career-job h3 {
+  font-size: 18px;
+  color: var(--color-accent);
+}
+.guardian-discovery .landing-job-list .career-job__bottom {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-rule);
+}
+.guardian-discovery .landing-job-list .career-job__salary {
+  color: var(--color-accent-deep);
+  font-size: 15px;
+  font-weight: 600;
+}
+.guardian-discovery .career-field-grid {
+  gap: 16px;
+}
+.guardian-discovery .career-field {
+  display: block;
+  padding: 24px;
+  border: 1px solid var(--color-rule);
+  border-radius: 12px;
+}
+.guardian-discovery .career-field:hover {
+  background: var(--color-accent-subtle);
+  border-color: var(--color-accent);
+}
+.guardian-discovery .career-field h3 {
+  color: var(--color-accent);
+  margin-bottom: 8px;
+}
+.guardian-discovery :is(.career-cv, .career-employer) {
+  padding: 32px;
+  border-radius: 16px;
+  background: var(--color-paper-2);
+}
+.guardian-discovery .career-employer {
+  background: var(--color-accent-subtle);
+}
+.guardian-discovery :is(.career-upload, .career-law-link) {
+  border: 1px solid var(--color-rule);
+  border-radius: 8px;
+  background: var(--color-paper);
+}
+.career-site .landing-footer {
+  border-top: 1px solid var(--color-rule);
+  background: var(--color-paper-2);
+}
+.career-site .footer-ft5__statement {
+  font-size: 32px;
+  font-weight: 750;
+}
+.guardian-job-browser .career-discovery__head {
+  background: var(--color-paper);
+  border-bottom: 1px solid var(--color-rule);
+}
+.career-site :is(.career-job, .career-detail__main, .career-detail__apply) {
+  border-radius: 12px;
+}
+.career-site .career-job__title a {
+  color: var(--color-accent);
+}
+/* Authentication uses the same white form surfaces, readable blue actions and quiet borders. */
+.auth-layout {
+  background: var(--color-paper-2);
+}
+.auth-layout > header {
+  border-bottom: 1px solid var(--color-rule);
+  background: var(--color-paper);
+}
+.auth-layout > header a:first-child {
+  color: var(--color-accent);
+}
+.auth-layout .auth-intro-title {
+  font-weight: 750;
+  font-size: 38px;
+}
+.auth-layout .auth-form-panel,
+.staff-login-page .staff-login-form-panel {
+  border: 1px solid var(--color-rule);
+  border-radius: 12px;
+}
+.auth-layout .auth-form-panel h1 {
+  font-size: 28px;
+  font-weight: 750;
+}
+.auth-layout :is(input:not([type="checkbox"]), select, textarea) {
+  min-height: 48px;
+  border-color: var(--color-rule-2);
+  border-radius: 8px;
+  background: var(--color-paper);
+  font-size: 16px;
+}
+.auth-layout :is(button[type="submit"], header a:last-child) {
+  min-height: 48px;
+}
+.staff-login-page .staff-login-brand > span {
+  background: transparent;
+  color: var(--color-accent);
+}
+@media (max-width: 1100px) {
+  .guardian-discovery .landing-job-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .career-site .career-header__row {
+    min-height: 68px;
+  }
+  .guardian-discovery .career-hero {
+    padding-block: 32px 24px;
+  }
+  .guardian-discovery .career-hero h1 {
+    font-size: 36px;
+  }
+  .guardian-discovery .landing-job-list {
+    grid-template-columns: 1fr;
+  }
+  .guardian-discovery :is(.career-cv, .career-employer, .career-field) {
+    padding: 24px;
+  }
+  .guardian-discovery .career-field-grid {
+    grid-template-columns: 1fr;
+  }
+  .career-site .footer-ft5__statement {
+    font-size: 28px;
+  }
+}
+
+/* GW-95 owns the persistent USER workspace frame and saved collapse preference.
+   Preserve its 244px / 76px inset sidebar instead of introducing a second toggle. */
+.workspace-shell.workspace-shell[data-sidebar-collapsed] .workspace-sidebar {
+  width: 244px;
+}
+.workspace-shell.workspace-shell[data-sidebar-collapsed] .workspace-navigation .workspace-nav-link,
+.workspace-shell.workspace-shell[data-sidebar-collapsed]
+  .workspace-quick-navigation
+  .workspace-footer-link {
+  min-height: 44px;
+  gap: 12px;
+}
+.workspace-shell.workspace-shell[data-sidebar-collapsed] .workspace-nav-link .workspace-nav-icon {
+  width: 20px;
+  height: 20px;
+}
+.workspace-shell.workspace-shell[data-sidebar-collapsed]
+  .workspace-nav-link
+  .workspace-nav-icon
+  svg {
+  width: 20px;
+  height: 20px;
+}
+.workspace-shell.workspace-shell[data-sidebar-collapsed] .workspace-brand {
+  justify-content: flex-start;
+}
+@media (min-width: 1101px) {
+  .workspace-shell.workspace-shell[data-sidebar-collapsed] .workspace-sidebar {
+    width: auto;
+  }
+  .workspace-shell.workspace-shell[data-sidebar-collapsed="true"]
+    .workspace-navigation
+    .workspace-nav-link,
+  .workspace-shell.workspace-shell[data-sidebar-collapsed="true"]
+    .workspace-quick-navigation
+    .workspace-footer-link {
+    gap: 0;
+  }
+}

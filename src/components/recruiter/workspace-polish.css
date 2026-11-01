@@ -1,4 +1,392 @@
-/* Recruiter-only refinements; shared candidate and staff layouts retain their rules. */
+/* Employer workspace: the supplied Indeed references, using GuardianWork components. */
+.recruiter-workspace {
+  --recruiter-rail: var(--color-rail);
+}
+.recruiter-workspace ::selection {
+  background: var(--color-accent-subtle);
+  color: var(--color-accent-deep);
+}
+.recruiter-workspace .workspace-content > main {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  padding: 48px clamp(24px, 4vw, 64px) 64px;
+  scrollbar-color: var(--color-rule-2) var(--color-paper);
+  scroll-padding-block: 24px;
+}
+.recruiter-workspace .workspace-page {
+  max-width: 1200px;
+  overflow-wrap: anywhere;
+}
+.recruiter-workspace .workspace-content {
+  background: var(--color-paper);
+}
+.recruiter-workspace .workspace-content > .recruiter-topbar {
+  min-height: 76px;
+  height: auto;
+  border-bottom: 1px solid var(--color-rule);
+  background: var(--color-paper);
+}
+.recruiter-header-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-accent);
+  font-size: 23px;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+.recruiter-topbar .workspace-page-title {
+  padding-inline-start: 20px;
+  border-inline-start: 1px solid var(--color-rule);
+  color: var(--color-ink-2);
+  font-weight: 500;
+}
+.recruiter-account {
+  max-width: 22ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 600;
+}
+.recruiter-workspace.workspace-shell .workspace-sidebar {
+  width: 280px;
+  border: 0;
+  background: var(--recruiter-rail);
+  color: var(--color-paper);
+}
+.recruiter-workspace .workspace-sidebar .workspace-brand {
+  gap: 8px;
+  padding: 12px 18px;
+  border-color: var(--color-rail-rule);
+}
+.recruiter-workspace .recruiter-sidebar-brand {
+  display: none;
+}
+.recruiter-workspace .recruiter-rail-toggle,
+.recruiter-workspace .workspace-brand > button {
+  color: var(--color-paper);
+}
+.recruiter-workspace .recruiter-rail-toggle:hover,
+.recruiter-workspace .workspace-brand > button:hover {
+  background: var(--color-rail-hover);
+}
+.recruiter-workspace .recruiter-company {
+  border-color: var(--color-rail-rule);
+}
+.recruiter-workspace .recruiter-company p {
+  color: var(--color-paper);
+}
+.recruiter-workspace .recruiter-company p + p {
+  color: var(--color-on-rail-muted);
+}
+.recruiter-workspace .workspace-sidebar .workspace-navigation {
+  padding: 20px 12px;
+  gap: 8px;
+}
+.recruiter-workspace .workspace-navigation .workspace-nav-link {
+  color: var(--color-paper);
+}
+.recruiter-workspace .workspace-nav-icon {
+  color: inherit;
+  background: transparent;
+}
+.recruiter-workspace .workspace-navigation .workspace-nav-link[aria-current="page"] {
+  color: var(--color-ink);
+  background: var(--color-paper);
+  border-color: var(--color-paper);
+}
+.recruiter-workspace
+  .workspace-navigation
+  .workspace-nav-link[aria-current="page"]
+  .workspace-nav-icon {
+  color: var(--color-ink);
+  background: transparent;
+}
+.recruiter-workspace .workspace-navigation a.workspace-nav-link:hover {
+  background: var(--color-rail-hover);
+  border-color: #666;
+  color: var(--color-paper);
+}
+.recruiter-workspace .workspace-navigation a.workspace-nav-link:hover .workspace-nav-icon {
+  color: inherit;
+  background: transparent;
+}
+.recruiter-workspace .workspace-navigation a.workspace-nav-link[aria-current="page"]:hover {
+  color: var(--color-ink);
+  background: #eeeeec;
+}
+.recruiter-workspace .workspace-navigation .workspace-nav-link--locked {
+  color: #b4b2b0;
+}
+.recruiter-lock-label {
+  color: var(--color-on-rail-muted);
+}
+.recruiter-workspace .workspace-sidebar :focus-visible {
+  outline: 2px solid var(--color-on-rail-focus);
+  outline-offset: 2px;
+}
+.recruiter-workspace .workspace-sidebar-footer {
+  border-color: var(--color-rail-rule);
+}
+.recruiter-workspace .workspace-footer-link {
+  color: #e4e2e0;
+}
+.recruiter-workspace .workspace-footer-link:hover {
+  color: var(--color-paper);
+  background: var(--color-rail-hover);
+}
+.recruiter-sidebar-note {
+  background: var(--color-rail-hover);
+}
+.recruiter-sidebar-note :is(p, a, svg) {
+  color: var(--color-paper);
+}
+.recruiter-workspace .recruiter-topbar button[aria-label="Đăng xuất"] {
+  min-width: 44px;
+  min-height: 44px;
+}
+.recruiter-skip-link {
+  position: fixed;
+  top: 8px;
+  left: 100px;
+  z-index: 60;
+  padding: 12px 18px;
+  border-radius: 8px;
+  background: var(--color-paper);
+  color: var(--color-accent);
+  transform: translateY(-200%);
+}
+.recruiter-skip-link:focus {
+  transform: translateY(0);
+}
+.recruiter-workspace .workspace-heading :is(h1, h2),
+.recruiter-workspace .guardian-welcome h1,
+.recruiter-workspace .jp-page-header h1 {
+  color: var(--color-ink);
+  font-size: clamp(28px, 2.8vw, 38px);
+  font-weight: 750;
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+  overflow-wrap: anywhere;
+}
+.recruiter-workspace .jp-page-header {
+  margin-bottom: 32px;
+}
+.recruiter-workspace .jp-page {
+  font-size: 16px;
+  line-height: 1.6;
+}
+.recruiter-workspace .jp-page:has(.jp-guided) {
+  max-width: 900px;
+}
+.recruiter-workspace .jp-guided {
+  width: 100%;
+}
+.recruiter-workspace .jp-form-section {
+  gap: 24px;
+  padding: 32px;
+}
+.recruiter-workspace .jp-page label:not(.jp-check) {
+  gap: 9px;
+  font-size: 16px;
+}
+.recruiter-workspace .jp-page :is(input:not([type="checkbox"]), select, textarea) {
+  min-height: 48px;
+  border-radius: 8px;
+}
+.recruiter-workspace .jp-button {
+  min-height: 48px;
+  padding-inline: 20px;
+  color: var(--color-accent);
+  border-color: var(--color-rule);
+  font-weight: 700;
+}
+.recruiter-workspace .jp-button.jp-primary {
+  color: var(--color-paper);
+  border-color: var(--color-accent);
+}
+.recruiter-workspace .jp-button.jp-danger {
+  color: var(--error);
+  border-color: var(--error);
+}
+.recruiter-workspace .jp-job-title {
+  color: var(--color-accent);
+}
+.recruiter-workspace .jp-feedback {
+  padding: 20px 24px;
+  border-radius: 12px;
+}
+.recruiter-workspace .jp-feedback.jp-error {
+  border: 1px solid var(--error);
+}
+.recruiter-workspace .jp-hint,
+.recruiter-workspace .jp-optional {
+  font-size: 14px;
+}
+.recruiter-workspace .jp-creation-steps button {
+  min-height: 76px;
+  font-size: 14px;
+}
+.recruiter-workspace .jp-creation-steps button[aria-current] {
+  background: transparent;
+}
+.recruiter-workspace .jp-creation-steps button:disabled {
+  opacity: 1;
+  color: var(--color-ink-2);
+}
+.recruiter-workspace .jp-creation-steps button[aria-current] > span:first-child {
+  background: var(--color-accent);
+  color: var(--color-paper);
+  border-color: var(--color-accent);
+}
+.recruiter-workspace .jp-page [aria-invalid="true"] {
+  border-color: var(--error);
+}
+.recruiter-workspace .job-description-field[data-invalid] {
+  border-color: var(--error);
+}
+.recruiter-workspace .workspace-shortcuts {
+  gap: 24px;
+  border: 0;
+  padding-block: 8px 28px;
+}
+.recruiter-workspace .workspace-shortcut {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 20px;
+  padding: 28px 24px;
+  border: 1px solid var(--color-rule);
+  border-radius: 16px;
+}
+.recruiter-workspace .workspace-shortcut:hover {
+  background: var(--color-paper-2);
+  border-color: var(--color-rule-2);
+}
+.recruiter-workspace .workspace-shortcut h3 {
+  color: var(--color-accent);
+  font-size: 18px;
+}
+.recruiter-workspace .workspace-shortcut .guardian-art {
+  display: block;
+  width: 180px;
+  max-width: 100%;
+  height: 120px;
+}
+.recruiter-workspace .workspace-shortcut .guardian-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.recruiter-workspace .workspace-shortcut > svg {
+  display: none;
+}
+@media (min-width: 1101px) {
+  .recruiter-workspace[data-navigation="compact"] .workspace-sidebar {
+    width: 80px;
+  }
+  .recruiter-workspace[data-navigation="compact"] .workspace-brand {
+    justify-content: center;
+    padding-inline: 12px;
+  }
+  .recruiter-workspace[data-navigation="compact"]
+    :is(.recruiter-company, .recruiter-sidebar-note, .recruiter-lock-label) {
+    display: none;
+  }
+  .recruiter-workspace[data-navigation="compact"]
+    :is(.workspace-nav-label, .workspace-footer-link) {
+    font-size: 0;
+  }
+  .recruiter-workspace[data-navigation="compact"] .workspace-nav-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .recruiter-workspace[data-navigation="compact"] .workspace-navigation .workspace-nav-link {
+    justify-content: center;
+    gap: 0;
+    padding-inline: 0;
+  }
+  .recruiter-workspace[data-navigation="compact"] .workspace-footer-link {
+    justify-content: center;
+    gap: 0;
+    padding-inline: 0;
+  }
+}
+@media (max-width: 1199px) {
+  .recruiter-account {
+    display: none;
+  }
+}
+@media (max-width: 1100px) {
+  .recruiter-workspace .recruiter-rail-toggle {
+    display: none;
+  }
+  .recruiter-workspace.workspace-shell .workspace-sidebar {
+    width: min(280px, 88vw);
+  }
+  .recruiter-workspace .recruiter-sidebar-brand {
+    display: flex;
+    margin-inline-end: auto;
+  }
+  .recruiter-sidebar-brand span {
+    color: var(--color-paper);
+  }
+}
+@media (max-width: 767px) {
+  .recruiter-workspace .workspace-content > main {
+    padding: 28px 20px 40px;
+  }
+  .recruiter-workspace .workspace-content > .recruiter-topbar {
+    min-height: 68px;
+  }
+  .recruiter-header-brand {
+    font-size: 19px;
+  }
+  .recruiter-header-brand svg {
+    width: 23px;
+  }
+  .recruiter-topbar .workspace-page-title {
+    display: none;
+  }
+  .recruiter-workspace .workspace-sidebar .workspace-brand {
+    justify-content: flex-end;
+  }
+  .recruiter-workspace .recruiter-sidebar-brand {
+    display: flex;
+    margin-inline-end: auto;
+  }
+  .recruiter-sidebar-brand span {
+    color: var(--color-paper);
+  }
+  .recruiter-workspace .workspace-header-action {
+    width: 44px;
+    padding: 0;
+  }
+  .recruiter-workspace .workspace-header-action span {
+    display: none;
+  }
+  .recruiter-workspace .jp-form-section {
+    padding: 24px 20px;
+  }
+  .recruiter-workspace .jp-creation-steps button {
+    min-height: 64px;
+    padding-inline: 8px;
+  }
+  .recruiter-workspace .jp-row {
+    flex-wrap: wrap;
+  }
+  .recruiter-workspace .jp-feedback {
+    padding: 16px;
+  }
+  .recruiter-workspace .workspace-shortcuts {
+    grid-template-columns: 1fr;
+  }
+}
 .recruiter-workspace .recruiter-setup h1 {
   font-size: 28px;
   line-height: 1.3;

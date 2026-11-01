@@ -282,6 +282,11 @@ test("owner creates a guided draft, resumes progress, recovers failed save and s
   await expect(page.getByRole("textbox", { name: "Mô tả công việc", exact: true })).toBeHidden();
   await page.getByRole("button", { name: "Lưu và tiếp tục", exact: true }).click();
   await expect(page.getByRole("alert")).toContainText("cần bổ sung");
+  await expect(page.getByRole("combobox", { name: "Loại công việc", exact: true })).toBeFocused();
+  await expect(page.getByRole("combobox", { name: "Loại công việc", exact: true })).toHaveAttribute(
+    "aria-invalid",
+    "true",
+  );
   await page
     .getByRole("textbox", { name: "Địa điểm làm việc", exact: true })
     .fill(completeContent.location!);
@@ -299,6 +304,12 @@ test("owner creates a guided draft, resumes progress, recovers failed save and s
   await deadline.fill("2099-12-01");
   await page.getByRole("button", { name: "Lưu và tiếp tục", exact: true }).click();
   await expect(page.getByRole("textbox", { name: "Mô tả công việc", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Lưu và tiếp tục", exact: true }).click();
+  await expect(page.getByRole("textbox", { name: "Mô tả công việc", exact: true })).toBeFocused();
+  await expect(page.getByRole("textbox", { name: "Mô tả công việc", exact: true })).toHaveAttribute(
+    "aria-invalid",
+    "true",
+  );
   await page.reload();
   await expect(page.getByRole("textbox", { name: "Mô tả công việc", exact: true })).toBeVisible();
   await page
@@ -344,6 +355,71 @@ test("owner creates a guided draft, resumes progress, recovers failed save and s
   expect(Object.keys(saved!.body!.content as JobContent).sort()).toEqual(
     ["title", "description", "employmentType", "workArrangement", "location", "deadline"].sort(),
   );
+});
+
+test("a saved draft remains successful when the browser cannot store step progress", async ({
+  page,
+}) => {
+  const mock = await mockJobs(page, []);
+  await login(page, "owner_demo", true);
+  await page.goto("/recruiter/jobs?create=true");
+  await page.getByLabel("Chức danh công việc", { exact: true }).fill("Chuyên viên vận hành");
+  await page.evaluate(() => {
+    const original = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (key, value) {
+      if (key.startsWith("job-creation:"))
+        throw new DOMException("Storage unavailable", "QuotaExceededError");
+      original.call(this, key, value);
+    };
+  });
+  await page.getByRole("button", { name: "Lưu bản nháp", exact: true }).click();
+  await expect(page).toHaveURL(/jobId=83/);
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  expect(mock.writes.filter((write) => write.method === "POST")).toHaveLength(1);
+  expect(mock.getJobs()[0].workingRevision?.content.title).toBe("Chuyên viên vận hành");
+});
+
+test("recruiter rail and forms stay usable at desktop, tablet and phone widths", async ({
+  page,
+}) => {
+  test.setTimeout(90000);
+  await mockJobs(page);
+  await login(page, "owner_demo", true);
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  const nav = page.getByRole("navigation", { name: "Điều hướng nhà tuyển dụng", exact: true });
+  await expect(page.locator("#recruiter-navigation")).toHaveCSS("width", "244px");
+  await page.getByRole("button", { name: "Thu gọn thanh điều hướng", exact: true }).click();
+  await expect(page.locator("#recruiter-navigation")).toHaveCSS("width", "76px");
+  await page.getByRole("button", { name: "Mở rộng thanh điều hướng", exact: true }).click();
+  for (const width of [1440, 1024, 390]) {
+    await page.setViewportSize({ width, height: width === 390 ? 844 : 1000 });
+    for (const route of [
+      "/rec",
+      "/rec/jobs",
+      "/rec/applications",
+      "/rec/talent",
+      "/rec/verification",
+      "/rec/members",
+      "/rec/jobs?create=true",
+    ]) {
+      await page.goto(route);
+      await expect(page.locator("main h1, main h2").first()).toBeVisible();
+      await page.evaluate(() => document.fonts.ready);
+      await noOverflow(page);
+      await page.screenshot({
+        path: `.impeccable/review/indeed/${width}-${route.split("/").filter(Boolean).join("-").replace("?create=true", "-create")}.png`,
+        fullPage: true,
+      });
+    }
+  }
+  const open = page.getByRole("button", { name: "Mở menu", exact: true });
+  await open.click();
+  await expect(nav).toBeVisible();
+  await expect(page.locator(".workspace-content")).toHaveJSProperty("inert", true);
+  await page.keyboard.press("Escape");
+  await expect(nav).toBeHidden();
+  await expect(open).toBeFocused();
+  await expect(page.locator(".workspace-content")).toHaveJSProperty("inert", false);
 });
 
 test("assignment preserves typed content and stale edits never report success", async ({

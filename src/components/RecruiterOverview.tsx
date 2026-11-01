@@ -1,14 +1,9 @@
-import {
-  ArrowRightIcon,
-  CompanyIcon,
-  JobPostingsIcon,
-  TalentSearchIcon,
-  VerificationDossierIcon,
-} from "@/components/icons";
+import { ArrowRightIcon, JobPostingsIcon, VerificationDossierIcon } from "@/components/icons";
 
 import { useEffect, useState } from "react";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { Link } from "@tanstack/react-router";
+import { GuardianIllustration } from "./GuardianIllustration";
 
 import {
   getStoredVerificationRecord,
@@ -131,25 +126,25 @@ export function RecruiterOverview({
             title: "Đăng tin tuyển dụng",
             description: "Tạo tin đăng, tiếp cận ứng viên phù hợp.",
             to: "/rec/jobs",
-            icon: JobPostingsIcon,
+            art: "posting" as const,
           },
           {
             title: "Tìm kiếm ứng viên",
             description: "Tìm kiếm nhân tài cho đội ngũ của bạn.",
             to: "/rec/talent",
-            icon: TalentSearchIcon,
+            art: "teamwork" as const,
           },
           {
             title: "Hồ sơ công ty",
             description: "Quản lý thông tin và giấy tờ xác thực.",
             to: "/rec/verification",
-            icon: CompanyIcon,
+            art: "review" as const,
           },
         ]
           .filter((item) => !invitedRecruiter || item.to !== "/rec/verification")
-          .map(({ title, description, to, icon: Icon }) => (
+          .map(({ title, description, to, art }) => (
             <Link key={to} to={to} className="workspace-shortcut group">
-              <Icon size={21} className="shrink-0 text-primary" />
+              <GuardianIllustration name={art} />
               <div>
                 <h3 className="text-[15px] font-semibold">{title}</h3>
                 <p className="mt-1 text-sm leading-5 text-charcoal-83">{description}</p>

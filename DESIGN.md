@@ -1,6 +1,6 @@
 ---
 name: GuardianWork
-description: A familiar Vietnamese recruitment platform in Guardian Blue.
+description: Guardian Blue recruitment with a scoped employer workspace palette.
 colors:
   primary: "#0868c9"
   primary-hover: "#0755a3"
@@ -20,6 +20,18 @@ colors:
   error: "#b42318"
   error-container: "#fee4e2"
   on-error-container: "#912018"
+  recruiter-accent: "#2557a7"
+  recruiter-accent-hover: "#164081"
+  recruiter-accent-deep: "#153d75"
+  recruiter-accent-subtle: "#eef3fb"
+  recruiter-paper: "#ffffff"
+  recruiter-ground: "#f7f7f6"
+  recruiter-inset: "#eeeeec"
+  recruiter-ink: "#2d2d2d"
+  recruiter-muted: "#595959"
+  recruiter-muted-2: "#666666"
+  recruiter-border: "#e4e2e0"
+  recruiter-border-strong: "#949494"
 typography:
   display:
     fontFamily: Hanken Grotesk, system-ui, sans-serif
@@ -51,6 +63,7 @@ rounded:
   lg: 0.75rem
   xl: 1rem
   2xl: 1.5rem
+  recruiter-control: 6px
   pill: 9999px
 spacing:
   xs: 8px
@@ -92,6 +105,31 @@ components:
   navigation:
     backgroundColor: "{colors.paper}"
     textColor: "{colors.ink}"
+  recruiter-primary-action:
+    backgroundColor: "{colors.recruiter-accent}"
+    textColor: "{colors.recruiter-paper}"
+    rounded: "{rounded.recruiter-control}"
+    padding: 10.4px 16px
+  recruiter-primary-action-hover:
+    backgroundColor: "{colors.recruiter-muted}"
+  recruiter-job-action:
+    backgroundColor: "{colors.recruiter-accent}"
+    textColor: "{colors.recruiter-paper}"
+    rounded: "{rounded.md}"
+    height: 48px
+    padding: 10px 20px
+  recruiter-job-action-hover:
+    backgroundColor: "{colors.recruiter-accent-hover}"
+  recruiter-job-field:
+    backgroundColor: "{colors.recruiter-paper}"
+    textColor: "{colors.recruiter-ink}"
+    rounded: "{rounded.md}"
+    height: 48px
+  recruiter-overview-shortcut:
+    backgroundColor: "{colors.recruiter-paper}"
+    textColor: "{colors.recruiter-ink}"
+    rounded: "{rounded.xl}"
+    padding: 28px 24px
 ---
 
 # Design System: GuardianWork
@@ -100,15 +138,16 @@ components:
 
 **Creative North Star: "Familiar recruitment, clear next steps"**
 
-Guardian Blue is a familiar, clear recruitment interface: white surfaces, cool blue-gray supporting grounds, dark blue text, and decisive blue actions. The user selected the category-standard direction with VietnamWorks as the craft reference. The implementation is code-first; the reference was not accessible for direct visual comparison.
+Guardian Blue is a familiar, clear recruitment interface: white surfaces, cool blue-gray supporting grounds, dark blue text, and decisive blue actions. The user selected the category-standard direction with VietnamWorks as the craft reference. The VietnamWorks reference was not accessible for direct visual comparison; supplied Indeed employer screens guide the scoped recruiter extension.
 
-GuardianWork is a multi-industry recruitment platform. Public browsing uses generous search and listing areas, with business, marketing, finance, HR, operations and technology as peer categories. Candidate, recruiter, administrator, and authentication surfaces use the same tokens with task-appropriate density. Existing role boundaries and workflows remain the source of product behavior.
+GuardianWork is a multi-industry recruitment platform. Public browsing uses generous search and listing areas, with business, marketing, finance, HR, operations and technology as peer categories. Public, candidate, staff, and authentication surfaces keep the shared Guardian Blue system. The recruiter workspace has a user-requested, Indeed-inspired local palette and denser employer-console layout; this is a scoped surface extension, not a product-wide identity change. Existing role boundaries and workflows remain the source of product behavior.
 
 **Key Characteristics:**
 
 - White and cool blue-gray surfaces with Guardian Blue actions.
 - Hanken Grotesk for headings, body copy, labels, and workspace UI.
 - Quiet borders, gently curved controls, and compact information hierarchy.
+- An Indeed-inspired blue and warm-neutral palette scoped to recruiter surfaces.
 
 ## Colors
 
@@ -132,7 +171,19 @@ The palette is light, cool, and practical. Frontmatter values are normative; the
 - **Quiet Rule / Strong Rule** (`rule`, `rule-2`): dividers, borders, and dashed upload boundaries.
 - **Inverse Ground** (`paper-inverse`): available shared inverse surface token; ordinary application surfaces remain light.
 
-**The Guardian Blue Rule.** Guardian Blue is the only product theme. Keep primary actions and focus consistent across public pages, authentication, and workspaces.
+**The Guardian Blue Rule.** Keep Guardian Blue primary actions and focus consistent on public, candidate, staff, and authentication surfaces. The recruiter workspace alone uses its documented local blue and neutral palette; do not propagate that surface treatment elsewhere.
+
+### Recruiter workspace extension
+
+The recruiter workspace uses a restrained, Indeed-inspired blue with warm-neutral grounds. The named recruiter tokens in the frontmatter are scoped to `/recruiter` surfaces, including the workspace shell, overview, verification and membership pages, and job creation. The white brand header and existing GuardianWork identity remain visible within that local treatment.
+
+- **Recruiter Blue** (`recruiter-accent`, `recruiter-accent-hover`, `recruiter-accent-deep`): recruiter actions, active text links, form focus, and selected steps.
+- **Recruiter Blue Wash** (`recruiter-accent-subtle`): selected or supporting recruiter surfaces.
+- **Warm White / Soft Warm Ground / Warm Inset** (`recruiter-paper`, `recruiter-ground`, `recruiter-inset`): cards and main content, page grounds, and grouped rows.
+- **Recruiter Charcoal / Supporting Gray / Quiet Gray** (`recruiter-ink`, `recruiter-muted`, `recruiter-muted-2`): primary content, supporting copy, and secondary metadata.
+- **Warm Rule / Strong Gray Rule** (`recruiter-border`, `recruiter-border-strong`): separators, control borders, and hover boundaries.
+
+**The Scoped Recruiter Palette Rule.** Apply these local tokens only inside the recruiter workspace. Other GuardianWork roles keep their existing palette.
 
 ## Typography
 
@@ -147,6 +198,8 @@ The palette is light, cool, and practical. Frontmatter values are normative; the
 - **Label:** compact navigation and information labels. Primary button labels are larger and bolder (15px, weight 700); metadata generally uses smaller type (12–13px).
 
 Authentication headlines and workspace headings retain local responsive type scales. Do not force the public hero scale into dense task views. The repository includes Geist Mono for legacy metadata; the redesigned public footer and workspace metadata use the body family.
+
+The recruiter workspace keeps Hanken Grotesk while using a compact employer-console hierarchy: page headings range from 28px to 38px on wide screens and reduce to 25px on narrow phones; ordinary job-editor text is 16px and labels are 16px. Recruiter metadata stays secondary and readable in the existing body family.
 
 ## Layout
 
@@ -166,11 +219,15 @@ Candidate and recruiter workspaces use a persistent full-height frame: a light i
 
 Depth comes primarily from light tonal surfaces and quiet borders. Listing cards change their border and ground on hover rather than lifting. Redesigned workspace content suppresses small and medium utility shadows. The public search assembly is the deliberate exception: a soft shadow distinguishes the working search form from the blue hero ground. Its exact shadow lives in the sidecar.
 
+The recruiter workspace is flat at rest: the dark rail, white top bar, warm page ground, and thin rules create separation without new shadows. Recruiter cards and editor sections change their ground or border for interaction and grouping.
+
 **The Quiet Surface Rule.** Use tonal grounds and thin rules for ordinary content; preserve the search form's soft elevation as a functional exception.
 
 ## Shapes
 
 Controls use gently curved corners (8px); search assemblies, listings, and upload areas use larger corners (12px). Supporting employer panels use the larger panel radius (16px). The shared radius scale also retains small and pill values for existing controls and status shapes. Popular skill chips have their own compact corners (5px). Borders are generally thin (1px); upload affordances use a dashed rule. Circular step markers and status shapes remain valid exceptions to rectangular containers.
+
+Recruiter controls use 6px corners where the existing employer action specifies them, while job-editor controls use 8px and list/editor surfaces use 12px. Overview shortcuts are softly rectangular (16px), with a thin warm-gray border. Keep the overall recruiter surface square-edged and information-led; use radius only to group a card or control.
 
 ## Components
 
@@ -204,11 +261,22 @@ Keyword, location, and action share a gently rounded, softly elevated white surf
 
 Short color and border transitions support state changes. Reduced-motion preference suppresses animation and transition duration. No new motion system is implied by the remaining legacy effects.
 
+### Recruiter workspace extension (scoped)
+
+The employer console reuses the shared workspace shell, semantic icon set, `Button`, job forms, and `GuardianIllustration`; recruiter styling is applied locally around those pieces.
+
+- **Navigation:** a charcoal desktop rail with light labels and icons. The current destination reverses to a white row with charcoal text. Hover stays on the rail and does not imply current-page state. At widths up to 1100px, use the existing explicit drawer controls and Escape dismissal. Desktop rail widths are 280px expanded and 80px compact.
+- **Primary actions:** recruiter actions use Recruiter Blue with white text; supporting job-editor actions use a white face and warm border. Keep page actions stronger than header shortcuts. Job-editor buttons and fields have 48px minimum height; navigation and icon controls retain usable hit areas from the shared components.
+- **Overview shortcuts:** white bordered cards with centered existing Guardian illustrations (180px by 120px), generous internal spacing (28px 24px), and a soft-warm hover ground. They remain links to actual recruiter tasks.
+- **Job editor:** a white bordered surface with divided form sections (32px padding on desktop, 24px by 20px on phones), labeled fields, and visible focus and validation states. Inputs use a warm-gray border, white background, and 8px corners. The current step uses a blue marker; unavailable steps keep readable supporting-gray labels. Error treatment continues to use the established semantic error tokens.
+
+The overview's candidate counts are visibly disclosed as illustrative data. Keep that disclosure and existing service-backed company and job workflows intact when changing presentation.
+
 ## Do's and Don'ts
 
 ### Do:
 
-- Do use Guardian Blue for primary actions, active navigation, and keyboard focus.
+- Do use Guardian Blue for primary actions, active navigation, and keyboard focus on public, candidate, staff, and authentication surfaces.
 - Do keep muted text on light surfaces and preserve visible field labels and focus outlines.
 - Do adapt grids and search controls to a single column on small phones.
 - Do preserve role-specific routes, existing content, and the distinction between simulated and integrated capabilities.
@@ -219,7 +287,7 @@ Short color and border transitions support state changes. Reduced-motion prefere
 ### Don't:
 
 - Don't expose a theme selector or restore a saved palette preference.
-- Don't introduce a different visual identity for a workspace or authentication page.
+- Don't introduce a different visual identity beyond the recruiter workspace exception documented here.
 - Don't strengthen unverified product claims or document simulated actions as production integrations.
 - Don't inherit legacy icon-font or decorative eyebrow treatments as new component patterns.
 - Don't restore large icon wells or oversized sidebar icons to the Candidate/recruiter rail.

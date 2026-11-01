@@ -23,12 +23,21 @@ export function JobContentEditor({
   onChange,
   disabled,
   step,
+  invalidField,
 }: {
   content: JobContent;
   onChange: (content: JobContent) => void;
   disabled: boolean;
   step?: number;
+  invalidField?: string | null;
 }) {
+  const fieldAttributes = (field: string, hint?: string) => ({
+    "data-job-field": field,
+    "aria-invalid": invalidField === field || undefined,
+    "aria-describedby":
+      [hint, invalidField === field ? "job-workspace-error" : ""].filter(Boolean).join(" ") ||
+      undefined,
+  });
   const update = (patch: Partial<JobContent>) => onChange({ ...content, ...patch });
   const compensation = content.compensation;
   const questions = content.screeningQuestions ?? [];
@@ -47,6 +56,7 @@ export function JobContentEditor({
               Chức danh công việc <RequiredMark />
             </span>
             <input
+              {...fieldAttributes("title")}
               aria-required="true"
               aria-label="Chức danh công việc"
               name="title"
@@ -61,6 +71,7 @@ export function JobContentEditor({
                 Loại công việc <RequiredMark />
               </span>
               <select
+                {...fieldAttributes("employmentType")}
                 aria-required="true"
                 aria-label="Loại công việc"
                 value={content.employmentType ?? ""}
@@ -79,6 +90,7 @@ export function JobContentEditor({
                 Hình thức làm việc <RequiredMark />
               </span>
               <select
+                {...fieldAttributes("workArrangement")}
                 aria-required="true"
                 aria-label="Hình thức làm việc"
                 value={content.workArrangement ?? ""}
@@ -100,6 +112,7 @@ export function JobContentEditor({
                 <RequiredMark />
               </span>
               <input
+                {...fieldAttributes("location", "job-location-hint")}
                 aria-label={
                   content.workArrangement === "REMOTE"
                     ? "Khu vực có thể làm việc từ xa"
@@ -108,7 +121,6 @@ export function JobContentEditor({
                 aria-required="true"
                 value={content.location ?? ""}
                 maxLength={1000}
-                aria-describedby="job-location-hint"
                 onChange={(e) => update({ location: e.target.value })}
               />
               <span className="jp-hint" id="job-location-hint">
@@ -122,11 +134,11 @@ export function JobContentEditor({
                 Hạn ứng tuyển <RequiredMark />
               </span>
               <input
+                {...fieldAttributes("deadline", "job-deadline-hint")}
                 aria-required="true"
                 type="date"
                 min={localDate(new Date().toISOString())}
                 aria-label="Hạn ứng tuyển"
-                aria-describedby="job-deadline-hint"
                 value={localDate(content.deadline)}
                 onChange={(e) =>
                   update({
@@ -149,6 +161,7 @@ export function JobContentEditor({
             Mô tả công việc <RequiredMark />
           </h3>
           <JobDescriptionEditor
+            invalid={invalidField === "description"}
             value={content.description ?? ""}
             onChange={(description) => update({ description })}
             disabled={disabled}
