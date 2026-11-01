@@ -144,7 +144,9 @@ function CompanyVerificationPage() {
                 : "Cung cấp thông tin doanh nghiệp để tạo không gian tuyển dụng. Bạn sẽ trở thành chủ sở hữu công ty sau khi đăng ký thành công."}
             </p>
           </div>
-          <span className="rounded-md border border-warm-border bg-paper-white px-3 py-2 text-sm">
+          <span
+            className={`status-tag status-tag--${stage === "VERIFIED" ? "success" : stage === "REJECTED" ? "danger" : stage === "PENDING" ? "warning" : "neutral"}`}
+          >
             {stage === "PENDING"
               ? "Chờ xác minh"
               : stage === "REJECTED"
@@ -173,7 +175,7 @@ function CompanyVerificationPage() {
         {notice && (
           <p
             role="status"
-            className="mb-5 rounded-lg border border-green-200 bg-green-50 p-4 text-sm leading-6 text-green-800"
+            className="mb-5 rounded-lg border border-rule bg-paper-2 p-4 text-sm leading-6 text-ink"
           >
             {notice}
           </p>
@@ -181,7 +183,7 @@ function CompanyVerificationPage() {
         {membershipError && (
           <div
             role="alert"
-            className="mb-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900"
+            className="mb-5 rounded-lg border border-rule bg-paper-2 p-4 text-sm leading-6 text-ink"
           >
             <p>{membershipError}</p>
             <button
@@ -220,7 +222,7 @@ function CompanyVerificationPage() {
               </p>
             )}
             {rejected && user?.activeMembership?.companyRole === "OWNER" && (
-              <p className="mb-5 rounded-lg bg-amber-50 p-4 text-sm leading-6 text-amber-900">
+              <p className="mb-5 rounded-lg bg-paper-2 p-4 text-sm leading-6 text-ink">
                 Lý do cần bổ sung:{" "}
                 {record.rejectionReason || "Vui lòng kiểm tra và cập nhật thông tin hồ sơ."}
               </p>

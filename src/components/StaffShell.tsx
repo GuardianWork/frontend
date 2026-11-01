@@ -23,6 +23,8 @@ import { LogoutButton } from "./LogoutButton";
 import { StaffAccount } from "./admin/StaffAccount";
 import { publicPortalHref } from "@/lib/portal";
 import "./admin/sidebar.css";
+import "./admin/staff-colors.css";
+import { WorkspaceBrand, WorkspaceNavigationToggle } from "./WorkspaceChrome";
 
 const NAVIGATION = [
   { to: "/staff", label: "Tổng quan", icon: RecruitmentOverviewIcon },
@@ -44,6 +46,7 @@ export function StaffShell({
 }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [open, setOpen] = useState(false);
+  const [navigationExpanded, setNavigationExpanded] = useState(false);
   useNavigationFocus(open, "workspace-navigation");
   useEffect(() => {
     const close = (event: KeyboardEvent) => {
@@ -53,7 +56,13 @@ export function StaffShell({
     return () => window.removeEventListener("keydown", close);
   }, []);
   return (
-    <div className="admin-workspace workspace-shell flex h-dvh w-full overflow-hidden bg-background text-charcoal-text">
+    <div
+      className="admin-workspace workspace-shell flex h-dvh w-full overflow-hidden bg-background text-charcoal-text"
+      data-navigation={navigationExpanded ? "expanded" : "compact"}
+    >
+      <a className="workspace-skip-link" href="#workspace-main">
+        Bỏ qua điều hướng
+      </a>
       <Toaster
         position="bottom-right"
         closeButton
@@ -83,7 +92,12 @@ export function StaffShell({
         className={`${open ? "flex" : "hidden"} workspace-sidebar fixed inset-y-0 left-0 z-50 w-64 flex-col border-r border-warm-border bg-paper-white md:static md:flex md:shrink-0`}
       >
         <div className="workspace-brand border-b border-warm-border">
-          <div className="flex items-center gap-3">
+          <WorkspaceNavigationToggle
+            expanded={navigationExpanded}
+            onToggle={() => setNavigationExpanded(!navigationExpanded)}
+            controls="workspace-navigation"
+          />
+          <div className="workspace-sidebar-brand flex items-center gap-3">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-on-primary">
               <ShieldCheck size={24} strokeWidth={1.8} aria-hidden="true" />
             </span>
@@ -110,6 +124,7 @@ export function StaffShell({
           {NAVIGATION.map(({ to, label, icon: Icon }) => (
             <Link
               key={to}
+              title={label}
               to={to}
               className="workspace-nav-link staff-nav-link"
               activeOptions={{ exact: to === "/staff" }}
@@ -132,7 +147,11 @@ export function StaffShell({
           ))}
         </nav>
         <div className="workspace-sidebar-footer border-t border-warm-border">
-          <a href={publicPortalHref()} className="workspace-footer-link">
+          <a
+            href={publicPortalHref()}
+            className="workspace-footer-link"
+            title="Trang chủ GuardianWork"
+          >
             <GlobeIcon size={18} aria-hidden="true" />
             <span>Trang chủ GuardianWork</span>
           </a>
@@ -151,6 +170,7 @@ export function StaffShell({
             >
               <MenuIcon size={22} aria-hidden="true" />
             </button>
+            <WorkspaceBrand to="/staff" />
             <p className="workspace-page-title min-w-0">{title}</p>
           </div>
           <div className="flex items-center gap-3">
@@ -159,7 +179,11 @@ export function StaffShell({
             <LogoutButton />
           </div>
         </header>
-        <main className="min-h-0 flex-1 overflow-y-auto p-4 md:p-8">
+        <main
+          id="workspace-main"
+          tabIndex={-1}
+          className="min-h-0 flex-1 overflow-y-auto p-4 md:p-8"
+        >
           <div className="workspace-page mx-auto max-w-7xl">{children}</div>
         </main>
       </div>

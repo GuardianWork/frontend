@@ -189,7 +189,7 @@ function RecruiterTalentPage() {
                           <div className="text-xs text-charcoal-83">{c.role}</div>
                         </div>
                       </div>
-                      <span className="text-xs font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200">
+                      <span className="text-xs font-bold text-ink bg-paper-2 px-2 py-0.5 rounded border border-rule">
                         {c.ielts}
                       </span>
                     </div>
@@ -213,8 +213,8 @@ function RecruiterTalentPage() {
                 <h3 className="font-bold text-xl text-charcoal-text">{current.name}</h3>
                 <p className="text-sm font-medium text-charcoal-83 mt-0.5">{current.role}</p>
                 <div className="flex items-center gap-2 mt-1.5">
-                  <span className="w-2 h-2 rounded-full bg-green-500" />
-                  <span className="text-sm font-semibold text-green-700">Hồ sơ minh họa</span>
+                  <span className="w-2 h-2 rounded-full bg-paper-20" />
+                  <span className="text-sm font-semibold text-ink">Hồ sơ minh họa</span>
                 </div>
               </div>
             </div>
@@ -232,7 +232,7 @@ function RecruiterTalentPage() {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-charcoal-40 text-sm font-semibold ">Ngoại ngữ:</span>
-                <span className="text-green-700 text-sm font-bold bg-green-50 px-2 py-0.5 rounded border border-green-200">
+                <span className="text-ink text-sm font-bold bg-paper-2 px-2 py-0.5 rounded border border-rule">
                   {current.ielts}
                 </span>
               </div>
@@ -275,7 +275,7 @@ function RecruiterTalentPage() {
                   Mã hồ sơ mẫu: #{current.id.toUpperCase()}
                 </p>
               </div>
-              <span className="px-3 py-1 bg-green-50 text-green-700 border border-green-200 rounded-full text-sm font-bold flex items-center gap-1">
+              <span className="px-3 py-1 bg-paper-2 text-ink border border-rule rounded-full text-sm font-bold flex items-center gap-1">
                 <Icon name="verified" className="!text-sm" /> Dữ liệu mẫu
               </span>
             </div>

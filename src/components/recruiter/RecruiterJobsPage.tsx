@@ -256,7 +256,7 @@ function JobRow({ job, scope }: { job: Job; scope: string }) {
             {jobStatusLabels[job.status]}
           </span>
           {revision && (
-            <span className="jp-badge">
+            <span className={`jp-badge jp-revision-${revision.state.toLowerCase()}`}>
               {revisionLabels[revision.state]} · v{revision.revisionNumber}
             </span>
           )}

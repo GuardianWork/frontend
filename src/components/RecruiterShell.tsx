@@ -4,6 +4,7 @@ import { useNavigationFocus } from "@/hooks/useNavigationFocus";
 import { EmailVerificationPanel } from "@/components/auth/EmailVerification";
 import "./workspace.css";
 import "./admin/sidebar.css";
+import "./recruiter/workspace-polish.css";
 import {
   MenuIcon,
   CloseIcon,
@@ -21,6 +22,7 @@ import { useEmployerOnboarding } from "@/hooks/useEmployerOnboarding";
 import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
 import { useWorkspaceLayout } from "@/context/WorkspaceLayoutContext";
 import { WorkspaceFooter } from "./WorkspaceFooter";
+import { WorkspaceBrand } from "./WorkspaceChrome";
 import { LogoutButton } from "./LogoutButton";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useContext, useEffect, useState, type ReactNode } from "react";
@@ -214,6 +216,7 @@ function RecruiterShellFrame({
             >
               <MenuIcon size={22} aria-hidden="true" />
             </button>
+            <WorkspaceBrand to="/rec" />
             <p className="workspace-page-title text-sm font-semibold tracking-tight [overflow-wrap:anywhere]">
               {title}
             </p>
@@ -240,7 +243,11 @@ function RecruiterShellFrame({
             <LogoutButton />
           </div>
         </header>
-        <main className="min-h-0 flex-1 overflow-y-auto p-4 md:p-8">
+        <main
+          id="recruiter-main"
+          tabIndex={-1}
+          className="min-h-0 flex-1 overflow-y-auto p-4 md:p-8"
+        >
           <div className="workspace-page mx-auto max-w-[1200px]">
             {user && !user.recruitingEmailEligible && pathname !== "/rec/account" && (
               <EmailVerificationPanel />

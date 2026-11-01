@@ -131,10 +131,15 @@ export function JobWorkspace({
   const completed = progress?.completed ?? 0;
   const moveStep = (next: number, id = job?.id) => {
     const value = { step: next, completed: Math.max(completed, next) };
-    if (id) sessionStorage.setItem(`job-creation:${scope}:${id}`, JSON.stringify(value));
+    try {
+      if (id) sessionStorage.setItem(`job-creation:${scope}:${id}`, JSON.stringify(value));
+    } catch {
+      // A storage restriction must not turn a successful API save into an error.
+    }
     setProgress(value);
     setView(next === 3 ? "preview" : "edit");
     setError("");
+    setInvalidField(null);
     requestAnimationFrame(() => headingRef.current?.focus());
   };
   const [job, setJob] = useState(initialJob);
@@ -148,6 +153,7 @@ export function JobWorkspace({
   );
   const [preview, setPreview] = useState<JobPreview | null>(null);
   const [error, setError] = useState("");
+  const [invalidField, setInvalidField] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const latest = useQuery({
@@ -248,11 +254,16 @@ export function JobWorkspace({
           : [];
     const missing = required.find((key) => !String(content[key] ?? "").trim());
     if (missing || (step === 0 && new Date(content.deadline!).getTime() <= Date.now())) {
+      const field = missing ?? "deadline";
+      setInvalidField(field);
       setError(
         missing
           ? `${fieldLabels[missing]}: cần bổ sung trước khi tiếp tục.`
           : "Hạn ứng tuyển phải ở tương lai.",
       );
+      requestAnimationFrame(() => {
+        form?.querySelector<HTMLElement>(`[data-job-field="${field}"]`)?.focus();
+      });
       return;
     }
     if (!form?.reportValidity()) return;
@@ -315,7 +326,7 @@ export function JobWorkspace({
             {jobStatusLabels[job.status]}
           </span>
           {job.workingRevision && (
-            <span className="jp-badge">
+            <span className={`jp-badge jp-revision-${job.workingRevision.state.toLowerCase()}`}>
               {revisionLabels[job.workingRevision.state]} · v{job.workingRevision.revisionNumber}
             </span>
           )}
@@ -325,7 +336,7 @@ export function JobWorkspace({
         </div>
       )}
       {error && !confirmation && (
-        <div className="jp-feedback jp-error" role="alert">
+        <div id="job-workspace-error" className="jp-feedback jp-error" role="alert">
           <strong>Chưa hoàn tất thao tác</strong>
           <p>{error}</p>
         </div>
@@ -424,11 +435,20 @@ export function JobWorkspace({
               }}
             >
               <JobContentEditor
+                invalidField={invalidField}
                 step={guided ? step : undefined}
                 content={content}
                 onChange={(next) => {
                   setContent(next);
                   setPreview(null);
+                  if (
+                    invalidField &&
+                    next[invalidField as keyof JobContent] !==
+                      content[invalidField as keyof JobContent]
+                  ) {
+                    setInvalidField(null);
+                    setError("");
+                  }
                 }}
                 disabled={busy}
               />
@@ -534,7 +554,11 @@ export function JobWorkspace({
                     void run(async () => {
                       const updated = await submitJob(job!, preview);
                       accept(updated);
-                      sessionStorage.removeItem(`job-creation:${scope}:${updated.id}`);
+                      try {
+                        sessionStorage.removeItem(`job-creation:${scope}:${updated.id}`);
+                      } catch {
+                        // Submission has already succeeded; cleanup is best effort.
+                      }
                       setProgress(null);
                       setView("history");
                       setNotice("Đã gửi bản tin để xét duyệt.");
@@ -830,7 +854,9 @@ function JobReviewHistory({ job, scope }: { job: Job; scope: string }) {
                   >
                     Bản v{revision.revisionNumber} · {revision.content.title || "Chưa có chức danh"}
                   </button>
-                  <span className="jp-badge">{revisionLabels[revision.state]}</span>
+                  <span className={`jp-badge jp-revision-${revision.state.toLowerCase()}`}>
+                    {revisionLabels[revision.state]}
+                  </span>
                 </div>
                 <p>
                   Tạo {formatJobDate(revision.createdAt)}

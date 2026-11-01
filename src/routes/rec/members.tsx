@@ -347,11 +347,15 @@ function CompanyMembersPage() {
                                   : "Nhà tuyển dụng"}
                             </td>
                             <td className="p-4">
-                              {m.status === "ACTIVE"
-                                ? "Đang hoạt động"
-                                : m.status === "LEFT"
-                                  ? "Đã rời công ty"
-                                  : "Đã bị xóa"}
+                              <span
+                                className={`status-tag status-tag--${m.status === "ACTIVE" ? "success" : m.status === "LEFT" ? "neutral" : "danger"}`}
+                              >
+                                {m.status === "ACTIVE"
+                                  ? "Đang hoạt động"
+                                  : m.status === "LEFT"
+                                    ? "Đã rời công ty"
+                                    : "Đã bị xóa"}
+                              </span>
                             </td>
                             <td className="p-4">
                               {m.companyRole === "RECRUITER" && m.status === "ACTIVE" && (

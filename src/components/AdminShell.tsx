@@ -2,6 +2,7 @@ import { SidebarState } from "@/context/sidebar-state";
 import { SidebarCollapseButton, SidebarLabel } from "./SidebarControls";
 import { useWorkspaceLayout } from "@/context/WorkspaceLayoutContext";
 import { WorkspaceFooter } from "./WorkspaceFooter";
+import { WorkspaceBrand } from "./WorkspaceChrome";
 import { useNavigationFocus } from "@/hooks/useNavigationFocus";
 import * as SemanticIcons from "@/components/icons";
 import "./workspace.css";
@@ -378,6 +379,7 @@ function AdminShellFrame({
             >
               <MenuIcon size={22} />
             </button>
+            <WorkspaceBrand to={currentRole === "candidate" ? "/can/jobs" : "/staff"} />
             <div className="min-w-0">
               <p className="workspace-page-title font-bold text-sm md:text-xl text-charcoal-text tracking-tight">
                 {title}
@@ -405,7 +407,7 @@ function AdminShellFrame({
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+        <main id="workspace-main" tabIndex={-1} className="flex-1 overflow-y-auto p-4 md:p-8">
           <div className="workspace-page max-w-7xl mx-auto">{children}</div>
         </main>
       </div>

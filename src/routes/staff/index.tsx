@@ -112,7 +112,7 @@ function AdminDashboard() {
       </section>
 
       {verificationError && (
-        <div className="admin-dashboard-fetch-error" role="status">
+        <div className="admin-dashboard-fetch-error" role="alert">
           <span>Chưa lấy được số hồ sơ xác minh từ API.</span>
           <button type="button" onClick={() => setReload((value) => value + 1)}>
             <RefreshCw size={14} aria-hidden="true" /> Thử lại
