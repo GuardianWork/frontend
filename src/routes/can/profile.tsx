@@ -1,3 +1,6 @@
+import { useCandidateProfile, useRefreshIdentity } from "@/hooks/useAccountIdentity";
+import { updateCandidatePhone } from "@/services/candidateProfile";
+import { accountError } from "@/services/accountControl";
 import { useEffect, useState, type FormEvent, type KeyboardEvent } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AdminShell } from "@/components/AdminShell";
@@ -52,30 +55,23 @@ type ExperienceEntry = CandidateExperience;
 type EducationEntry = CandidateEducation;
 type EditSection = "all" | "basics" | "about" | "experience" | "education" | "skills";
 
-const PROFILE_ROLE_OPTIONS = [
-  "Kỹ sư phần mềm",
-  "Senior Software Engineer",
-  "Full-stack Developer",
-  "Backend Developer",
-  "Frontend Developer",
-  "Tech Lead",
-  "Project Manager",
-  "Product Manager",
-  "UI/UX Designer",
-  "Data Engineer",
-  "DevOps Engineer",
-  "QA Engineer",
-];
-
-const MAX_NAME_LENGTH = 150;
-const MAX_EMAIL_LENGTH = 50;
+const MAX_NAME_LENGTH = 100;
 const MAX_ABOUT_LENGTH = 1000;
 const MAX_SKILLS = 20;
 const MAX_SKILL_LENGTH = 30;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-const PHONE_PATTERN = /^0\d{9}$/;
+const PHONE_PATTERN = /^(?:0|\+84)\d{9}$/;
+const PROFILE_ROLE_OPTIONS = [
+  "Chuyên viên kinh doanh",
+  "Chuyên viên tiếp thị",
+  "Chuyên viên kế toán",
+  "Chuyên viên nhân sự",
+  "Chuyên viên vận hành",
+  "Kỹ sư phần mềm",
+  "Quản lý",
+];
 
-export const Route = createFileRoute("/candidate/profile")({
+export const Route = createFileRoute("/can/profile")({
   head: () => ({
     meta: [
       { name: "robots", content: "noindex, nofollow" },
@@ -97,25 +93,29 @@ function mapApiProfileToDetails(
   return {
     ...current,
     fullName: api.fullName,
-    email: api.email,
+    firstName: api.firstName,
+    lastName: api.lastName,
+    email: api.email ?? current.email,
     phone: toLocalPhone(api.phoneNumber),
     avatarUrl: api.avatarUrl,
     isPublic: api.isPublic,
     skills: api.skills,
-    experiences: api.experience.map((entry: ApiExperienceEntry, index) => ({
-      title: entry.role,
-      company: entry.company,
-      from: entry.startDate,
-      to: entry.endDate || "",
-      description: entry.description || "",
-    })),
-    education: api.education.map((entry: ApiEducationEntry, index) => ({
-      degree: entry.degree,
-      school: entry.institution,
-      from: entry.startYear,
-      to: entry.endYear || "",
-      description: entry.description || "",
-    })),
+    experiences:
+      api.experience?.map((entry: ApiExperienceEntry, index) => ({
+        title: entry.role,
+        company: entry.company,
+        from: entry.startDate,
+        to: entry.endDate || "",
+        description: entry.description || "",
+      })) ?? current.experiences,
+    education:
+      api.education?.map((entry: ApiEducationEntry, index) => ({
+        degree: entry.degree,
+        school: entry.institution,
+        from: entry.startYear,
+        to: entry.endYear || "",
+        description: entry.description || "",
+      })) ?? current.education,
   };
 }
 
@@ -153,6 +153,10 @@ function currentAvatarUrl(profile: CandidateProfileDetails): string | undefined 
 
 function CandidateProfilePage() {
   const user = useAuthUser();
+  const serverProfile = useCandidateProfile();
+  const refreshIdentity = useRefreshIdentity();
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const { profileDetails: profile, setProfileDetails } = useCandidate();
   const [candidateCvs, setCandidateCvs] = useState<CandidateCvRecord[]>([]);
   const defaultCv = candidateCvs.find((cv) => cv.isDefault);
@@ -249,7 +253,9 @@ function CandidateProfilePage() {
     setIsEditing(true);
   };
 
-  const closeEditForm = () => setIsEditing(false);
+  const closeEditForm = () => {
+    if (!saving) setIsEditing(false);
+  };
 
   const clearFieldError = (key: string) => {
     setFieldErrors((current) => {
@@ -286,6 +292,7 @@ function CandidateProfilePage() {
   };
 
   const addExperience = () => {
+    setCustomRoleIndexes((current) => ({ ...current, [draft.experiences.length]: true }));
     setDraft((current) => ({
       ...current,
       experiences: [
@@ -372,6 +379,8 @@ function CandidateProfilePage() {
 
   const handleSave = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (saving || !serverProfile.data) return;
+    setSaveError("");
 
     const pendingSkill = skillInput.replace(/\s+/g, " ").trim();
     const skillsForSave =
@@ -392,7 +401,8 @@ function CandidateProfilePage() {
     }
 
     const touches = (target: EditSection) => editSection === "all" || editSection === target;
-    const normalizedName = draft.fullName.replace(/\s+/g, " ").trim();
+    const firstName = draft.firstName.trim();
+    const lastName = draft.lastName.trim();
     const cleanExperiences = draft.experiences.map((entry) => ({
       ...entry,
       title: entry.title.trim(),
@@ -426,80 +436,57 @@ function CandidateProfilePage() {
 
     const nextProfile: CandidateProfileDetails = {
       ...profile,
-      fullName: touches("basics") ? normalizedName : profile.fullName,
-      email: touches("basics") ? draft.email.trim() : profile.email,
-      phone: touches("basics") ? draft.phone.replace(/\D/g, "") : profile.phone,
+      firstName: touches("basics") ? firstName : profile.firstName,
+      lastName: touches("basics") ? lastName : profile.lastName,
+      phone: touches("basics") ? draft.phone.trim() : profile.phone,
       experience: touches("about") ? draft.experience.trim() : profile.experience,
       skills: touches("skills") ? skillsForSave : profile.skills,
       experiences,
       education,
     };
 
-    const apiExperience = touches("experience")
-      ? profile.experiences === experiences
-        ? apiProfileExperiences(nextProfile.experiences)
-        : apiProfileExperiences(experiences)
-      : apiProfileExperiences(profile.experiences);
-    const apiEducation = touches("education")
-      ? apiProfileEducation(education)
-      : apiProfileEducation(profile.education);
-
-    const phoneValue = nextProfile.phone.replace(/\D/g, "");
-    setIsSaving(true);
+    setSaving(true);
     try {
-      const saved = await saveApiProfile({
-        fullName: nextProfile.fullName,
-        phoneNumber: phoneValue ? phoneValue : undefined,
-        avatarUrl: currentAvatarUrl(draft),
-        skills: nextProfile.skills,
-        experience: apiExperience,
-        education: apiEducation,
-        isPublic: touches("basics") ? draft.isPublic : profile.isPublic,
-      });
-      const merged = mapApiProfileToDetails(saved, nextProfile);
-      const finalProfile: CandidateProfileDetails = {
-        ...merged,
-        experience: nextProfile.experience,
-      };
-      setProfileDetails(finalProfile);
-      setDraft(finalProfile);
-      setSkillsDraft(finalProfile.skills);
-      setSkillInput("");
-      setSkillNotice("");
-      setFieldErrors({});
-      setSuccessMessage(getSuccessMessage(editSection));
-      setIsSuccessDialogOpen(true);
-      setIsEditing(false);
+      const persisted = await updateCandidatePhone(
+        {
+          ...serverProfile.data,
+          firstName: nextProfile.firstName,
+          lastName: nextProfile.lastName,
+          skills: nextProfile.skills,
+          experienceSummary: nextProfile.experience,
+          // Detailed experience/education records keep their incumbent local flow;
+          // never discard the server education summary in a full PUT.
+          avatarUrl: nextProfile.avatarUrl,
+          isPublic: nextProfile.isPublic,
+        },
+        nextProfile.phone,
+      );
+      nextProfile.fullName = persisted.fullName;
+      nextProfile.firstName = persisted.firstName;
+      nextProfile.lastName = persisted.lastName;
+      nextProfile.phone = persisted.phoneNumber || "";
     } catch (cause) {
-      const error = cause as {
-        status?: number;
-        code?: number;
-        fieldErrors?: Record<string, string>;
-      };
-      if (error.status === 401) {
-        window.location.assign("/login?role=candidate");
-        return;
-      }
-      if (error.code === 40930 || error.status === 409) {
-        setFieldErrors({ phone: "Số điện thoại này đã được sử dụng." });
-      } else if (error.code === 40030 || error.status === 400) {
-        const backendErrors =
-          error.fieldErrors && typeof error.fieldErrors === "object" ? error.fieldErrors : {};
-        const mapped: Record<string, string> = {};
-        for (const [key, value] of Object.entries(backendErrors)) {
-          mapped[key] = String(value);
-        }
-        if (Object.keys(mapped).length) setFieldErrors(mapped);
-        else if (error.status === 400) {
-          // Keep a generic field-friendly error when the code is 40030.
-          if (error.code === 40030) setFieldErrors({ phone: "Số điện thoại không hợp lệ." });
-        }
-      } else {
-        setFieldErrors({});
-      }
-    } finally {
-      setIsSaving(false);
+      setSaveError(accountError(cause, "identity"));
+      setSaving(false);
+      return;
     }
+    try {
+      await refreshIdentity();
+    } catch {
+      setSaveError(
+        "Đã lưu nhưng chưa tải lại được danh tính. Hãy tải lại trang trước khi tiếp tục.",
+      );
+    }
+    setSaving(false);
+    setProfileDetails(nextProfile);
+    setDraft(nextProfile);
+    setSkillsDraft(nextProfile.skills);
+    setSkillInput("");
+    setSkillNotice("");
+    setFieldErrors({});
+    setSuccessMessage(getSuccessMessage(editSection));
+    setIsSuccessDialogOpen(true);
+    setIsEditing(false);
   };
 
   const readinessItems = [
@@ -521,6 +508,20 @@ function CandidateProfilePage() {
   const missingLabels = readinessItems.filter((item) => !item.done).map((item) => item.label);
   const initial = user?.firstName?.slice(0, 1) || profile.fullName.slice(0, 1) || "U";
 
+  if (serverProfile.isPending || serverProfile.isError)
+    return (
+      <AdminShell title="Hồ sơ của tôi" role="candidate">
+        <h1>Hồ sơ cá nhân</h1>
+        <p role={serverProfile.isError ? "alert" : "status"}>
+          {serverProfile.isError ? accountError(serverProfile.error) : "Đang tải hồ sơ…"}
+        </p>
+        {serverProfile.isError && (
+          <button className="btn mt-4" onClick={() => void serverProfile.refetch()}>
+            Tải lại hồ sơ
+          </button>
+        )}
+      </AdminShell>
+    );
   return (
     <AdminShell title="Hồ sơ của tôi" role="candidate">
       <div className="mx-auto max-w-6xl caret-accent selection:bg-accent selection:text-accent-ink">
@@ -543,6 +544,10 @@ function CandidateProfilePage() {
           </button>
         </header>
 
+        <p className="mb-5 text-sm leading-6 text-ink-3">
+          Họ, tên, liên hệ, kỹ năng và giới thiệu được lưu trên tài khoản. Các mục kinh nghiệm, học
+          vấn chi tiết bên dưới là bản minh họa cục bộ trong trình duyệt.
+        </p>
         {isEditing && (
           <FloatingPanel isOpen={true} onClose={closeEditForm} labelledBy="edit-profile-title">
             <form onSubmit={handleSave} noValidate className="flex min-h-0 flex-1 flex-col">
@@ -595,7 +600,12 @@ function CandidateProfilePage() {
                   </div>
                 )}
 
-                <div className="grid gap-4 md:grid-cols-2">
+                {saveError && (
+                  <p role="alert" className="mb-4 text-sm text-error">
+                    {saveError}
+                  </p>
+                )}
+                <fieldset disabled={saving} className="grid gap-4 md:grid-cols-2">
                   {(editSection === "all" || editSection === "basics") && (
                     <>
                       {editSection === "all" && (
@@ -603,84 +613,56 @@ function CandidateProfilePage() {
                           <FormSectionLabel title="Thông tin cá nhân" />
                         </div>
                       )}
+                      {(
+                        [
+                          ["lastName", "Họ", "family-name"],
+                          ["firstName", "Tên", "given-name"],
+                        ] as const
+                      ).map(([field, label, autoComplete]) => (
+                        <div key={field}>
+                          <FieldHeader
+                            htmlFor={`profile-${field}`}
+                            label={label}
+                            required
+                            counter={`${draft[field].length}/${MAX_NAME_LENGTH}`}
+                          />
+                          <input
+                            id={`profile-${field}`}
+                            maxLength={MAX_NAME_LENGTH}
+                            type="text"
+                            autoComplete={autoComplete}
+                            value={draft[field]}
+                            onChange={(event) => updateDraft(field, event.target.value)}
+                            aria-invalid={Boolean(fieldErrors[field])}
+                            aria-describedby={
+                              fieldErrors[field] ? `profile-${field}-error` : undefined
+                            }
+                            className={fieldClass(fieldErrors[field])}
+                          />
+                          <FieldError id={`profile-${field}-error`} message={fieldErrors[field]} />
+                        </div>
+                      ))}
                       <div className="md:col-span-2">
-                        <FieldHeader
-                          htmlFor="profile-full-name"
-                          label="Họ tên"
-                          required
-                          counter={`${draft.fullName.length}/${MAX_NAME_LENGTH}`}
-                        />
+                        <FieldHeader htmlFor="profile-email" label="Email đã đăng ký" />
                         <input
-                          id="profile-full-name"
-                          maxLength={MAX_NAME_LENGTH}
-                          type="text"
-                          autoComplete="name"
-                          value={draft.fullName}
-                          onChange={(event) => updateDraft("fullName", event.target.value)}
-                          onBlur={(event) =>
-                            updateDraft(
-                              "fullName",
-                              event.target.value.replace(/\s+/g, " ").trimStart(),
-                            )
-                          }
-                          aria-required="true"
-                          aria-invalid={Boolean(fieldErrors.fullName)}
-                          aria-describedby={
-                            fieldErrors.fullName
-                              ? "profile-full-name-error profile-full-name-hint"
-                              : "profile-full-name-hint"
-                          }
-                          className={fieldClass(fieldErrors.fullName)}
+                          id="profile-email"
+                          value={profile.email}
+                          readOnly
+                          className={fieldClass()}
                         />
-                        <p
-                          id="profile-full-name-hint"
-                          className="mt-1 text-xs leading-4 font-normal text-ink-3"
-                        >
-                          Tên hiển thị với nhà tuyển dụng, tối đa {MAX_NAME_LENGTH} ký tự.
+                        <p className="mt-2 text-sm text-ink-3">
+                          Email cố định của tài khoản, không thể thay đổi.
                         </p>
-                        <FieldError id="profile-full-name-error" message={fieldErrors.fullName} />
                       </div>
                       <div>
-                        <div className="flex items-baseline justify-between gap-3">
-                          <div className="flex items-center gap-1.5">
-                            <label
-                              htmlFor="profile-phone"
-                              className="text-sm font-semibold text-ink-2"
-                            >
-                              Số điện thoại
-                            </label>
-                            <TooltipProvider delayDuration={0}>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    type="button"
-                                    aria-label="Việc thay đổi số điện thoại áp dụng cho cả tài khoản tuyển dụng"
-                                    className="inline-flex h-5 w-5 items-center justify-center rounded-full text-ink-3 transition-colors hover:text-ink-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
-                                  >
-                                    <Info size={14} aria-hidden="true" />
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent side="bottom">
-                                  Việc thay đổi số điện thoại áp dụng cho cả tài khoản tuyển dụng
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </div>
-                          <span className="text-xs font-medium tabular-nums text-ink-3">
-                            {draft.phone.length}/10
-                          </span>
-                        </div>
+                        <FieldHeader htmlFor="profile-phone" label="Số điện thoại" />
                         <input
                           id="profile-phone"
-                          inputMode="numeric"
-                          maxLength={10}
+                          maxLength={30}
                           type="tel"
                           autoComplete="tel"
                           value={draft.phone}
-                          onChange={(event) =>
-                            updateDraft("phone", event.target.value.replace(/\D/g, ""))
-                          }
-                          aria-required="true"
+                          onChange={(event) => updateDraft("phone", event.target.value)}
                           aria-invalid={Boolean(fieldErrors.phone)}
                           aria-describedby={
                             fieldErrors.phone ? "profile-phone-error" : "profile-phone-hint"
@@ -691,7 +673,7 @@ function CandidateProfilePage() {
                           id="profile-phone-hint"
                           className="mt-1 text-xs leading-4 font-normal text-ink-3"
                         >
-                          10 chữ số, bắt đầu bằng 0. Ví dụ 0987654321.
+                          Số di động Việt Nam dạng 0… hoặc +84… Để trống và lưu để xóa.
                         </p>
                         <FieldError id="profile-phone-error" message={fieldErrors.phone} />
                       </div>
@@ -1182,7 +1164,7 @@ function CandidateProfilePage() {
                       )}
                     </div>
                   )}
-                </div>
+                </fieldset>
               </div>
 
               <div className="flex shrink-0 flex-col-reverse gap-3 border-t border-rule bg-paper px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-7">
@@ -1195,8 +1177,8 @@ function CandidateProfilePage() {
                   >
                     Hủy
                   </button>
-                  <button type="submit" disabled={isSaving} className="btn min-h-11 px-5 text-sm">
-                    {isSaving ? "Đang lưu…" : "Lưu thay đổi"}
+                  <button type="submit" disabled={saving} className="btn min-h-11 px-5 text-sm">
+                    {saving ? "Đang lưu…" : "Lưu thay đổi"}
                   </button>
                 </div>
               </div>
@@ -1253,7 +1235,7 @@ function CandidateProfilePage() {
                   <BadgeCheck size={18} strokeWidth={2.4} aria-hidden="true" />
                 </span>
               </div>
-              <h2 className="mt-4 text-2xl font-extrabold leading-tight tracking-[-0.03em] text-ink text-pretty">
+              <h2 className="mt-4 text-2xl font-extrabold leading-tight tracking-[-0.03em] text-ink text-pretty [overflow-wrap:anywhere]">
                 {profile.fullName}
               </h2>
               <p className="mt-1 text-sm font-semibold leading-5 text-ink-2">
@@ -1323,7 +1305,7 @@ function CandidateProfilePage() {
                 <p className="mt-1 text-xs text-ink-3">Đang là hồ sơ mặc định.</p>
               ) : null}
               <Link
-                to="/candidate/cvs"
+                to="/can/cvs"
                 className="mt-2.5 inline-flex min-h-10 items-center gap-1 text-xs font-bold text-accent underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
               >
                 Quản lý hồ sơ
@@ -1360,6 +1342,15 @@ function CandidateProfilePage() {
                 {profile.isPublic ? "Đang hiển thị" : "Riêng tư"}
               </span>
             </div>
+            <p className="mt-5 text-sm text-ink-3">
+              Họ, tên và số điện thoại dùng chung với tài khoản.
+            </p>
+            <Link
+              to="/account"
+              className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-primary"
+            >
+              Cài đặt tài khoản và bảo mật
+            </Link>
           </aside>
 
           <div className="min-w-0 divide-y divide-rule">
@@ -1491,32 +1482,13 @@ function validateDraft(
   const touches = (target: EditSection) => section === "all" || section === target;
 
   if (touches("basics")) {
-    const name = draft.fullName.replace(/\s+/g, " ").trim();
-    if (!name) errors.fullName = "Nhập họ tên của bạn.";
-    else if (name.length > MAX_NAME_LENGTH) {
-      errors.fullName = `Họ tên tối đa ${MAX_NAME_LENGTH} ký tự.`;
+    for (const field of ["firstName", "lastName"] as const) {
+      if (!draft[field].trim()) errors[field] = "Nhập họ và tên của bạn.";
+      else if (draft[field].trim().length > MAX_NAME_LENGTH)
+        errors[field] = `Mỗi trường tối đa ${MAX_NAME_LENGTH} ký tự.`;
     }
-
-    const phone = draft.phone.replace(/\D/g, "");
-    if (phone && !PHONE_PATTERN.test(phone)) {
-      errors.phone = "Số điện thoại gồm 10 chữ số và bắt đầu bằng 0.";
-    }
-
-    const avatarUrl = draft.avatarUrl?.trim() ?? "";
-    if (avatarUrl) {
-      if (avatarUrl.length > 512) {
-        errors.avatarUrl = "Ảnh đại diện phải là đường dẫn HTTPS hợp lệ.";
-      } else {
-        try {
-          const parsed = new URL(avatarUrl);
-          if (parsed.protocol !== "https:") {
-            errors.avatarUrl = "Ảnh đại diện phải là đường dẫn HTTPS hợp lệ.";
-          }
-        } catch {
-          errors.avatarUrl = "Ảnh đại diện phải là đường dẫn HTTPS hợp lệ.";
-        }
-      }
-    }
+    if (draft.phone.trim() && !PHONE_PATTERN.test(draft.phone.trim()))
+      errors.phone = "Nhập số di động Việt Nam dạng 0… hoặc +84…";
   }
 
   if (touches("about") && draft.experience.length > MAX_ABOUT_LENGTH) {
@@ -1580,8 +1552,10 @@ function validateDraft(
 
 function fieldIdFromError(key: string) {
   switch (key) {
-    case "fullName":
-      return "profile-full-name";
+    case "firstName":
+      return "profile-firstName";
+    case "lastName":
+      return "profile-lastName";
     case "email":
       return "profile-email";
     case "phone":
@@ -1757,7 +1731,7 @@ function getEditorTitle(section: EditSection) {
 function getEditorDescription(section: EditSection) {
   switch (section) {
     case "basics":
-      return "Cập nhật họ tên, email và số điện thoại nhà tuyển dụng dùng để liên hệ.";
+      return "Cập nhật họ, tên và số điện thoại dùng chung với tài khoản. Email đã đăng ký không thể thay đổi.";
     case "about":
       return "Viết phần giới thiệu ngắn gọn để nhà tuyển dụng hiểu điểm mạnh của bạn.";
     case "experience":

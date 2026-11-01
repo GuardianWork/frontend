@@ -67,7 +67,7 @@ export function EmployerOnboardingPanel() {
       <div className="mt-7 flex flex-wrap items-center gap-3">
         {(stage === "COMPANY_ACTION_REQUIRED" || stage === "REJECTED") && (
           <Link
-            to="/recruiter/verification"
+            to="/rec/verification"
             className="recruiter-primary inline-flex min-h-11 items-center gap-2"
           >
             <Building2 size={17} aria-hidden="true" />
@@ -76,7 +76,7 @@ export function EmployerOnboardingPanel() {
         )}
         {stage === "COMPANY_ACTION_REQUIRED" && (
           <Link
-            to="/recruiter/members"
+            to="/rec/members"
             className="inline-flex min-h-11 items-center rounded-lg border border-warm-border px-4 text-sm font-semibold text-primary"
           >
             Xem lời mời công ty

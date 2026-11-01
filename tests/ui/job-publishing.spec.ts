@@ -265,7 +265,7 @@ test("owner creates an incomplete draft, sees validation, completes and submits 
 }, info) => {
   const mock = await mockJobs(page, []);
   await login(page, "owner_demo", true);
-  await page.goto("/recruiter/jobs");
+  await page.goto("/rec/jobs");
   await expect(
     page.getByRole("heading", { name: "Bắt đầu với tin tuyển dụng đầu tiên" }),
   ).toBeVisible();
@@ -323,7 +323,7 @@ test("assignment preserves typed content and stale edits never report success", 
 }, info) => {
   const mock = await mockJobs(page);
   await login(page, "owner_demo", true);
-  await page.goto("/recruiter/jobs?jobId=83");
+  await page.goto("/rec/jobs?jobId=83");
   await page.getByLabel("Chức danh công việc", { exact: true }).fill("Bản sửa chưa lưu");
   await page.getByLabel("Tôi chịu trách nhiệm").click();
   await expect(
@@ -372,7 +372,7 @@ test("list filters reach the API and publication controls require explicit closi
   mock.getJobs()[0].workingRevision = null;
   mock.getJobs()[0].availableActions = ["CREATE_DRAFT", "PAUSE", "CLOSE"];
   await login(page, "owner_demo", true);
-  await page.goto("/recruiter/jobs");
+  await page.goto("/rec/jobs");
   await expect(page.locator(".jp-job-list > li")).toHaveCount(2);
   await page.screenshot({
     path: `/tmp/job-publishing-${info.project.name}-list.png`,
@@ -429,7 +429,7 @@ test("assigned recruiter cannot change responsibility; request failure has a ret
       },
     }),
   );
-  await page.goto("/recruiter/jobs?jobId=83");
+  await page.goto("/rec/jobs?jobId=83");
   await expect(
     page.getByText("Bạn có quyền truy cập vì được phân công.", { exact: false }),
   ).toBeVisible();
@@ -454,7 +454,7 @@ test("rejection reasons remain readable and a replacement draft starts from the 
   mock.getJobs()[0].workingRevision = null;
   mock.getJobs()[0].availableActions = ["CREATE_DRAFT"];
   await login(page, "owner_demo", true);
-  await page.goto("/recruiter/jobs?jobId=83");
+  await page.goto("/rec/jobs?jobId=83");
   await expect(page.getByText(rejected.rejectionReason, { exact: false })).toBeVisible();
   await page.getByRole("button", { name: "Bản v1 · Chuyên viên kinh doanh", exact: true }).click();
   await expect(page.locator(".jp-history-content")).toContainText(completeContent.description!);
@@ -473,7 +473,7 @@ test("expired jobs with unfinished revisions open in readable history without an
   job.availableActions = [];
   await mockJobs(page, [job]);
   await login(page, "owner_demo", true);
-  await page.goto("/recruiter/jobs?jobId=83");
+  await page.goto("/rec/jobs?jobId=83");
   await expect(page.getByRole("heading", { name: "Lịch sử xét duyệt", exact: true })).toBeVisible();
   await expect(page.getByText("Tin đã kết thúc.", { exact: false })).toBeVisible();
   await expect(page.getByLabel("Chức danh công việc", { exact: true })).toHaveCount(0);
@@ -484,7 +484,7 @@ test("remote jobs keep multiline descriptions and optional values can be added t
 }) => {
   const mock = await mockJobs(page);
   await login(page, "owner_demo", true);
-  await page.goto("/recruiter/jobs?jobId=83");
+  await page.goto("/rec/jobs?jobId=83");
   await page
     .getByRole("combobox", { name: "Hình thức làm việc", exact: true })
     .selectOption("REMOTE");

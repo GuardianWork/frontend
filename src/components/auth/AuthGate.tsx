@@ -3,35 +3,13 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { ApiError } from "@/services/api";
 import { AUTH_SESSION_EVENT, hasAuthSession, isStaffUser, loadCurrentUser } from "@/services/auth";
 import { EmployerOnboardingProvider } from "@/context/EmployerOnboardingContext";
-import { useEmployerOnboarding } from "@/hooks/useEmployerOnboarding";
-import { EmployerOnboardingPanel } from "@/components/EmployerOnboardingPanel";
-import { RecruiterShell } from "@/components/RecruiterShell";
 import { loadEmployerOnboarding, type EmployerOnboarding } from "@/services/employerOnboarding";
 import { getMemberEmailSecret, getInvitationSecret } from "@/lib/member-email-secret";
-
-function RecruiterAccess({ children }: { children: ReactNode }) {
-  const context = useEmployerOnboarding();
-  const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const stage = context?.onboarding.stage;
-  const companyPage = pathname === "/recruiter/verification";
-  const invitationsPage = pathname === "/recruiter/members";
-  const allowed =
-    stage === "VERIFIED" ||
-    (stage === "COMPANY_ACTION_REQUIRED" && (companyPage || invitationsPage)) ||
-    ((stage === "PENDING" || stage === "REJECTED") && companyPage);
-  if (!allowed)
-    return (
-      <RecruiterShell title="Thiết lập tuyển dụng">
-        <EmployerOnboardingPanel />
-      </RecruiterShell>
-    );
-  return children;
-}
 
 /** Restore identity from /me before showing an authenticated workspace. */
 export function AuthGate({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const area = /^\/(candidate|recruiter|admin|staff)(?:\/|$)/.exec(pathname)?.[1] ?? "";
+  const area = /^\/(can|rec|admin|staff|account)(?:\/|$)/.exec(pathname)?.[1] ?? "";
   const navigate = useNavigate();
   const [state, setState] = useState<{ area: string; ready: boolean; error: string }>({
     area: "",
@@ -51,14 +29,14 @@ export function AuthGate({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (
       (getMemberEmailSecret() || getInvitationSecret()) &&
-      area !== "recruiter" &&
+      area !== "rec" &&
       pathname !== "/login"
     ) {
       void navigate({
         to: hasAuthSession()
           ? getInvitationSecret()
-            ? "/recruiter/members"
-            : "/recruiter/verification"
+            ? "/rec/members"
+            : "/rec/verification"
           : "/login",
         search: { role: "recruiter" },
         replace: true,
@@ -72,16 +50,28 @@ export function AuthGate({ children }: { children: ReactNode }) {
     }
     let cancelled = false;
     setState({ area, ready: false, error: "" });
+    const entryPath = window.location.pathname;
     const restore = async () => {
       try {
         if (!hasAuthSession()) throw new ApiError("Vui lòng đăng nhập để tiếp tục.", 401);
         const user = await loadCurrentUser();
         if ((area === "admin" || area === "staff") && !isStaffUser(user))
           throw new ApiError("Tài khoản hiện tại không có quyền truy cập Platform staff.", 403);
-        if (area === "recruiter") {
-          const next = await loadEmployerOnboarding();
-          if (cancelled) return;
-          setOnboarding(next);
+        if ((area === "account" || entryPath.endsWith("/account")) && user.role !== "USER")
+          throw new ApiError(
+            "Cài đặt tự phục vụ chỉ dành cho tài khoản người dùng, không dành cho Staff.",
+            403,
+          );
+        if (area === "rec") {
+          try {
+            const next = await loadEmployerOnboarding();
+            if (cancelled) return;
+            setOnboarding(next);
+          } catch (cause) {
+            if (entryPath !== "/rec/account" || (cause instanceof ApiError && cause.status === 401))
+              throw cause;
+            setOnboarding({ stage: "COMPANY_ACTION_REQUIRED" });
+          }
         }
         if (!cancelled) setState({ area, ready: true, error: "" });
       } catch (error) {
@@ -94,7 +84,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
               area === "staff"
                 ? {}
                 : {
-                    role: area === "recruiter" ? "recruiter" : "candidate",
+                    role: area === "rec" ? "recruiter" : "candidate",
                     ...(returnTo && !returnTo.startsWith("/login") ? { next: returnTo } : {}),
                   },
             replace: true,
@@ -114,10 +104,10 @@ export function AuthGate({ children }: { children: ReactNode }) {
   }, [area, navigate, retry]);
   if (!area) return children;
   if (state.area === area && state.ready && hasAuthSession()) {
-    if (area === "recruiter" && onboarding)
+    if (area === "rec" && onboarding)
       return (
         <EmployerOnboardingProvider key={retry} initial={onboarding}>
-          <RecruiterAccess>{children}</RecruiterAccess>
+          {children}
         </EmployerOnboardingProvider>
       );
     return children;
@@ -141,9 +131,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
           </button>
           <Link
             to="/login"
-            search={
-              area === "staff" ? {} : { role: area === "recruiter" ? "recruiter" : "candidate" }
-            }
+            search={area === "staff" ? {} : { role: area === "rec" ? "recruiter" : "candidate" }}
             className="rounded-lg border border-warm-border px-4 py-3 text-sm"
           >
             Đăng nhập lại

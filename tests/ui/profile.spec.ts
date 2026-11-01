@@ -3,16 +3,18 @@ import { expect, test, login } from "./fixtures";
 test.describe("candidate profile", () => {
   test.beforeEach(async ({ page }) => {
     await login(page, "candidate_demo");
-    await page.goto("/candidate/profile", { waitUntil: "domcontentloaded" });
+    await page.goto("/can/profile", { waitUntil: "domcontentloaded" });
   });
 
-  test("renders the seeded mock profile", async ({ page }) => {
+  test("renders API identity with the existing illustrative experience records", async ({
+    page,
+  }) => {
     await expect(page.getByRole("heading", { name: "Hồ sơ cá nhân" })).toBeVisible();
     await expect(
       page.getByText("Senior Tech Lead & Systems Engineer", { exact: true }),
     ).toBeVisible();
     await expect(page.getByText("Cử nhân Khoa học Máy tính", { exact: true })).toBeVisible();
-    await expect(page.getByText("Go", { exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "An Nguyễn", exact: true })).toBeVisible();
   });
 
   test("adds education and experience, then syncs saved values to the profile", async ({

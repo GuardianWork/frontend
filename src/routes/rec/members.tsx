@@ -28,7 +28,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 
-export const Route = createFileRoute("/recruiter/members")({
+export const Route = createFileRoute("/rec/members")({
   head: () => ({
     meta: [
       { name: "robots", content: "noindex, nofollow" },

@@ -57,11 +57,11 @@ test("a shared account without membership can open Company setup and never calls
     if (request.url().includes("/api/me/employer-onboarding")) retiredRequests.push(request.url());
   });
   await login(page, "recruiter_demo", true);
-  await page.goto("/recruiter/verification", { waitUntil: "domcontentloaded" });
+  await page.goto("/rec/verification", { waitUntil: "domcontentloaded" });
   await expect(page.getByRole("heading", { name: "Đăng ký công ty", exact: true })).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Tên công ty" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Xem lời mời công ty" })).toBeVisible();
-  await page.goto("/recruiter/jobs?create=true", { waitUntil: "domcontentloaded" });
+  await page.goto("/rec/jobs?create=true", { waitUntil: "domcontentloaded" });
   await expect(page.getByRole("heading", { name: "Kết nối với công ty của bạn" })).toBeVisible();
   expect(retiredRequests).toEqual([]);
 });
@@ -80,7 +80,7 @@ test("Company verification status alone gates recruiter features", async ({ page
     ),
   );
   await login(page, "owner_demo", true);
-  await page.goto("/recruiter/jobs?create=true");
+  await page.goto("/rec/jobs?create=true");
   await expect(page.getByRole("heading", { name: "Hồ sơ công ty đang chờ duyệt" })).toBeVisible();
   status = "REJECTED";
   await page.getByRole("button", { name: "Tải lại trạng thái" }).click();
@@ -199,7 +199,7 @@ test("candidate phone is read from the shared profile API and can be cleared", a
   page,
 }, info) => {
   await login(page, "candidate_demo");
-  await page.goto("/candidate/profile");
+  await page.goto("/can/profile");
   await expect(page.getByText("Chưa cập nhật", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Chỉnh sửa số điện thoại", exact: true }).click();
   await page.locator("#candidate-phone").fill("0909876543");

@@ -6,7 +6,7 @@ import { RecruiterShell } from "@/components/RecruiterShell";
 import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
 import { canViewMemberData } from "@/services/companyMembers";
 
-export const Route = createFileRoute("/recruiter/applications")({
+export const Route = createFileRoute("/rec/applications")({
   head: () => ({
     meta: [
       { name: "robots", content: "noindex, nofollow" },
@@ -48,7 +48,7 @@ function ApplicationsPage() {
       ) : !member || company?.verificationStatus !== "VERIFIED" ? (
         <div className="rounded-xl border border-warm-border bg-paper-white p-6">
           <p className="mb-3">Bạn cần là thành viên công ty đã xác thực để xem đơn ứng tuyển.</p>
-          <Link to="/recruiter/members" className="text-primary">
+          <Link to="/rec/members" className="text-primary">
             Xem thành viên công ty →
           </Link>
         </div>
@@ -97,7 +97,7 @@ function ApplicationsPage() {
                         : "Chưa có đơn ứng tuyển trong phạm vi quyền xem của bạn."}
                     </p>
                     {!query && (
-                      <Link to="/recruiter/jobs" className="admin-text-link mt-3">
+                      <Link to="/rec/jobs" className="admin-text-link mt-3">
                         Xem tin tuyển dụng
                       </Link>
                     )}

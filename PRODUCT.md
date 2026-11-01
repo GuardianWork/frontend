@@ -26,6 +26,8 @@ The codebase provides Vietnamese and English language dictionaries, with Vietnam
 
 - Candidate surfaces include job browsing, saved jobs and applications, a profile, and a legal copilot.
 - Recruiter surfaces include an overview, jobs, applications, talent, company profile, company verification, and workspace members.
+- Shared account control is available in Candidate `/can/account` and recruiter `/rec/account` context for the same `USER` identity: names and phone, email verification, password changes, deactivation and deletion requests. Public recovery is at `/account-recovery`; `STAFF` is excluded. Lifecycle requests result in `DEACTIVATED` or `DELETION_PENDING`, not immediate erasure. This frontend expects backend migration `V2026.10.31.94` and older `fullName` writers to be stopped before rollout; live backend and mail delivery are unverified.
+- Candidate identity and profile summaries use the account/profile APIs. Existing detailed experience and education records remain illustrative local records; no backend record schema is established for them.
 - Administrator surfaces include verification, analytics, candidates, and compliance. The compliance screen lists published JDs flagged by AI for administrator investigation. The staff job-management page uses the authenticated backend revision queue, details, history, and version-checked approve/reject decisions. Staff hide/restore and AI findings are unavailable in the current job-review API. Company verification remains a separate workflow.
 - Authentication, company verification, membership, and recruiter job publishing have service modules. The recruiter jobs workspace uses the real API for drafts, preview/submission, revision history, lifecycle controls, and owner-managed assignments. Published content and pending revisions remain distinct; backend available actions and version checks govern changes. Candidate browsing retains its existing sample/local flow; staff job review uses real API requests. Backend availability and live end-to-end production readiness have not been confirmed.
 - Some existing interactions are simulations: the landing-page CV flow uses local timers, and the legal copilot uses preset and generic local responses. These do not establish functioning AI integrations.
@@ -40,7 +42,7 @@ Preserve the GuardianWork product name and the product facts represented by the 
 
 - Product copy and bilingual dictionaries: `src/lib/dictionary.ts`.
 - Public and candidate views: `src/components/guardian/`.
-- Role-specific routes: `src/routes/candidate/`, `src/routes/recruiter/`, and `src/routes/admin/`.
+- Role-specific routes: `src/routes/can/`, `src/routes/rec/`, and `src/routes/admin/`.
 - Authentication, company-verification, and membership integrations: `src/services/`.
 - Existing legal, AI, customer-count, and compliance claims in interface copy are implementation evidence, not independently verified proof. Do not invent or strengthen those claims.
 

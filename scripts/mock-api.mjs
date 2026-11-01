@@ -47,7 +47,88 @@ export function createMockApiServer() {
   }));
   const candidateProfiles = new Map();
   const candidateCvs = new Map();
-  const cvAssets = new Map();
+  const seededSkills = ["Go", "Kubernetes", "TypeScript", "React / Next.js"];
+  const seededExperience = [
+    {
+      role: "Senior Tech Lead & Systems Engineer",
+      company: "GuardianWork VN • TP. Hồ Chí Minh",
+      startDate: "2023-01",
+      endDate: null,
+      description: "Dẫn dắt kiến trúc và phát triển sản phẩm web.",
+    },
+    {
+      role: "Lead Frontend Systems Architect",
+      company: "Apex Cloud Services • Remote APAC",
+      startDate: "2020-01",
+      endDate: "2023-01",
+      description: "Thiết kế hệ thống giao diện và cải thiện hiệu năng ứng dụng.",
+    },
+  ];
+  const seededEducation = [
+    {
+      degree: "Cử nhân Khoa học Máy tính",
+      institution: "Đại học Quốc gia TP.HCM",
+      startYear: "2017-09",
+      endYear: "2021-06",
+      description: null,
+    },
+  ];
+  const accountProofs = new Map();
+  const stateOf = (user) => user.selfServiceState || "ACTIVE";
+  function revokeSessions(user) {
+    for (const [key, value] of accessTokens) if (value.userId === user.id) accessTokens.delete(key);
+    for (const [key, value] of refreshTokens) if (value === user.id) refreshTokens.delete(key);
+    for (const [key] of accountProofs) if (key.startsWith(`${user.id}:`)) accountProofs.delete(key);
+  }
+  function closureBlockers(user) {
+    return [
+      ...(!user.emailVerified ? ["EMAIL_VERIFICATION_REQUIRED"] : []),
+      ...(membership(user)
+        ? [
+            membership(user).companyRole === "OWNER"
+              ? "COMPANY_OWNERSHIP_EXISTS"
+              : "ACTIVE_COMPANY_MEMBERSHIP_EXISTS",
+          ]
+        : []),
+    ];
+  }
+  function accountDto(user) {
+    return {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      fullName: `${user.firstName} ${user.lastName}`.trim(),
+      phoneNumber: user.phone || null,
+      username: user.username,
+      email: user.email,
+      emailVerified: user.emailVerified,
+      selfServiceState: stateOf(user),
+      closureEligible: closureBlockers(user).length === 0,
+      closureBlockers: closureBlockers(user),
+    };
+  }
+  function updateIdentity(user, body) {
+    if (
+      typeof body.firstName !== "string" ||
+      typeof body.lastName !== "string" ||
+      !body.firstName.trim() ||
+      !body.lastName.trim() ||
+      body.firstName.trim().length > 100 ||
+      body.lastName.trim().length > 100 ||
+      body.phoneNumber === "" ||
+      (body.phoneNumber != null && typeof body.phoneNumber !== "string")
+    )
+      return [400, "40001 INVALID_IDENTITY"];
+    const phone = body.phoneNumber?.trim().replace(/^0/, "+84") || null;
+    if (phone && !/^\+84\d{9}$/.test(phone)) return [400, "40001 INVALID_PHONE"];
+    if (phone && users.some((other) => other.id !== user.id && other.phone === phone))
+      return [409, "40930 PHONE_UNAVAILABLE"];
+    Object.assign(user, {
+      firstName: body.firstName.trim(),
+      lastName: body.lastName.trim(),
+      phone,
+    });
+    return null;
+  }
   const accessTokens = new Map();
   const refreshTokens = new Map();
   const companies = [
@@ -208,6 +289,10 @@ export function createMockApiServer() {
         send(401, "Invalid credentials");
         return;
       }
+      if (stateOf(user) !== "ACTIVE" || user.banned) {
+        send(403, "40304 ACCOUNT_SUSPENDED");
+        return;
+      }
       send(200, "Login successful", tokenPair(user));
       return;
     }
@@ -226,11 +311,78 @@ export function createMockApiServer() {
       send(200, "Logged out successfully");
       return;
     }
+    if (req.method === "POST" && path.startsWith("/api/auth/account-recovery/")) {
+      const recoveryUser = users.find(
+        (user) =>
+          [user.username.toLowerCase(), user.email].includes(
+            String(body.usernameOrEmail).trim().toLowerCase(),
+          ) && user.password === body.password,
+      );
+      if (!recoveryUser) {
+        send(401, "40101 INVALID_CREDENTIALS");
+        return;
+      }
+      if (recoveryUser.role !== "USER") {
+        send(403, "40300 SELF_SERVICE_EXCLUDED");
+        return;
+      }
+      const expected =
+        body.action === "REACTIVATE"
+          ? "DEACTIVATED"
+          : body.action === "CANCEL_DELETION"
+            ? "DELETION_PENDING"
+            : null;
+      if (recoveryUser.banned) {
+        send(403, "40304 ACCOUNT_SUSPENDED");
+        return;
+      }
+      if (!expected || stateOf(recoveryUser) !== expected) {
+        send(409, "40995 LIFECYCLE_MISMATCH");
+        return;
+      }
+      const key = `${recoveryUser.id}:${body.action}`;
+      if (path.endsWith("/request-code")) {
+        const previous = accountProofs.get(key);
+        if (previous && Date.now() < previous.nextAt) {
+          res.setHeader("Retry-After", "60");
+          send(429, "42994 CODE_COOLDOWN");
+          return;
+        }
+        const proof = { nextAt: Date.now() + 60000, expiresAt: Date.now() + 600000, attempts: 0 };
+        accountProofs.set(key, proof);
+        send(200, "Mock email delivery accepted", {
+          deliveryAccepted: true,
+          nextRequestAt: new Date(proof.nextAt).toISOString(),
+          expiresAt: new Date(proof.expiresAt).toISOString(),
+        });
+        return;
+      }
+      if (path.endsWith("/confirm")) {
+        if (body.acknowledgeConsequences !== true) {
+          send(400, "40001 ACKNOWLEDGEMENT_REQUIRED");
+          return;
+        }
+        const proof = accountProofs.get(key);
+        if (
+          !proof ||
+          proof.expiresAt <= Date.now() ||
+          proof.attempts++ >= 5 ||
+          body.emailSecret !== "012345"
+        ) {
+          send(400, "40094 INVALID_LIFECYCLE_PROOF");
+          return;
+        }
+        recoveryUser.selfServiceState = "ACTIVE";
+        revokeSessions(recoveryUser);
+        send(200, "Recovered; sign in normally", { selfServiceState: "ACTIVE" });
+        return;
+      }
+    }
     const token = req.headers.authorization?.replace(/^Bearer /, "");
     const session = accessTokens.get(token);
     const user =
       session && session.expiresAt > Date.now() && users.find((user) => user.id === session.userId);
-    if (!user && !path.startsWith("/api/mock/")) {
+    if (!user || stateOf(user) !== "ACTIVE") {
       send(401, "Vui lòng đăng nhập để tiếp tục.");
       return;
     }
@@ -243,6 +395,111 @@ export function createMockApiServer() {
       });
       return;
     }
+    if (
+      path === "/api/me/account" ||
+      path.startsWith("/api/me/account/") ||
+      path.startsWith("/api/me/email-verification/") ||
+      path === "/api/auth/change-password"
+    ) {
+      if (user.role !== "USER") {
+        send(403, "40300 SELF_SERVICE_EXCLUDED");
+        return;
+      }
+    }
+    if (path === "/api/me/account" && req.method === "GET") {
+      send(200, "Current account", accountDto(user));
+      return;
+    }
+    if (path === "/api/me/account" && req.method === "PUT") {
+      if (
+        Object.keys(body).some((key) => !["firstName", "lastName", "phoneNumber"].includes(key))
+      ) {
+        send(400, "40001 UNSUPPORTED_FIELD");
+        return;
+      }
+      const invalid = updateIdentity(user, body);
+      if (invalid) {
+        send(...invalid);
+        return;
+      }
+      send(200, "Updated account", accountDto(user));
+      return;
+    }
+    if (req.method === "PUT" && path === "/api/auth/change-password") {
+      if (!user.emailVerified) {
+        send(403, "40335 EMAIL_VERIFICATION_REQUIRED");
+        return;
+      }
+      if (body.currentPassword !== user.password) {
+        send(400, "40001 INVALID_CURRENT_PASSWORD");
+        return;
+      }
+      if (
+        typeof body.newPassword !== "string" ||
+        !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,128}$/.test(body.newPassword)
+      ) {
+        send(400, "40002 PASSWORD_POLICY");
+        return;
+      }
+      user.password = body.newPassword;
+      revokeSessions(user);
+      send(200, "Password changed");
+      return;
+    }
+    const closure = /^\/api\/me\/account\/(deactivation|deletion)\/(request-code|confirm)$/.exec(
+      path,
+    );
+    if (req.method === "POST" && closure) {
+      const blockers = closureBlockers(user);
+      if (blockers.length) {
+        const code = blockers.includes("EMAIL_VERIFICATION_REQUIRED")
+          ? [403, "40335 EMAIL_VERIFICATION_REQUIRED"]
+          : blockers.includes("COMPANY_OWNERSHIP_EXISTS")
+            ? [409, "40994 COMPANY_OWNERSHIP_EXISTS"]
+            : [409, "40910 ACTIVE_COMPANY_MEMBERSHIP_EXISTS"];
+        send(...code);
+        return;
+      }
+      if (body.currentPassword !== user.password) {
+        send(400, "40001 INVALID_CURRENT_PASSWORD");
+        return;
+      }
+      const key = `${user.id}:${closure[1]}`;
+      if (closure[2] === "request-code") {
+        const previous = accountProofs.get(key);
+        if (previous && Date.now() < previous.nextAt) {
+          res.setHeader("Retry-After", "60");
+          send(429, "42994 CODE_COOLDOWN");
+          return;
+        }
+        const proof = { nextAt: Date.now() + 60000, expiresAt: Date.now() + 600000, attempts: 0 };
+        accountProofs.set(key, proof);
+        send(200, "Mock email delivery accepted", {
+          deliveryAccepted: true,
+          nextRequestAt: new Date(proof.nextAt).toISOString(),
+          expiresAt: new Date(proof.expiresAt).toISOString(),
+        });
+        return;
+      }
+      if (body.acknowledgeConsequences !== true) {
+        send(400, "40001 ACKNOWLEDGEMENT_REQUIRED");
+        return;
+      }
+      const proof = accountProofs.get(key);
+      if (
+        !proof ||
+        proof.expiresAt <= Date.now() ||
+        proof.attempts++ >= 5 ||
+        body.emailSecret !== "012345"
+      ) {
+        send(400, "40094 INVALID_LIFECYCLE_PROOF");
+        return;
+      }
+      user.selfServiceState = closure[1] === "deactivation" ? "DEACTIVATED" : "DELETION_PENDING";
+      revokeSessions(user);
+      send(200, "Account state changed", { selfServiceState: stateOf(user) });
+      return;
+    }
     if (req.method === "POST" && path === "/api/me/email-verification/request") {
       send(200, "Mock delivery unavailable", {
         deliveryAccepted: false,
@@ -252,43 +509,16 @@ export function createMockApiServer() {
       });
       return;
     }
-    if (path === "/api/candidates/profile" && ["GET", "PUT"].includes(req.method)) {
-      const seededExperience = [
-        {
-          company: "GuardianWork VN • TP. Hồ Chí Minh",
-          role: "Senior Tech Lead & Systems Engineer",
-          startDate: "2023-01",
-          endDate: null,
-          description: "Dẫn dắt kiến trúc bảo mật tuân thủ Bộ luật Lao động 2019.",
-        },
-        {
-          company: "Apex Cloud Services • Remote APAC",
-          role: "Lead Frontend Systems Architect",
-          startDate: "2020-01",
-          endDate: "2023-01",
-          description: "Thiết kế design system token và tối ưu hóa thời gian tải.",
-        },
-      ];
-      const seededEducation = [
-        {
-          institution: "Đại học Quốc gia TP.HCM",
-          degree: "Cử nhân Khoa học Máy tính",
-          startYear: "2017-09",
-          endYear: "2021-06",
-          description: "Chuyên ngành Hệ thống thông tin.",
-        },
-      ];
-      const seededSkills = [
-        "Go",
-        "Kubernetes",
-        "TypeScript",
-        "React / Next.js",
-        "Distributed Systems",
-        "PostgreSQL",
-        "Tailwind CSS",
-        "SOC2 Security",
-        "gRPC / REST",
-      ];
+    if (req.method === "POST" && path === "/api/me/email-verification/confirm") {
+      if (body.emailSecret !== "012345") {
+        send(400, "40030 INVALID_EMAIL_PROOF");
+        return;
+      }
+      user.emailVerified = true;
+      send(200, "Email verified", { emailVerified: true });
+      return;
+    }
+    if (path === "/api/v1/candidates/profile" && ["GET", "PUT"].includes(req.method)) {
       const previous = candidateProfiles.get(user.id) || {
         id: randomUUID(),
         userId: user.id,
@@ -304,60 +534,32 @@ export function createMockApiServer() {
         updatedAt: new Date().toISOString(),
       };
       if (req.method === "PUT") {
-        let phone = undefined;
-        if (Object.prototype.hasOwnProperty.call(body, "phoneNumber")) {
-          const normalized =
-            body.phoneNumber === null
-              ? null
-              : String(body.phoneNumber)
-                  .trim()
-                  .replace(/[\s.-]/g, "")
-                  .replace(/^0/, "+84");
-          if (normalized && !/^\+84\d{9,10}$/.test(normalized)) {
-            send(400, "40030 INVALID_PHONE_NUMBER: A Vietnamese mobile number is required");
-            return;
-          }
-          if (
-            normalized &&
-            users.some((account) => account.id !== user.id && account.phone === normalized)
-          ) {
-            send(409, "40930 IDENTIFIER_UNAVAILABLE: Contact information is unavailable");
-            return;
-          }
-          phone = normalized;
-        }
-        if (!body.fullName?.trim()) {
-          res.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
-          res.end(
-            JSON.stringify({
-              status: 40000,
-              message: "Vui lòng kiểm tra lại thông tin.",
-              errors: { fullName: "Full name must not be blank" },
-            }),
-          );
+        if ("fullName" in body) {
+          send(400, "40001 FULL_NAME_READ_ONLY");
           return;
         }
-        user.phone = phone === undefined ? user.phone : phone;
+        const invalid = updateIdentity(user, body);
+        if (invalid) {
+          send(...invalid);
+          return;
+        }
         Object.assign(previous, {
-          fullName: String(body.fullName).trim().replace(/\s+/g, " "),
-          avatarUrl: body.avatarUrl === undefined ? previous.avatarUrl : body.avatarUrl,
-          skills: body.skills === undefined ? previous.skills : body.skills,
-          experience: body.experience === undefined ? previous.experience : body.experience,
-          education: body.education === undefined ? previous.education : body.education,
-          isPublic: body.isPublic === undefined ? previous.isPublic : body.isPublic,
-          email: user.email,
-          phoneNumber: phone === undefined ? user.phone || null : phone,
-          updatedAt: new Date().toISOString(),
+          avatarUrl: body.avatarUrl,
+          skills: body.skills,
+          experienceSummary: body.experienceSummary,
+          educationSummary: body.educationSummary,
+          isPublic: body.isPublic,
         });
         candidateProfiles.set(user.id, previous);
       }
-      const responseProfile = {
+      candidateProfiles.set(user.id, previous);
+      send(200, "Candidate profile", {
         ...previous,
-        email: user.email,
-        phoneNumber: previous.phoneNumber || null,
-      };
-      previous.phoneNumber = responseProfile.phoneNumber;
-      send(200, "Candidate profile", responseProfile);
+        firstName: user.firstName,
+        lastName: user.lastName,
+        fullName: `${user.firstName} ${user.lastName}`.trim(),
+        phoneNumber: user.phone || null,
+      });
       return;
     }
 

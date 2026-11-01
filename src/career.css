@@ -163,7 +163,7 @@ body {
   display: inline-flex;
   gap: 6px;
   align-items: center;
-  min-height: 38px;
+  min-height: 44px;
   padding: 0 10px;
   border: 1px solid var(--color-rule);
   border-radius: 8px;
@@ -270,6 +270,14 @@ body {
   padding: 12px 20px 16px;
   border-top: 1px solid var(--color-rule);
   background: var(--color-paper);
+  max-height: calc(100dvh - 110px);
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+}
+@media (min-width: 951px) {
+  .career-mobile-nav {
+    display: none;
+  }
 }
 .career-mobile-nav a {
   display: flex;
@@ -690,7 +698,15 @@ body {
   flex-shrink: 0;
 }
 .career-upload-status button {
-  padding: 8px;
+  display: inline-grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  margin-left: auto;
+  border-radius: 8px;
+}
+.career-upload-status button:hover {
+  background: var(--color-paper-2);
 }
 .career-cv .career-upload-error {
   color: var(--error);
@@ -946,11 +962,11 @@ body {
   }
   .career-language {
     gap: 3px;
-    min-height: 36px;
+    min-height: 44px;
     padding: 0 7px;
   }
   .career-icon-button {
-    min-width: 36px;
+    min-width: 44px;
   }
   .career-hero {
     padding-block: 36px 28px;

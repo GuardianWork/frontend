@@ -9,7 +9,7 @@ import { useCandidate } from "@/context/CandidateContext";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AdminShell, Icon } from "@/components/AdminShell";
 
-export const Route = createFileRoute("/candidate/")({
+export const Route = createFileRoute("/can/")({
   head: () => ({
     meta: [
       { name: "robots", content: "noindex, nofollow" },
@@ -42,7 +42,7 @@ function CandidateIndexPage() {
 
           <div className="flex items-center gap-3">
             <Link
-              to="/jobs"
+              to="/can/jobs"
               className="px-5 py-2.5 bg-primary text-on-primary text-sm font-bold rounded-lg hover:opacity-90 transition-colors flex items-center gap-2 shadow-sm"
             >
               <JobIcon size={16} />
@@ -70,7 +70,7 @@ function CandidateIndexPage() {
       </p>
       {/* Working destinations */}
       <div className="workspace-shortcuts mb-8">
-        <Link to="/jobs" className="group flex flex-col justify-between gap-4">
+        <Link to="/can/jobs" className="group flex flex-col justify-between gap-4">
           <div>
             <div className="text-primary mb-3">
               <JobIcon size={24} />
@@ -86,7 +86,7 @@ function CandidateIndexPage() {
           </div>
         </Link>
 
-        <Link to="/candidate/copilot" className="group flex flex-col justify-between gap-4">
+        <Link to="/can/copilot" className="group flex flex-col justify-between gap-4">
           <div>
             <div className="text-primary mb-3">
               <LegalReferenceIcon size={24} />
@@ -103,7 +103,7 @@ function CandidateIndexPage() {
           </div>
         </Link>
 
-        <Link to="/candidate/profile" className="group flex flex-col justify-between gap-4">
+        <Link to="/can/profile" className="group flex flex-col justify-between gap-4">
           <div>
             <div className="text-primary mb-3">
               <CandidateProfileIcon size={24} />
@@ -135,7 +135,7 @@ function CandidateIndexPage() {
           </div>
         </div>
         <Link
-          to="/candidate/copilot"
+          to="/can/copilot"
           className="px-4 py-2 bg-paper-white border border-warm-border rounded-lg text-sm font-bold text-charcoal-text hover:bg-surface-container transition-colors shrink-0 shadow-xs"
         >
           Tìm hiểu điều khoản

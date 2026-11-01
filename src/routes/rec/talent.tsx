@@ -4,7 +4,7 @@ import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AdminShell, Icon } from "@/components/AdminShell";
 
-export const Route = createFileRoute("/recruiter/talent")({
+export const Route = createFileRoute("/rec/talent")({
   head: () => ({
     meta: [
       { name: "robots", content: "noindex, nofollow" },
@@ -76,7 +76,7 @@ function RecruiterTalentPage() {
 
         <div className="flex items-center gap-3">
           <Link
-            to="/recruiter"
+            to="/rec"
             className="px-4 py-2 border border-warm-border bg-paper-white text-charcoal-text text-sm font-medium rounded-lg hover:bg-surface-container transition-colors flex items-center gap-2 shadow-sm"
           >
             <Icon name="hub" className="!text-base text-primary" />

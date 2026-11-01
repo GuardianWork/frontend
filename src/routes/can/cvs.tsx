@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CvManagerView } from "@/components/candidate/CvManagerView";
 
-export const Route = createFileRoute("/candidate/cvs")({
+export const Route = createFileRoute("/can/cvs")({
   head: () => ({
     meta: [
       { name: "robots", content: "noindex, nofollow" },

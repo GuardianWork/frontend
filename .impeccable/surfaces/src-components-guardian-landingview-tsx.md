@@ -2,7 +2,7 @@
 version: 1
 slug: "src-components-guardian-landingview-tsx"
 primary_target: "src/components/guardian/LandingView.tsx"
-related_targets: ["src/styles.css","src/components/guardian/Header.tsx","src/components/AdminShell.tsx","src/components/RecruiterShell.tsx","src/routes/candidate/jobs.tsx","src/components/auth/AuthLayout.tsx"]
+related_targets: ["src/styles.css","src/components/guardian/Header.tsx","src/components/AdminShell.tsx","src/components/RecruiterShell.tsx","src/routes/can/jobs.tsx","src/components/auth/AuthLayout.tsx"]
 ---
 
 # GuardianWork recruitment redesign

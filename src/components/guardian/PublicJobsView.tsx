@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   ArrowLeft,
   ArrowRight,
@@ -23,6 +23,7 @@ import {
   X,
 } from "lucide-react";
 import { Header } from "./Header";
+import { AdminShell } from "@/components/AdminShell";
 import { Footer } from "./Footer";
 import { PublicApiJob } from "./PublicApiJob";
 import { useAuthUser } from "@/hooks/useAuthUser";
@@ -45,6 +46,12 @@ import {
   type JobSearchParams,
 } from "@/lib/job-search";
 
+function useJobsPath() {
+  return useRouterState({
+    select: (state) =>
+      state.location.pathname.startsWith("/can/") ? ("/can/jobs" as const) : ("/jobs" as const),
+  });
+}
 const PAGE_SIZE = 6;
 
 const POPULAR_QUERIES = ["Kinh doanh", "Kế toán", "Tiếp thị", "Nhân sự"];
@@ -75,8 +82,15 @@ function badgeClass(job: JobItem) {
  * This is the single job search for guests and candidates: the guest catalogue is
  * the default, and entering a keyword reveals the two-column reading layout.
  */
-export function PublicJobsView({ search }: { search: JobSearchParams }) {
-  const navigate = useNavigate({ from: "/jobs" });
+export function PublicJobsView({
+  search,
+  workspace: inWorkspace = false,
+}: {
+  search: JobSearchParams;
+  workspace?: boolean;
+}) {
+  const navigate = useNavigate();
+  const jobsPath = useJobsPath();
   const user = useAuthUser();
   const { isApplied } = useCandidate();
   const { workspace, company } = useCompanyWorkspace();
@@ -93,7 +107,7 @@ export function PublicJobsView({ search }: { search: JobSearchParams }) {
 
   const update = (patch: JobSearchParams) => {
     void navigate({
-      to: "/jobs",
+      to: jobsPath,
       search: jobSearch({ ...search, ...patch }),
       replace: true,
       // Keep the visitor where they are: filtering must not throw them back to the hero.
@@ -116,13 +130,14 @@ export function PublicJobsView({ search }: { search: JobSearchParams }) {
         application.jobId === jobId && application.email === user?.email.toLowerCase(),
     );
 
-  return (
+  const Content = inWorkspace ? "div" : "main";
+  const content = (
     <div className="career-site guardian-job-browser">
       <a className="skip-link" href="#main-content">
         Đến nội dung chính
       </a>
-      <Header variant="landing" />
-      <main id="main-content">
+      {!inWorkspace && <Header variant="landing" />}
+      <Content id="main-content">
         {search.job && /^[1-9]\d*$/.test(search.job) ? (
           <PublicApiJob key={search.job} id={search.job} />
         ) : activeJob ? (
@@ -205,9 +220,16 @@ export function PublicJobsView({ search }: { search: JobSearchParams }) {
             />
           </>
         )}
-      </main>
-      <Footer />
+      </Content>
+      {!inWorkspace && <Footer />}
     </div>
+  );
+  return inWorkspace ? (
+    <AdminShell title="Tìm việc làm" role="candidate">
+      {content}
+    </AdminShell>
+  ) : (
+    content
   );
 }
 
@@ -226,6 +248,7 @@ function JobCard({
   active?: boolean;
   onSelect: () => void;
 }) {
+  const jobsPath = useJobsPath();
   return (
     <article
       className={`career-job career-job--interactive${active ? " is-active" : ""}`}
@@ -240,7 +263,7 @@ function JobCard({
       </div>
       <h3>
         <Link
-          to="/jobs"
+          to={jobsPath}
           search={jobSearch({ ...search, job: job.id })}
           className="career-job__link"
           aria-label={`${job.title} — ${job.company}`}
@@ -526,9 +549,10 @@ function JobDetail({
   jobs: JobItem[];
   embedded?: boolean;
 }) {
-  const navigate = useNavigate({ from: "/jobs" });
+  const navigate = useNavigate();
+  const jobsPath = useJobsPath();
   const similar = embedded ? [] : similarJobs(jobs, job);
-  const applyHref = `/candidate/jobs/apply?job=${encodeURIComponent(job.id)}`;
+  const applyHref = `/can/jobs/apply?job=${encodeURIComponent(job.id)}`;
 
   return (
     <article
@@ -536,7 +560,7 @@ function JobDetail({
     >
       {!embedded && (
         <Link
-          to="/jobs"
+          to={jobsPath}
           search={jobSearch({ ...search, job: "", page: search.page ?? "" })}
           className="career-text-link career-back"
         >
@@ -623,11 +647,7 @@ function JobDetail({
               ) : (
                 <>
                   <p>Mở hồ sơ ứng viên để chọn CV và gửi đơn cho vị trí này.</p>
-                  <Link
-                    to="/candidate/jobs/apply"
-                    search={{ job: job.id }}
-                    className="career-button"
-                  >
+                  <Link to="/can/jobs/apply" search={{ job: job.id }} className="career-button">
                     Ứng tuyển ngay
                     <ArrowRight size={18} aria-hidden="true" />
                   </Link>
@@ -713,7 +733,7 @@ function JobDetail({
                 search={search}
                 onSelect={() =>
                   void navigate({
-                    to: "/jobs",
+                    to: jobsPath,
                     search: jobSearch({ ...search, job: related.id }),
                     resetScroll: false,
                   })
@@ -728,12 +748,13 @@ function JobDetail({
 }
 
 function MissingJob({ search, jobs }: { search: JobSearchParams; jobs: JobItem[] }) {
-  const navigate = useNavigate({ from: "/jobs" });
+  const navigate = useNavigate();
+  const jobsPath = useJobsPath();
   const suggestions = jobs.filter((job) => !isSampleListing(job)).slice(0, 3);
   return (
     <section className="career-container career-detail">
       <Link
-        to="/jobs"
+        to={jobsPath}
         search={jobSearch({ ...search, job: "" })}
         className="career-text-link career-back"
       >
@@ -746,7 +767,7 @@ function MissingJob({ search, jobs }: { search: JobSearchParams; jobs: JobItem[]
         <p>Bạn có thể tiếp tục tìm kiếm các việc làm khác.</p>
         <div className="career-empty__actions">
           <Link
-            to="/jobs"
+            to={jobsPath}
             search={jobSearch({ ...search, job: "", page: "" })}
             className="career-button"
           >
@@ -765,7 +786,7 @@ function MissingJob({ search, jobs }: { search: JobSearchParams; jobs: JobItem[]
                 search={search}
                 onSelect={() =>
                   void navigate({
-                    to: "/jobs",
+                    to: jobsPath,
                     search: jobSearch({ ...search, job: job.id }),
                     resetScroll: false,
                   })
