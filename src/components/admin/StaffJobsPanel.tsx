@@ -18,6 +18,7 @@ import {
   type StaffJobReview,
   type StaffDecisionReceipt,
 } from "@/services/staffJobs";
+import { JobLegalReview } from "./JobLegalReview";
 import { PostingControls } from "./PostingControls";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import "./compliance.css";
@@ -443,6 +444,7 @@ function StaffJobDetail({
                   </TabsContent>
                 </div>
                 <aside className="compliance-inspector">
+                  <JobLegalReview review={review} />
                   <section
                     className="admin-panel staff-jobs-eligibility"
                     aria-labelledby="review-eligibility-title"

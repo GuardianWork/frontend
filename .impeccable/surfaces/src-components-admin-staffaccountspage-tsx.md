@@ -13,6 +13,6 @@ Provide user and company tabs with a labeled search field, paginated results, an
 
 Ban and unban actions require a confirmation dialog and reason. Bans offer temporary expiry or permanence. Explain the consequence before submission, show current restriction information in the detail view, and use semantic error color for destructive confirmation. Display times in Vietnam time.
 
-Use the shared admin pagination with this endpoint's local page size of 20. Search and tab changes reset pagination. Preserve loading, empty, retry, stale-detail, and mutation feedback states. On phones, retain the table's accessible horizontal scroll region and stack the detail actions. Preserve keyboard tab navigation, visible focus, dialog focus behavior, and return focus when closing detail.
+Use the shared admin pagination with this endpoint's local page size of 20. Search and tab changes reset pagination. Preserve loading, empty, retry, stale-detail, and mutation feedback states. Retain accessible table overflow on desktop. Preserve keyboard tab navigation, visible focus, dialog focus behavior, and return focus when closing detail.
 
-Staff action confirmations use the shared bottom-right toast host in StaffShell, with semantic status icons, a Vietnamese dismiss control, a six-second duration, and responsive viewport insets. Keep correction and retry errors beside their form fields.
+Staff action confirmations use the shared bottom-right toast host in StaffShell, with semantic status icons, a Vietnamese dismiss control, a six-second duration, and desktop viewport insets. Keep correction and retry errors beside their form fields.

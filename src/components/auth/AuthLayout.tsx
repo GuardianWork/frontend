@@ -19,7 +19,10 @@ export function AuthLayout({
     <div className="auth-layout min-h-screen bg-parchment-bg font-sans text-charcoal-text">
       <header className="border-b border-warm-border bg-paper-white">
         <div className="mx-auto flex min-h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-8">
-          <Link to="/vn" className="flex items-center gap-2 text-xl font-extrabold tracking-tight">
+          <Link
+            to="/vn"
+            className="guardian-logo flex items-center gap-2 text-xl font-extrabold tracking-tight"
+          >
             <ShieldCheck size={29} />
             <span>GuardianWork</span>
           </Link>
