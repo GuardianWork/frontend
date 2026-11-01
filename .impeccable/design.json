@@ -640,6 +640,14 @@
       "description": "Pale-pink semantic alert with a red circle-exclamation icon and readable charcoal copy.",
       "html": "<div class=\"ds-attention\" role=\"alert\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"11\"/><path d=\"M12 6v7M12 17v1\"/></svg><div><strong>Không thể lưu thay đổi</strong><p>Kiểm tra thông tin và thử lại.</p></div></div>",
       "css": ".ds-attention{position:relative;display:flex;align-items:flex-start;min-height:64px;margin:16px 0;padding:20px 24px 20px 58px;border:0;border-radius:16px;background:var(--color-attention-ground);color:var(--color-ink);font-family:\"Hanken Grotesk\",system-ui,sans-serif;font-size:15px;line-height:1.6;overflow-wrap:anywhere}.ds-attention svg{position:absolute;top:22px;left:24px;width:20px;height:20px;fill:var(--color-attention);stroke:var(--color-paper);stroke-width:2;stroke-linecap:round}.ds-attention strong{display:block;margin-bottom:4px;color:var(--color-ink);font-weight:700}.ds-attention p{margin:0;color:var(--color-ink)}@media(max-width:640px){.ds-attention{padding:18px 18px 18px 48px;font-size:14px}.ds-attention svg{top:20px;left:18px}}"
+    },
+    {
+      "name": "Semantic status tags",
+      "kind": "badge",
+      "refersTo": "status-tag",
+      "description": "Shared text-labeled status palette: green approved/active, red rejected/blocked, blue information, amber pending, slate inactive/draft. Keep a current-color border and bold legible text. Staff banners retain pink backgrounds and red exclamation icons. Staff list categories additionally use purple (#65319a on #f2eafa), orange (#9a3e0b on #fff0e6) and teal (#076568 on #e2f5f3), so distinct actions/states in each collection do not share one hue. Audit actions: green verify, red reject, orange hide, blue restore, purple lock, teal unlock. Withdrawn reviews use purple; recorded reports use teal.",
+      "html": "<div class=\"ds-status-tags\"><span class=\"ds-status-success\">Đã xác minh</span><span class=\"ds-status-danger\">Đã khóa</span><span class=\"ds-status-info\">Mới tiếp nhận</span><span class=\"ds-status-warning\">Chờ duyệt</span><span class=\"ds-status-neutral\">Bản nháp</span></div>",
+      "css": ".ds-status-tags{display:flex;flex-wrap:wrap;gap:8px}.ds-status-tags span{padding:4px 10px;border:1px solid currentColor;border-radius:5px;font:700 13px/20px \"Hanken Grotesk\",sans-serif}.ds-status-success{color:#176039;background:#e7f5eb}.ds-status-danger{color:#a12320;background:#fde9e7}.ds-status-info{color:#174b94;background:#e8f0ff}.ds-status-warning{color:#794400;background:#fff1d2}.ds-status-neutral{color:#454b55;background:#edf0f3}"
     }
   ],
   "narrative": {

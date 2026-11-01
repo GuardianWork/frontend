@@ -781,7 +781,8 @@ function statusTone(status: string): StaffStatusTone {
   if (["Đang công khai", "Hoạt động", "Trong ngưỡng", "Bình thường", "Hoàn tất"].includes(status))
     return "verified";
   if (["Tạm khóa", "Khóa vĩnh viễn", "Thất bại"].includes(status)) return "rejected";
-  if (["Đã ẩn", "Đã ghi nhận"].includes(status)) return "neutral";
+  if (status === "Đã ghi nhận") return "teal";
+  if (status === "Đã ẩn") return "orange";
   if (["Mới tiếp nhận", "Đang chạy"].includes(status)) return "info";
   return "pending";
 }

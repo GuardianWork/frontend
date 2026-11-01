@@ -8,7 +8,7 @@ import {
 } from "@/components/icons";
 import { AdminShell } from "@/components/AdminShell";
 import { AdminPagination } from "./AdminPagination";
-import { StaffStatusBadge } from "./StaffStatusBadge";
+import { StaffStatusBadge, type StaffStatusTone } from "./StaffStatusBadge";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
   accountError,
@@ -38,12 +38,26 @@ const labels: Record<string, string> = {
   PENDING: "Chờ xác minh",
   REJECTED: "Đã từ chối",
 };
+const verificationTones: Record<string, StaffStatusTone> = {
+  VERIFIED: "verified",
+  REGISTERED: "neutral",
+  PENDING: "pending",
+  REJECTED: "rejected",
+};
 const label = (value?: string) => (value ? labels[value] || value : "Chưa có thông tin");
 function Status({ item, type }: { item: StaffAccount; type: AccountType }) {
   const banned =
     type === "companies" ? item.isBanned : item.status === "BANNED" || !!item.activeBan;
   return (
-    <StaffStatusBadge tone={banned ? "rejected" : "neutral"}>
+    <StaffStatusBadge
+      tone={
+        banned
+          ? "rejected"
+          : type === "companies" || item.status === "ACTIVE"
+            ? "verified"
+            : "neutral"
+      }
+    >
       {banned ? "Đã khóa" : type === "companies" ? "Không bị khóa" : label(item.status)}
     </StaffStatusBadge>
   );
@@ -373,7 +387,19 @@ export function StaffAccountsPage() {
                               )}
                             </td>
                             <td>{type === "users" ? item.email : item.taxCode}</td>
-                            <td>{label(type === "users" ? item.role : item.verificationStatus)}</td>
+                            <td>
+                              {type === "users" ? (
+                                label(item.role)
+                              ) : (
+                                <StaffStatusBadge
+                                  tone={
+                                    verificationTones[item.verificationStatus ?? ""] ?? "neutral"
+                                  }
+                                >
+                                  {label(item.verificationStatus)}
+                                </StaffStatusBadge>
+                              )}
+                            </td>
                             <td>
                               <Status item={item} type={type} />
                             </td>

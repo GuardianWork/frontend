@@ -326,7 +326,7 @@ export function JobWorkspace({
             {jobStatusLabels[job.status]}
           </span>
           {job.workingRevision && (
-            <span className="jp-badge">
+            <span className={`jp-badge jp-revision-${job.workingRevision.state.toLowerCase()}`}>
               {revisionLabels[job.workingRevision.state]} · v{job.workingRevision.revisionNumber}
             </span>
           )}
@@ -854,7 +854,9 @@ function JobReviewHistory({ job, scope }: { job: Job; scope: string }) {
                   >
                     Bản v{revision.revisionNumber} · {revision.content.title || "Chưa có chức danh"}
                   </button>
-                  <span className="jp-badge">{revisionLabels[revision.state]}</span>
+                  <span className={`jp-badge jp-revision-${revision.state.toLowerCase()}`}>
+                    {revisionLabels[revision.state]}
+                  </span>
                 </div>
                 <p>
                   Tạo {formatJobDate(revision.createdAt)}

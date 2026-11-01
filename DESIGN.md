@@ -301,7 +301,7 @@ The shared `Alert` and existing `[role="alert"]` surfaces use a pale-pink rounde
 ### Don't:
 
 - Don't expose a theme selector or restore a saved palette preference.
-- Don't introduce role-specific palettes or use attention colors for routine status decoration.
+- Don't introduce role-specific brand palettes. Use the shared semantic status colors for explicit state labels.
 - Don't extend Content Blue to public headers/footers, authentication, standalone recovery, or workspace headers/sidebars.
 - Don't strengthen unverified product claims or document simulated actions as production integrations.
 - Don't inherit legacy icon-font or decorative eyebrow treatments as new component patterns.
@@ -321,7 +321,7 @@ Illustrations are supporting content, not evidence of verification, safety, or l
 
 ### Shared workspace navigation
 
-The GW-95 sidebar update applies to Candidate and Recruiter workspaces; Staff keeps its existing 280px/80px layout and local toggle. Candidate and Recruiter use a charcoal inset panel with 44px navigation targets, standalone 20px icons, light labels, and a white selected row. Do not add the old large icon wells to these two rails. Locked Recruiter rows remain non-interactive and keep their permission explanation.
+The GW-95 sidebar update applies to Candidate and Recruiter workspaces; Staff keeps its existing 280px/80px layout and local toggle. Candidate and Recruiter use a charcoal inset panel with 44px navigation targets, standalone 20px icons, light labels, and a white selected row. Do not add the old large icon wells to these two rails. All workspace sidebar icons keep a transparent background through hover, press, selection and keyboard focus; inherit the row foreground and use the row highlight and focus outline for feedback. Locked Recruiter rows remain non-interactive and keep their permission explanation.
 
 The sidebar expands to 244px and collapses to a 76px icon rail. A 44×44 header control toggles it; only an explicit toggle animates the grid for 240ms with short label fades (90–140ms). Restoring the saved display preference or changing viewport size does not animate; reduced-motion preference disables the transition. Labels stay accessible through their names and tooltips while collapsed. On mobile, use the full drawer, explicit open/close controls, Escape dismissal, and focus handling.
 
@@ -347,3 +347,13 @@ Mounted candidate/recruiter pages use explicit patterns in `src/components/works
 - Dialogs have a viewport-bounded height, scrollable content, readable titles, a 44px close target with a Vietnamese accessible name, and a restrained overlay. Preserve Radix focus trapping, Escape behavior, and existing decision validation.
 
 The comprehensive route/data coverage matrix is [docs/design/surface-coverage.md](docs/design/surface-coverage.md). Source truth and any pending copy approvals are recorded in the handoff rather than silently rewritten. Legacy view components that are not mounted are outside the implementation surface.
+
+
+### Status tags and staff contrast
+
+Status labels share semantic colors across public listings, recruiter publishing/history, verification, membership and staff operations. Use dark green on #e7f5eb for verified/approved/active states, dark red on #fde9e7 for rejected/blocked states, dark blue on #e8f0ff for information, amber on #fff1d2 for pending/paused states, and slate on #edf0f3 for drafts/inactive/closed states. Keep explicit text, a current-color border and bold labels; color supplements the status wording. Tokens and shared selectors live in `src/site-polish.css`. Neutral drafts never imply failure.
+
+Staff content uses blue headings, tinted table headers, white panels with stronger boundaries, and blue primary/retry actions. `staff-colors.css` is scoped by the staff portal body attribute, including portalled dialogs. Staff error notifications use a full-width pale pink banner, a red exclamation icon and dark, left-aligned text. Destructive confirmation actions retain red.
+
+
+Staff lists distinguish each category within the same collection rather than collapsing unrelated states into one positive/negative hue. Audit actions use green verification, red rejection, orange hiding, blue restoration, purple locking and teal unlocking. Review queues use amber pending, green approved, red rejected and purple withdrawn. Reports use blue received, amber reviewing and teal recorded. Account access and company verification retain separate status labels. Staff-only supplementary badge tones live in `staff-colors.css` and reuse `StaffStatusBadge`.

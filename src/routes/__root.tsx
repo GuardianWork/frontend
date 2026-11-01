@@ -162,7 +162,10 @@ function RootShell({ children }: { children: ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body className="min-h-full flex flex-col bg-paper text-ink">
+      <body
+        data-portal={IS_STAFF_PORTAL ? "staff" : "public"}
+        className="min-h-full flex flex-col bg-paper text-ink"
+      >
         {children}
         <Scripts />
       </body>

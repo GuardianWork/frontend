@@ -717,3 +717,77 @@ body {
   border-color: var(--color-discovery-accent);
   background: var(--color-discovery-subtle);
 }
+
+/* Shared status colors: labels carry meaning alongside high-contrast semantic hues. */
+:root {
+  --status-info-ink: #174b94;
+  --status-info-ground: #e8f0ff;
+  --status-success-ink: #176039;
+  --status-success-ground: #e7f5eb;
+  --status-warning-ink: #794400;
+  --status-warning-ground: #fff1d2;
+  --status-danger-ink: #a12320;
+  --status-danger-ground: #fde9e7;
+  --status-neutral-ink: #454b55;
+  --status-neutral-ground: #edf0f3;
+}
+body :is(.admin-record-status, .career-badge, .jp-badge, .status-tag) {
+  color: var(--status-info-ink);
+  background: var(--status-info-ground);
+  border: 1px solid currentColor;
+  font-weight: 700;
+}
+body .status-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 5px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+body
+  :is(
+    .admin-record-status--verified,
+    .career-badge--success,
+    .jp-status-published,
+    .jp-revision-approved,
+    .status-tag--success
+  ) {
+  color: var(--status-success-ink);
+  background: var(--status-success-ground);
+}
+body
+  :is(
+    .admin-record-status--pending,
+    .career-badge--warning,
+    .jp-status-paused,
+    .jp-revision-pending_review,
+    .jp-badge.jp-warning,
+    .status-tag--warning
+  ) {
+  color: var(--status-warning-ink);
+  background: var(--status-warning-ground);
+}
+body
+  :is(
+    .admin-record-status--rejected,
+    .jp-status-suspended,
+    .jp-revision-rejected,
+    .status-tag--danger
+  ) {
+  color: var(--status-danger-ink);
+  background: var(--status-danger-ground);
+}
+body
+  :is(
+    .admin-record-status--neutral,
+    .jp-status-draft,
+    .jp-status-closed,
+    .jp-status-expired,
+    .jp-revision-draft,
+    .jp-revision-withdrawn,
+    .status-tag--neutral
+  ) {
+  color: var(--status-neutral-ink);
+  background: var(--status-neutral-ground);
+}

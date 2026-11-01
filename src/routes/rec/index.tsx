@@ -115,10 +115,7 @@ const stageLabels = {
 };
 
 function fitBadgeClass(fit: CandidateItem["fit"]) {
-  if (fit === "STRONG FIT") return "bg-paper-2 text-ink border border-rule";
-  if (fit === "GOOD FIT")
-    return "bg-surface-container text-charcoal-text border border-warm-border";
-  return "bg-paper-2 text-ink border border-rule";
+  return fit === "STRONG FIT" ? "status-tag status-tag--success" : "status-tag";
 }
 
 function RecruiterIndexPage() {

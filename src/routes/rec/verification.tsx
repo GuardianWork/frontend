@@ -144,7 +144,9 @@ function CompanyVerificationPage() {
                 : "Cung cấp thông tin doanh nghiệp để tạo không gian tuyển dụng. Bạn sẽ trở thành chủ sở hữu công ty sau khi đăng ký thành công."}
             </p>
           </div>
-          <span className="rounded-md border border-warm-border bg-paper-white px-3 py-2 text-sm">
+          <span
+            className={`status-tag status-tag--${stage === "VERIFIED" ? "success" : stage === "REJECTED" ? "danger" : stage === "PENDING" ? "warning" : "neutral"}`}
+          >
             {stage === "PENDING"
               ? "Chờ xác minh"
               : stage === "REJECTED"

@@ -32,7 +32,9 @@ function tone(state: StaffJobReview["state"]): StaffStatusTone {
       ? "verified"
       : state === "REJECTED"
         ? "rejected"
-        : "neutral";
+        : state === "WITHDRAWN"
+          ? "purple"
+          : "neutral";
 }
 function dateTime(value: string | null) {
   if (!value || !Number.isFinite(Date.parse(value))) return "Chưa có";

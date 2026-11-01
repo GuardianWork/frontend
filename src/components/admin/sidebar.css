@@ -45,7 +45,7 @@
   height: 32px;
   flex-shrink: 0;
   border-radius: 8px;
-  color: var(--color-ink-3);
+  color: inherit;
   transition:
     background-color 160ms ease,
     color 160ms ease;
@@ -60,8 +60,8 @@
   font-weight: 650;
 }
 .workspace-nav-link[aria-current="page"] .workspace-nav-icon {
-  background: var(--color-accent);
-  color: var(--color-paper);
+  background: transparent;
+  color: inherit;
 }
 .workspace-shell .workspace-nav-link:focus-visible {
   outline: 2px solid var(--color-accent);
@@ -100,15 +100,15 @@
     color: var(--color-accent-deep);
   }
   a.workspace-nav-link:hover .workspace-nav-icon {
-    background: var(--color-accent-subtle);
-    color: var(--color-accent);
+    background: transparent;
+    color: inherit;
   }
   .workspace-shell .workspace-navigation a.workspace-nav-link[aria-current="page"]:hover {
     background: var(--color-accent-subtle);
   }
   a.workspace-nav-link[aria-current="page"]:hover .workspace-nav-icon {
-    background: var(--color-accent-hover);
-    color: var(--color-paper);
+    background: transparent;
+    color: inherit;
   }
   .workspace-footer-link:hover {
     background: var(--color-paper-2);
@@ -126,7 +126,7 @@
   }
 }
 
-/* A larger, stable icon tile makes workspace navigation feedback easier to scan. */
+/* Icons stay unfilled in every state; the row carries selection and hover feedback. */
 .workspace-shell .workspace-navigation .workspace-nav-link {
   min-height: 56px;
   padding: 7px 8px;
@@ -142,24 +142,24 @@
   height: 22px;
 }
 .workspace-shell .workspace-navigation .workspace-nav-link:focus-visible .workspace-nav-icon {
-  background: var(--color-accent-subtle);
-  color: var(--color-accent-deep);
+  background: transparent;
+  color: inherit;
 }
 .workspace-shell .workspace-navigation .workspace-nav-link[aria-current="page"] .workspace-nav-icon,
 .workspace-shell .workspace-navigation a.workspace-nav-link:active .workspace-nav-icon {
-  background: var(--color-accent);
-  color: var(--color-paper);
+  background: transparent;
+  color: inherit;
 }
 @media (hover: hover) and (pointer: fine) {
   .workspace-shell .workspace-navigation a.workspace-nav-link:hover .workspace-nav-icon {
-    background: var(--color-accent-subtle);
-    color: var(--color-accent-deep);
+    background: transparent;
+    color: inherit;
   }
   .workspace-shell
     .workspace-navigation
     a.workspace-nav-link[aria-current="page"]:hover
     .workspace-nav-icon {
-    background: var(--color-accent-hover);
-    color: var(--color-paper);
+    background: transparent;
+    color: inherit;
   }
 }

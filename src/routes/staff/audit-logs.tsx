@@ -7,11 +7,16 @@ import {
   SearchIcon as Search,
 } from "@/components/icons";
 import { AdminShell } from "@/components/AdminShell";
+import { StaffStatusBadge, type StaffStatusTone } from "@/components/admin/StaffStatusBadge";
 import { AdminPagination } from "@/components/admin/AdminPagination";
 import { ListSearch } from "@/components/ListSearch";
 import { useListPagination } from "@/hooks/useListPagination";
 import { matchesSearch } from "@/lib/list-search";
-import { AUDIT_ACTION_LABELS, AUDIT_SAMPLE_ENTRIES } from "@/lib/admin-audit-logs";
+import {
+  AUDIT_ACTION_LABELS,
+  AUDIT_SAMPLE_ENTRIES,
+  type AuditAction,
+} from "@/lib/admin-audit-logs";
 import "@/components/admin/audit-logs.css";
 
 export const Route = createFileRoute("/staff/audit-logs")({
@@ -34,6 +39,24 @@ const timestamp = new Intl.DateTimeFormat("vi-VN", {
   second: "2-digit",
   hourCycle: "h23",
 });
+
+const actionTones: Record<AuditAction, StaffStatusTone> = {
+  VERIFY_COMPANY: "verified",
+  REJECT_COMPANY: "rejected",
+  HIDE_JOB: "orange",
+  RESTORE_JOB: "info",
+  LOCK_ACCOUNT: "purple",
+  UNLOCK_ACCOUNT: "teal",
+};
+const stateTones: Record<string, StaffStatusTone> = {
+  "Chờ xác minh": "pending",
+  "Đã xác minh": "verified",
+  "Đang công khai": "info",
+  "Hoạt động": "teal",
+  "Đã ẩn": "orange",
+  "Tạm khóa": "purple",
+  "Bị từ chối": "rejected",
+};
 
 function AuditLogsPage() {
   const [query, setQuery] = useState("");
@@ -184,11 +207,9 @@ function AuditLogsPage() {
                         <small>{entry.actor.email}</small>
                       </td>
                       <td role="cell" data-label="Hành động">
-                        <span
-                          className={`audit-action ${["REJECT_COMPANY", "HIDE_JOB", "LOCK_ACCOUNT"].includes(entry.action) ? "audit-action--attention" : "audit-action--positive"}`}
-                        >
+                        <StaffStatusBadge tone={actionTones[entry.action]}>
                           {AUDIT_ACTION_LABELS[entry.action]}
-                        </span>
+                        </StaffStatusBadge>
                       </td>
                       <td role="cell" data-label="Đối tượng">
                         <strong>{entry.target}</strong>
@@ -215,12 +236,16 @@ function AuditLogsPage() {
                             <div className="audit-change">
                               <div>
                                 <span>Trước thay đổi</span>
-                                <strong>{entry.before}</strong>
+                                <StaffStatusBadge tone={stateTones[entry.before] ?? "neutral"}>
+                                  {entry.before}
+                                </StaffStatusBadge>
                               </div>
                               <ArrowRight size={18} aria-hidden="true" />
                               <div>
                                 <span>Sau thay đổi</span>
-                                <strong>{entry.after}</strong>
+                                <StaffStatusBadge tone={stateTones[entry.after] ?? "neutral"}>
+                                  {entry.after}
+                                </StaffStatusBadge>
                               </div>
                             </div>
                             <p>

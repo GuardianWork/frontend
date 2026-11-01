@@ -23,6 +23,7 @@ import { LogoutButton } from "./LogoutButton";
 import { StaffAccount } from "./admin/StaffAccount";
 import { publicPortalHref } from "@/lib/portal";
 import "./admin/sidebar.css";
+import "./admin/staff-colors.css";
 import { WorkspaceBrand, WorkspaceNavigationToggle } from "./WorkspaceChrome";
 
 const NAVIGATION = [
