@@ -1,3 +1,4 @@
+import { RecruiterSetupProgress } from "@/components/recruiter/RecruiterSetupProgress";
 import { useEmployerOnboarding } from "@/hooks/useEmployerOnboarding";
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -132,7 +133,7 @@ function CompanyVerificationPage() {
   return (
     <RecruiterShell title="Đăng ký công ty">
       <div className="mx-auto max-w-4xl">
-        <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+        <div className="workspace-heading">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">
               {hasCompany ? "Hồ sơ công ty" : "Đăng ký công ty"}
@@ -153,6 +154,7 @@ function CompanyVerificationPage() {
                   : statusLabels.REGISTERED}
           </span>
         </div>
+        {stage && stage !== "VERIFIED" && <RecruiterSetupProgress stage={stage} />}
         {stage === "COMPANY_ACTION_REQUIRED" && (
           <p className="mb-5 text-sm leading-6 text-charcoal-83">
             Bạn được mời tham gia công ty có sẵn?{" "}

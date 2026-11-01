@@ -130,7 +130,7 @@ export function PendingCompanyInvitations({
             onClick={() => setReload((value) => value + 1)}
             className="mt-2 min-h-11 rounded-lg px-3 font-semibold text-primary hover:bg-surface-container-low focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
           >
-            Thử lại lời mời
+            Tải lại lời mời
           </button>
         </div>
       ) : (
@@ -207,8 +207,8 @@ export function PendingCompanyInvitations({
                             {busy
                               ? "Đang xử lý…"
                               : confirmation.action === "resend"
-                                ? "Xác nhận gửi lại"
-                                : "Xác nhận thu hồi"}
+                                ? "Gửi lại lời mời"
+                                : "Thu hồi lời mời"}
                           </button>
                           <button
                             type="button"

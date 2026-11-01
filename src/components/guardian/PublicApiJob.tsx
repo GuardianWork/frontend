@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { ApiError, apiRequest } from "@/services/api";
 import type { JobContent } from "@/services/jobs";
-import { JobContentView } from "@/components/recruiter/JobContentEditor";
+import { JobContentView } from "@/components/recruiter/JobContentView";
 
 /** Never render retained query data after a public retrieval failure. */
 export function PublicApiJob({ id }: { id: string }) {

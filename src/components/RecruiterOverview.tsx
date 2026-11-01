@@ -68,9 +68,9 @@ export function RecruiterOverview({
               {invitedRecruiter
                 ? "Bạn đang tham gia công ty với vai trò Nhà tuyển dụng. Hồ sơ pháp lý do chủ sở hữu phụ trách."
                 : status === "VERIFIED"
-                  ? "Thông tin doanh nghiệp đã được phê duyệt. Bạn có thể xem lại hồ sơ trong cài đặt tài khoản."
+                  ? "Thông tin doanh nghiệp đã được phê duyệt. Bạn có thể xem lại thông tin tại Hồ sơ công ty."
                   : status === "PENDING"
-                    ? "Hồ sơ đã được tiếp nhận. Theo dõi kết quả và yêu cầu bổ sung tại cài đặt tài khoản."
+                    ? "Hồ sơ đã được tiếp nhận. Theo dõi kết quả và yêu cầu bổ sung tại Hồ sơ công ty."
                     : "Cập nhật thông tin công ty và giấy đăng ký doanh nghiệp để xây dựng uy tín với ứng viên."}
             </p>
           </div>
@@ -113,7 +113,7 @@ export function RecruiterOverview({
           {
             label: "Đã gửi đề nghị",
             value: offers,
-            sub: "Tiến gần hơn đến đội ngũ mới",
+            sub: "Theo tiến độ tuyển dụng minh họa",
           },
         ].map((item) => (
           <div key={item.label} className="workspace-summary__item">
@@ -134,13 +134,13 @@ export function RecruiterOverview({
             icon: JobPostingsIcon,
           },
           {
-            title: "Khám phá ứng viên",
+            title: "Tìm kiếm ứng viên",
             description: "Tìm kiếm nhân tài cho đội ngũ của bạn.",
             to: "/recruiter/talent",
             icon: TalentSearchIcon,
           },
           {
-            title: "Hồ sơ doanh nghiệp",
+            title: "Hồ sơ công ty",
             description: "Quản lý thông tin và giấy tờ xác thực.",
             to: "/recruiter/verification",
             icon: CompanyIcon,

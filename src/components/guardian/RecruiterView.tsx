@@ -513,7 +513,7 @@ export function RecruiterView() {
                 Đăng vị trí tuyển dụng mới
               </span>
               <h2 className="font-display text-2xl font-bold text-ink mt-1">
-                Tạo tin tuyển dụng có Bảo vệ Pháp lý
+                Đăng tin tuyển dụng có Bảo vệ Pháp lý
               </h2>
             </div>
 

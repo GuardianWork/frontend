@@ -143,7 +143,7 @@ test("recruiter welcome and genuine empty jobs keep create action and filter dis
   await expect(
     page.getByRole("heading", { name: "Bắt đầu với tin tuyển dụng đầu tiên" }),
   ).toBeVisible();
-  await expect(page.getByRole("link", { name: "Tạo tin tuyển dụng", exact: true })).toHaveCount(2);
+  await expect(page.getByRole("link", { name: "Đăng tin tuyển dụng", exact: true })).toHaveCount(2);
   await expect(page.locator(".guardian-art--empty")).toHaveCount(0);
   await capture(page, info, "recruiter-jobs-empty");
   await page.getByLabel("Trạng thái xuất bản", { exact: true }).selectOption("DRAFT");

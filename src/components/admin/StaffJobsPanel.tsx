@@ -5,7 +5,7 @@ import { useAuthUser } from "@/hooks/useAuthUser";
 import { AdminPagination } from "./AdminPagination";
 import { StaffStatusBadge, type StaffStatusTone } from "./StaffStatusBadge";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
-import { JobContentView } from "@/components/recruiter/JobContentEditor";
+import { JobContentView } from "@/components/recruiter/JobContentView";
 import { jobStatusLabels, revisionLabels } from "@/services/jobs";
 import {
   decideStaffJobReview,

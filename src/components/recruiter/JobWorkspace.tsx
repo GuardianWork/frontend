@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useBlocker } from "@tanstack/react-router";
 import {
@@ -41,10 +41,33 @@ import {
   type JobPreview,
   type RevisionHistory,
 } from "@/services/jobs";
-import { JobContentEditor, JobContentView } from "./JobContentEditor";
+import { JobContentEditor } from "./JobContentEditor";
+import { JobContentView } from "./JobContentView";
 import { formatJobDate, textSections } from "@/lib/job-content";
 import { JobResponsibility } from "./JobResponsibility";
 
+const creationSteps = [
+  "Thông tin vị trí",
+  "Mô tả công việc",
+  "Thông tin bổ sung",
+  "Kiểm tra và gửi duyệt",
+];
+function readProgress(scope: string, id?: number) {
+  try {
+    const value = JSON.parse(sessionStorage.getItem(`job-creation:${scope}:${id}`) ?? "null");
+    return value &&
+      Number.isInteger(value.step) &&
+      value.step >= 0 &&
+      value.step <= 3 &&
+      Number.isInteger(value.completed) &&
+      value.completed >= value.step &&
+      value.completed <= 3
+      ? value
+      : null;
+  } catch {
+    return null;
+  }
+}
 type View = "edit" | "preview" | "published" | "history";
 const fieldLabels: Record<string, string> = {
   title: "Chức danh",
@@ -100,6 +123,20 @@ export function JobWorkspace({
   onReload?: () => void;
 }) {
   const queryClient = useQueryClient();
+  const [progress, setProgress] = useState(() => readProgress(scope, initialJob?.id));
+  const guided =
+    (!initialJob || Boolean(progress)) &&
+    (!initialJob || initialJob.workingRevision?.state === "DRAFT");
+  const step = progress?.step ?? 0;
+  const completed = progress?.completed ?? 0;
+  const moveStep = (next: number, id = job?.id) => {
+    const value = { step: next, completed: Math.max(completed, next) };
+    if (id) sessionStorage.setItem(`job-creation:${scope}:${id}`, JSON.stringify(value));
+    setProgress(value);
+    setView(next === 3 ? "preview" : "edit");
+    setError("");
+    requestAnimationFrame(() => headingRef.current?.focus());
+  };
   const [job, setJob] = useState(initialJob);
   const [content, setContent] = useState<JobContent>(initialJob?.workingRevision?.content ?? {});
   const savedContent = useRef(JSON.stringify(content));
@@ -171,6 +208,7 @@ export function JobWorkspace({
       const updated = await persist();
       setNotice("Đã lưu bản nháp.");
       if (!job) {
+        if (guided) moveStep(step, updated.id);
         busyRef.current = false;
         onCreated?.(updated);
       }
@@ -184,6 +222,54 @@ export function JobWorkspace({
       setView("preview");
       headingRef.current?.focus();
     });
+  useEffect(() => {
+    if (!guided || step !== 3 || !initialJob) return;
+    let active = true;
+    void previewJob(initialJob.id)
+      .then((result) => {
+        if (active) {
+          setPreview(result);
+          setView("preview");
+        }
+      })
+      .catch((cause) => {
+        if (active) setError(jobError(cause));
+      });
+    return () => {
+      active = false;
+    };
+  }, [guided, step, initialJob]);
+  const continueStep = (form: HTMLFormElement | null) => {
+    const required =
+      step === 0
+        ? (["title", "employmentType", "workArrangement", "location", "deadline"] as const)
+        : step === 1
+          ? (["description"] as const)
+          : [];
+    const missing = required.find((key) => !String(content[key] ?? "").trim());
+    if (missing || (step === 0 && new Date(content.deadline!).getTime() <= Date.now())) {
+      setError(
+        missing
+          ? `${fieldLabels[missing]}: cần bổ sung trước khi tiếp tục.`
+          : "Hạn ứng tuyển phải ở tương lai.",
+      );
+      return;
+    }
+    if (!form?.reportValidity()) return;
+    void run(async () => {
+      const updated = await persist();
+      if (step === 2) {
+        const result = await previewJob(updated.id);
+        setPreview(result);
+      }
+      moveStep(step + 1, updated.id);
+      setNotice("Đã lưu tiến trình.");
+      if (!job) {
+        busyRef.current = false;
+        onCreated?.(updated);
+      }
+    });
+  };
   const reload = () => {
     setConfirmation(null);
     dirtyRef.current = false;
@@ -204,7 +290,7 @@ export function JobWorkspace({
           <h1 ref={headingRef} tabIndex={-1}>
             {job
               ? content.title || latest.data?.content.title || `Tin tuyển dụng #${job.id}`
-              : "Tạo tin tuyển dụng"}
+              : "Đăng tin tuyển dụng"}
           </h1>
           <p>
             {job
@@ -260,13 +346,43 @@ export function JobWorkspace({
           </p>
         </div>
       )}
-      <div className="jp-workspace-grid">
+      {guided && (
+        <nav aria-label="Các bước tạo tin" className="jp-creation-steps">
+          <ol>
+            {creationSteps.map((label, index) => (
+              <li key={label}>
+                <button
+                  type="button"
+                  disabled={busy || index > completed}
+                  aria-current={step === index ? "step" : undefined}
+                  onClick={() => {
+                    if (index === 3) {
+                      void showPreview();
+                    }
+                    moveStep(index);
+                  }}
+                >
+                  <span aria-hidden="true">{index + 1}</span>
+                  <span>{label}</span>
+                </button>
+              </li>
+            ))}
+          </ol>
+          <p>
+            Bước {step + 1} / 4 · Tiến trình được lưu khi tiếp tục. Tin chỉ công khai sau khi được
+            duyệt.
+          </p>
+        </nav>
+      )}
+      <div
+        className={`jp-workspace-grid${guided ? ` jp-guided${step < 3 ? " jp-guided-writing" : ""}` : ""}`}
+      >
         <div className="jp-workspace-main">
-          <nav className="jp-tabs" aria-label="Nội dung tin tuyển dụng">
+          <nav hidden={guided} className="jp-tabs" aria-label="Nội dung tin tuyển dụng">
             {editable && (
               <button
                 aria-current={view === "edit" ? "page" : undefined}
-                onClick={() => changeView("edit")}
+                onClick={() => (guided ? moveStep(2) : changeView("edit"))}
               >
                 <FileText size={17} aria-hidden="true" />
                 Soạn tin
@@ -308,6 +424,7 @@ export function JobWorkspace({
               }}
             >
               <JobContentEditor
+                step={guided ? step : undefined}
                 content={content}
                 onChange={(next) => {
                   setContent(next);
@@ -326,11 +443,37 @@ export function JobWorkspace({
                         : "Tin chưa được lưu"}
                 </p>
                 <div className="jp-actions">
-                  <button type="submit" className="jp-button" disabled={busy}>
+                  <button type="submit" formNoValidate className="jp-button" disabled={busy}>
                     <Save size={16} aria-hidden="true" />
                     Lưu bản nháp
                   </button>
-                  {job && (
+                  {guided && step > 0 && (
+                    <button
+                      type="button"
+                      className="jp-button"
+                      disabled={busy}
+                      onClick={() => moveStep(step - 1)}
+                    >
+                      Quay lại
+                    </button>
+                  )}
+                  {guided && (
+                    <button
+                      type="button"
+                      className="jp-button jp-primary"
+                      disabled={busy}
+                      onClick={(event) => continueStep(event.currentTarget.form)}
+                    >
+                      {step === 2
+                        ? content.headcount ||
+                          content.compensation ||
+                          content.screeningQuestions?.length
+                          ? "Lưu và xem trước"
+                          : "Bỏ qua và xem trước"
+                        : "Lưu và tiếp tục"}
+                    </button>
+                  )}
+                  {!guided && job && (
                     <button
                       type="button"
                       className="jp-button jp-primary"
@@ -365,6 +508,20 @@ export function JobWorkspace({
                   <Link to="/recruiter/verification">Xem trạng thái xác thực công ty</Link>
                 </div>
               )}
+              {guided && (
+                <div className="jp-review-edits" aria-label="Chỉnh sửa từng phần">
+                  {creationSteps.slice(0, 3).map((label, index) => (
+                    <button
+                      className="jp-button"
+                      disabled={busy}
+                      key={label}
+                      onClick={() => moveStep(index)}
+                    >
+                      Sửa: {label}
+                    </button>
+                  ))}
+                </div>
+              )}
               <JobContentView content={preview.content} />
               <div className="jp-editor-footer">
                 <button className="jp-button" onClick={() => changeView("edit")}>
@@ -377,6 +534,8 @@ export function JobWorkspace({
                     void run(async () => {
                       const updated = await submitJob(job!, preview);
                       accept(updated);
+                      sessionStorage.removeItem(`job-creation:${scope}:${updated.id}`);
+                      setProgress(null);
                       setView("history");
                       setNotice("Đã gửi bản tin để xét duyệt.");
                     });
