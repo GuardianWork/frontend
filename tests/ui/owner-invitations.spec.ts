@@ -26,7 +26,7 @@ async function ownerPage(page: Page) {
     }),
   );
   await login(page, "owner_demo", true);
-  await page.goto("/recruiter/members", { waitUntil: "domcontentloaded" });
+  await page.goto("/rec/members", { waitUntil: "domcontentloaded" });
   await expect(page.getByRole("button", { name: "Tạo lời mời", exact: true })).toBeEnabled();
 }
 const invitation = {

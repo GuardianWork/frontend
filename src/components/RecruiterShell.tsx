@@ -1,3 +1,5 @@
+import { SidebarState } from "@/context/sidebar-state";
+import { SidebarCollapseButton, SidebarLabel } from "./SidebarControls";
 import { useNavigationFocus } from "@/hooks/useNavigationFocus";
 import { EmailVerificationPanel } from "@/components/auth/EmailVerification";
 import "./workspace.css";
@@ -9,7 +11,6 @@ import {
   ArrowUpRightIcon,
   GlobeIcon,
   JobIcon,
-  CandidateProfileIcon,
   ApplicationIcon,
   TalentSearchIcon,
   CompanyMembersIcon,
@@ -18,24 +19,32 @@ import {
 } from "@/components/icons";
 import { useEmployerOnboarding } from "@/hooks/useEmployerOnboarding";
 import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
-import { LeaveCompanyButton } from "./LeaveCompanyButton";
+import { useWorkspaceLayout } from "@/context/WorkspaceLayoutContext";
+import { WorkspaceFooter } from "./WorkspaceFooter";
 import { LogoutButton } from "./LogoutButton";
-import { isStaffUser } from "@/services/auth";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { useEffect, useState, type ReactNode } from "react";
+import { useContext, useEffect, useState, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { ShieldCheck } from "lucide-react";
 
 const navigation = [
-  { to: "/recruiter", label: "Tổng quan", icon: RecruitmentOverviewIcon },
-  { to: "/recruiter/jobs", label: "Tin tuyển dụng", icon: JobIcon },
-  { to: "/recruiter/talent", label: "Tìm kiếm ứng viên", icon: TalentSearchIcon },
-  { to: "/recruiter/applications", label: "Đơn ứng tuyển", icon: ApplicationIcon },
-  { to: "/recruiter/members", label: "Thành viên công ty", icon: CompanyMembersIcon },
-  { to: "/recruiter/verification", label: "Hồ sơ công ty", icon: VerificationDossierIcon },
+  { to: "/rec", label: "Tổng quan", icon: RecruitmentOverviewIcon },
+  { to: "/rec/jobs", label: "Tin tuyển dụng", icon: JobIcon },
+  { to: "/rec/talent", label: "Tìm kiếm ứng viên", icon: TalentSearchIcon },
+  { to: "/rec/applications", label: "Đơn ứng tuyển", icon: ApplicationIcon },
+  { to: "/rec/members", label: "Thành viên công ty", icon: CompanyMembersIcon },
+  { to: "/rec/verification", label: "Hồ sơ công ty", icon: VerificationDossierIcon },
 ];
 
-export function RecruiterShell({
+export function RecruiterShell(props: {
+  title: string;
+  children: ReactNode;
+  topNavExtras?: ReactNode;
+}) {
+  const layout = useWorkspaceLayout();
+  return layout ? <>{props.children}</> : <RecruiterShellFrame {...props} />;
+}
+function RecruiterShellFrame({
   title,
   children,
   topNavExtras,
@@ -51,6 +60,7 @@ export function RecruiterShell({
   const user = useAuthUser();
   const invitedRecruiter = user?.activeMembership?.companyRole === "RECRUITER";
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { collapsed, animate } = useContext(SidebarState);
   const [menuOpen, setMenuOpen] = useState(false);
   useNavigationFocus(menuOpen, "recruiter-navigation");
   useEffect(() => {
@@ -62,7 +72,11 @@ export function RecruiterShell({
   }, []);
 
   return (
-    <div className="recruiter-workspace workspace-shell flex h-dvh w-full overflow-hidden bg-background text-charcoal-text">
+    <div
+      data-sidebar-collapsed={collapsed}
+      data-sidebar-animate={animate}
+      className="recruiter-workspace workspace-shell flex h-dvh w-full overflow-hidden bg-background text-charcoal-text"
+    >
       {menuOpen && (
         <button
           aria-label="Đóng menu điều hướng"
@@ -76,14 +90,14 @@ export function RecruiterShell({
       >
         <div className="workspace-brand flex min-h-[76px] items-center justify-between border-b border-warm-border px-5 py-4">
           <Link
-            to="/recruiter"
+            to="/rec"
             onClick={() => setMenuOpen(false)}
-            className="flex min-w-0 items-center gap-3"
+            className="workspace-brand__identity flex min-w-0 items-center gap-3"
           >
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary text-on-primary">
               <ShieldCheck size={24} aria-hidden="true" />
             </span>
-            <span>
+            <span className="workspace-brand__copy">
               <span className="block text-lg font-semibold leading-tight tracking-tight text-primary">
                 GuardianWork
               </span>
@@ -100,7 +114,7 @@ export function RecruiterShell({
           </button>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto">
-          <div className="mx-5 border-b border-warm-border py-4">
+          <div className="workspace-company-summary mx-5 border-b border-warm-border py-4">
             <p className="break-words text-sm font-semibold">
               {user?.activeMembership?.companyName || "Chưa đăng ký công ty"}
             </p>
@@ -115,62 +129,67 @@ export function RecruiterShell({
             {navigation
               .filter(
                 (item) =>
-                  !invitedRecruiter ||
-                  !["/recruiter/members", "/recruiter/verification"].includes(item.to),
+                  !invitedRecruiter || !["/rec/members", "/rec/verification"].includes(item.to),
               )
               .map(({ to, label, icon: Icon }) => {
                 const active =
-                  to === "/recruiter"
-                    ? pathname.replace(/\/$/, "") === to
-                    : pathname.startsWith(to);
+                  to === "/rec" ? pathname.replace(/\/$/, "") === to : pathname.startsWith(to);
                 const locked =
                   !recruitingEnabled &&
                   ![
-                    "/recruiter",
-                    "/recruiter/verification",
-                    ...(stage === "COMPANY_ACTION_REQUIRED" ? ["/recruiter/members"] : []),
+                    "/rec",
+                    "/rec/verification",
+                    "/rec/account",
+                    ...(stage === "COMPANY_ACTION_REQUIRED" ? ["/rec/members"] : []),
                   ].includes(to);
                 if (locked)
                   return (
-                    <span
+                    <SidebarLabel
                       key={to}
-                      aria-disabled="true"
-                      title="Hoàn tất thiết lập tuyển dụng để sử dụng"
-                      className="workspace-nav-link workspace-nav-link--locked"
+                      label={`${label} · Hoàn tất thiết lập tuyển dụng để sử dụng`}
+                    >
+                      <span
+                        aria-label={`${label} · Hoàn tất thiết lập tuyển dụng để sử dụng`}
+                        aria-disabled="true"
+                        title="Hoàn tất thiết lập tuyển dụng để sử dụng"
+                        className="workspace-nav-link workspace-nav-link--locked"
+                      >
+                        <span className="workspace-nav-icon">
+                          <Icon size={20} aria-hidden="true" />
+                        </span>
+                        <span className="workspace-nav-label">{label}</span>
+                        <span className="workspace-nav-lock ml-auto text-xs">Khóa</span>
+                      </span>
+                    </SidebarLabel>
+                  );
+                return (
+                  <SidebarLabel key={to} label={label}>
+                    <Link
+                      aria-label={label}
+                      to={to}
+                      activeOptions={{ exact: to === "/rec" }}
+                      onClick={() => setMenuOpen(false)}
+                      aria-current={active ? "page" : undefined}
+                      className="workspace-nav-link"
                     >
                       <span className="workspace-nav-icon">
                         <Icon size={20} aria-hidden="true" />
                       </span>
                       <span className="workspace-nav-label">{label}</span>
-                      <span className="ml-auto text-xs">Khóa</span>
-                    </span>
-                  );
-                return (
-                  <Link
-                    key={to}
-                    to={to}
-                    activeOptions={{ exact: to === "/recruiter" }}
-                    onClick={() => setMenuOpen(false)}
-                    aria-current={active ? "page" : undefined}
-                    className="workspace-nav-link"
-                  >
-                    <span className="workspace-nav-icon">
-                      <Icon size={20} aria-hidden="true" />
-                    </span>
-                    <span className="workspace-nav-label">{label}</span>
-                  </Link>
+                    </Link>
+                  </SidebarLabel>
                 );
               })}
           </nav>
           {!invitedRecruiter && (
-            <div className="mx-3 mb-4 mt-6 rounded-lg bg-surface-container-low p-4">
+            <div className="workspace-company-help">
               <VerificationDossierIcon className="mb-3 text-primary" size={24} />
               <p className="text-sm font-semibold">Xây dựng uy tín doanh nghiệp</p>
               <p className="mt-2 text-xs leading-5 text-charcoal-83">
                 Hoàn thiện hồ sơ để ứng viên an tâm kết nối với bạn.
               </p>
               <Link
-                to="/recruiter/verification"
+                to="/rec/verification"
                 onClick={() => setMenuOpen(false)}
                 className="mt-3 flex items-center gap-2 text-xs font-semibold text-primary"
               >
@@ -179,26 +198,12 @@ export function RecruiterShell({
             </div>
           )}
         </div>
-        <div className="workspace-sidebar-footer mt-auto space-y-1 border-t border-warm-border text-xs text-charcoal-83">
-          {recruitingEnabled && invitedRecruiter && user.activeMembership && (
-            <LeaveCompanyButton companyName={user.activeMembership.companyName} />
-          )}
-          <Link to="/vn" className="workspace-footer-link">
-            <GlobeIcon size={18} /> Trang chủ GuardianWork
-          </Link>
-          <Link to="/jobs" className="workspace-footer-link">
-            <CandidateProfileIcon size={18} /> Dành cho ứng viên
-          </Link>
-          {user && isStaffUser(user) && (
-            <Link to="/admin" className="workspace-footer-link">
-              <ArrowUpRightIcon size={18} /> Quản trị hệ thống
-            </Link>
-          )}
-        </div>
+        <WorkspaceFooter role="recruiter" onNavigate={() => setMenuOpen(false)} />
       </aside>
       <div className="workspace-content flex h-dvh min-w-0 flex-1 flex-col overflow-hidden bg-parchment-bg">
         <header className="flex min-h-[76px] shrink-0 items-center justify-between gap-3 border-b border-warm-border bg-paper-white px-4 md:px-8">
           <div className="flex min-w-0 items-center gap-3">
+            <SidebarCollapseButton controls="recruiter-navigation" />
             <button
               type="button"
               aria-label="Mở menu"
@@ -223,7 +228,7 @@ export function RecruiterShell({
             {recruitingEnabled && topNavExtras}
             {recruitingEnabled && (
               <Link
-                to="/recruiter/jobs"
+                to="/rec/jobs"
                 aria-label="Đăng tin tuyển dụng"
                 search={{ create: true }}
                 className="workspace-header-action"
@@ -237,8 +242,12 @@ export function RecruiterShell({
         </header>
         <main className="min-h-0 flex-1 overflow-y-auto p-4 md:p-8">
           <div className="workspace-page mx-auto max-w-[1200px]">
-            {user && !user.recruitingEmailEligible && <EmailVerificationPanel />}
-            {user?.recruitingEmailEligible || pathname === "/recruiter/verification" ? (
+            {user && !user.recruitingEmailEligible && pathname !== "/rec/account" && (
+              <EmailVerificationPanel />
+            )}
+            {user?.recruitingEmailEligible ||
+            pathname === "/rec/verification" ||
+            pathname === "/rec/account" ? (
               children
             ) : (
               <p className="text-sm leading-6 text-charcoal-83">

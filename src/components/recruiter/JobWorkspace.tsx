@@ -505,7 +505,7 @@ export function JobWorkspace({
                     ))}
                   </ul>
                   <p>Quay lại soạn tin hoặc cập nhật người phụ trách rồi xem trước lần nữa.</p>
-                  <Link to="/recruiter/verification">Xem trạng thái xác thực công ty</Link>
+                  <Link to="/rec/verification">Xem trạng thái xác thực công ty</Link>
                 </div>
               )}
               {guided && (

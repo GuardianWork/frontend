@@ -147,7 +147,10 @@ export async function loginAccount(
     if (error instanceof ApiError && error.status === 401)
       throw new Error("Email, tên đăng nhập hoặc mật khẩu không chính xác.");
     if (error instanceof ApiError && error.status === 403)
-      throw new Error("Tài khoản chưa được phép đăng nhập. Vui lòng liên hệ bộ phận hỗ trợ.");
+      throw new ApiError(
+        "Tài khoản hiện không thể đăng nhập. Bạn có thể chủ động kiểm tra điều kiện khôi phục nếu đã tự tạm ngừng hoặc yêu cầu xóa.",
+        403,
+      );
     throw error;
   }
   if (!isAuthSession(result))
@@ -163,9 +166,9 @@ export function getLoginDestination(user: AuthUser, purpose: AccountPurpose) {
   if (user.role === "ADMIN") return "/admin" as const;
   return purpose === "recruiter"
     ? user.activeMembership
-      ? ("/recruiter" as const)
-      : ("/recruiter/verification" as const)
-    : ("/jobs" as const);
+      ? ("/rec" as const)
+      : ("/rec/verification" as const)
+    : ("/can/jobs" as const);
 }
 
 let refreshing: { token: string; promise: Promise<AuthSession> } | null = null;

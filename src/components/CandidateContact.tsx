@@ -5,7 +5,9 @@ import {
   updateCandidatePhone,
   type CandidateProfile,
 } from "@/services/candidateProfile";
+import { useRefreshIdentity } from "@/hooks/useAccountIdentity";
 export function CandidateContact() {
+  const refreshIdentity = useRefreshIdentity();
   const [editing, setEditing] = useState(false);
   const [profile, setProfile] = useState<CandidateProfile | null>(null);
   const [phone, setPhone] = useState("");
@@ -41,6 +43,7 @@ export function CandidateContact() {
       const next = await updateCandidatePhone(profile, phone);
       setProfile(next);
       setPhone(next.phoneNumber || "");
+      await refreshIdentity();
       setNotice(
         next.phoneNumber
           ? "Đã cập nhật số điện thoại chung của tài khoản."
@@ -49,7 +52,7 @@ export function CandidateContact() {
     } catch (cause) {
       setError(
         cause instanceof ApiError && cause.status === 409
-          ? "Số điện thoại đã được sử dụng bởi tài khoản khác."
+          ? "Số điện thoại không khả dụng. Hãy dùng số khác."
           : cause instanceof ApiError && cause.status === 400
             ? "Số điện thoại không hợp lệ. Nhập số Việt Nam dạng 0… hoặc +84… rồi thử lại."
             : "Không lưu được số điện thoại. Hãy tải lại thông tin trước khi thử lại.",

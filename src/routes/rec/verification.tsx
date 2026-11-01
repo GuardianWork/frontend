@@ -14,7 +14,7 @@ import {
   type CompanyLegalDossier,
 } from "@/services/companyVerification";
 
-export const Route = createFileRoute("/recruiter/verification")({
+export const Route = createFileRoute("/rec/verification")({
   head: () => ({
     meta: [
       { name: "robots", content: "noindex, nofollow" },
@@ -159,7 +159,7 @@ function CompanyVerificationPage() {
           <p className="mb-5 text-sm leading-6 text-charcoal-83">
             Bạn được mời tham gia công ty có sẵn?{" "}
             <Link
-              to="/recruiter/members"
+              to="/rec/members"
               className="font-semibold text-primary underline underline-offset-4"
             >
               Xem lời mời công ty
@@ -343,7 +343,7 @@ function CompanyVerificationPage() {
               )}
               {!canEdit && (
                 <Link
-                  to="/recruiter"
+                  to="/rec"
                   className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary"
                 >
                   Về tổng quan <ArrowRight size={16} aria-hidden="true" />

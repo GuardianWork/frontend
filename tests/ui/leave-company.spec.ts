@@ -42,8 +42,25 @@ async function recruiter(page: Page) {
     await route.fulfill({ json: body });
   });
   await login(page, "recruiter_demo", true);
-  if (page.viewportSize()!.width < 768)
-    await page.getByRole("button", { name: "Mở menu", exact: true }).click();
+  await page.route("**/api/me/account", (route) =>
+    route.fulfill({
+      json: {
+        status: 200,
+        data: {
+          firstName: "Linh",
+          lastName: "Trần",
+          fullName: "Linh Trần",
+          username: "recruiter_demo",
+          email: "recruiter@example.test",
+          emailVerified: true,
+          selfServiceState: "ACTIVE",
+          closureEligible: false,
+          closureBlockers: ["ACTIVE_COMPANY_MEMBERSHIP_EXISTS"],
+        },
+      },
+    }),
+  );
+  await page.goto("/rec/account");
   await page.getByRole("button", { name: "Rời công ty", exact: true }).click();
   return () => {
     left = true;

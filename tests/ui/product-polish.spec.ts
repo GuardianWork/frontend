@@ -2,7 +2,7 @@ import { test, expect, login } from "./fixtures";
 import type { Page, TestInfo } from "@playwright/test";
 const phase = process.env.VISUAL_REVIEW_PHASE || "after";
 async function capture(page: Page, info: TestInfo, name: string) {
-  if (/\/(candidate|recruiter|staff)(?:\/|$)/.test(new URL(page.url()).pathname))
+  if (/\/(can|rec|staff)(?:\/|$)/.test(new URL(page.url()).pathname))
     await expect(page.locator(".workspace-page")).toBeVisible();
   await page.evaluate(async () => {
     await document.fonts.ready;
@@ -18,12 +18,7 @@ async function capture(page: Page, info: TestInfo, name: string) {
 test("candidate discovery, profile and reference content remain usable", async ({ page }, info) => {
   test.setTimeout(120000);
   await login(page, "candidate_demo");
-  for (const route of [
-    "/candidate",
-    "/candidate/jobs",
-    "/candidate/profile",
-    "/candidate/copilot",
-  ]) {
+  for (const route of ["/can", "/can/jobs", "/can/profile", "/can/copilot"]) {
     await page.goto(route);
     await expect(page.locator("main h1, main h2").first()).toBeVisible();
     await capture(page, info, route.split("/").filter(Boolean).join("-"));
@@ -57,12 +52,12 @@ test("verified recruiter workspace covers operational collections and company fo
   });
   await login(page, "owner_demo", true);
   for (const route of [
-    "/recruiter",
-    "/recruiter/jobs",
-    "/recruiter/applications",
-    "/recruiter/talent",
-    "/recruiter/verification",
-    "/recruiter/members",
+    "/rec",
+    "/rec/jobs",
+    "/rec/applications",
+    "/rec/talent",
+    "/rec/verification",
+    "/rec/members",
   ]) {
     await page.goto(route);
     await expect(page.locator("main h1, main h2").first()).toBeVisible();

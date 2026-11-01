@@ -51,7 +51,7 @@ export function RecruiterOverview({
               Theo dõi hồ sơ công ty, tin tuyển dụng và danh sách ứng viên.
             </p>
           </div>
-          <Link to="/recruiter/jobs" search={{ create: true }} className="recruiter-primary">
+          <Link to="/rec/jobs" search={{ create: true }} className="recruiter-primary">
             <JobPostingsIcon size={17} />
             Đăng tin tuyển dụng
           </Link>
@@ -77,7 +77,7 @@ export function RecruiterOverview({
         </div>
         {!invitedRecruiter && (
           <Link
-            to={status === "VERIFIED" ? "/recruiter/members" : "/recruiter/verification"}
+            to={status === "VERIFIED" ? "/rec/members" : "/rec/verification"}
             className="flex shrink-0 items-center gap-2 text-sm font-semibold text-primary"
           >
             {status === "VERIFIED"
@@ -130,23 +130,23 @@ export function RecruiterOverview({
           {
             title: "Đăng tin tuyển dụng",
             description: "Tạo tin đăng, tiếp cận ứng viên phù hợp.",
-            to: "/recruiter/jobs",
+            to: "/rec/jobs",
             icon: JobPostingsIcon,
           },
           {
             title: "Tìm kiếm ứng viên",
             description: "Tìm kiếm nhân tài cho đội ngũ của bạn.",
-            to: "/recruiter/talent",
+            to: "/rec/talent",
             icon: TalentSearchIcon,
           },
           {
             title: "Hồ sơ công ty",
             description: "Quản lý thông tin và giấy tờ xác thực.",
-            to: "/recruiter/verification",
+            to: "/rec/verification",
             icon: CompanyIcon,
           },
         ]
-          .filter((item) => !invitedRecruiter || item.to !== "/recruiter/verification")
+          .filter((item) => !invitedRecruiter || item.to !== "/rec/verification")
           .map(({ title, description, to, icon: Icon }) => (
             <Link key={to} to={to} className="workspace-shortcut group">
               <Icon size={21} className="shrink-0 text-primary" />

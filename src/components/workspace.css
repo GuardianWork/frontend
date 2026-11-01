@@ -364,3 +364,314 @@
 .workspace-summary__item :is(.text-2xl, .text-3xl) {
   color: var(--color-ink);
 }
+
+/* Candidate and recruiter quick navigation share placement and hit areas. */
+.workspace-shell .workspace-quick-navigation {
+  flex-shrink: 0;
+  display: grid;
+  gap: 4px;
+  margin-top: auto;
+  padding: 12px 10px;
+  border-top: 1px solid var(--color-rule);
+}
+.workspace-quick-navigation .workspace-footer-link {
+  min-height: 44px;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  color: var(--color-ink-2);
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 500;
+}
+.workspace-quick-navigation .workspace-footer-link > svg {
+  flex-shrink: 0;
+}
+.workspace-quick-navigation .workspace-footer-link:hover {
+  background: var(--color-paper-3);
+  color: var(--color-ink);
+}
+.workspace-quick-navigation .workspace-footer-link[aria-current="page"] {
+  background: var(--color-accent-subtle);
+  color: var(--color-accent-deep);
+  font-weight: 650;
+}
+.workspace-quick-navigation__hint {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--color-ink-3);
+  font-weight: 400;
+}
+.candidate-workspace .guardian-job-browser .career-container {
+  padding-inline: 0;
+}
+.candidate-workspace .guardian-job-browser .career-discovery__head {
+  padding-top: 0;
+  background: var(--color-paper);
+}
+.candidate-workspace .guardian-job-browser .career-results {
+  padding-bottom: 0;
+}
+
+/* Light, inset navigation inspired by the supplied Sidebars reference. */
+.workspace-shell:is(.candidate-workspace, .recruiter-workspace) .workspace-sidebar {
+  width: 244px;
+  height: calc(100dvh - 16px);
+  margin: 8px;
+  border: 1px solid var(--color-rule);
+  border-radius: 14px;
+  background: var(--color-paper);
+}
+.workspace-shell:is(.candidate-workspace, .recruiter-workspace)
+  .workspace-sidebar
+  .workspace-brand {
+  min-height: 72px;
+  padding: 16px;
+  border-bottom: 1px solid var(--color-rule);
+}
+.workspace-shell:is(.candidate-workspace, .recruiter-workspace)
+  .workspace-sidebar
+  .workspace-navigation {
+  padding: 16px 10px;
+  gap: 4px;
+}
+.workspace-shell:is(.candidate-workspace, .recruiter-workspace)
+  .workspace-navigation
+  .workspace-nav-link {
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 8px;
+  color: var(--color-ink-2);
+  font-size: 14px;
+  line-height: 1.45;
+  font-weight: 500;
+}
+.workspace-shell:is(.candidate-workspace, .recruiter-workspace)
+  .workspace-navigation
+  .workspace-nav-link
+  .workspace-nav-icon {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  border-radius: 0;
+  color: inherit;
+  background: transparent;
+}
+.workspace-shell:is(.candidate-workspace, .recruiter-workspace)
+  .workspace-navigation
+  .workspace-nav-link
+  .workspace-nav-icon
+  svg {
+  width: 20px;
+  height: 20px;
+}
+.workspace-shell:is(.candidate-workspace, .recruiter-workspace)
+  .workspace-navigation
+  .workspace-nav-link[aria-current="page"] {
+  background: var(--color-accent-subtle);
+  color: var(--color-accent-deep);
+  font-weight: 650;
+}
+.workspace-shell:is(.candidate-workspace, .recruiter-workspace)
+  .workspace-navigation
+  .workspace-nav-link[aria-current="page"]
+  .workspace-nav-icon {
+  color: inherit;
+  background: transparent;
+}
+.workspace-shell:is(.candidate-workspace, .recruiter-workspace)
+  .workspace-navigation
+  a.workspace-nav-link:hover {
+  background: var(--color-paper-2);
+  color: var(--color-ink);
+}
+.workspace-shell:is(.candidate-workspace, .recruiter-workspace)
+  .workspace-navigation
+  a.workspace-nav-link[aria-current="page"]:hover {
+  background: var(--color-accent-subtle);
+  color: var(--color-accent-deep);
+}
+.workspace-shell:is(.candidate-workspace, .recruiter-workspace)
+  .workspace-navigation
+  .workspace-nav-link--locked {
+  color: var(--color-ink-3);
+}
+.workspace-shell:is(.candidate-workspace, .recruiter-workspace) .workspace-quick-navigation {
+  padding: 10px;
+  border-top: 1px solid var(--color-rule);
+}
+.workspace-quick-navigation .workspace-footer-link {
+  border-radius: 8px;
+}
+.workspace-company-help {
+  margin: 0 16px 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-rule);
+}
+@media (max-width: 1100px) {
+  .workspace-shell:is(.candidate-workspace, .recruiter-workspace) .workspace-sidebar {
+    inset: 8px auto 8px 8px;
+    width: min(300px, calc(100vw - 32px));
+    height: auto;
+    margin: 0;
+  }
+}
+
+.workspace-collapse-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--color-rule);
+  border-radius: 6px;
+  color: var(--color-ink-2);
+  background: var(--color-paper);
+}
+.workspace-collapse-toggle:hover {
+  color: var(--color-ink);
+  background: var(--color-paper-2);
+}
+
+/* One interruptible transition connects expanded navigation to the compact rail. */
+@media (min-width: 1101px) {
+  .workspace-shell:is(.candidate-workspace, .recruiter-workspace) {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    transition: grid-template-columns 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .workspace-shell:is(.candidate-workspace, .recruiter-workspace) .workspace-sidebar {
+    width: auto;
+    min-width: 0;
+  }
+  .workspace-shell[data-sidebar-collapsed="true"]:is(.candidate-workspace, .recruiter-workspace) {
+    grid-template-columns: 92px minmax(0, 1fr);
+  }
+  .workspace-shell:is(.candidate-workspace, .recruiter-workspace)
+    .workspace-sidebar
+    .workspace-brand {
+    padding-inline: 20px;
+    overflow: hidden;
+  }
+  .workspace-shell .workspace-brand__identity {
+    min-width: 0;
+  }
+  .workspace-sidebar
+    :is(.workspace-brand__copy, .workspace-nav-label, .workspace-footer-link > span) {
+    min-width: 0;
+    max-width: 210px;
+    overflow: hidden;
+    opacity: 1;
+    visibility: visible;
+    transition:
+      opacity 140ms ease-out,
+      max-width 240ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      visibility 0s;
+  }
+  .workspace-sidebar .workspace-brand__copy,
+  .workspace-sidebar .workspace-nav-label,
+  .workspace-sidebar .workspace-footer-link > span {
+    white-space: nowrap;
+  }
+  .workspace-shell .workspace-navigation .workspace-nav-link,
+  .workspace-shell .workspace-quick-navigation .workspace-footer-link,
+  .workspace-shell .workspace-brand__identity {
+    transition:
+      gap 240ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      background-color 160ms ease,
+      color 160ms ease;
+  }
+  .workspace-shell .workspace-sidebar .workspace-company-summary,
+  .workspace-shell .workspace-sidebar .workspace-company-help {
+    max-height: 220px;
+    overflow: hidden;
+    opacity: 1;
+    transition:
+      max-height 240ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      opacity 100ms ease-out,
+      margin 240ms ease,
+      padding 240ms ease;
+  }
+  .workspace-shell[data-sidebar-collapsed="true"]
+    .workspace-sidebar
+    :is(.workspace-brand__copy, .workspace-nav-label, .workspace-footer-link > span) {
+    max-width: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 90ms ease-out,
+      max-width 240ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      visibility 0s 90ms;
+  }
+  .workspace-shell[data-sidebar-collapsed="true"] .workspace-sidebar .workspace-nav-lock {
+    display: none;
+  }
+  .workspace-shell[data-sidebar-collapsed="true"] .workspace-sidebar .workspace-company-summary,
+  .workspace-shell[data-sidebar-collapsed="true"] .workspace-sidebar .workspace-company-help {
+    max-height: 0;
+    opacity: 0;
+    margin-block: 0;
+    padding-block: 0;
+    border: 0;
+    visibility: hidden;
+  }
+  .workspace-shell[data-sidebar-collapsed="true"] .workspace-navigation .workspace-nav-link,
+  .workspace-shell[data-sidebar-collapsed="true"]
+    .workspace-quick-navigation
+    .workspace-footer-link {
+    gap: 0;
+    justify-content: center;
+    padding-inline: 0;
+  }
+  .workspace-shell[data-sidebar-collapsed="true"] .workspace-brand__identity {
+    gap: 0;
+  }
+}
+.workspace-quick-navigation__hint {
+  display: none;
+}
+@media (max-width: 1100px) {
+  .workspace-collapse-toggle {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .workspace-shell:is(.candidate-workspace, .recruiter-workspace),
+  .workspace-sidebar
+    :is(
+      .workspace-brand__copy,
+      .workspace-nav-label,
+      .workspace-footer-link > span,
+      .workspace-company-summary,
+      .workspace-company-help
+    ),
+  .workspace-shell .workspace-sidebar .workspace-brand__identity {
+    transition: none;
+  }
+}
+/* Brand copy must never rewrap while the rail clips its inline measure. */
+.workspace-brand__copy :is(h2, p, span) {
+  white-space: nowrap;
+  text-wrap: nowrap;
+}
+
+/* Restore saved geometry immediately; only an explicit toggle starts motion. */
+.workspace-shell[data-sidebar-animate="false"],
+.workspace-shell[data-sidebar-animate="false"]
+  .workspace-sidebar
+  :is(
+    .workspace-brand__copy,
+    .workspace-nav-label,
+    .workspace-footer-link > span,
+    .workspace-company-summary,
+    .workspace-company-help,
+    .workspace-brand__identity
+  ),
+.workspace-shell[data-sidebar-animate="false"] .workspace-navigation .workspace-nav-link,
+.workspace-shell[data-sidebar-animate="false"] .workspace-quick-navigation .workspace-footer-link {
+  transition: none;
+}

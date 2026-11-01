@@ -5,7 +5,7 @@ import { ArrowRight, BriefcaseBusiness, Plus, RotateCw, Users } from "lucide-rea
 import { AdminShell } from "@/components/AdminShell";
 import { AdminPagination } from "@/components/admin/AdminPagination";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { Route } from "@/routes/recruiter/jobs";
+import { Route } from "@/routes/rec/jobs";
 import {
   getJob,
   jobError,
@@ -58,7 +58,7 @@ export function RecruiterJobsPage() {
             <BriefcaseBusiness size={32} aria-hidden="true" />
             <h1>Tham gia công ty để quản lý tin</h1>
             <p>Bạn cần là chủ sở hữu hoặc nhà tuyển dụng đang hoạt động trong công ty.</p>
-            <Link className="jp-button jp-primary" to="/recruiter/verification">
+            <Link className="jp-button jp-primary" to="/rec/verification">
               Xem thông tin công ty
             </Link>
           </div>
@@ -117,7 +117,7 @@ export function RecruiterJobsPage() {
                     : "Soạn nội dung và theo dõi các tin được phân công cho bạn."}
                 </p>
               </div>
-              <Link className="jp-button jp-primary" to="/recruiter/jobs" search={{ create: true }}>
+              <Link className="jp-button jp-primary" to="/rec/jobs" search={{ create: true }}>
                 <Plus size={18} aria-hidden="true" />
                 Đăng tin tuyển dụng
               </Link>
@@ -211,11 +211,7 @@ export function RecruiterJobsPage() {
                       Xem tất cả tin
                     </button>
                   ) : (
-                    <Link
-                      className="jp-button jp-primary"
-                      to="/recruiter/jobs"
-                      search={{ create: true }}
-                    >
+                    <Link className="jp-button jp-primary" to="/rec/jobs" search={{ create: true }}>
                       Đăng tin tuyển dụng
                     </Link>
                   )}
@@ -266,7 +262,7 @@ function JobRow({ job, scope }: { job: Job; scope: string }) {
           )}
           {job.needsReassignment && <span className="jp-badge jp-warning">Cần phân công lại</span>}
         </div>
-        <Link className="jp-job-title" to="/recruiter/jobs" search={{ jobId: job.id }}>
+        <Link className="jp-job-title" to="/rec/jobs" search={{ jobId: job.id }}>
           {content?.title || `Tin tuyển dụng #${job.id}`}
         </Link>
         <p>
@@ -288,7 +284,7 @@ function JobRow({ job, scope }: { job: Job; scope: string }) {
       </div>
       <Link
         className="jp-button"
-        to="/recruiter/jobs"
+        to="/rec/jobs"
         search={{ jobId: job.id }}
         aria-label={`Quản lý ${content?.title || `tin #${job.id}`}`}
       >

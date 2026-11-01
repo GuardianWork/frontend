@@ -31,7 +31,10 @@ export function parseJobSearch(search: Record<string, unknown>): JobSearchParams
   const values: JobSearchParams = {};
   for (const key of JOB_SEARCH_KEYS) {
     const value = search[key];
-    if (typeof value === "string") values[key] = value;
+    // The router's URL parser decodes numeric query values (for example job=42)
+    // as numbers. Normalize them before exposing the string-valued search state.
+    if (typeof value === "string" || (typeof value === "number" && Number.isFinite(value)))
+      values[key] = String(value);
   }
   return jobSearch(values);
 }

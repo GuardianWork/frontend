@@ -7,13 +7,13 @@ This refinement preserves Guardian Blue, Hanken Grotesk, the shield/check mark, 
 | Files | Behavior |
 | --- | --- |
 | `src/components/icons/` | Project semantic module: 20 supplied domain glyphs plus normalized, licensed local Radix actions. |
-| `src/components/guardian/Header.tsx`, `StaffShell.tsx`, `RecruiterShell.tsx`, `AdminShell.tsx`, `components/admin/sidebar.css` | Coherent action/navigation icons. All three workspace sidebars share Staff's row, icon, selected/hover/focus treatment. Candidate navigation uses the real mounted AdminShell. Staff Overview uses exact matching, fixing persistent selection on other sections. |
+| `src/components/guardian/Header.tsx`, `StaffShell.tsx`, `RecruiterShell.tsx`, `AdminShell.tsx`, `components/admin/sidebar.css` | Coherent action/navigation icons. Staff navigation keeps its existing layout. Candidate and recruiter use the compact, collapsible inset rail documented in `DESIGN.md`; the persistent header toggle and shared three-link footer belong to those roles. Candidate navigation uses the mounted AdminShell frame. |
 | `components/auth/{AuthLayout,AccountPurposeChoice,PasswordInput,StaffLoginPage}.tsx`, `components/LogoutButton.tsx`, `components/VerificationUpload.tsx` | Purpose-specific art and semantic controls; incumbent brand mark and authentication/upload behavior preserved. |
 | `components/staff/DossierHistory.tsx`, `routes/staff/verifications.tsx` | Separate history, refresh, evidence, unavailable-evidence and outcome symbols. Empty queue art is excluded from loading/error/search/filter states. No changes to API or decision submission logic. |
 | `components/GuardianIllustration.tsx`, `src/career.css` | Exact intrinsic dimensions, contain sizing, empty alt text, responsive picture sources that avoid hidden desktop image requests on phones. |
 | `components/guardian/LandingView.tsx` | Grid introduction: copy left, multi-industry art right; full-width search below. Existing industry-category icons retained. |
-| `components/RecruiterOverview.tsx`, `routes/candidate/index.tsx` | Small right accents; introduction and CTA stay together. |
-| `routes/recruiter/jobs.tsx` | Compact genuine-empty artwork; suppresses it for keyword misses, workspace read errors, absent membership and populated lists. Existing create action retained. |
+| `components/RecruiterOverview.tsx`, `routes/can/index.tsx` | Small right accents; introduction and CTA stay together. |
+| `routes/rec/jobs.tsx` | Compact genuine-empty artwork; suppresses it for keyword misses, workspace read errors, absent membership and populated lists. Existing create action retained. |
 | `DESIGN.md`, landing surface brief, `docs/design/assets/` | Reusable conventions, sources, exact export audit, license notices, source hashes, prompts and edited masters. |
 | `tests/ui/visual-assets.spec.ts`, `tests/ui/sidebar-navigation.spec.ts` | Responsive asset/state checks and navigation regression coverage. |
 
