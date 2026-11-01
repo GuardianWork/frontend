@@ -762,6 +762,10 @@
   grid-template-columns: minmax(0, 1fr);
   max-width: 900px;
 }
+.jp-guided-writing .jp-workspace-main {
+  border: 0;
+  border-radius: 0;
+}
 .jp-guided-writing .jp-workspace-side,
 .jp-tabs[hidden],
 .jp-form-section[hidden] {
@@ -770,12 +774,7 @@
 .jp-step-heading {
   padding: 24px 24px 0;
 }
-.jp-review-edits {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding-block: 16px;
-}
+
 @media (max-width: 640px) {
   .jp-creation-steps ol {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -794,4 +793,214 @@
   color: var(--color-error);
   font-weight: 700;
   margin-inline-start: 3px;
+}
+
+.jp-editor-footer.jp-creation-footer {
+  justify-content: flex-end;
+}
+
+.jp-editor-footer.jp-writing-footer {
+  background: var(--jp-paper);
+}
+
+.jp-field-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  color: var(--error);
+  font-size: 13px;
+  font-weight: 500;
+}
+.jp-validation-summary {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-items: start;
+  gap: 20px;
+  padding: 24px;
+  border-radius: 24px;
+  background: var(--error-container);
+  color: var(--jp-ink);
+  font-size: 16px;
+  line-height: 1.5;
+}
+.jp-validation-summary[hidden] {
+  display: none;
+}
+.jp-validation-summary .jp-validation-heading {
+  margin: 2px 0 8px;
+  color: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+.jp-validation-summary ul {
+  margin: 0;
+  padding-left: 23px;
+  list-style: disc;
+}
+.jp-validation-summary li + li {
+  margin-top: 4px;
+}
+.jp-validation-summary button {
+  color: inherit;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+.jp-validation-summary button:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.jp-validation-summary button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+.jp-validation-icon {
+  fill: var(--error);
+  stroke: var(--color-paper);
+  flex: none;
+}
+
+.jp-field-error > svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.jp-review-section-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.jp-review-section-heading h3,
+.jp-review-section-heading h4 {
+  margin: 0;
+}
+.jp-review-title h3 {
+  font-size: 24px;
+  letter-spacing: -0.02em;
+}
+.jp-review-edit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--jp-blue);
+  background: transparent;
+  cursor: pointer;
+}
+.jp-review-edit:hover {
+  background: var(--color-accent-subtle);
+}
+.jp-review-edit:focus-visible {
+  outline: 2px solid var(--jp-blue);
+  outline-offset: 3px;
+}
+.jp-review-edit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.jp-review-dialog {
+  max-width: 780px;
+  padding: 28px 0 0;
+  gap: 8px;
+  background: var(--jp-paper);
+}
+.jp-review-dialog > h2,
+.jp-review-dialog > p {
+  margin-inline: 28px;
+}
+.jp-review-dialog > form {
+  min-height: 0;
+}
+.jp-review-dialog-body {
+  max-height: calc(100dvh - 260px);
+  overflow-y: auto;
+  padding-block: 8px;
+}
+.jp-review-dialog-body > .jp-feedback {
+  margin: 16px 28px 0;
+}
+.jp-review-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px 28px;
+  border-top: 1px solid var(--jp-rule);
+}
+.jp-review-dialog > h2 {
+  font-size: 22px;
+  line-height: 1.3;
+}
+
+.jp-review-details > section {
+  margin: 0;
+}
+.jp-review-details > section + section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--jp-rule);
+}
+.jp-review-details .jp-review-section-heading {
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.jp-review-details h3 {
+  font-size: 18px;
+  font-weight: 700;
+}
+.jp-review-detail-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px 32px;
+  margin: 0;
+}
+.jp-review-detail {
+  min-width: 0;
+}
+.jp-review-detail dt {
+  color: var(--jp-muted);
+  font-size: 14px;
+  font-weight: 500;
+}
+.jp-review-detail dd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  margin: 4px 0 0;
+  font-size: 16px;
+  overflow-wrap: anywhere;
+}
+.jp-review-missing {
+  color: var(--jp-muted);
+  font-size: 15px;
+}
+.jp-review-details .jp-review-questions-heading {
+  margin-top: 24px;
+}
+.jp-review-questions {
+  margin-top: 8px;
+}
+.jp-review-questions > li + li {
+  margin-top: 24px;
+}
+.jp-review-detail {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  align-items: start;
+  gap: 24px;
+}
+.jp-review-detail dt {
+  padding-block: 6px;
+}
+.jp-review-detail dd {
+  margin: 0;
 }

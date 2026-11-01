@@ -16,11 +16,15 @@ export function JobDescriptionEditor({
   onChange,
   disabled,
   invalid = false,
+  onBlur,
+  errorId,
 }: {
   value: string;
   onChange: (value: string) => void;
   disabled: boolean;
   invalid?: boolean;
+  onBlur?: () => void;
+  errorId?: string;
 }) {
   const editor = useEditor({
     immediatelyRender: false,
@@ -110,13 +114,11 @@ export function JobDescriptionEditor({
           "aria-multiline": "true",
           "aria-required": "true",
           "aria-invalid": String(invalid),
-          "aria-describedby": invalid
-            ? "job-description-count job-workspace-error"
-            : "job-description-count",
+          "aria-describedby": ["job-description-count", errorId].filter(Boolean).join(" "),
         },
       },
     });
-  }, [editor, invalid]);
+  }, [editor, invalid, errorId]);
   useEffect(() => {
     if (!editor) return;
     const current = editor.isEmpty
@@ -171,7 +173,13 @@ export function JobDescriptionEditor({
     },
   ];
   return (
-    <div className="job-description-field" data-invalid={invalid || undefined}>
+    <div
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) onBlur?.();
+      }}
+      className="job-description-field"
+      data-invalid={invalid || undefined}
+    >
       <div className="job-description-toolbar" role="group" aria-label="Định dạng mô tả công việc">
         {actions.map(({ label, Icon, pressed, unavailable, run }) => (
           <button
