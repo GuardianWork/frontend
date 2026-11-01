@@ -18,12 +18,7 @@ async function capture(page: Page, info: TestInfo, name: string) {
 test("candidate discovery, profile and reference content remain usable", async ({ page }, info) => {
   test.setTimeout(120000);
   await login(page, "candidate_demo");
-  for (const route of [
-    "/can",
-    "/can/jobs",
-    "/can/profile",
-    "/can/copilot",
-  ]) {
+  for (const route of ["/can", "/can/jobs", "/can/profile", "/can/copilot"]) {
     await page.goto(route);
     await expect(page.locator("main h1, main h2").first()).toBeVisible();
     await capture(page, info, route.split("/").filter(Boolean).join("-"));

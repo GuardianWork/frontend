@@ -211,11 +211,7 @@ export function RecruiterJobsPage() {
                       Xem tất cả tin
                     </button>
                   ) : (
-                    <Link
-                      className="jp-button jp-primary"
-                      to="/rec/jobs"
-                      search={{ create: true }}
-                    >
+                    <Link className="jp-button jp-primary" to="/rec/jobs" search={{ create: true }}>
                       Đăng tin tuyển dụng
                     </Link>
                   )}

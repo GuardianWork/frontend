@@ -213,12 +213,7 @@ export function LandingView() {
             </div>
             <div className="career-field-grid">
               {categories.map(({ label, en: englishLabel, query: q, detail, detailEn }) => (
-                <Link
-                  key={label}
-                  to="/jobs"
-                  search={jobSearch({ q })}
-                  className="career-field"
-                >
+                <Link key={label} to="/jobs" search={jobSearch({ q })} className="career-field">
                   <h3>{en ? englishLabel : label}</h3>
                   <p>{en ? detailEn : detail}</p>
                 </Link>
