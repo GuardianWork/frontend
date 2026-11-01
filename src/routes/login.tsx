@@ -23,8 +23,21 @@ import {
 } from "@/services/auth";
 
 export const Route = createFileRoute("/login")({
-  validateSearch: (search: Record<string, unknown>): ReturnType<typeof parseAccountPurpose> =>
-    IS_STAFF_PORTAL ? {} : parseAccountPurpose(search),
+  validateSearch: (search: Record<string, unknown>) =>
+    IS_STAFF_PORTAL
+      ? {}
+      : {
+          ...parseAccountPurpose(search),
+          ...([
+            "password-changed",
+            "deactivated",
+            "deletion-pending",
+            "reactivated",
+            "deletion-cancelled",
+          ].includes(String(search.notice))
+            ? { notice: String(search.notice) }
+            : {}),
+        },
   head: () => ({
     meta: [
       { name: "robots", content: "noindex, nofollow" },
@@ -43,7 +56,7 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginPage() {
-  const { role = "candidate", next } = Route.useSearch();
+  const { role = "candidate", next, notice } = Route.useSearch();
   const navigate = Route.useNavigate();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
@@ -77,9 +90,9 @@ function LoginPage() {
       const legacySetupLink = getMemberEmailSecret();
       await navigate({
         to: legacySetupLink
-          ? "/recruiter/verification"
+          ? "/rec/verification"
           : getInvitationSecret()
-            ? "/recruiter/members"
+            ? "/rec/members"
             : hasPendingInvitation()
               ? "/company-invitations"
               : getLoginDestination(user, role),
@@ -105,6 +118,24 @@ function LoginPage() {
         >
           Liên kết thiết lập tuyển dụng cũ không còn được dùng. Đăng nhập để tiếp tục với hồ sơ công
           ty.
+        </p>
+      )}
+      {notice && (
+        <p role="status" className="mb-5 rounded-lg bg-surface-container-low p-4 text-sm leading-6">
+          {
+            {
+              "password-changed":
+                "Đã đổi mật khẩu và kết thúc mọi phiên đăng nhập. Hãy đăng nhập lại bằng mật khẩu mới.",
+              deactivated:
+                "Tài khoản đã tạm ngừng và hồ sơ ứng viên đã được ẩn. Mọi phiên đăng nhập đã kết thúc.",
+              "deletion-pending":
+                "Yêu cầu xóa tài khoản đang chờ xử lý. Truy cập đã dừng; dữ liệu chưa được xóa vĩnh viễn và chưa có ngày hoàn tất được cam kết.",
+              reactivated:
+                "Tài khoản đã được kích hoạt lại. Hãy đăng nhập bình thường để tiếp tục.",
+              "deletion-cancelled":
+                "Đã hủy yêu cầu xóa đang chờ. Hãy đăng nhập bình thường để tiếp tục.",
+            }[notice]
+          }
         </p>
       )}
       <AccountPurposeChoice
@@ -169,6 +200,14 @@ function LoginPage() {
           )}
         </button>
       </form>
+      <p className="mt-6 text-center text-sm">
+        <Link
+          to="/account-recovery"
+          className="font-semibold text-primary underline-offset-4 hover:underline"
+        >
+          Kích hoạt lại hoặc hủy yêu cầu xóa tài khoản
+        </Link>
+      </p>
       <p className="mt-6 text-center text-sm">
         <a
           href={staffPortalHref()}

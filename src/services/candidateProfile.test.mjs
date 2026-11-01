@@ -8,13 +8,14 @@ test("candidate contact updates preserve profile fields and clearing sends null"
   const profile = {
     id: "profile",
     userId: 1,
-    fullName: "Nguyễn An",
-    email: "an@example.test",
+    firstName: "An",
+    lastName: "Nguyễn",
+    fullName: "An Nguyễn",
     phoneNumber: "+84901234567",
     avatarUrl: null,
     skills: ["Sales"],
-    experience: [],
-    education: [],
+    experienceSummary: "Kinh nghiệm",
+    educationSummary: "Đại học",
     isPublic: false,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -32,12 +33,11 @@ test("candidate contact updates preserve profile fields and clearing sends null"
   try {
     for (const phone of ["0909876543", ""]) {
       globalThis.fetch = async (url, init) => {
-        assert.equal(url, "/api/candidates/profile");
+        assert.equal(url, "/api/v1/candidates/profile");
         assert.equal(init.method, "PUT");
         assert.equal(init.headers.Authorization, "Bearer access");
-        const sent = JSON.parse(init.body);
-        assert.equal(sent.fullName, profile.fullName);
-        assert.equal(sent.phoneNumber, phone ? "+84909876543" : null);
+        const { id, userId, fullName, createdAt, updatedAt, ...fields } = profile;
+        assert.deepEqual(JSON.parse(init.body), { ...fields, phoneNumber: phone || null });
         return Response.json({
           status: 200,
           data: { ...profile, phoneNumber: phone ? "+84909876543" : null },

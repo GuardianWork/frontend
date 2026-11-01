@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { RecruiterJobsPage } from "@/components/recruiter/RecruiterJobsPage";
 
-export const Route = createFileRoute("/recruiter/jobs")({
+export const Route = createFileRoute("/rec/jobs")({
   validateSearch: (search: Record<string, unknown>): { create?: boolean; jobId?: number } => ({
     create: search.create === true || search.create === "true" ? true : undefined,
     jobId:

@@ -160,6 +160,8 @@ Observed public breakpoints are width ceilings (1100px, 950px, 640px). Workspace
 
 The frontmatter spacing values are recurring observed intervals, not a claim that the application exposes a CSS spacing-token API. Public section spacing is generally larger (32–60px); listing interiors use compact padding (22px desktop, 20px phone).
 
+Candidate and recruiter workspaces use a persistent full-height frame: a light inset sidebar sits beside a fixed header and a separately scrolling main area. The sidebar panel is 244px wide when expanded and 76px in its icon-only rail; links are 44px high with simple 20px icons. Nested navigation keeps the sidebar and header mounted and changes only the main view. Below the desktop rail breakpoint, navigation opens as a full mobile drawer.
+
 ## Elevation & Depth
 
 Depth comes primarily from light tonal surfaces and quiet borders. Listing cards change their border and ground on hover rather than lifting. Redesigned workspace content suppresses small and medium utility shadows. The public search assembly is the deliberate exception: a soft shadow distinguishes the working search form from the blue hero ground. Its exact shadow lives in the sidecar.
@@ -194,6 +196,8 @@ Search fields use transparent backgrounds inside a shared white assembly, dark t
 
 Public navigation uses a white sticky band, thin bottom rule, and medium-weight labels. Current and hovered links become blue with a bottom indicator. At narrower widths, the inline links give way to an explicit expandable mobile menu. Workspace side navigation highlights the current destination with a blue wash and blue text. Preserve current-page semantics and mobile menu expanded state.
 
+Candidate and recruiter navigation uses the compact inset sidebar described above. Keep its header toggle, icon-only collapsed rail, and three-link footer inside the persistent role layout; Staff navigation remains unchanged.
+
 ### Search Assembly
 
 Keyword, location, and action share a gently rounded, softly elevated white surface. This is the recurring public-to-workspace discovery pattern. Guests and signed-in candidates share one public job browser: the guest catalogue is the default, a keyword reveals the two-column list and detail layout, and the filter panel appears with that keyword view. Job titles link to the full listing page, while selecting a card updates the detail pane in place. A keyword or location field must remain independently focusable on every device.
@@ -208,6 +212,9 @@ Short color and border transitions support state changes. Reduced-motion prefere
 - Do keep muted text on light surfaces and preserve visible field labels and focus outlines.
 - Do adapt grids and search controls to a single column on small phones.
 - Do preserve role-specific routes, existing content, and the distinction between simulated and integrated capabilities.
+- Do keep the Candidate/recruiter sidebar and header mounted while nested navigation changes only the main view.
+- Do keep the exact three role-aware quick links at the bottom of both Candidate and recruiter sidebars.
+- Do keep the compact collapsible rail scoped to Candidate and recruiter; preserve the Staff sidebar.
 
 ### Don't:
 
@@ -215,6 +222,7 @@ Short color and border transitions support state changes. Reduced-motion prefere
 - Don't introduce a different visual identity for a workspace or authentication page.
 - Don't strengthen unverified product claims or document simulated actions as production integrations.
 - Don't inherit legacy icon-font or decorative eyebrow treatments as new component patterns.
+- Don't restore large icon wells or oversized sidebar icons to the Candidate/recruiter rail.
 
 This record is extracted from `src/styles.css`, `src/career.css`, shared shells, authentication layout, the fixed theme provider, and the Guardian landing implementation. Existing Material Symbols usage in some workspace components and uppercase workspace eyebrows are legacy exceptions, not patterns for new UI. The stale stylesheet comment about saved themes does not represent runtime behavior: the theme provider fixes Guardian Blue and clears the legacy preference.
 
@@ -230,9 +238,11 @@ Illustrations are supporting content, not evidence of verification, safety, or l
 
 ### Shared workspace navigation
 
-Staff, recruiter, and candidate sidebars use the same `.workspace-navigation` / `.workspace-nav-link` pattern from `components/admin/sidebar.css`: 56px minimum rows, 12px corners, 40px icon wells, 22px semantic glyphs, and 6px row gaps. Selection uses blue wash, deep-blue text, a quiet border, and a blue icon well. Hover uses the page ground; it does not mark an item current or move the row. Focus has a visible blue outline. Locked recruiter rows remain non-interactive and retain their permission explanation. Footer links have 44px minimum hit areas. Labels may wrap.
+The GW-95 sidebar update applies to Candidate and recruiter workspaces; Staff navigation keeps its existing layout. Candidate and recruiter use a light inset panel with 44px navigation targets, standalone 20px icons, muted ink, and a quiet blue selected ground. Do not add the old large icon wells to these two rails. Locked recruiter rows remain non-interactive and keep their permission explanation.
 
-Overview routes must use exact router matching (`activeOptions.exact`); section routes remain selected on their child pages. Only the destination matching the current route receives `aria-current="page"`. Mobile keeps explicit open/close controls and Escape dismissal. This convention preserves each portal's routes, role visibility, and actions.
+The sidebar expands to 244px and collapses to a 76px icon rail. A 44×44 header control toggles it; only an explicit toggle animates the grid for 240ms with short label fades (90–140ms). Restoring the saved display preference or changing viewport size does not animate; reduced-motion preference disables the transition. Labels stay accessible through their names and tooltips while collapsed. On mobile, use the full drawer, explicit open/close controls, Escape dismissal, and focus handling.
+
+Both Candidate and recruiter footers contain exactly these three destinations, in this order: **Cài đặt tài khoản**, **Chuyển phân hệ**, **Trang chủ**. Account and workspace destinations remain role-aware. Overview routes use exact matching; only the current destination receives `aria-current="page"`. Keep these route and role boundaries when extending navigation.
 
 Local size exceptions retained for existing compact metadata and sidebar footers are 12px and 13px. The illustrated desktop landing heading uses a 32–48px fluid range to keep the full-width search comfortably beneath the copy/art grid; the existing phone headline remains 32px.
 

@@ -76,6 +76,14 @@ function ErrorComponent({ error, reset }: { error: unknown; reset: () => void })
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   beforeLoad: ({ location }) => {
     const path = location.pathname;
+    const canonical = path
+      .replace(/^\/candidate(?=\/|$)/, "/can")
+      .replace(/^\/recruiter(?=\/|$)/, "/rec");
+    if (!IS_STAFF_PORTAL && canonical !== path)
+      throw redirect({
+        href: canonical + location.searchStr + (location.hash ? `#${location.hash}` : ""),
+        replace: true,
+      });
     const staffDestination =
       path === "/admin/job-approvals" ? "/staff/jobs" : path.replace(/^\/admin(?=\/|$)/, "/staff");
     const staffPath = /^\/(staff|admin)(?:\/|$)/.test(path);
@@ -160,8 +168,17 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+import { AUTH_SESSION_EVENT, hasAuthSession } from "../services/auth";
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useEffect(() => {
+    const clearPrivateCache = () => {
+      if (!hasAuthSession()) queryClient.clear();
+    };
+    window.addEventListener(AUTH_SESSION_EVENT, clearPrivateCache);
+    return () => window.removeEventListener(AUTH_SESSION_EVENT, clearPrivateCache);
+  }, [queryClient]);
 
   return (
     <QueryClientProvider client={queryClient}>

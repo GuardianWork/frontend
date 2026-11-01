@@ -1,11 +1,11 @@
 ---
 version: 1
-slug: "src-routes-candidate-jobs-apply-tsx"
-primary_target: "src/routes/candidate/jobs_.apply.tsx"
+slug: "src-routes-can-jobs-apply-tsx"
+primary_target: "src/routes/can/jobs_.apply.tsx"
 related_targets:
   [
     "src/components/candidate/JobApplyPage.tsx",
-    "src/routes/candidate/jobs.tsx",
+    "src/routes/can/jobs.tsx",
     "src/lib/candidate-jobs.ts",
     "src/lib/cv-file.ts",
     "src/context/CandidateContext.tsx",
@@ -15,7 +15,7 @@ related_targets:
 
 # GuardianWork job application
 
-Scope: `/candidate/jobs/apply`, the single screen a candidate lands on from the Apply action in `/candidate/jobs`. Visitor mode: Operate. The candidate is signed in, has chosen one listing, and is confirming an application they already intend to send.
+Scope: `/can/jobs/apply`, the single screen a candidate lands on from the Apply action in `/can/jobs`. Visitor mode: Operate. The candidate is signed in, has chosen one listing, and is confirming an application they already intend to send.
 
 ## Direction contract
 

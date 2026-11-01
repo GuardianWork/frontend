@@ -74,8 +74,8 @@ test("an unavailable API or invalid success response never signs a user in", asy
 });
 
 test("portal selection is an onboarding intent; admin destination requires the server role", () => {
-  assert.equal(getLoginDestination(user, "candidate"), "/jobs");
-  assert.equal(getLoginDestination(user, "recruiter"), "/recruiter/verification");
+  assert.equal(getLoginDestination(user, "candidate"), "/can/jobs");
+  assert.equal(getLoginDestination(user, "recruiter"), "/rec/verification");
   assert.equal(getLoginDestination({ ...user, role: "ADMIN" }, "candidate"), "/admin");
   assert.equal(getLoginDestination({ ...user, role: "STAFF" }, "candidate"), "/staff");
 });
@@ -158,7 +158,7 @@ test("/me loads authoritative identity and OWNER membership without changing acc
   const me = await loadCurrentUser();
   assert.equal(me.role, "USER");
   assert.deepEqual(getCurrentUser().activeMembership, activeMembership);
-  assert.equal(getLoginDestination(me, "recruiter"), "/recruiter");
+  assert.equal(getLoginDestination(me, "recruiter"), "/rec");
   delete globalThis.sessionStorage;
 });
 

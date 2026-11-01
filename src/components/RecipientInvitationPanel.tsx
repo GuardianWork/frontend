@@ -34,7 +34,7 @@ export function RecipientInvitationPanel() {
         setSecret(null);
         setAccepted(true);
         await context?.refresh();
-        await navigate({ to: "/recruiter" });
+        await navigate({ to: "/rec" });
       }
     } catch (cause) {
       setError(recipientInvitationError(cause));
@@ -99,12 +99,12 @@ export function RecipientInvitationPanel() {
           </button>
         )}
         {accepted ? (
-          <Link to="/recruiter" className="recruiter-primary inline-flex min-h-11 items-center">
+          <Link to="/rec" className="recruiter-primary inline-flex min-h-11 items-center">
             Về không gian tuyển dụng
           </Link>
         ) : (
           <Link
-            to="/recruiter/verification"
+            to="/rec/verification"
             className="inline-flex min-h-11 items-center px-3 text-sm font-semibold text-primary"
           >
             Đăng ký công ty của bạn

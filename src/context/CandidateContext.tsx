@@ -1,4 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
+import { useAuthUser } from "@/hooks/useAuthUser";
+import { useCandidateProfile } from "@/hooks/useAccountIdentity";
+import { useRouterState } from "@tanstack/react-router";
 import React, { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 export interface CandidateProfile {
@@ -34,6 +37,8 @@ export interface CandidateEducation {
 }
 
 export interface CandidateProfileDetails {
+  firstName: string;
+  lastName: string;
   fullName: string;
   phone: string;
   email: string;
@@ -135,6 +140,8 @@ const DEFAULT_PROFILE: CandidateProfile = {
 };
 
 const DEFAULT_PROFILE_DETAILS: CandidateProfileDetails = {
+  firstName: "",
+  lastName: "",
   fullName: DEFAULT_PROFILE.name,
   phone: "0987654321",
   email: DEFAULT_PROFILE.email,
@@ -242,6 +249,9 @@ const CandidateContext = createContext<CandidateContextType>({
 });
 
 export function CandidateProvider({ children }: { children: ReactNode }) {
+  const user = useAuthUser();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const serverProfile = useCandidateProfile(pathname.startsWith("/can"));
   const [profile, setProfile] = useState<CandidateProfile>(DEFAULT_PROFILE);
   const [profileDetails, setProfileDetails] =
     useState<CandidateProfileDetails>(DEFAULT_PROFILE_DETAILS);
@@ -263,6 +273,45 @@ export function CandidateProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("storage", sync);
   }, []);
 
+  useEffect(() => {
+    setCvs((previous) => {
+      for (const cv of previous) if (cv.previewUrl) URL.revokeObjectURL(cv.previewUrl);
+      return DEFAULT_CVS;
+    });
+    setProfile(DEFAULT_PROFILE);
+    setSavedJobs([]);
+    setProfileDetails({
+      ...DEFAULT_PROFILE_DETAILS,
+      firstName: "",
+      lastName: "",
+      fullName: "",
+      phone: "",
+      email: "",
+      skills: [],
+      experience: "",
+    });
+  }, [user?.id]);
+
+  const sharedProfile = React.useMemo(
+    () => ({
+      ...profileDetails,
+      firstName: user?.firstName || "",
+      lastName: user?.lastName || "",
+      fullName:
+        serverProfile.data?.fullName || (user ? `${user.firstName} ${user.lastName}`.trim() : ""),
+      email: user?.email || "",
+      ...(serverProfile.data
+        ? {
+            phone: serverProfile.data.phoneNumber || "",
+            avatarUrl: serverProfile.data.avatarUrl,
+            isPublic: serverProfile.data.isPublic,
+            skills: serverProfile.data.skills,
+            experience: serverProfile.data.experienceSummary || "",
+          }
+        : {}),
+    }),
+    [profileDetails, user, serverProfile.data],
+  );
   const addCv = (input: CandidateCvInput) => {
     if (cvs.length >= MAX_CV_COUNT) return null;
 
@@ -322,9 +371,15 @@ export function CandidateProvider({ children }: { children: ReactNode }) {
   return (
     <CandidateContext.Provider
       value={{
-        profile,
+        profile: {
+          ...profile,
+          name: sharedProfile.fullName,
+          shortName: sharedProfile.firstName,
+          email: sharedProfile.email,
+          phone: sharedProfile.phone,
+        },
         setProfile,
-        profileDetails,
+        profileDetails: sharedProfile,
         setProfileDetails,
         cvs,
         addCv,

@@ -108,7 +108,7 @@ function InvitationPage() {
             {result}
           </p>
           <Link
-            to={accepted ? "/recruiter" : "/candidate/jobs"}
+            to={accepted ? "/rec" : "/can/jobs"}
             className="recruiter-primary inline-flex min-h-11 items-center"
           >
             {accepted ? "Vào không gian tuyển dụng" : "Tiếp tục tìm việc"}

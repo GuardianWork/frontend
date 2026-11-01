@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { AdminShell, Icon } from "@/components/AdminShell";
 
-export const Route = createFileRoute("/candidate/copilot")({
+export const Route = createFileRoute("/can/copilot")({
   head: () => ({
     meta: [
       { name: "robots", content: "noindex, nofollow" },

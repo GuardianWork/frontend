@@ -1,5 +1,5 @@
 import { GlobeIcon, MenuIcon, CloseIcon, ArrowRightIcon } from "@/components/icons";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useHydrated, useRouterState } from "@tanstack/react-router";
 import { ShieldCheck } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
@@ -16,6 +16,7 @@ export function Header({
   const { appliedJobs, savedJobs } = useCandidate();
   const user = useAuthUser();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const menuToggle = useRef<HTMLButtonElement>(null);
   const hydrated = useHydrated();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const currentHref = useRouterState({ select: (state) => state.location.href });
@@ -28,19 +29,20 @@ export function Header({
   const isActive = (to: string) => pathname === to;
   useEffect(() => {
     const close = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
+      if (event.key === "Escape" && mobileOpen) {
         setMobileOpen(false);
+        menuToggle.current?.focus();
       }
     };
     window.addEventListener("keydown", close);
     return () => window.removeEventListener("keydown", close);
-  }, []);
+  }, [mobileOpen]);
   // Guests get public discovery only; the candidate workspace links need a session.
   const links = user
     ? [
-        { to: "/jobs", label: dict.navWorkbench.jobs },
-        { to: "/candidate/profile", label: dict.navWorkbench.profile },
-        { to: "/candidate/copilot", label: dict.navWorkbench.legalChat },
+        { to: "/can/jobs", label: dict.navWorkbench.jobs },
+        { to: "/can/profile", label: dict.navWorkbench.profile },
+        { to: "/can/copilot", label: dict.navWorkbench.legalChat },
       ]
     : [{ to: "/jobs", label: dict.nav.findJob }];
   const loginSearch =
@@ -74,6 +76,11 @@ export function Header({
           ))}
         </nav>
         <div className="career-header__tools">
+          {user?.role === "USER" && (
+            <Link to="/can/account" className="career-header__login">
+              {en ? "Account settings" : "Cài đặt tài khoản"}
+            </Link>
+          )}
           <button
             disabled={!hydrated}
             className="career-language"
@@ -85,7 +92,7 @@ export function Header({
           </button>
           {user ? (
             <Link
-              to="/candidate/profile"
+              to="/can/profile"
               className="career-header__account"
               aria-label={en ? `Your profile, ${displayName}` : `Hồ sơ của ${displayName}`}
               title={displayName}
@@ -112,6 +119,7 @@ export function Header({
             </Link>
           )}
           <button
+            ref={menuToggle}
             disabled={!hydrated}
             className="career-icon-button career-header__toggle"
             aria-label={
@@ -161,6 +169,11 @@ export function Header({
           <Link to="/recruit" onClick={() => setMobileOpen(false)}>
             {dict.nav.forCompanies}
           </Link>
+          {user?.role === "USER" && (
+            <Link to="/can/account" onClick={() => setMobileOpen(false)}>
+              Cài đặt tài khoản
+            </Link>
+          )}
           {user && isStaffUser(user) && (
             <Link to="/compliance" onClick={() => setMobileOpen(false)}>
               Admin Console

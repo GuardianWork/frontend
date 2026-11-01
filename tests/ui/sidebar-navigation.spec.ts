@@ -32,7 +32,7 @@ test("candidate navigation shares Staff styling and follows selection on mobile 
   page,
 }, info) => {
   await login(page, "candidate_demo");
-  await page.goto("/candidate");
+  await page.goto("/can");
   const nav = page.getByRole("navigation", { name: "Điều hướng chính", exact: true });
   if (info.project.name === "mobile")
     await page.getByRole("button", { name: "Mở điều hướng" }).click();

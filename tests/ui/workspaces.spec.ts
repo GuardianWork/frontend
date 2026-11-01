@@ -26,8 +26,8 @@ test("guests can search and read job listings without an account", async ({ page
 test("candidate pages accept search and profile edits", async ({ page }, info) => {
   test.setTimeout(60000);
   await login(page, "candidate_demo");
-  const report = await auditInputs(page, ["/jobs", "/candidate/profile", "/candidate/copilot"]);
-  await page.goto("/candidate/profile", { waitUntil: "domcontentloaded" });
+  const report = await auditInputs(page, ["/jobs", "/can/profile", "/can/copilot"]);
+  await page.goto("/can/profile", { waitUntil: "domcontentloaded" });
   await page.getByRole("button", { name: "Chỉnh sửa hồ sơ" }).click();
   const editor = page.getByRole("dialog");
   await editor.getByLabel("Họ tên").fill("Chuyên viên kế toán");
@@ -51,12 +51,12 @@ test("recruiter pages keep pending company data read-only and other searches edi
   test.setTimeout(60000);
   await login(page, "owner_demo", true);
   const report = await auditInputs(page, [
-    "/recruiter",
-    "/recruiter/jobs",
-    "/recruiter/applications",
-    "/recruiter/talent",
-    "/recruiter/members",
-    "/recruiter/verification",
+    "/rec",
+    "/rec/jobs",
+    "/rec/applications",
+    "/rec/talent",
+    "/rec/members",
+    "/rec/verification",
   ]);
   await expect(page.locator('[name="companyName"]')).toBeDisabled();
   await expect(

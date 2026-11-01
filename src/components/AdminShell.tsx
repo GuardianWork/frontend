@@ -1,3 +1,7 @@
+import { SidebarState } from "@/context/sidebar-state";
+import { SidebarCollapseButton, SidebarLabel } from "./SidebarControls";
+import { useWorkspaceLayout } from "@/context/WorkspaceLayoutContext";
+import { WorkspaceFooter } from "./WorkspaceFooter";
 import { useNavigationFocus } from "@/hooks/useNavigationFocus";
 import * as SemanticIcons from "@/components/icons";
 import "./workspace.css";
@@ -7,12 +11,11 @@ import {
   CandidateProfileIcon,
   MenuIcon,
   CloseIcon,
-  LockIcon,
   GlobeIcon,
 } from "@/components/icons";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { BriefcaseBusiness, ChevronDown, X, ShieldCheck } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useContext, useEffect, useState, type ReactNode } from "react";
 import { StaffShell } from "./StaffShell";
 import { LogoutButton } from "./LogoutButton";
 import { RecruiterShell } from "./RecruiterShell";
@@ -35,17 +38,17 @@ const ADMIN_JOB_NAV: NavItem[] = [
 ];
 
 const CANDIDATE_NAV: NavItem[] = [
-  { to: "/jobs", label: "Tìm việc làm", icon: "work" },
-  { to: "/candidate/cvs", label: "Hồ sơ xin việc", icon: "description" },
-  { to: "/candidate/profile", label: "Hồ sơ của tôi", icon: "badge" },
-  { to: "/candidate/copilot", label: "Trợ lý pháp lý", icon: "gavel" },
+  { to: "/can/jobs", label: "Tìm việc làm", icon: "work" },
+  { to: "/can/cvs", label: "Hồ sơ xin việc", icon: "description" },
+  { to: "/can/profile", label: "Hồ sơ của tôi", icon: "badge" },
+  { to: "/can/copilot", label: "Trợ lý pháp lý", icon: "gavel" },
 ];
 
 const RECRUITER_NAV: NavItem[] = [
-  { to: "/recruiter", label: "Recruiter Hub", icon: "hub" },
-  { to: "/recruiter/verification", label: "Xác thực Pháp nhân", icon: "verified" },
-  { to: "/recruiter/talent", label: "Talent Profiles", icon: "person_search" },
-  { to: "/recruiter/jobs", label: "Manage Jobs", icon: "work" },
+  { to: "/rec", label: "Recruiter Hub", icon: "hub" },
+  { to: "/rec/verification", label: "Xác thực Pháp nhân", icon: "verified" },
+  { to: "/rec/talent", label: "Talent Profiles", icon: "person_search" },
+  { to: "/rec/jobs", label: "Manage Jobs", icon: "work" },
 ];
 
 // Transitional aliases for routed legacy JSX; unresolved consumers retain Material Symbols.
@@ -101,7 +104,16 @@ function Icon({ name, className = "" }: { name: string; className?: string }) {
   );
 }
 
-export function AdminShell({
+export function AdminShell(props: {
+  title: string;
+  role?: ShellRole;
+  topNavExtras?: ReactNode;
+  children: ReactNode;
+}) {
+  const layout = useWorkspaceLayout();
+  return layout ? <>{props.children}</> : <AdminShellFrame {...props} />;
+}
+function AdminShellFrame({
   title,
   role: forcedRole,
   topNavExtras,
@@ -112,6 +124,7 @@ export function AdminShell({
   topNavExtras?: ReactNode;
   children: ReactNode;
 }) {
+  const { collapsed, animate } = useContext(SidebarState);
   const [menuOpen, setMenuOpen] = useState(false);
   useNavigationFocus(menuOpen, "workspace-navigation");
   useEffect(() => {
@@ -141,9 +154,9 @@ export function AdminShell({
   // Infer role from pathname or use forcedRole
   let currentRole: ShellRole = forcedRole || "admin";
   if (!forcedRole) {
-    if (pathname.startsWith("/candidate")) {
+    if (pathname.startsWith("/can")) {
       currentRole = "candidate";
-    } else if (pathname.startsWith("/recruiter")) {
+    } else if (pathname.startsWith("/rec")) {
       currentRole = "recruiter";
     } else {
       currentRole = "admin";
@@ -172,7 +185,7 @@ export function AdminShell({
           sub: "Talent Safeguard & Jobs",
           icon: "person",
           cta: "Tìm việc chuẩn Luật",
-          ctaTo: "/jobs",
+          ctaTo: "/can/jobs",
         }
       : currentRole === "recruiter"
         ? {
@@ -180,7 +193,7 @@ export function AdminShell({
             sub: "Talent Sourcing & Pipeline",
             icon: "hub",
             cta: "Đăng tin tuyển dụng",
-            ctaTo: "/recruiter",
+            ctaTo: "/rec",
           }
         : {
             title: "Quản trị",
@@ -192,46 +205,48 @@ export function AdminShell({
 
   const renderNavItem = (item: NavItem) => {
     const active =
-      item.to === "/admin" || item.to === "/recruiter" || item.to === "/candidate"
+      item.to === "/admin" || item.to === "/rec" || item.to === "/can"
         ? pathname === item.to
         : pathname.startsWith(item.to);
     return (
-      <Link
-        key={item.to}
-        to={item.to}
-        activeOptions={{
-          exact: item.to === "/admin" || item.to === "/recruiter" || item.to === "/candidate",
-        }}
-        aria-current={active ? "page" : undefined}
-        onClick={() => setMenuOpen(false)}
-        className={
-          currentRole === "candidate"
-            ? "workspace-nav-link"
-            : active
-              ? "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-semibold bg-surface-container text-charcoal-text"
-              : "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-charcoal-40 hover:text-charcoal-text hover:bg-charcoal-04 transition-colors"
-        }
-      >
-        {currentRole === "candidate" ? (
-          <>
-            <span className="workspace-nav-icon">
-              {item.icon === "work" ? (
-                <JobIcon size={20} />
-              ) : item.icon === "gavel" ? (
-                <LegalReferenceIcon size={20} />
-              ) : (
-                <CandidateProfileIcon size={20} />
-              )}
-            </span>
-            <span className="workspace-nav-label">{item.label}</span>
-          </>
-        ) : (
-          <>
-            <Icon name={item.icon} className="!text-xl" />
-            {item.label}
-          </>
-        )}
-      </Link>
+      <SidebarLabel key={item.to} label={item.label}>
+        <Link
+          aria-label={item.label}
+          to={item.to}
+          activeOptions={{
+            exact: item.to === "/admin" || item.to === "/rec" || item.to === "/can",
+          }}
+          aria-current={active ? "page" : undefined}
+          onClick={() => setMenuOpen(false)}
+          className={
+            currentRole === "candidate"
+              ? "workspace-nav-link"
+              : active
+                ? "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-semibold bg-surface-container text-charcoal-text"
+                : "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-charcoal-40 hover:text-charcoal-text hover:bg-charcoal-04 transition-colors"
+          }
+        >
+          {currentRole === "candidate" ? (
+            <>
+              <span className="workspace-nav-icon">
+                {item.icon === "work" ? (
+                  <JobIcon size={20} />
+                ) : item.icon === "gavel" ? (
+                  <LegalReferenceIcon size={20} />
+                ) : (
+                  <CandidateProfileIcon size={20} />
+                )}
+              </span>
+              <span className="workspace-nav-label">{item.label}</span>
+            </>
+          ) : (
+            <>
+              <Icon name={item.icon} className="!text-xl" />
+              {item.label}
+            </>
+          )}
+        </Link>
+      </SidebarLabel>
     );
   };
 
@@ -246,6 +261,8 @@ export function AdminShell({
 
   return (
     <div
+      data-sidebar-collapsed={collapsed}
+      data-sidebar-animate={animate}
       className={`${currentRole === "admin" ? "admin-workspace " : "candidate-workspace "}workspace-shell flex h-screen w-full overflow-hidden bg-background text-charcoal-text`}
     >
       {menuOpen && (
@@ -261,7 +278,7 @@ export function AdminShell({
         className={`${menuOpen ? "flex" : "hidden"} workspace-sidebar fixed inset-y-0 left-0 z-50 w-64 flex-col border-r border-warm-border bg-paper-white md:static md:z-20 md:flex md:h-screen md:shrink-0`}
       >
         <div className="workspace-brand p-5 border-b border-warm-border">
-          <div className="flex items-center gap-3">
+          <div className="workspace-brand__identity flex items-center gap-3">
             <div className="w-10 h-10 rounded-md bg-primary text-on-primary flex items-center justify-center">
               {currentRole === "candidate" ? (
                 <ShieldCheck size={24} aria-hidden="true" />
@@ -269,7 +286,7 @@ export function AdminShell({
                 <Icon name={roleMeta.icon} className="!text-2xl" />
               )}
             </div>
-            <div>
+            <div className="workspace-brand__copy">
               <h2 className="font-semibold text-lg tracking-tight leading-tight text-primary">
                 GuardianWork
               </h2>
@@ -334,34 +351,24 @@ export function AdminShell({
           )}
         </nav>
 
-        {/* Bottom CTA & Links */}
-        <div className="workspace-sidebar-footer p-4 border-t border-warm-border flex flex-col gap-3">
-          {currentRole !== "admin" && (
-            <Link
-              to={roleMeta.ctaTo}
-              className="workspace-footer-cta w-full py-2.5 px-4 bg-primary text-on-primary font-medium rounded-md hover:bg-primary-hover transition-colors flex items-center justify-center gap-2 text-xs"
-            >
-              <JobIcon size={16} />
-              {roleMeta.cta}
-            </Link>
-          )}
-          <div className="flex flex-col gap-1">
-            <Link to="/login" className="workspace-footer-link">
-              <LockIcon size={18} />
-              Xác thực định danh
-            </Link>
+        {currentRole === "candidate" ? (
+          <WorkspaceFooter role="candidate" onNavigate={() => setMenuOpen(false)} />
+        ) : (
+          <div className="workspace-sidebar-footer">
             <Link to="/vn" className="workspace-footer-link">
-              <GlobeIcon size={18} />
-              Trang chủ GuardianWork
+              <GlobeIcon size={18} /> Trang chủ GuardianWork
             </Link>
           </div>
-        </div>
+        )}
       </aside>
 
       {/* Main Container */}
       <div className="workspace-content min-w-0 flex-1 flex flex-col h-screen overflow-hidden bg-parchment-bg">
         <header className="w-full bg-paper-white border-b border-warm-border h-20 px-4 md:px-8 flex items-center justify-between shrink-0 z-10">
           <div className="min-w-0 flex items-center gap-4">
+            {currentRole === "candidate" && (
+              <SidebarCollapseButton controls="workspace-navigation" />
+            )}
             <button
               aria-label="Mở điều hướng"
               aria-expanded={menuOpen}
@@ -382,7 +389,7 @@ export function AdminShell({
           <div className="flex items-center gap-3 md:gap-5">
             {currentRole === "recruiter" && (
               <Link
-                to="/recruiter/verification"
+                to="/rec/verification"
                 className="hidden sm:flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-colors"
               >
                 <Icon name="verified" className="!text-sm text-primary" />

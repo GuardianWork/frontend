@@ -1,10 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { loadCurrentUser } from "@/services/auth";
 import { ApiError } from "@/services/api";
 import { confirmEmailVerification, requestEmailVerification } from "@/services/emailVerification";
 
-export function EmailVerificationPanel() {
+import { useRefreshIdentity } from "@/hooks/useAccountIdentity";
+import { accountError } from "@/services/accountControl";
+
+export function EmailVerificationPanel({
+  purpose = "recruiter",
+}: {
+  purpose?: "recruiter" | "account";
+}) {
+  const refreshIdentity = useRefreshIdentity();
+  const lock = useRef(false);
   const user = useAuthUser();
   const [operation, setOperation] = useState<"request" | "confirm" | "refresh" | null>(null);
   const [code, setCode] = useState("");
@@ -21,35 +30,36 @@ export function EmailVerificationPanel() {
     return () => window.clearInterval(timer);
   }, []);
   async function refreshVerification() {
-    if (busy) return;
+    if (lock.current) return;
+    lock.current = true;
     setOperation("refresh");
     setError("");
     try {
-      const current = await loadCurrentUser();
+      const current = await refreshIdentity();
       setMessage(
-        current.recruitingEmailEligible
+        current.emailVerified
           ? "Email đã được xác minh."
           : "Email chưa được xác minh. Nhập mã 6 chữ số trong email để xác nhận.",
       );
     } catch (cause) {
-      setError(
-        cause instanceof Error
-          ? cause.message
-          : "Không thể tải trạng thái xác minh. Vui lòng thử lại.",
-      );
+      setError(accountError(cause, "verification"));
     } finally {
+      lock.current = false;
       setOperation(null);
     }
   }
   async function request() {
-    if (busy) return;
+    if (lock.current) return;
+    lock.current = true;
     setOperation("request");
     setError("");
     setMessage("");
     try {
       const result = await requestEmailVerification();
       setNow(Date.now());
-      setNextRequestAt(result.nextRequestAt ? Date.parse(result.nextRequestAt) : 0);
+      setNextRequestAt(
+        result.nextRequestAt ? Date.parse(result.nextRequestAt) : Date.now() + 60000,
+      );
       setExpiresAt(result.expiresAt ? Date.parse(result.expiresAt) : 0);
       setCode("");
       setMessage(
@@ -61,28 +71,34 @@ export function EmailVerificationPanel() {
       );
       if (result.alreadyVerified) {
         setConfirmed(true);
-        await loadCurrentUser();
+        await refreshIdentity();
       }
     } catch (cause) {
       if (cause instanceof ApiError && cause.status === 429) {
         setNow(Date.now());
-        setNextRequestAt(Date.now() + (cause.retryAfterSeconds ?? 60) * 1000);
+        setNextRequestAt(
+          Math.max(
+            cause.nextRequestAt ? Date.parse(cause.nextRequestAt) || 0 : 0,
+            Date.now() + (cause.retryAfterSeconds ?? 60) * 1000,
+          ),
+        );
         setError("Bạn vừa yêu cầu mã. Vui lòng chờ trước khi gửi lại.");
-      } else
-        setError(cause instanceof Error ? cause.message : "Không thể gửi mã. Vui lòng thử lại.");
+      } else setError(accountError(cause, "verification"));
     } finally {
+      lock.current = false;
       setOperation(null);
     }
   }
   async function confirm(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (busy || confirmed) return;
+    if (lock.current || confirmed) return;
     setError("");
     setMessage("");
     if (!/^[0-9]{6}$/.test(code)) {
       setError("Nhập đúng 6 chữ số trong email xác minh.");
       return;
     }
+    lock.current = true;
     setOperation("confirm");
     try {
       await confirmEmailVerification(code);
@@ -90,7 +106,7 @@ export function EmailVerificationPanel() {
       setConfirmed(true);
       setMessage("Email đã được xác minh.");
       try {
-        await loadCurrentUser();
+        await refreshIdentity();
       } catch {
         setError(
           "Email đã được xác minh nhưng chưa tải được quyền tài khoản. Chọn cập nhật trạng thái để thử lại.",
@@ -100,11 +116,10 @@ export function EmailVerificationPanel() {
       setError(
         cause instanceof ApiError && cause.status === 400
           ? "Mã không hợp lệ, đã hết hạn hoặc không còn sử dụng được. Kiểm tra mã mới nhất; nếu vẫn không được, hãy yêu cầu mã mới."
-          : cause instanceof Error
-            ? cause.message
-            : "Không thể xác minh email. Vui lòng thử lại.",
+          : accountError(cause, "verification"),
       );
     } finally {
+      lock.current = false;
       setOperation(null);
     }
   }
@@ -114,11 +129,12 @@ export function EmailVerificationPanel() {
       aria-labelledby="email-proof-title"
     >
       <h2 id="email-proof-title" className="text-lg font-semibold">
-        Xác minh email để tuyển dụng
+        {purpose === "account" ? "Xác minh email đã đăng ký" : "Xác minh email để tuyển dụng"}
       </h2>
       <p className="mt-2 max-w-2xl text-sm leading-6 text-charcoal-83">
-        Xác minh {user?.email} trước khi đăng ký công ty, nhận lời mời hoặc quản lý tuyển dụng. Bạn
-        vẫn có thể sử dụng không gian ứng viên.
+        {purpose === "account"
+          ? `Mã chỉ gửi đến ${user?.email}. Xác minh để đổi mật khẩu hoặc quản lý trạng thái tài khoản. Bạn vẫn có thể chỉnh sửa thông tin cá nhân khi chưa xác minh.`
+          : `Xác minh ${user?.email} trước khi đăng ký công ty, nhận lời mời hoặc quản lý tuyển dụng. Bạn vẫn có thể sử dụng không gian ứng viên.`}
       </p>
       {!confirmed && (
         <>

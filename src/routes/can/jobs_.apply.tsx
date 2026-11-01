@@ -5,7 +5,7 @@ interface ApplySearch {
   job?: string;
 }
 
-export const Route = createFileRoute("/candidate/jobs_/apply")({
+export const Route = createFileRoute("/can/jobs_/apply")({
   validateSearch: (search: Record<string, unknown>): ApplySearch => ({
     job: typeof search.job === "string" && search.job ? search.job : undefined,
   }),

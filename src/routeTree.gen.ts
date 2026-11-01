@@ -10,7 +10,10 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AccountRouteImport } from './routes/account'
+import { Route as AccountRecoveryRouteImport } from './routes/account-recovery'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
+import { Route as CanRouteImport } from './routes/can'
 import { Route as CandidatesRouteImport } from './routes/candidates'
 import { Route as CompanyInvitationsRouteImport } from './routes/company-invitations'
 import { Route as ComplianceRouteImport } from './routes/compliance'
@@ -18,6 +21,7 @@ import { Route as CopilotRouteImport } from './routes/copilot'
 import { Route as JobsRouteImport } from './routes/jobs'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as RecRouteImport } from './routes/rec'
 import { Route as RecruitRouteImport } from './routes/recruit'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -34,19 +38,21 @@ import { Route as AdminMonitoringRouteImport } from './routes/admin/monitoring'
 import { Route as AdminReportsRouteImport } from './routes/admin/reports'
 import { Route as AdminTasksRouteImport } from './routes/admin/tasks'
 import { Route as AdminVerificationsRouteImport } from './routes/admin/verifications'
-import { Route as CandidateIndexRouteImport } from './routes/candidate/index'
-import { Route as CandidateCopilotRouteImport } from './routes/candidate/copilot'
-import { Route as CandidateCvsRouteImport } from './routes/candidate/cvs'
-import { Route as CandidateJobsRouteImport } from './routes/candidate/jobs'
-import { Route as CandidateProfileRouteImport } from './routes/candidate/profile'
-import { Route as RecruiterIndexRouteImport } from './routes/recruiter/index'
-import { Route as RecruiterApplicationsRouteImport } from './routes/recruiter/applications'
-import { Route as RecruiterHubRouteImport } from './routes/recruiter/hub'
-import { Route as RecruiterJobsRouteImport } from './routes/recruiter/jobs'
-import { Route as RecruiterMembersRouteImport } from './routes/recruiter/members'
-import { Route as RecruiterProfileRouteImport } from './routes/recruiter/profile'
-import { Route as RecruiterTalentRouteImport } from './routes/recruiter/talent'
-import { Route as RecruiterVerificationRouteImport } from './routes/recruiter/verification'
+import { Route as CanIndexRouteImport } from './routes/can/index'
+import { Route as CanAccountRouteImport } from './routes/can/account'
+import { Route as CanCopilotRouteImport } from './routes/can/copilot'
+import { Route as CanCvsRouteImport } from './routes/can/cvs'
+import { Route as CanJobsRouteImport } from './routes/can/jobs'
+import { Route as CanProfileRouteImport } from './routes/can/profile'
+import { Route as RecIndexRouteImport } from './routes/rec/index'
+import { Route as RecAccountRouteImport } from './routes/rec/account'
+import { Route as RecApplicationsRouteImport } from './routes/rec/applications'
+import { Route as RecHubRouteImport } from './routes/rec/hub'
+import { Route as RecJobsRouteImport } from './routes/rec/jobs'
+import { Route as RecMembersRouteImport } from './routes/rec/members'
+import { Route as RecProfileRouteImport } from './routes/rec/profile'
+import { Route as RecTalentRouteImport } from './routes/rec/talent'
+import { Route as RecVerificationRouteImport } from './routes/rec/verification'
 import { Route as StaffIndexRouteImport } from './routes/staff/index'
 import { Route as StaffAccountsRouteImport } from './routes/staff/accounts'
 import { Route as StaffAnalyticsRouteImport } from './routes/staff/analytics'
@@ -58,16 +64,31 @@ import { Route as StaffMonitoringRouteImport } from './routes/staff/monitoring'
 import { Route as StaffReportsRouteImport } from './routes/staff/reports'
 import { Route as StaffTasksRouteImport } from './routes/staff/tasks'
 import { Route as StaffVerificationsRouteImport } from './routes/staff/verifications'
-import { Route as CandidateJobsApplyRouteImport } from './routes/candidate/jobs_.apply'
+import { Route as CanJobsApplyRouteImport } from './routes/can/jobs_.apply'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AccountRoute = AccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountRecoveryRoute = AccountRecoveryRouteImport.update({
+  id: '/account-recovery',
+  path: '/account-recovery',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AnalyticsRoute = AnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CanRoute = CanRouteImport.update({
+  id: '/can',
+  path: '/can',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CandidatesRoute = CandidatesRouteImport.update({
@@ -103,6 +124,11 @@ const LoginRoute = LoginRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecRoute = RecRouteImport.update({
+  id: '/rec',
+  path: '/rec',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecruitRoute = RecruitRouteImport.update({
@@ -185,70 +211,80 @@ const AdminVerificationsRoute = AdminVerificationsRouteImport.update({
   path: '/admin/verifications',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CandidateIndexRoute = CandidateIndexRouteImport.update({
-  id: '/candidate/',
-  path: '/candidate/',
-  getParentRoute: () => rootRouteImport,
+const CanIndexRoute = CanIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CanRoute,
 } as any)
-const CandidateCopilotRoute = CandidateCopilotRouteImport.update({
-  id: '/candidate/copilot',
-  path: '/candidate/copilot',
-  getParentRoute: () => rootRouteImport,
+const CanAccountRoute = CanAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => CanRoute,
 } as any)
-const CandidateCvsRoute = CandidateCvsRouteImport.update({
-  id: '/candidate/cvs',
-  path: '/candidate/cvs',
-  getParentRoute: () => rootRouteImport,
+const CanCopilotRoute = CanCopilotRouteImport.update({
+  id: '/copilot',
+  path: '/copilot',
+  getParentRoute: () => CanRoute,
 } as any)
-const CandidateJobsRoute = CandidateJobsRouteImport.update({
-  id: '/candidate/jobs',
-  path: '/candidate/jobs',
-  getParentRoute: () => rootRouteImport,
+const CanCvsRoute = CanCvsRouteImport.update({
+  id: '/cvs',
+  path: '/cvs',
+  getParentRoute: () => CanRoute,
 } as any)
-const CandidateProfileRoute = CandidateProfileRouteImport.update({
-  id: '/candidate/profile',
-  path: '/candidate/profile',
-  getParentRoute: () => rootRouteImport,
+const CanJobsRoute = CanJobsRouteImport.update({
+  id: '/jobs',
+  path: '/jobs',
+  getParentRoute: () => CanRoute,
 } as any)
-const RecruiterIndexRoute = RecruiterIndexRouteImport.update({
-  id: '/recruiter/',
-  path: '/recruiter/',
-  getParentRoute: () => rootRouteImport,
+const CanProfileRoute = CanProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => CanRoute,
 } as any)
-const RecruiterApplicationsRoute = RecruiterApplicationsRouteImport.update({
-  id: '/recruiter/applications',
-  path: '/recruiter/applications',
-  getParentRoute: () => rootRouteImport,
+const RecIndexRoute = RecIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => RecRoute,
 } as any)
-const RecruiterHubRoute = RecruiterHubRouteImport.update({
-  id: '/recruiter/hub',
-  path: '/recruiter/hub',
-  getParentRoute: () => rootRouteImport,
+const RecAccountRoute = RecAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => RecRoute,
 } as any)
-const RecruiterJobsRoute = RecruiterJobsRouteImport.update({
-  id: '/recruiter/jobs',
-  path: '/recruiter/jobs',
-  getParentRoute: () => rootRouteImport,
+const RecApplicationsRoute = RecApplicationsRouteImport.update({
+  id: '/applications',
+  path: '/applications',
+  getParentRoute: () => RecRoute,
 } as any)
-const RecruiterMembersRoute = RecruiterMembersRouteImport.update({
-  id: '/recruiter/members',
-  path: '/recruiter/members',
-  getParentRoute: () => rootRouteImport,
+const RecHubRoute = RecHubRouteImport.update({
+  id: '/hub',
+  path: '/hub',
+  getParentRoute: () => RecRoute,
 } as any)
-const RecruiterProfileRoute = RecruiterProfileRouteImport.update({
-  id: '/recruiter/profile',
-  path: '/recruiter/profile',
-  getParentRoute: () => rootRouteImport,
+const RecJobsRoute = RecJobsRouteImport.update({
+  id: '/jobs',
+  path: '/jobs',
+  getParentRoute: () => RecRoute,
 } as any)
-const RecruiterTalentRoute = RecruiterTalentRouteImport.update({
-  id: '/recruiter/talent',
-  path: '/recruiter/talent',
-  getParentRoute: () => rootRouteImport,
+const RecMembersRoute = RecMembersRouteImport.update({
+  id: '/members',
+  path: '/members',
+  getParentRoute: () => RecRoute,
 } as any)
-const RecruiterVerificationRoute = RecruiterVerificationRouteImport.update({
-  id: '/recruiter/verification',
-  path: '/recruiter/verification',
-  getParentRoute: () => rootRouteImport,
+const RecProfileRoute = RecProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => RecRoute,
+} as any)
+const RecTalentRoute = RecTalentRouteImport.update({
+  id: '/talent',
+  path: '/talent',
+  getParentRoute: () => RecRoute,
+} as any)
+const RecVerificationRoute = RecVerificationRouteImport.update({
+  id: '/verification',
+  path: '/verification',
+  getParentRoute: () => RecRoute,
 } as any)
 const StaffIndexRoute = StaffIndexRouteImport.update({
   id: '/staff/',
@@ -305,15 +341,18 @@ const StaffVerificationsRoute = StaffVerificationsRouteImport.update({
   path: '/staff/verifications',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CandidateJobsApplyRoute = CandidateJobsApplyRouteImport.update({
-  id: '/candidate/jobs_/apply',
-  path: '/candidate/jobs/apply',
-  getParentRoute: () => rootRouteImport,
+const CanJobsApplyRoute = CanJobsApplyRouteImport.update({
+  id: '/jobs_/apply',
+  path: '/jobs/apply',
+  getParentRoute: () => CanRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
+  '/account-recovery': typeof AccountRecoveryRoute
   '/analytics': typeof AnalyticsRoute
+  '/can': typeof CanRouteWithChildren
   '/candidates': typeof CandidatesRoute
   '/company-invitations': typeof CompanyInvitationsRoute
   '/compliance': typeof ComplianceRoute
@@ -321,6 +360,7 @@ export interface FileRoutesByFullPath {
   '/jobs': typeof JobsRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
+  '/rec': typeof RecRouteWithChildren
   '/recruit': typeof RecruitRoute
   '/register': typeof RegisterRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -336,17 +376,19 @@ export interface FileRoutesByFullPath {
   '/admin/reports': typeof AdminReportsRoute
   '/admin/tasks': typeof AdminTasksRoute
   '/admin/verifications': typeof AdminVerificationsRoute
-  '/candidate/copilot': typeof CandidateCopilotRoute
-  '/candidate/cvs': typeof CandidateCvsRoute
-  '/candidate/jobs': typeof CandidateJobsRoute
-  '/candidate/profile': typeof CandidateProfileRoute
-  '/recruiter/applications': typeof RecruiterApplicationsRoute
-  '/recruiter/hub': typeof RecruiterHubRoute
-  '/recruiter/jobs': typeof RecruiterJobsRoute
-  '/recruiter/members': typeof RecruiterMembersRoute
-  '/recruiter/profile': typeof RecruiterProfileRoute
-  '/recruiter/talent': typeof RecruiterTalentRoute
-  '/recruiter/verification': typeof RecruiterVerificationRoute
+  '/can/account': typeof CanAccountRoute
+  '/can/copilot': typeof CanCopilotRoute
+  '/can/cvs': typeof CanCvsRoute
+  '/can/jobs': typeof CanJobsRoute
+  '/can/profile': typeof CanProfileRoute
+  '/rec/account': typeof RecAccountRoute
+  '/rec/applications': typeof RecApplicationsRoute
+  '/rec/hub': typeof RecHubRoute
+  '/rec/jobs': typeof RecJobsRoute
+  '/rec/members': typeof RecMembersRoute
+  '/rec/profile': typeof RecProfileRoute
+  '/rec/talent': typeof RecTalentRoute
+  '/rec/verification': typeof RecVerificationRoute
   '/staff/accounts': typeof StaffAccountsRoute
   '/staff/analytics': typeof StaffAnalyticsRoute
   '/staff/audit-logs': typeof StaffAuditLogsRoute
@@ -358,13 +400,15 @@ export interface FileRoutesByFullPath {
   '/staff/tasks': typeof StaffTasksRoute
   '/staff/verifications': typeof StaffVerificationsRoute
   '/admin/': typeof AdminIndexRoute
-  '/candidate/': typeof CandidateIndexRoute
-  '/recruiter/': typeof RecruiterIndexRoute
+  '/can/': typeof CanIndexRoute
+  '/rec/': typeof RecIndexRoute
   '/staff/': typeof StaffIndexRoute
-  '/candidate/jobs/apply': typeof CandidateJobsApplyRoute
+  '/can/jobs/apply': typeof CanJobsApplyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
+  '/account-recovery': typeof AccountRecoveryRoute
   '/analytics': typeof AnalyticsRoute
   '/candidates': typeof CandidatesRoute
   '/company-invitations': typeof CompanyInvitationsRoute
@@ -388,17 +432,19 @@ export interface FileRoutesByTo {
   '/admin/reports': typeof AdminReportsRoute
   '/admin/tasks': typeof AdminTasksRoute
   '/admin/verifications': typeof AdminVerificationsRoute
-  '/candidate/copilot': typeof CandidateCopilotRoute
-  '/candidate/cvs': typeof CandidateCvsRoute
-  '/candidate/jobs': typeof CandidateJobsRoute
-  '/candidate/profile': typeof CandidateProfileRoute
-  '/recruiter/applications': typeof RecruiterApplicationsRoute
-  '/recruiter/hub': typeof RecruiterHubRoute
-  '/recruiter/jobs': typeof RecruiterJobsRoute
-  '/recruiter/members': typeof RecruiterMembersRoute
-  '/recruiter/profile': typeof RecruiterProfileRoute
-  '/recruiter/talent': typeof RecruiterTalentRoute
-  '/recruiter/verification': typeof RecruiterVerificationRoute
+  '/can/account': typeof CanAccountRoute
+  '/can/copilot': typeof CanCopilotRoute
+  '/can/cvs': typeof CanCvsRoute
+  '/can/jobs': typeof CanJobsRoute
+  '/can/profile': typeof CanProfileRoute
+  '/rec/account': typeof RecAccountRoute
+  '/rec/applications': typeof RecApplicationsRoute
+  '/rec/hub': typeof RecHubRoute
+  '/rec/jobs': typeof RecJobsRoute
+  '/rec/members': typeof RecMembersRoute
+  '/rec/profile': typeof RecProfileRoute
+  '/rec/talent': typeof RecTalentRoute
+  '/rec/verification': typeof RecVerificationRoute
   '/staff/accounts': typeof StaffAccountsRoute
   '/staff/analytics': typeof StaffAnalyticsRoute
   '/staff/audit-logs': typeof StaffAuditLogsRoute
@@ -410,15 +456,18 @@ export interface FileRoutesByTo {
   '/staff/tasks': typeof StaffTasksRoute
   '/staff/verifications': typeof StaffVerificationsRoute
   '/admin': typeof AdminIndexRoute
-  '/candidate': typeof CandidateIndexRoute
-  '/recruiter': typeof RecruiterIndexRoute
+  '/can': typeof CanIndexRoute
+  '/rec': typeof RecIndexRoute
   '/staff': typeof StaffIndexRoute
-  '/candidate/jobs/apply': typeof CandidateJobsApplyRoute
+  '/can/jobs/apply': typeof CanJobsApplyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
+  '/account-recovery': typeof AccountRecoveryRoute
   '/analytics': typeof AnalyticsRoute
+  '/can': typeof CanRouteWithChildren
   '/candidates': typeof CandidatesRoute
   '/company-invitations': typeof CompanyInvitationsRoute
   '/compliance': typeof ComplianceRoute
@@ -426,6 +475,7 @@ export interface FileRoutesById {
   '/jobs': typeof JobsRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
+  '/rec': typeof RecRouteWithChildren
   '/recruit': typeof RecruitRoute
   '/register': typeof RegisterRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -441,17 +491,19 @@ export interface FileRoutesById {
   '/admin/reports': typeof AdminReportsRoute
   '/admin/tasks': typeof AdminTasksRoute
   '/admin/verifications': typeof AdminVerificationsRoute
-  '/candidate/copilot': typeof CandidateCopilotRoute
-  '/candidate/cvs': typeof CandidateCvsRoute
-  '/candidate/jobs': typeof CandidateJobsRoute
-  '/candidate/profile': typeof CandidateProfileRoute
-  '/recruiter/applications': typeof RecruiterApplicationsRoute
-  '/recruiter/hub': typeof RecruiterHubRoute
-  '/recruiter/jobs': typeof RecruiterJobsRoute
-  '/recruiter/members': typeof RecruiterMembersRoute
-  '/recruiter/profile': typeof RecruiterProfileRoute
-  '/recruiter/talent': typeof RecruiterTalentRoute
-  '/recruiter/verification': typeof RecruiterVerificationRoute
+  '/can/account': typeof CanAccountRoute
+  '/can/copilot': typeof CanCopilotRoute
+  '/can/cvs': typeof CanCvsRoute
+  '/can/jobs': typeof CanJobsRoute
+  '/can/profile': typeof CanProfileRoute
+  '/rec/account': typeof RecAccountRoute
+  '/rec/applications': typeof RecApplicationsRoute
+  '/rec/hub': typeof RecHubRoute
+  '/rec/jobs': typeof RecJobsRoute
+  '/rec/members': typeof RecMembersRoute
+  '/rec/profile': typeof RecProfileRoute
+  '/rec/talent': typeof RecTalentRoute
+  '/rec/verification': typeof RecVerificationRoute
   '/staff/accounts': typeof StaffAccountsRoute
   '/staff/analytics': typeof StaffAnalyticsRoute
   '/staff/audit-logs': typeof StaffAuditLogsRoute
@@ -463,16 +515,19 @@ export interface FileRoutesById {
   '/staff/tasks': typeof StaffTasksRoute
   '/staff/verifications': typeof StaffVerificationsRoute
   '/admin/': typeof AdminIndexRoute
-  '/candidate/': typeof CandidateIndexRoute
-  '/recruiter/': typeof RecruiterIndexRoute
+  '/can/': typeof CanIndexRoute
+  '/rec/': typeof RecIndexRoute
   '/staff/': typeof StaffIndexRoute
-  '/candidate/jobs_/apply': typeof CandidateJobsApplyRoute
+  '/can/jobs_/apply': typeof CanJobsApplyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/account'
+    | '/account-recovery'
     | '/analytics'
+    | '/can'
     | '/candidates'
     | '/company-invitations'
     | '/compliance'
@@ -480,6 +535,7 @@ export interface FileRouteTypes {
     | '/jobs'
     | '/login'
     | '/profile'
+    | '/rec'
     | '/recruit'
     | '/register'
     | '/sitemap.xml'
@@ -495,17 +551,19 @@ export interface FileRouteTypes {
     | '/admin/reports'
     | '/admin/tasks'
     | '/admin/verifications'
-    | '/candidate/copilot'
-    | '/candidate/cvs'
-    | '/candidate/jobs'
-    | '/candidate/profile'
-    | '/recruiter/applications'
-    | '/recruiter/hub'
-    | '/recruiter/jobs'
-    | '/recruiter/members'
-    | '/recruiter/profile'
-    | '/recruiter/talent'
-    | '/recruiter/verification'
+    | '/can/account'
+    | '/can/copilot'
+    | '/can/cvs'
+    | '/can/jobs'
+    | '/can/profile'
+    | '/rec/account'
+    | '/rec/applications'
+    | '/rec/hub'
+    | '/rec/jobs'
+    | '/rec/members'
+    | '/rec/profile'
+    | '/rec/talent'
+    | '/rec/verification'
     | '/staff/accounts'
     | '/staff/analytics'
     | '/staff/audit-logs'
@@ -517,13 +575,15 @@ export interface FileRouteTypes {
     | '/staff/tasks'
     | '/staff/verifications'
     | '/admin/'
-    | '/candidate/'
-    | '/recruiter/'
+    | '/can/'
+    | '/rec/'
     | '/staff/'
-    | '/candidate/jobs/apply'
+    | '/can/jobs/apply'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/account'
+    | '/account-recovery'
     | '/analytics'
     | '/candidates'
     | '/company-invitations'
@@ -547,17 +607,19 @@ export interface FileRouteTypes {
     | '/admin/reports'
     | '/admin/tasks'
     | '/admin/verifications'
-    | '/candidate/copilot'
-    | '/candidate/cvs'
-    | '/candidate/jobs'
-    | '/candidate/profile'
-    | '/recruiter/applications'
-    | '/recruiter/hub'
-    | '/recruiter/jobs'
-    | '/recruiter/members'
-    | '/recruiter/profile'
-    | '/recruiter/talent'
-    | '/recruiter/verification'
+    | '/can/account'
+    | '/can/copilot'
+    | '/can/cvs'
+    | '/can/jobs'
+    | '/can/profile'
+    | '/rec/account'
+    | '/rec/applications'
+    | '/rec/hub'
+    | '/rec/jobs'
+    | '/rec/members'
+    | '/rec/profile'
+    | '/rec/talent'
+    | '/rec/verification'
     | '/staff/accounts'
     | '/staff/analytics'
     | '/staff/audit-logs'
@@ -569,14 +631,17 @@ export interface FileRouteTypes {
     | '/staff/tasks'
     | '/staff/verifications'
     | '/admin'
-    | '/candidate'
-    | '/recruiter'
+    | '/can'
+    | '/rec'
     | '/staff'
-    | '/candidate/jobs/apply'
+    | '/can/jobs/apply'
   id:
     | '__root__'
     | '/'
+    | '/account'
+    | '/account-recovery'
     | '/analytics'
+    | '/can'
     | '/candidates'
     | '/company-invitations'
     | '/compliance'
@@ -584,6 +649,7 @@ export interface FileRouteTypes {
     | '/jobs'
     | '/login'
     | '/profile'
+    | '/rec'
     | '/recruit'
     | '/register'
     | '/sitemap.xml'
@@ -599,17 +665,19 @@ export interface FileRouteTypes {
     | '/admin/reports'
     | '/admin/tasks'
     | '/admin/verifications'
-    | '/candidate/copilot'
-    | '/candidate/cvs'
-    | '/candidate/jobs'
-    | '/candidate/profile'
-    | '/recruiter/applications'
-    | '/recruiter/hub'
-    | '/recruiter/jobs'
-    | '/recruiter/members'
-    | '/recruiter/profile'
-    | '/recruiter/talent'
-    | '/recruiter/verification'
+    | '/can/account'
+    | '/can/copilot'
+    | '/can/cvs'
+    | '/can/jobs'
+    | '/can/profile'
+    | '/rec/account'
+    | '/rec/applications'
+    | '/rec/hub'
+    | '/rec/jobs'
+    | '/rec/members'
+    | '/rec/profile'
+    | '/rec/talent'
+    | '/rec/verification'
     | '/staff/accounts'
     | '/staff/analytics'
     | '/staff/audit-logs'
@@ -621,15 +689,18 @@ export interface FileRouteTypes {
     | '/staff/tasks'
     | '/staff/verifications'
     | '/admin/'
-    | '/candidate/'
-    | '/recruiter/'
+    | '/can/'
+    | '/rec/'
     | '/staff/'
-    | '/candidate/jobs_/apply'
+    | '/can/jobs_/apply'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AccountRoute: typeof AccountRoute
+  AccountRecoveryRoute: typeof AccountRecoveryRoute
   AnalyticsRoute: typeof AnalyticsRoute
+  CanRoute: typeof CanRouteWithChildren
   CandidatesRoute: typeof CandidatesRoute
   CompanyInvitationsRoute: typeof CompanyInvitationsRoute
   ComplianceRoute: typeof ComplianceRoute
@@ -637,6 +708,7 @@ export interface RootRouteChildren {
   JobsRoute: typeof JobsRoute
   LoginRoute: typeof LoginRoute
   ProfileRoute: typeof ProfileRoute
+  RecRoute: typeof RecRouteWithChildren
   RecruitRoute: typeof RecruitRoute
   RegisterRoute: typeof RegisterRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -652,17 +724,6 @@ export interface RootRouteChildren {
   AdminReportsRoute: typeof AdminReportsRoute
   AdminTasksRoute: typeof AdminTasksRoute
   AdminVerificationsRoute: typeof AdminVerificationsRoute
-  CandidateCopilotRoute: typeof CandidateCopilotRoute
-  CandidateCvsRoute: typeof CandidateCvsRoute
-  CandidateJobsRoute: typeof CandidateJobsRoute
-  CandidateProfileRoute: typeof CandidateProfileRoute
-  RecruiterApplicationsRoute: typeof RecruiterApplicationsRoute
-  RecruiterHubRoute: typeof RecruiterHubRoute
-  RecruiterJobsRoute: typeof RecruiterJobsRoute
-  RecruiterMembersRoute: typeof RecruiterMembersRoute
-  RecruiterProfileRoute: typeof RecruiterProfileRoute
-  RecruiterTalentRoute: typeof RecruiterTalentRoute
-  RecruiterVerificationRoute: typeof RecruiterVerificationRoute
   StaffAccountsRoute: typeof StaffAccountsRoute
   StaffAnalyticsRoute: typeof StaffAnalyticsRoute
   StaffAuditLogsRoute: typeof StaffAuditLogsRoute
@@ -674,10 +735,7 @@ export interface RootRouteChildren {
   StaffTasksRoute: typeof StaffTasksRoute
   StaffVerificationsRoute: typeof StaffVerificationsRoute
   AdminIndexRoute: typeof AdminIndexRoute
-  CandidateIndexRoute: typeof CandidateIndexRoute
-  RecruiterIndexRoute: typeof RecruiterIndexRoute
   StaffIndexRoute: typeof StaffIndexRoute
-  CandidateJobsApplyRoute: typeof CandidateJobsApplyRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -689,11 +747,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account-recovery': {
+      id: '/account-recovery'
+      path: '/account-recovery'
+      fullPath: '/account-recovery'
+      preLoaderRoute: typeof AccountRecoveryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/analytics': {
       id: '/analytics'
       path: '/analytics'
       fullPath: '/analytics'
       preLoaderRoute: typeof AnalyticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/can': {
+      id: '/can'
+      path: '/can'
+      fullPath: '/can'
+      preLoaderRoute: typeof CanRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/candidates': {
@@ -743,6 +822,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rec': {
+      id: '/rec'
+      path: '/rec'
+      fullPath: '/rec'
+      preLoaderRoute: typeof RecRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recruit': {
@@ -857,96 +943,110 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminVerificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/candidate/': {
-      id: '/candidate/'
-      path: '/candidate'
-      fullPath: '/candidate/'
-      preLoaderRoute: typeof CandidateIndexRouteImport
-      parentRoute: typeof rootRouteImport
+    '/can/': {
+      id: '/can/'
+      path: '/'
+      fullPath: '/can/'
+      preLoaderRoute: typeof CanIndexRouteImport
+      parentRoute: typeof CanRoute
     }
-    '/candidate/copilot': {
-      id: '/candidate/copilot'
-      path: '/candidate/copilot'
-      fullPath: '/candidate/copilot'
-      preLoaderRoute: typeof CandidateCopilotRouteImport
-      parentRoute: typeof rootRouteImport
+    '/can/account': {
+      id: '/can/account'
+      path: '/account'
+      fullPath: '/can/account'
+      preLoaderRoute: typeof CanAccountRouteImport
+      parentRoute: typeof CanRoute
     }
-    '/candidate/cvs': {
-      id: '/candidate/cvs'
-      path: '/candidate/cvs'
-      fullPath: '/candidate/cvs'
-      preLoaderRoute: typeof CandidateCvsRouteImport
-      parentRoute: typeof rootRouteImport
+    '/can/copilot': {
+      id: '/can/copilot'
+      path: '/copilot'
+      fullPath: '/can/copilot'
+      preLoaderRoute: typeof CanCopilotRouteImport
+      parentRoute: typeof CanRoute
     }
-    '/candidate/jobs': {
-      id: '/candidate/jobs'
-      path: '/candidate/jobs'
-      fullPath: '/candidate/jobs'
-      preLoaderRoute: typeof CandidateJobsRouteImport
-      parentRoute: typeof rootRouteImport
+    '/can/cvs': {
+      id: '/can/cvs'
+      path: '/cvs'
+      fullPath: '/can/cvs'
+      preLoaderRoute: typeof CanCvsRouteImport
+      parentRoute: typeof CanRoute
     }
-    '/candidate/profile': {
-      id: '/candidate/profile'
-      path: '/candidate/profile'
-      fullPath: '/candidate/profile'
-      preLoaderRoute: typeof CandidateProfileRouteImport
-      parentRoute: typeof rootRouteImport
+    '/can/jobs': {
+      id: '/can/jobs'
+      path: '/jobs'
+      fullPath: '/can/jobs'
+      preLoaderRoute: typeof CanJobsRouteImport
+      parentRoute: typeof CanRoute
     }
-    '/recruiter/': {
-      id: '/recruiter/'
-      path: '/recruiter'
-      fullPath: '/recruiter/'
-      preLoaderRoute: typeof RecruiterIndexRouteImport
-      parentRoute: typeof rootRouteImport
+    '/can/profile': {
+      id: '/can/profile'
+      path: '/profile'
+      fullPath: '/can/profile'
+      preLoaderRoute: typeof CanProfileRouteImport
+      parentRoute: typeof CanRoute
     }
-    '/recruiter/applications': {
-      id: '/recruiter/applications'
-      path: '/recruiter/applications'
-      fullPath: '/recruiter/applications'
-      preLoaderRoute: typeof RecruiterApplicationsRouteImport
-      parentRoute: typeof rootRouteImport
+    '/rec/': {
+      id: '/rec/'
+      path: '/'
+      fullPath: '/rec/'
+      preLoaderRoute: typeof RecIndexRouteImport
+      parentRoute: typeof RecRoute
     }
-    '/recruiter/hub': {
-      id: '/recruiter/hub'
-      path: '/recruiter/hub'
-      fullPath: '/recruiter/hub'
-      preLoaderRoute: typeof RecruiterHubRouteImport
-      parentRoute: typeof rootRouteImport
+    '/rec/account': {
+      id: '/rec/account'
+      path: '/account'
+      fullPath: '/rec/account'
+      preLoaderRoute: typeof RecAccountRouteImport
+      parentRoute: typeof RecRoute
     }
-    '/recruiter/jobs': {
-      id: '/recruiter/jobs'
-      path: '/recruiter/jobs'
-      fullPath: '/recruiter/jobs'
-      preLoaderRoute: typeof RecruiterJobsRouteImport
-      parentRoute: typeof rootRouteImport
+    '/rec/applications': {
+      id: '/rec/applications'
+      path: '/applications'
+      fullPath: '/rec/applications'
+      preLoaderRoute: typeof RecApplicationsRouteImport
+      parentRoute: typeof RecRoute
     }
-    '/recruiter/members': {
-      id: '/recruiter/members'
-      path: '/recruiter/members'
-      fullPath: '/recruiter/members'
-      preLoaderRoute: typeof RecruiterMembersRouteImport
-      parentRoute: typeof rootRouteImport
+    '/rec/hub': {
+      id: '/rec/hub'
+      path: '/hub'
+      fullPath: '/rec/hub'
+      preLoaderRoute: typeof RecHubRouteImport
+      parentRoute: typeof RecRoute
     }
-    '/recruiter/profile': {
-      id: '/recruiter/profile'
-      path: '/recruiter/profile'
-      fullPath: '/recruiter/profile'
-      preLoaderRoute: typeof RecruiterProfileRouteImport
-      parentRoute: typeof rootRouteImport
+    '/rec/jobs': {
+      id: '/rec/jobs'
+      path: '/jobs'
+      fullPath: '/rec/jobs'
+      preLoaderRoute: typeof RecJobsRouteImport
+      parentRoute: typeof RecRoute
     }
-    '/recruiter/talent': {
-      id: '/recruiter/talent'
-      path: '/recruiter/talent'
-      fullPath: '/recruiter/talent'
-      preLoaderRoute: typeof RecruiterTalentRouteImport
-      parentRoute: typeof rootRouteImport
+    '/rec/members': {
+      id: '/rec/members'
+      path: '/members'
+      fullPath: '/rec/members'
+      preLoaderRoute: typeof RecMembersRouteImport
+      parentRoute: typeof RecRoute
     }
-    '/recruiter/verification': {
-      id: '/recruiter/verification'
-      path: '/recruiter/verification'
-      fullPath: '/recruiter/verification'
-      preLoaderRoute: typeof RecruiterVerificationRouteImport
-      parentRoute: typeof rootRouteImport
+    '/rec/profile': {
+      id: '/rec/profile'
+      path: '/profile'
+      fullPath: '/rec/profile'
+      preLoaderRoute: typeof RecProfileRouteImport
+      parentRoute: typeof RecRoute
+    }
+    '/rec/talent': {
+      id: '/rec/talent'
+      path: '/talent'
+      fullPath: '/rec/talent'
+      preLoaderRoute: typeof RecTalentRouteImport
+      parentRoute: typeof RecRoute
+    }
+    '/rec/verification': {
+      id: '/rec/verification'
+      path: '/verification'
+      fullPath: '/rec/verification'
+      preLoaderRoute: typeof RecVerificationRouteImport
+      parentRoute: typeof RecRoute
     }
     '/staff/': {
       id: '/staff/'
@@ -1025,19 +1125,70 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StaffVerificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/candidate/jobs_/apply': {
-      id: '/candidate/jobs_/apply'
-      path: '/candidate/jobs/apply'
-      fullPath: '/candidate/jobs/apply'
-      preLoaderRoute: typeof CandidateJobsApplyRouteImport
-      parentRoute: typeof rootRouteImport
+    '/can/jobs_/apply': {
+      id: '/can/jobs_/apply'
+      path: '/jobs/apply'
+      fullPath: '/can/jobs/apply'
+      preLoaderRoute: typeof CanJobsApplyRouteImport
+      parentRoute: typeof CanRoute
     }
   }
 }
 
+interface CanRouteChildren {
+  CanAccountRoute: typeof CanAccountRoute
+  CanCopilotRoute: typeof CanCopilotRoute
+  CanCvsRoute: typeof CanCvsRoute
+  CanJobsRoute: typeof CanJobsRoute
+  CanProfileRoute: typeof CanProfileRoute
+  CanIndexRoute: typeof CanIndexRoute
+  CanJobsApplyRoute: typeof CanJobsApplyRoute
+}
+
+const CanRouteChildren: CanRouteChildren = {
+  CanAccountRoute: CanAccountRoute,
+  CanCopilotRoute: CanCopilotRoute,
+  CanCvsRoute: CanCvsRoute,
+  CanJobsRoute: CanJobsRoute,
+  CanProfileRoute: CanProfileRoute,
+  CanIndexRoute: CanIndexRoute,
+  CanJobsApplyRoute: CanJobsApplyRoute,
+}
+
+const CanRouteWithChildren = CanRoute._addFileChildren(CanRouteChildren)
+
+interface RecRouteChildren {
+  RecAccountRoute: typeof RecAccountRoute
+  RecApplicationsRoute: typeof RecApplicationsRoute
+  RecHubRoute: typeof RecHubRoute
+  RecJobsRoute: typeof RecJobsRoute
+  RecMembersRoute: typeof RecMembersRoute
+  RecProfileRoute: typeof RecProfileRoute
+  RecTalentRoute: typeof RecTalentRoute
+  RecVerificationRoute: typeof RecVerificationRoute
+  RecIndexRoute: typeof RecIndexRoute
+}
+
+const RecRouteChildren: RecRouteChildren = {
+  RecAccountRoute: RecAccountRoute,
+  RecApplicationsRoute: RecApplicationsRoute,
+  RecHubRoute: RecHubRoute,
+  RecJobsRoute: RecJobsRoute,
+  RecMembersRoute: RecMembersRoute,
+  RecProfileRoute: RecProfileRoute,
+  RecTalentRoute: RecTalentRoute,
+  RecVerificationRoute: RecVerificationRoute,
+  RecIndexRoute: RecIndexRoute,
+}
+
+const RecRouteWithChildren = RecRoute._addFileChildren(RecRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AccountRoute: AccountRoute,
+  AccountRecoveryRoute: AccountRecoveryRoute,
   AnalyticsRoute: AnalyticsRoute,
+  CanRoute: CanRouteWithChildren,
   CandidatesRoute: CandidatesRoute,
   CompanyInvitationsRoute: CompanyInvitationsRoute,
   ComplianceRoute: ComplianceRoute,
@@ -1045,6 +1196,7 @@ const rootRouteChildren: RootRouteChildren = {
   JobsRoute: JobsRoute,
   LoginRoute: LoginRoute,
   ProfileRoute: ProfileRoute,
+  RecRoute: RecRouteWithChildren,
   RecruitRoute: RecruitRoute,
   RegisterRoute: RegisterRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
@@ -1060,17 +1212,6 @@ const rootRouteChildren: RootRouteChildren = {
   AdminReportsRoute: AdminReportsRoute,
   AdminTasksRoute: AdminTasksRoute,
   AdminVerificationsRoute: AdminVerificationsRoute,
-  CandidateCopilotRoute: CandidateCopilotRoute,
-  CandidateCvsRoute: CandidateCvsRoute,
-  CandidateJobsRoute: CandidateJobsRoute,
-  CandidateProfileRoute: CandidateProfileRoute,
-  RecruiterApplicationsRoute: RecruiterApplicationsRoute,
-  RecruiterHubRoute: RecruiterHubRoute,
-  RecruiterJobsRoute: RecruiterJobsRoute,
-  RecruiterMembersRoute: RecruiterMembersRoute,
-  RecruiterProfileRoute: RecruiterProfileRoute,
-  RecruiterTalentRoute: RecruiterTalentRoute,
-  RecruiterVerificationRoute: RecruiterVerificationRoute,
   StaffAccountsRoute: StaffAccountsRoute,
   StaffAnalyticsRoute: StaffAnalyticsRoute,
   StaffAuditLogsRoute: StaffAuditLogsRoute,
@@ -1082,10 +1223,7 @@ const rootRouteChildren: RootRouteChildren = {
   StaffTasksRoute: StaffTasksRoute,
   StaffVerificationsRoute: StaffVerificationsRoute,
   AdminIndexRoute: AdminIndexRoute,
-  CandidateIndexRoute: CandidateIndexRoute,
-  RecruiterIndexRoute: RecruiterIndexRoute,
   StaffIndexRoute: StaffIndexRoute,
-  CandidateJobsApplyRoute: CandidateJobsApplyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

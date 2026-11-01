@@ -1,3 +1,4 @@
+import { AdminShell } from "@/components/AdminShell";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import {
@@ -145,7 +146,7 @@ function BackBar({ jobId }: { jobId?: string }) {
     <header className="sticky top-0 z-30 bg-paper-inverse text-paper">
       <div className="mx-auto grid h-14 max-w-[880px] grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 sm:px-6">
         <Link
-          to="/jobs"
+          to="/can/jobs"
           search={jobId ? { job: jobId } : {}}
           className={`inline-flex min-w-0 items-center gap-1.5 justify-self-start rounded-md py-1.5 text-sm font-semibold min-h-11 text-paper/85 transition-colors hover:text-paper ${focusRing} focus-visible:ring-paper focus-visible:ring-offset-paper-inverse`}
         >
@@ -155,7 +156,7 @@ function BackBar({ jobId }: { jobId?: string }) {
           </span>
         </Link>
         <Link
-          to="/jobs"
+          to="/can/jobs"
           aria-label="GuardianWork — danh sách việc làm"
           className={`inline-flex items-center gap-2 justify-self-center rounded-md min-h-11 ${focusRing} focus-visible:ring-paper focus-visible:ring-offset-paper-inverse`}
         >
@@ -172,12 +173,10 @@ function BackBar({ jobId }: { jobId?: string }) {
 
 function Shell({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-paper-2 selection:bg-accent selection:text-accent-ink">
+    <AdminShell title="Ứng tuyển" role="candidate">
       <BackBar />
-      <main className="mx-auto w-full max-w-[880px] px-3 pb-16 pt-5 sm:px-6 sm:pt-8">
-        {children}
-      </main>
-    </div>
+      <div className="mx-auto w-full max-w-[880px] px-3 pb-16 pt-5 sm:px-6 sm:pt-8">{children}</div>
+    </AdminShell>
   );
 }
 
@@ -672,13 +671,13 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
             </p>
             <div className="mt-4 flex flex-col gap-2 sm:flex-row">
               <Link
-                to="/jobs"
+                to="/can/jobs"
                 className={`inline-flex min-h-11 items-center justify-center rounded-lg bg-accent px-5 text-sm font-bold text-accent-ink transition-colors hover:bg-accent-hover active:bg-accent-deep ${focusRing}`}
               >
                 Tìm việc làm khác
               </Link>
               <Link
-                to="/candidate/cvs"
+                to="/can/cvs"
                 className={`inline-flex min-h-11 items-center justify-center rounded-lg border border-rule bg-paper px-5 text-sm font-semibold text-ink transition-colors hover:bg-paper-3 ${focusRing}`}
               >
                 Quản lý hồ sơ
@@ -717,7 +716,7 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
             sách việc làm đang tuyển.
           </p>
           <Link
-            to="/jobs"
+            to="/can/jobs"
             className={`mt-5 inline-flex min-h-11 items-center justify-center rounded-lg bg-accent px-5 text-sm font-bold text-accent-ink transition-colors hover:bg-accent-hover ${focusRing}`}
           >
             Xem việc làm đang tuyển
@@ -761,13 +760,13 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
           </dl>
           <div className="mt-5 flex flex-col justify-center gap-2 sm:flex-row">
             <Link
-              to="/jobs"
+              to="/can/jobs"
               className={`inline-flex min-h-11 items-center justify-center rounded-lg bg-accent px-5 text-sm font-bold text-accent-ink transition-colors hover:bg-accent-hover ${focusRing}`}
             >
               Về danh sách việc làm
             </Link>
             <Link
-              to="/candidate/cvs"
+              to="/can/cvs"
               className={`inline-flex min-h-11 items-center justify-center rounded-lg border border-rule bg-paper px-5 text-sm font-semibold text-ink transition-colors hover:bg-paper-3 ${focusRing}`}
             >
               Quản lý hồ sơ
@@ -949,7 +948,7 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
                       <p className="rounded-lg border border-rule bg-paper px-3 py-2.5 text-xs leading-5 text-ink-2">
                         Bạn đã có {MAX_CV_COUNT}/{MAX_CV_COUNT} hồ sơ.{" "}
                         <Link
-                          to="/candidate/cvs"
+                          to="/can/cvs"
                           className="font-semibold text-accent underline-offset-2 hover:underline"
                         >
                           Xóa bớt một hồ sơ
@@ -1143,7 +1142,7 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
                   Hồ sơ cá nhân còn thiếu thông tin nên một số trường chưa được điền. Bổ sung trực
                   tiếp bên dưới hoặc{" "}
                   <Link
-                    to="/candidate/profile"
+                    to="/can/profile"
                     className="font-semibold text-accent underline-offset-2 hover:underline"
                   >
                     cập nhật hồ sơ cá nhân

@@ -12,16 +12,19 @@ This matrix was recorded before the comprehensive composition changes. Review st
 | `/register?role=candidate` | AuthLayout + register | Registration API | One clear registration form, validation and recovery |
 | `/register?role=recruiter` | Same shared account form | Shared `/auth/register`; Company setup and verification APIs after login | Account first; then create a Company or accept an invitation |
 | Staff `/login` | `auth/StaffLoginPage` | Auth API; STAFF role required | Quiet single login form; no registration/audience chooser |
-| `/candidate` | candidate/index + AdminShell | Illustrative introduction/quick links | Open welcome, useful next steps, compact accent |
-| `/candidate/jobs` | candidate/jobs | Static JOBS plus browser-local Company jobs/applications | Search → result rows → selected listing and apply action |
-| `/candidate/profile` | candidate/profile + CandidateContact | Signed-in name/email; profile/contact API where wired; example skills/experience; local edits | Identity/editing first; CV/profile details in sections, sample claims identified |
-| `/candidate/copilot` | candidate/copilot | Preset and generic local answers, no AI API | Questions → readable answer → references; preserve legal wording |
-| `/recruiter` | recruiter/index + RecruiterOverview | Illustrative candidate pipeline, local component state; Company verification API | Compact welcome/summary, keyboard-accessible candidate list, selected detail |
-| `/recruiter/jobs` | recruiter/jobs | Browser-local company workspace, author/grant checks | Results and create action; simple summary, real empty versus filtered miss |
-| `/recruiter/applications` | recruiter/applications | Browser-local applications/grants | Compare applicant, role, email and submission in a table/list |
-| `/recruiter/talent` | recruiter/talent | Illustrative talent records and simulated outreach | Selection list, profile details; controls clearly retain simulation limits |
-| `/recruiter/verification` | recruiter/verification | Company API + expectedVersion + active membership | Company form/status; preserve legal dossier fields, validation and retry |
-| `/recruiter/members` | recruiter/members + RecipientInvitationPanel | Invitations API; local workspace grants/history where implemented | Invitation form, role/member records, scoped actions |
+| `/can` | `can/index` + persistent Candidate `AdminShell` | Illustrative introduction/quick links | Open welcome, useful next steps, compact accent |
+| `/can/jobs` | `can/jobs` | Static JOBS plus browser-local Company jobs/applications | Search → result rows → selected listing and apply action inside Candidate shell |
+| `/can/profile` | `can/profile` + CandidateContact | Shared identity/profile APIs; illustrative skills and detailed experience/education records | Identity editing first; distinguish API-backed fields from local example records |
+| `/can/copilot` | `can/copilot` | Preset and generic local answers, no AI API | Questions → readable answer → references; preserve legal wording |
+| `/can/account` | Shared `AccountPage` in Candidate shell | Shared USER identity, email proof, password, eligibility and lifecycle APIs | Shared identity settings; separate verification, password and lifecycle actions |
+| `/rec` | `rec/index` + persistent RecruiterShell | Illustrative candidate pipeline, local component state; Company verification API | Compact welcome/summary, keyboard-accessible candidate list, selected detail |
+| `/rec/jobs` | `rec/jobs` | Browser-local company workspace, author/grant checks | Results and create action; simple summary, real empty versus filtered miss |
+| `/rec/applications` | `rec/applications` | Browser-local applications/grants | Compare applicant, role, email and submission in a table/list |
+| `/rec/talent` | `rec/talent` | Illustrative talent records and simulated outreach | Selection list, profile details; controls clearly retain simulation limits |
+| `/rec/verification` | `rec/verification` | Company API + expectedVersion + active membership | Company form/status; preserve legal dossier fields, validation and retry |
+| `/rec/members` | `rec/members` + RecipientInvitationPanel | Invitations API; local workspace grants/history where implemented | Invitation form, role/member records, scoped actions |
+| `/rec/account` | Shared `AccountPage` in RecruiterShell | Same USER identity and account APIs; authoritative `/auth/me` membership for recruiter access | Reuse account UI without switching to Candidate shell |
+| `/account-recovery` | Public recovery form | Unauthenticated recovery requests; no returned session | Explain eligibility, prove by email, then return to ordinary sign-in |
 | `/staff` | staff/index | Real verification count API; other metrics illustrative | Verification queue first; compact mixed-source overview |
 | `/staff/verifications` | staff/verifications + DossierHistory | API-backed queue/history/evidence/decisions | Filters/table → retained summary/evidence/history → accountable decision |
 | `/staff/jobs` | JobManagementPanel | Explicit sample records and in-page decisions | Operational table and review detail; sample notice stays visible |
@@ -34,8 +37,9 @@ This matrix was recorded before the comprehensive composition changes. Review st
 ## Redirects and unused implementations
 
 - `/` → `/vn` in public; Staff portal boundary sends non-Staff paths to Staff login.
-- `/jobs`, `/copilot`, `/recruit`, `/profile` → candidate jobs/copilot, recruiter overview/talent respectively.
-- `/recruiter/profile` → `/recruiter/verification`; `/recruiter/hub` → `/recruiter`.
+- `/jobs` remains public job discovery; `/can/jobs` presents the same discovery in the Candidate shell.
+- Legacy `/candidate/*` and `/recruiter/*` deep links redirect to `/can/*` and `/rec/*` respectively, preserving query and hash. `/recruiter/profile` → `/rec/verification`; `/recruiter/hub` → `/rec`.
+- `/account` redirects to `/rec/account` when `/auth/me` has an active membership and otherwise to `/can/account`; the shared USER account component retains the route's role shell.
 - `/staff/compliance` → Staff jobs; `/staff/candidates` → accounts; `/staff/analytics`, `/staff/monitoring`, `/staff/tasks` → overview.
 - `/analytics`, `/candidates`, `/compliance` are legacy aliases routed through admin/Staff boundaries.
 - `guardian/CandidateProfileView`, `CandidateJobsView`, `CopilotView`, older recruiter/admin view components are not mounted by the current file routes. No changes are planned there.

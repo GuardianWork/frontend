@@ -5,7 +5,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { RecruiterOverview } from "@/components/RecruiterOverview";
 import { AdminShell, Icon } from "@/components/AdminShell";
 
-export const Route = createFileRoute("/recruiter/")({
+export const Route = createFileRoute("/rec/")({
   head: () => ({
     meta: [
       { name: "robots", content: "noindex, nofollow" },
@@ -164,7 +164,7 @@ function RecruiterIndexPage() {
       </details>
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-semibold">Theo dõi ứng viên</h2>
-        <Link to="/recruiter/talent" className="text-sm font-semibold text-primary">
+        <Link to="/rec/talent" className="text-sm font-semibold text-primary">
           Xem tất cả ứng viên →
         </Link>
       </div>

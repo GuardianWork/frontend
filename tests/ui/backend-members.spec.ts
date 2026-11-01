@@ -54,7 +54,7 @@ test("members use server data and removal refreshes the list", async ({ page }) 
     return route.fulfill({ json: { status: 200, data: { membershipId: 71, status: "REMOVED" } } });
   });
   await login(page, "owner_demo", true);
-  await page.goto("/recruiter/members");
+  await page.goto("/rec/members");
   await expect(page.locator("tbody")).toContainText("server@example.test");
   await page.screenshot({ path: "/tmp/backend-members-desktop.png", fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });

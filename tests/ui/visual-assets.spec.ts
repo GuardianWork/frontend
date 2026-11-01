@@ -92,10 +92,10 @@ test("candidate welcome and current profile keep navigation and edit controls", 
   page,
 }, info) => {
   await login(page, "candidate_demo");
-  await page.goto("/candidate");
+  await page.goto("/can");
   await expect(page.locator(".guardian-welcome")).toBeVisible();
   await capture(page, info, "candidate-welcome");
-  await page.goto("/candidate/profile");
+  await page.goto("/can/profile");
   await expect(page.getByRole("button", { name: "Chỉnh sửa hồ sơ" })).toBeVisible();
   await capture(page, info, "candidate-profile");
 });
@@ -139,7 +139,7 @@ test("recruiter welcome and genuine empty jobs keep create action and filter dis
       },
     }),
   );
-  await page.goto("/recruiter/jobs");
+  await page.goto("/rec/jobs");
   await expect(
     page.getByRole("heading", { name: "Bắt đầu với tin tuyển dụng đầu tiên" }),
   ).toBeVisible();
