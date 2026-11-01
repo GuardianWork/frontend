@@ -520,3 +520,200 @@ body {
     gap: 0;
   }
 }
+
+/* Persistent sidebars: keep account settings legible in the approved charcoal treatment. */
+.workspace-shell[data-sidebar-collapsed] .workspace-brand__copy :is(h2, strong),
+.workspace-shell[data-sidebar-collapsed] .workspace-brand__identity > span,
+.workspace-shell[data-sidebar-collapsed] .workspace-brand__identity > span span {
+  color: var(--color-on-rail);
+}
+.workspace-shell[data-sidebar-collapsed] .workspace-brand__copy p,
+.workspace-shell[data-sidebar-collapsed] .workspace-company-summary p,
+.workspace-shell[data-sidebar-collapsed] .workspace-company-help :is(p, a, svg),
+.workspace-shell[data-sidebar-collapsed] .workspace-nav-lock {
+  color: var(--color-on-rail-muted);
+}
+.workspace-shell.workspace-shell
+  .workspace-quick-navigation
+  .workspace-footer-link[aria-current="page"] {
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+.workspace-shell.workspace-shell .workspace-quick-navigation__hint {
+  color: inherit;
+}
+.workspace-shell[data-sidebar-collapsed] .workspace-company-summary,
+.workspace-shell[data-sidebar-collapsed] .workspace-company-help {
+  border-color: var(--color-rail-rule);
+}
+.workspace-shell .workspace-collapse-toggle {
+  flex-shrink: 0;
+}
+.workspace-shell .workspace-content > header > div:first-child {
+  min-width: 0;
+}
+/* Standard form actions, recovery, verification and account-security surfaces. */
+.account-page :is(.account-field input, .account-field select, .account-button),
+.account-recovery :is(.account-field input, .account-challenge > input, .account-button) {
+  min-height: 48px;
+  border-radius: 8px;
+}
+.account-page .account-section h2 {
+  font-size: 20px;
+  font-weight: 700;
+}
+.account-page .account-button,
+.account-recovery .account-button {
+  font-size: 15px;
+  font-weight: 700;
+}
+:is(.auth-layout, .staff-login-page, .workspace-page) input::placeholder,
+:is(.auth-layout, .staff-login-page, .workspace-page) textarea::placeholder {
+  color: var(--color-ink-3);
+  opacity: 1;
+}
+:is(.auth-layout, .staff-login-page) input:not([type="checkbox"]):not([type="radio"]) {
+  border-color: var(--color-rule-2);
+}
+@media (max-width: 1100px) {
+  .workspace-shell .workspace-sidebar .workspace-brand__identity {
+    min-width: 0;
+  }
+}
+@media (max-width: 767px) {
+  .workspace-shell .workspace-content > header > div:first-child {
+    gap: 8px;
+  }
+  .workspace-header-brand {
+    font-size: 18px;
+  }
+}
+
+/* Attention notices follow the supplied reference: pale pink, charcoal copy, red alert mark.
+   The circle/exclamation is decorative; the live-region text states the actual problem. */
+:is(.workspace-page, .auth-layout, .staff-login-page, .account-dialog) [role="alert"],
+.recruiter-workspace .jp-feedback.jp-error,
+.recruiter-workspace .jp-feedback.jp-warning,
+.account-page .account-section .account-error,
+.account-recovery .account-error {
+  position: relative;
+  min-height: 64px;
+  margin-block: 16px;
+  padding: 20px 24px 20px 58px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--color-attention-ground);
+  color: var(--color-ink);
+  font-size: 15px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+:is(.workspace-page, .auth-layout, .staff-login-page, .account-dialog) [role="alert"]::before,
+.recruiter-workspace .jp-feedback.jp-error::before,
+.recruiter-workspace .jp-feedback.jp-warning::before {
+  content: "";
+  position: absolute;
+  inset-block-start: 22px;
+  inset-inline-start: 24px;
+  width: 20px;
+  height: 20px;
+  background: var(--color-attention);
+  border-radius: 50%;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' fill-rule='evenodd' d='M12 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24Zm-1 5h2v9h-2V5Zm0 12h2v2h-2v-2Z'/%3E%3C/svg%3E");
+  mask-size: contain;
+  mask-repeat: no-repeat;
+}
+:is(.workspace-page, .auth-layout, .staff-login-page, .account-dialog)
+  [role="alert"]
+  :is(p, li, strong),
+.recruiter-workspace .jp-feedback.jp-error p,
+.recruiter-workspace .jp-feedback.jp-warning p {
+  color: inherit;
+}
+:is(.workspace-page, .auth-layout, .staff-login-page, .account-dialog) [role="alert"] strong {
+  font-weight: 700;
+}
+[data-sonner-toast].staff-toast[data-type="error"] {
+  border: 0;
+  background: var(--color-attention-ground);
+  color: var(--color-ink);
+  box-shadow: none;
+  border-radius: 16px;
+}
+[data-sonner-toast].staff-toast[data-type="error"] [data-icon] {
+  color: var(--color-attention);
+}
+@media (max-width: 640px) {
+  :is(.workspace-page, .auth-layout, .staff-login-page, .account-dialog) [role="alert"],
+  .recruiter-workspace .jp-feedback.jp-error,
+  .recruiter-workspace .jp-feedback.jp-warning {
+    padding: 18px 18px 18px 48px;
+    font-size: 14px;
+  }
+  :is(.workspace-page, .auth-layout, .staff-login-page, .account-dialog) [role="alert"]::before,
+  .recruiter-workspace .jp-feedback.jp-error::before,
+  .recruiter-workspace .jp-feedback.jp-warning::before {
+    inset-inline-start: 18px;
+    inset-block-start: 20px;
+  }
+}
+
+/* Public discovery uses blue to identify searchable content and next actions.
+   The surrounding navigation stays monochrome; attention notices retain their pink treatment. */
+.career-site > #main-content {
+  --color-accent: var(--color-discovery-accent);
+  --color-accent-hover: var(--color-discovery-hover);
+  --color-accent-deep: var(--color-discovery-deep);
+  --color-accent-subtle: var(--color-discovery-subtle);
+  --color-focus: var(--color-discovery-accent);
+  --primary: var(--color-discovery-accent);
+  --primary-container: var(--color-discovery-deep);
+  --charcoal-04: var(--color-discovery-subtle);
+  --gw-selected: var(--color-discovery-subtle);
+}
+.career-site > #main-content .career-job h3,
+.career-site > #main-content .career-job h3 a,
+.career-site > #main-content .career-job__salary {
+  color: var(--color-discovery-deep);
+}
+.career-site > #main-content .career-job.is-active {
+  border-color: var(--color-discovery-accent);
+  background: var(--color-discovery-subtle);
+}
+.career-site > #main-content .career-job h3 a:hover {
+  color: var(--color-discovery-hover);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Sidebar destinations share the same blue content hierarchy as job discovery. */
+.workspace-content > main {
+  --color-accent: var(--color-discovery-accent);
+  --color-accent-hover: var(--color-discovery-hover);
+  --color-accent-deep: var(--color-discovery-deep);
+  --color-accent-subtle: var(--color-discovery-subtle);
+  --color-focus: var(--color-discovery-accent);
+  --primary: var(--color-discovery-accent);
+  --primary-container: var(--color-discovery-deep);
+  --charcoal-04: var(--color-discovery-subtle);
+  --gw-selected: var(--color-discovery-subtle);
+}
+.workspace-content
+  > main
+  :is(
+    .account-overview h1,
+    .account-section h2,
+    .workspace-prose h3,
+    .workspace-prose h4,
+    .workspace-detail-header h2
+  ) {
+  color: var(--color-discovery-deep);
+}
+.workspace-content > main .admin-dashboard-metric > strong,
+.workspace-content > main .workspace-summary__item :is(strong, .text-2xl, .text-3xl) {
+  color: var(--color-discovery-deep);
+}
+.workspace-content > main .workspace-result.is-selected {
+  border-color: var(--color-discovery-accent);
+  background: var(--color-discovery-subtle);
+}

@@ -81,7 +81,7 @@ export function VerificationUpload({
         </p>
       )}
       {value && (
-        <div className="mt-3 flex items-center gap-2 rounded-md border border-emerald-100 bg-surface-container p-3 text-xs text-emerald-800">
+        <div className="mt-3 flex items-center gap-2 rounded-md border border-rule bg-surface-container p-3 text-xs text-ink">
           <EvidenceIcon size={20} />
           <span className="min-w-0 flex-1 truncate">{fileName || "Tài liệu đã lưu"}</span>
           <a

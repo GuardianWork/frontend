@@ -414,21 +414,21 @@
   padding-bottom: 0;
 }
 
-/* Light, inset navigation inspired by the supplied Sidebars reference. */
+/* Persistent USER workspaces retain their inset geometry with the shared charcoal rail. */
 .workspace-shell:is(.candidate-workspace, .recruiter-workspace) .workspace-sidebar {
   width: 244px;
   height: calc(100dvh - 16px);
   margin: 8px;
-  border: 1px solid var(--color-rule);
+  border: 1px solid var(--color-rail-rule);
   border-radius: 14px;
-  background: var(--color-paper);
+  background: var(--color-rail);
 }
 .workspace-shell:is(.candidate-workspace, .recruiter-workspace)
   .workspace-sidebar
   .workspace-brand {
   min-height: 72px;
   padding: 16px;
-  border-bottom: 1px solid var(--color-rule);
+  border-bottom: 1px solid var(--color-rail-rule);
 }
 .workspace-shell:is(.candidate-workspace, .recruiter-workspace)
   .workspace-sidebar
@@ -444,7 +444,7 @@
   padding: 10px 12px;
   border: 0;
   border-radius: 8px;
-  color: var(--color-ink-2);
+  color: var(--color-on-rail);
   font-size: 14px;
   line-height: 1.45;
   font-weight: 500;
@@ -471,8 +471,8 @@
 .workspace-shell:is(.candidate-workspace, .recruiter-workspace)
   .workspace-navigation
   .workspace-nav-link[aria-current="page"] {
-  background: var(--color-accent-subtle);
-  color: var(--color-accent-deep);
+  background: var(--color-paper);
+  color: var(--color-ink);
   font-weight: 650;
 }
 .workspace-shell:is(.candidate-workspace, .recruiter-workspace)
@@ -485,23 +485,23 @@
 .workspace-shell:is(.candidate-workspace, .recruiter-workspace)
   .workspace-navigation
   a.workspace-nav-link:hover {
-  background: var(--color-paper-2);
-  color: var(--color-ink);
+  background: var(--color-rail-hover);
+  color: var(--color-on-rail);
 }
 .workspace-shell:is(.candidate-workspace, .recruiter-workspace)
   .workspace-navigation
   a.workspace-nav-link[aria-current="page"]:hover {
-  background: var(--color-accent-subtle);
-  color: var(--color-accent-deep);
+  background: var(--color-paper-3);
+  color: var(--color-ink);
 }
 .workspace-shell:is(.candidate-workspace, .recruiter-workspace)
   .workspace-navigation
   .workspace-nav-link--locked {
-  color: var(--color-ink-3);
+  color: var(--color-on-rail-muted);
 }
 .workspace-shell:is(.candidate-workspace, .recruiter-workspace) .workspace-quick-navigation {
   padding: 10px;
-  border-top: 1px solid var(--color-rule);
+  border-top: 1px solid var(--color-rail-rule);
 }
 .workspace-quick-navigation .workspace-footer-link {
   border-radius: 8px;

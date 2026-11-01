@@ -22,6 +22,7 @@ import { useEmployerOnboarding } from "@/hooks/useEmployerOnboarding";
 import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
 import { useWorkspaceLayout } from "@/context/WorkspaceLayoutContext";
 import { WorkspaceFooter } from "./WorkspaceFooter";
+import { WorkspaceBrand } from "./WorkspaceChrome";
 import { LogoutButton } from "./LogoutButton";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useContext, useEffect, useState, type ReactNode } from "react";
@@ -215,6 +216,7 @@ function RecruiterShellFrame({
             >
               <MenuIcon size={22} aria-hidden="true" />
             </button>
+            <WorkspaceBrand to="/rec" />
             <p className="workspace-page-title text-sm font-semibold tracking-tight [overflow-wrap:anywhere]">
               {title}
             </p>

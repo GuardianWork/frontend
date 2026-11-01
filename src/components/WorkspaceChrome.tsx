@@ -4,7 +4,7 @@ import { MenuIcon } from "./icons";
 import { Button } from "./ui/button";
 
 /** The same brand and navigation controls across GuardianWork's three workspaces. */
-export function WorkspaceBrand({ to }: { to: "/can" | "/staff" | "/rec" }) {
+export function WorkspaceBrand({ to }: { to: "/can/jobs" | "/staff" | "/rec" }) {
   return (
     <Link to={to} className="workspace-header-brand" aria-label="GuardianWork — Tổng quan">
       <ShieldCheck size={27} aria-hidden="true" />

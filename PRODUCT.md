@@ -36,7 +36,7 @@ The codebase provides Vietnamese and English language dictionaries, with Vietnam
 
 ## Brand Commitments
 
-Preserve the GuardianWork product name and the product facts represented by the existing application. The user chose a familiar recruitment-platform design, with VietnamWorks as the craft reference, and code-first implementation. Preserve existing task flows while replacing the visual presentation. Guardian Blue is the only theme; do not expose a theme selector or restore alternate saved palettes.
+Preserve the GuardianWork product name and the product facts represented by the existing application. The user chose a familiar recruitment-platform design, with VietnamWorks as the craft reference, and code-first implementation. Use the `/rec` black, white, charcoal, and gray system for public, authentication and recovery, candidate, recruiter, and staff chrome. Use blue highlights in public discovery content and the main content area of all three workspaces; keep headers and sidebars monochrome. Reserve semantic red and pale pink for attention notices. Do not expose a theme selector or restore alternate saved palettes.
 
 ## Evidence on Hand
 

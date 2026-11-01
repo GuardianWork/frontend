@@ -90,14 +90,14 @@
   --color-ink: #2d2d2d;
   --color-ink-2: #595959;
   --color-ink-3: #666666;
-  --color-accent: #2557a7;
-  --color-accent-hover: #164081;
-  --color-accent-deep: #153d75;
-  --color-accent-subtle: #eef3fb;
+  --color-accent: #2d2d2d;
+  --color-accent-hover: #111111;
+  --color-accent-deep: #1f1f1f;
+  --color-accent-subtle: #f3f3f2;
   --color-accent-ink: #ffffff;
-  --color-accent-2: #df650d;
-  --color-mint: #147953;
-  --color-lavender: #e8edfb;
+  --color-accent-2: #595959;
+  --color-mint: #2d2d2d;
+  --color-lavender: #eeeeec;
   --color-rule: #e4e2e0;
   --color-rule-2: #949494;
   --color-rail: #2d2d2d;
@@ -105,7 +105,7 @@
   --color-rail-rule: #505050;
   --color-on-rail: #ffffff;
   --color-on-rail-muted: #d4d2d0;
-  --color-on-rail-focus: #a6c6ff;
+  --color-on-rail-focus: #ffffff;
   --color-focus: var(--color-accent);
   /* Admin console compatibility */
   --radius: 0.5rem;
@@ -131,9 +131,15 @@
   --on-secondary-container: var(--color-ink-2);
   --on-surface: var(--color-ink);
   --on-surface-variant: var(--color-ink-2);
-  --error: #b42318;
-  --error-container: #fee4e2;
-  --on-error-container: #912018;
+  --error: #b3261e;
+  --error-container: #fdefef;
+  --on-error-container: #83231d;
+  --color-attention: #b3261e;
+  --color-attention-ground: #fdefef;
+  --color-discovery-accent: #2557a7;
+  --color-discovery-hover: #164081;
+  --color-discovery-deep: #153d75;
+  --color-discovery-subtle: #eef3fb;
 }
 
 @layer base {

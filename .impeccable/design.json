@@ -1,446 +1,488 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-01T03:51:41.000Z",
+  "generatedAt": "2026-11-01T04:27:13Z",
   "title": "Design System: GuardianWork",
   "extensions": {
     "colorMeta": {
       "primary": {
         "role": "primary",
-        "displayName": "Guardian Blue",
+        "displayName": "Charcoal",
         "tonalRamp": [
-          "oklch(15.00% 0.17009 255.20)",
-          "oklch(26.43% 0.17009 255.20)",
-          "oklch(37.86% 0.17009 255.20)",
-          "oklch(49.29% 0.17009 255.20)",
-          "oklch(60.71% 0.17009 255.20)",
-          "oklch(72.14% 0.17009 255.20)",
-          "oklch(83.57% 0.17009 255.20)",
-          "oklch(95.00% 0.17009 255.20)"
+          "oklch(15.00% 0.00000 89.88)",
+          "oklch(26.43% 0.00000 89.88)",
+          "oklch(37.86% 0.00000 89.88)",
+          "oklch(49.29% 0.00000 89.88)",
+          "oklch(60.71% 0.00000 89.88)",
+          "oklch(72.14% 0.00000 89.88)",
+          "oklch(83.57% 0.00000 89.88)",
+          "oklch(95.00% 0.00000 89.88)"
         ],
-        "canonical": "#0868c9"
+        "canonical": "#2d2d2d"
       },
       "primary-hover": {
         "role": "primary",
-        "displayName": "Guardian Blue Hover",
+        "displayName": "Near Black",
         "tonalRamp": [
-          "oklch(15.00% 0.14306 254.63)",
-          "oklch(26.43% 0.14306 254.63)",
-          "oklch(37.86% 0.14306 254.63)",
-          "oklch(49.29% 0.14306 254.63)",
-          "oklch(60.71% 0.14306 254.63)",
-          "oklch(72.14% 0.14306 254.63)",
-          "oklch(83.57% 0.14306 254.63)",
-          "oklch(95.00% 0.14306 254.63)"
+          "oklch(15.00% 0.00000 89.88)",
+          "oklch(26.43% 0.00000 89.88)",
+          "oklch(37.86% 0.00000 89.88)",
+          "oklch(49.29% 0.00000 89.88)",
+          "oklch(60.71% 0.00000 89.88)",
+          "oklch(72.14% 0.00000 89.88)",
+          "oklch(83.57% 0.00000 89.88)",
+          "oklch(95.00% 0.00000 89.88)"
         ],
-        "canonical": "#0755a3"
+        "canonical": "#111111"
       },
       "primary-deep": {
         "role": "primary",
-        "displayName": "Guardian Blue Deep",
+        "displayName": "Deep Charcoal",
         "tonalRamp": [
-          "oklch(15.00% 0.12111 253.44)",
-          "oklch(26.43% 0.12111 253.44)",
-          "oklch(37.86% 0.12111 253.44)",
-          "oklch(49.29% 0.12111 253.44)",
-          "oklch(60.71% 0.12111 253.44)",
-          "oklch(72.14% 0.12111 253.44)",
-          "oklch(83.57% 0.12111 253.44)",
-          "oklch(95.00% 0.12111 253.44)"
+          "oklch(15.00% 0.00000 89.88)",
+          "oklch(26.43% 0.00000 89.88)",
+          "oklch(37.86% 0.00000 89.88)",
+          "oklch(49.29% 0.00000 89.88)",
+          "oklch(60.71% 0.00000 89.88)",
+          "oklch(72.14% 0.00000 89.88)",
+          "oklch(83.57% 0.00000 89.88)",
+          "oklch(95.00% 0.00000 89.88)"
         ],
-        "canonical": "#064887"
+        "canonical": "#1f1f1f"
       },
       "primary-subtle": {
         "role": "primary",
-        "displayName": "Clear Blue Wash",
+        "displayName": "Soft Gray Wash",
         "tonalRamp": [
-          "oklch(15.00% 0.01935 252.88)",
-          "oklch(26.43% 0.01935 252.88)",
-          "oklch(37.86% 0.01935 252.88)",
-          "oklch(49.29% 0.01935 252.88)",
-          "oklch(60.71% 0.01935 252.88)",
-          "oklch(72.14% 0.01935 252.88)",
-          "oklch(83.57% 0.01935 252.88)",
-          "oklch(95.00% 0.01935 252.88)"
+          "oklch(15.00% 0.00133 106.42)",
+          "oklch(26.43% 0.00133 106.42)",
+          "oklch(37.86% 0.00133 106.42)",
+          "oklch(49.29% 0.00133 106.42)",
+          "oklch(60.71% 0.00133 106.42)",
+          "oklch(72.14% 0.00133 106.42)",
+          "oklch(83.57% 0.00133 106.42)",
+          "oklch(95.00% 0.00133 106.42)"
         ],
-        "canonical": "#e9f3ff"
+        "canonical": "#f3f3f2"
+      },
+      "accent-ink": {
+        "role": "neutral",
+        "displayName": "White Action Text",
+        "tonalRamp": [
+          "oklch(15.00% 0.00000 89.88)",
+          "oklch(26.43% 0.00000 89.88)",
+          "oklch(37.86% 0.00000 89.88)",
+          "oklch(49.29% 0.00000 89.88)",
+          "oklch(60.71% 0.00000 89.88)",
+          "oklch(72.14% 0.00000 89.88)",
+          "oklch(83.57% 0.00000 89.88)",
+          "oklch(95.00% 0.00000 89.88)"
+        ],
+        "canonical": "#ffffff"
+      },
+      "support-gray": {
+        "role": "secondary",
+        "displayName": "Supporting Gray",
+        "tonalRamp": [
+          "oklch(15.00% 0.00000 89.88)",
+          "oklch(26.43% 0.00000 89.88)",
+          "oklch(37.86% 0.00000 89.88)",
+          "oklch(49.29% 0.00000 89.88)",
+          "oklch(60.71% 0.00000 89.88)",
+          "oklch(72.14% 0.00000 89.88)",
+          "oklch(83.57% 0.00000 89.88)",
+          "oklch(95.00% 0.00000 89.88)"
+        ],
+        "canonical": "#595959"
       },
       "paper": {
         "role": "neutral",
         "displayName": "White Paper",
         "tonalRamp": [
-          "oklch(15.00% 0.00000 0.00)",
-          "oklch(26.43% 0.00000 0.00)",
-          "oklch(37.86% 0.00000 0.00)",
-          "oklch(49.29% 0.00000 0.00)",
-          "oklch(60.71% 0.00000 0.00)",
-          "oklch(72.14% 0.00000 0.00)",
-          "oklch(83.57% 0.00000 0.00)",
-          "oklch(95.00% 0.00000 0.00)"
+          "oklch(15.00% 0.00000 89.88)",
+          "oklch(26.43% 0.00000 89.88)",
+          "oklch(37.86% 0.00000 89.88)",
+          "oklch(49.29% 0.00000 89.88)",
+          "oklch(60.71% 0.00000 89.88)",
+          "oklch(72.14% 0.00000 89.88)",
+          "oklch(83.57% 0.00000 89.88)",
+          "oklch(95.00% 0.00000 89.88)"
         ],
         "canonical": "#ffffff"
       },
       "paper-2": {
         "role": "neutral",
-        "displayName": "Cool Ground",
+        "displayName": "Soft Warm Ground",
         "tonalRamp": [
-          "oklch(15.00% 0.00740 260.73)",
-          "oklch(26.43% 0.00740 260.73)",
-          "oklch(37.86% 0.00740 260.73)",
-          "oklch(49.29% 0.00740 260.73)",
-          "oklch(60.71% 0.00740 260.73)",
-          "oklch(72.14% 0.00740 260.73)",
-          "oklch(83.57% 0.00740 260.73)",
-          "oklch(95.00% 0.00740 260.73)"
+          "oklch(15.00% 0.00132 106.42)",
+          "oklch(26.43% 0.00132 106.42)",
+          "oklch(37.86% 0.00132 106.42)",
+          "oklch(49.29% 0.00132 106.42)",
+          "oklch(60.71% 0.00132 106.42)",
+          "oklch(72.14% 0.00132 106.42)",
+          "oklch(83.57% 0.00132 106.42)",
+          "oklch(95.00% 0.00132 106.42)"
         ],
-        "canonical": "#f3f6fb"
+        "canonical": "#f7f7f6"
       },
       "paper-3": {
         "role": "neutral",
-        "displayName": "Cool Inset",
+        "displayName": "Warm Inset",
         "tonalRamp": [
-          "oklch(15.00% 0.01426 254.61)",
-          "oklch(26.43% 0.01426 254.61)",
-          "oklch(37.86% 0.01426 254.61)",
-          "oklch(49.29% 0.01426 254.61)",
-          "oklch(60.71% 0.01426 254.61)",
-          "oklch(72.14% 0.01426 254.61)",
-          "oklch(83.57% 0.01426 254.61)",
-          "oklch(95.00% 0.01426 254.61)"
+          "oklch(15.00% 0.00266 106.45)",
+          "oklch(26.43% 0.00266 106.45)",
+          "oklch(37.86% 0.00266 106.45)",
+          "oklch(49.29% 0.00266 106.45)",
+          "oklch(60.71% 0.00266 106.45)",
+          "oklch(72.14% 0.00266 106.45)",
+          "oklch(83.57% 0.00266 106.45)",
+          "oklch(95.00% 0.00266 106.45)"
         ],
-        "canonical": "#e8eff8"
+        "canonical": "#eeeeec"
       },
       "paper-inverse": {
         "role": "neutral",
-        "displayName": "Inverse Ground",
+        "displayName": "Charcoal Inverse",
         "tonalRamp": [
-          "oklch(15.00% 0.05853 256.16)",
-          "oklch(26.43% 0.05853 256.16)",
-          "oklch(37.86% 0.05853 256.16)",
-          "oklch(49.29% 0.05853 256.16)",
-          "oklch(60.71% 0.05853 256.16)",
-          "oklch(72.14% 0.05853 256.16)",
-          "oklch(83.57% 0.05853 256.16)",
-          "oklch(95.00% 0.05853 256.16)"
+          "oklch(15.00% 0.00000 89.88)",
+          "oklch(26.43% 0.00000 89.88)",
+          "oklch(37.86% 0.00000 89.88)",
+          "oklch(49.29% 0.00000 89.88)",
+          "oklch(60.71% 0.00000 89.88)",
+          "oklch(72.14% 0.00000 89.88)",
+          "oklch(83.57% 0.00000 89.88)",
+          "oklch(95.00% 0.00000 89.88)"
         ],
-        "canonical": "#152a46"
+        "canonical": "#2d2d2d"
       },
       "ink": {
         "role": "neutral",
-        "displayName": "Deep Ink",
+        "displayName": "Charcoal Text",
         "tonalRamp": [
-          "oklch(15.00% 0.05860 255.23)",
-          "oklch(26.43% 0.05860 255.23)",
-          "oklch(37.86% 0.05860 255.23)",
-          "oklch(49.29% 0.05860 255.23)",
-          "oklch(60.71% 0.05860 255.23)",
-          "oklch(72.14% 0.05860 255.23)",
-          "oklch(83.57% 0.05860 255.23)",
-          "oklch(95.00% 0.05860 255.23)"
+          "oklch(15.00% 0.00000 89.88)",
+          "oklch(26.43% 0.00000 89.88)",
+          "oklch(37.86% 0.00000 89.88)",
+          "oklch(49.29% 0.00000 89.88)",
+          "oklch(60.71% 0.00000 89.88)",
+          "oklch(72.14% 0.00000 89.88)",
+          "oklch(83.57% 0.00000 89.88)",
+          "oklch(95.00% 0.00000 89.88)"
         ],
-        "canonical": "#172d49"
+        "canonical": "#2d2d2d"
       },
       "ink-2": {
         "role": "neutral",
-        "displayName": "Supporting Ink",
+        "displayName": "Supporting Gray Text",
         "tonalRamp": [
-          "oklch(15.00% 0.04950 255.21)",
-          "oklch(26.43% 0.04950 255.21)",
-          "oklch(37.86% 0.04950 255.21)",
-          "oklch(49.29% 0.04950 255.21)",
-          "oklch(60.71% 0.04950 255.21)",
-          "oklch(72.14% 0.04950 255.21)",
-          "oklch(83.57% 0.04950 255.21)",
-          "oklch(95.00% 0.04950 255.21)"
+          "oklch(15.00% 0.00000 89.88)",
+          "oklch(26.43% 0.00000 89.88)",
+          "oklch(37.86% 0.00000 89.88)",
+          "oklch(49.29% 0.00000 89.88)",
+          "oklch(60.71% 0.00000 89.88)",
+          "oklch(72.14% 0.00000 89.88)",
+          "oklch(83.57% 0.00000 89.88)",
+          "oklch(95.00% 0.00000 89.88)"
         ],
-        "canonical": "#435771"
+        "canonical": "#595959"
       },
       "ink-3": {
         "role": "neutral",
-        "displayName": "Muted Ink",
+        "displayName": "Quiet Gray Text",
         "tonalRamp": [
-          "oklch(15.00% 0.04297 253.43)",
-          "oklch(26.43% 0.04297 253.43)",
-          "oklch(37.86% 0.04297 253.43)",
-          "oklch(49.29% 0.04297 253.43)",
-          "oklch(60.71% 0.04297 253.43)",
-          "oklch(72.14% 0.04297 253.43)",
-          "oklch(83.57% 0.04297 253.43)",
-          "oklch(95.00% 0.04297 253.43)"
+          "oklch(15.00% 0.00000 89.88)",
+          "oklch(26.43% 0.00000 89.88)",
+          "oklch(37.86% 0.00000 89.88)",
+          "oklch(49.29% 0.00000 89.88)",
+          "oklch(60.71% 0.00000 89.88)",
+          "oklch(72.14% 0.00000 89.88)",
+          "oklch(83.57% 0.00000 89.88)",
+          "oklch(95.00% 0.00000 89.88)"
         ],
-        "canonical": "#5a6d84"
+        "canonical": "#666666"
       },
       "rule": {
         "role": "neutral",
-        "displayName": "Quiet Rule",
+        "displayName": "Warm Rule",
         "tonalRamp": [
-          "oklch(15.00% 0.01611 253.91)",
-          "oklch(26.43% 0.01611 253.91)",
-          "oklch(37.86% 0.01611 253.91)",
-          "oklch(49.29% 0.01611 253.91)",
-          "oklch(60.71% 0.01611 253.91)",
-          "oklch(72.14% 0.01611 253.91)",
-          "oklch(83.57% 0.01611 253.91)",
-          "oklch(95.00% 0.01611 253.91)"
+          "oklch(15.00% 0.00348 67.78)",
+          "oklch(26.43% 0.00348 67.78)",
+          "oklch(37.86% 0.00348 67.78)",
+          "oklch(49.29% 0.00348 67.78)",
+          "oklch(60.71% 0.00348 67.78)",
+          "oklch(72.14% 0.00348 67.78)",
+          "oklch(83.57% 0.00348 67.78)",
+          "oklch(95.00% 0.00348 67.78)"
         ],
-        "canonical": "#dde5ef"
+        "canonical": "#e4e2e0"
       },
       "rule-2": {
         "role": "neutral",
-        "displayName": "Strong Rule",
+        "displayName": "Strong Gray Rule",
         "tonalRamp": [
-          "oklch(15.00% 0.03046 252.99)",
-          "oklch(26.43% 0.03046 252.99)",
-          "oklch(37.86% 0.03046 252.99)",
-          "oklch(49.29% 0.03046 252.99)",
-          "oklch(60.71% 0.03046 252.99)",
-          "oklch(72.14% 0.03046 252.99)",
-          "oklch(83.57% 0.03046 252.99)",
-          "oklch(95.00% 0.03046 252.99)"
+          "oklch(15.00% 0.00000 89.88)",
+          "oklch(26.43% 0.00000 89.88)",
+          "oklch(37.86% 0.00000 89.88)",
+          "oklch(49.29% 0.00000 89.88)",
+          "oklch(60.71% 0.00000 89.88)",
+          "oklch(72.14% 0.00000 89.88)",
+          "oklch(83.57% 0.00000 89.88)",
+          "oklch(95.00% 0.00000 89.88)"
         ],
-        "canonical": "#afbed0"
+        "canonical": "#949494"
       },
-      "support-orange": {
-        "role": "secondary",
-        "displayName": "Supporting Orange",
+      "rail": {
+        "role": "neutral",
+        "displayName": "Charcoal Rail",
         "tonalRamp": [
-          "oklch(15.00% 0.17345 47.56)",
-          "oklch(26.43% 0.17345 47.56)",
-          "oklch(37.86% 0.17345 47.56)",
-          "oklch(49.29% 0.17345 47.56)",
-          "oklch(60.71% 0.17345 47.56)",
-          "oklch(72.14% 0.17345 47.56)",
-          "oklch(83.57% 0.17345 47.56)",
-          "oklch(95.00% 0.17345 47.56)"
+          "oklch(15.00% 0.00000 89.88)",
+          "oklch(26.43% 0.00000 89.88)",
+          "oklch(37.86% 0.00000 89.88)",
+          "oklch(49.29% 0.00000 89.88)",
+          "oklch(60.71% 0.00000 89.88)",
+          "oklch(72.14% 0.00000 89.88)",
+          "oklch(83.57% 0.00000 89.88)",
+          "oklch(95.00% 0.00000 89.88)"
         ],
-        "canonical": "#df650d"
+        "canonical": "#2d2d2d"
       },
-      "success": {
-        "role": "secondary",
-        "displayName": "Success Green",
+      "rail-hover": {
+        "role": "neutral",
+        "displayName": "Rail Hover",
         "tonalRamp": [
-          "oklch(15.00% 0.10658 161.69)",
-          "oklch(26.43% 0.10658 161.69)",
-          "oklch(37.86% 0.10658 161.69)",
-          "oklch(49.29% 0.10658 161.69)",
-          "oklch(60.71% 0.10658 161.69)",
-          "oklch(72.14% 0.10658 161.69)",
-          "oklch(83.57% 0.10658 161.69)",
-          "oklch(95.00% 0.10658 161.69)"
+          "oklch(15.00% 0.00000 89.88)",
+          "oklch(26.43% 0.00000 89.88)",
+          "oklch(37.86% 0.00000 89.88)",
+          "oklch(49.29% 0.00000 89.88)",
+          "oklch(60.71% 0.00000 89.88)",
+          "oklch(72.14% 0.00000 89.88)",
+          "oklch(83.57% 0.00000 89.88)",
+          "oklch(95.00% 0.00000 89.88)"
         ],
-        "canonical": "#147953"
+        "canonical": "#424242"
+      },
+      "rail-rule": {
+        "role": "neutral",
+        "displayName": "Rail Divider",
+        "tonalRamp": [
+          "oklch(15.00% 0.00000 89.88)",
+          "oklch(26.43% 0.00000 89.88)",
+          "oklch(37.86% 0.00000 89.88)",
+          "oklch(49.29% 0.00000 89.88)",
+          "oklch(60.71% 0.00000 89.88)",
+          "oklch(72.14% 0.00000 89.88)",
+          "oklch(83.57% 0.00000 89.88)",
+          "oklch(95.00% 0.00000 89.88)"
+        ],
+        "canonical": "#505050"
+      },
+      "on-rail": {
+        "role": "neutral",
+        "displayName": "Rail Text",
+        "tonalRamp": [
+          "oklch(15.00% 0.00000 89.88)",
+          "oklch(26.43% 0.00000 89.88)",
+          "oklch(37.86% 0.00000 89.88)",
+          "oklch(49.29% 0.00000 89.88)",
+          "oklch(60.71% 0.00000 89.88)",
+          "oklch(72.14% 0.00000 89.88)",
+          "oklch(83.57% 0.00000 89.88)",
+          "oklch(95.00% 0.00000 89.88)"
+        ],
+        "canonical": "#ffffff"
+      },
+      "on-rail-muted": {
+        "role": "neutral",
+        "displayName": "Muted Rail Text",
+        "tonalRamp": [
+          "oklch(15.00% 0.00352 67.78)",
+          "oklch(26.43% 0.00352 67.78)",
+          "oklch(37.86% 0.00352 67.78)",
+          "oklch(49.29% 0.00352 67.78)",
+          "oklch(60.71% 0.00352 67.78)",
+          "oklch(72.14% 0.00352 67.78)",
+          "oklch(83.57% 0.00352 67.78)",
+          "oklch(95.00% 0.00352 67.78)"
+        ],
+        "canonical": "#d4d2d0"
+      },
+      "on-rail-focus": {
+        "role": "neutral",
+        "displayName": "Rail Focus",
+        "tonalRamp": [
+          "oklch(15.00% 0.00000 89.88)",
+          "oklch(26.43% 0.00000 89.88)",
+          "oklch(37.86% 0.00000 89.88)",
+          "oklch(49.29% 0.00000 89.88)",
+          "oklch(60.71% 0.00000 89.88)",
+          "oklch(72.14% 0.00000 89.88)",
+          "oklch(83.57% 0.00000 89.88)",
+          "oklch(95.00% 0.00000 89.88)"
+        ],
+        "canonical": "#ffffff"
+      },
+      "mint": {
+        "role": "secondary",
+        "displayName": "Monochrome Success",
+        "tonalRamp": [
+          "oklch(15.00% 0.00000 89.88)",
+          "oklch(26.43% 0.00000 89.88)",
+          "oklch(37.86% 0.00000 89.88)",
+          "oklch(49.29% 0.00000 89.88)",
+          "oklch(60.71% 0.00000 89.88)",
+          "oklch(72.14% 0.00000 89.88)",
+          "oklch(83.57% 0.00000 89.88)",
+          "oklch(95.00% 0.00000 89.88)"
+        ],
+        "canonical": "#2d2d2d"
+      },
+      "lavender": {
+        "role": "neutral",
+        "displayName": "Neutral Lavender",
+        "tonalRamp": [
+          "oklch(15.00% 0.00266 106.45)",
+          "oklch(26.43% 0.00266 106.45)",
+          "oklch(37.86% 0.00266 106.45)",
+          "oklch(49.29% 0.00266 106.45)",
+          "oklch(60.71% 0.00266 106.45)",
+          "oklch(72.14% 0.00266 106.45)",
+          "oklch(83.57% 0.00266 106.45)",
+          "oklch(95.00% 0.00266 106.45)"
+        ],
+        "canonical": "#eeeeec"
       },
       "error": {
         "role": "secondary",
-        "displayName": "Error",
+        "displayName": "Attention Red",
         "tonalRamp": [
-          "oklch(15.00% 0.18205 29.51)",
-          "oklch(26.43% 0.18205 29.51)",
-          "oklch(37.86% 0.18205 29.51)",
-          "oklch(49.29% 0.18205 29.51)",
-          "oklch(60.71% 0.18205 29.51)",
-          "oklch(72.14% 0.18205 29.51)",
-          "oklch(83.57% 0.18205 29.51)",
-          "oklch(95.00% 0.18205 29.51)"
+          "oklch(15.00% 0.17832 28.70)",
+          "oklch(26.43% 0.17832 28.70)",
+          "oklch(37.86% 0.17832 28.70)",
+          "oklch(49.29% 0.17832 28.70)",
+          "oklch(60.71% 0.17832 28.70)",
+          "oklch(72.14% 0.17832 28.70)",
+          "oklch(83.57% 0.17832 28.70)",
+          "oklch(95.00% 0.17832 28.70)"
         ],
-        "canonical": "#b42318"
+        "canonical": "#b3261e"
       },
       "error-container": {
         "role": "secondary",
-        "displayName": "Error Container",
+        "displayName": "Pale Pink Notice",
         "tonalRamp": [
-          "oklch(15.00% 0.02879 22.95)",
-          "oklch(26.43% 0.02879 22.95)",
-          "oklch(37.86% 0.02879 22.95)",
-          "oklch(49.29% 0.02879 22.95)",
-          "oklch(60.71% 0.02879 22.95)",
-          "oklch(72.14% 0.02879 22.95)",
-          "oklch(83.57% 0.02879 22.95)",
-          "oklch(95.00% 0.02879 22.95)"
+          "oklch(15.00% 0.01516 17.42)",
+          "oklch(26.43% 0.01516 17.42)",
+          "oklch(37.86% 0.01516 17.42)",
+          "oklch(49.29% 0.01516 17.42)",
+          "oklch(60.71% 0.01516 17.42)",
+          "oklch(72.14% 0.01516 17.42)",
+          "oklch(83.57% 0.01516 17.42)",
+          "oklch(95.00% 0.01516 17.42)"
         ],
-        "canonical": "#fee4e2"
+        "canonical": "#fdefef"
       },
       "on-error-container": {
         "role": "secondary",
-        "displayName": "On Error Container",
+        "displayName": "Dark Error Text",
         "tonalRamp": [
-          "oklch(15.00% 0.15003 28.99)",
-          "oklch(26.43% 0.15003 28.99)",
-          "oklch(37.86% 0.15003 28.99)",
-          "oklch(49.29% 0.15003 28.99)",
-          "oklch(60.71% 0.15003 28.99)",
-          "oklch(72.14% 0.15003 28.99)",
-          "oklch(83.57% 0.15003 28.99)",
-          "oklch(95.00% 0.15003 28.99)"
+          "oklch(15.00% 0.13183 28.02)",
+          "oklch(26.43% 0.13183 28.02)",
+          "oklch(37.86% 0.13183 28.02)",
+          "oklch(49.29% 0.13183 28.02)",
+          "oklch(60.71% 0.13183 28.02)",
+          "oklch(72.14% 0.13183 28.02)",
+          "oklch(83.57% 0.13183 28.02)",
+          "oklch(95.00% 0.13183 28.02)"
         ],
-        "canonical": "#912018"
+        "canonical": "#83231d"
       },
-      "recruiter-accent": {
-        "role": "primary",
-        "displayName": "Recruiter Blue",
+      "attention": {
+        "role": "secondary",
+        "displayName": "Attention Icon Red",
         "tonalRamp": [
-          "oklch(15% 0.14 260)",
-          "oklch(26% 0.14 260)",
-          "oklch(38% 0.14 260)",
-          "oklch(49% 0.14 260)",
-          "oklch(61% 0.14 260)",
-          "oklch(72% 0.14 260)",
-          "oklch(84% 0.14 260)",
-          "oklch(95% 0.14 260)"
-        ]
+          "oklch(15.00% 0.17832 28.70)",
+          "oklch(26.43% 0.17832 28.70)",
+          "oklch(37.86% 0.17832 28.70)",
+          "oklch(49.29% 0.17832 28.70)",
+          "oklch(60.71% 0.17832 28.70)",
+          "oklch(72.14% 0.17832 28.70)",
+          "oklch(83.57% 0.17832 28.70)",
+          "oklch(95.00% 0.17832 28.70)"
+        ],
+        "canonical": "#b3261e"
       },
-      "recruiter-accent-hover": {
-        "role": "primary",
-        "displayName": "Recruiter Blue Hover",
+      "attention-ground": {
+        "role": "secondary",
+        "displayName": "Attention Notice Ground",
         "tonalRamp": [
-          "oklch(15% 0.13 260)",
-          "oklch(26% 0.13 260)",
-          "oklch(38% 0.13 260)",
-          "oklch(49% 0.13 260)",
-          "oklch(61% 0.13 260)",
-          "oklch(72% 0.13 260)",
-          "oklch(84% 0.13 260)",
-          "oklch(95% 0.13 260)"
-        ]
+          "oklch(15.00% 0.01516 17.42)",
+          "oklch(26.43% 0.01516 17.42)",
+          "oklch(37.86% 0.01516 17.42)",
+          "oklch(49.29% 0.01516 17.42)",
+          "oklch(60.71% 0.01516 17.42)",
+          "oklch(72.14% 0.01516 17.42)",
+          "oklch(83.57% 0.01516 17.42)",
+          "oklch(95.00% 0.01516 17.42)"
+        ],
+        "canonical": "#fdefef"
       },
-      "recruiter-accent-deep": {
-        "role": "primary",
-        "displayName": "Recruiter Blue Deep",
+      "discovery-accent": {
+        "role": "secondary",
+        "displayName": "Content Blue",
         "tonalRamp": [
-          "oklch(15% 0.12 260)",
-          "oklch(26% 0.12 260)",
-          "oklch(38% 0.12 260)",
-          "oklch(49% 0.12 260)",
-          "oklch(61% 0.12 260)",
-          "oklch(72% 0.12 260)",
-          "oklch(84% 0.12 260)",
-          "oklch(95% 0.12 260)"
-        ]
+          "oklch(15.00% 0.13974 259.53)",
+          "oklch(26.43% 0.13974 259.53)",
+          "oklch(37.86% 0.13974 259.53)",
+          "oklch(49.29% 0.13974 259.53)",
+          "oklch(60.71% 0.13974 259.53)",
+          "oklch(72.14% 0.13974 259.53)",
+          "oklch(83.57% 0.13974 259.53)",
+          "oklch(95.00% 0.13974 259.53)"
+        ],
+        "canonical": "#2557a7"
       },
-      "recruiter-accent-subtle": {
-        "role": "primary",
-        "displayName": "Recruiter Blue Wash",
+      "discovery-hover": {
+        "role": "secondary",
+        "displayName": "Content Blue Hover",
         "tonalRamp": [
-          "oklch(15% 0.015 260)",
-          "oklch(26% 0.015 260)",
-          "oklch(38% 0.015 260)",
-          "oklch(49% 0.015 260)",
-          "oklch(61% 0.015 260)",
-          "oklch(72% 0.015 260)",
-          "oklch(84% 0.015 260)",
-          "oklch(95% 0.015 260)"
-        ]
+          "oklch(15.00% 0.11930 259.20)",
+          "oklch(26.43% 0.11930 259.20)",
+          "oklch(37.86% 0.11930 259.20)",
+          "oklch(49.29% 0.11930 259.20)",
+          "oklch(60.71% 0.11930 259.20)",
+          "oklch(72.14% 0.11930 259.20)",
+          "oklch(83.57% 0.11930 259.20)",
+          "oklch(95.00% 0.11930 259.20)"
+        ],
+        "canonical": "#164081"
       },
-      "recruiter-paper": {
-        "role": "neutral",
-        "displayName": "Recruiter White Paper",
+      "discovery-deep": {
+        "role": "secondary",
+        "displayName": "Deep Content Blue",
         "tonalRamp": [
-          "oklch(15% 0.004 70)",
-          "oklch(26% 0.004 70)",
-          "oklch(38% 0.004 70)",
-          "oklch(49% 0.004 70)",
-          "oklch(61% 0.004 70)",
-          "oklch(72% 0.004 70)",
-          "oklch(84% 0.004 70)",
-          "oklch(95% 0.004 70)"
-        ]
+          "oklch(15.00% 0.10603 257.70)",
+          "oklch(26.43% 0.10603 257.70)",
+          "oklch(37.86% 0.10603 257.70)",
+          "oklch(49.29% 0.10603 257.70)",
+          "oklch(60.71% 0.10603 257.70)",
+          "oklch(72.14% 0.10603 257.70)",
+          "oklch(83.57% 0.10603 257.70)",
+          "oklch(95.00% 0.10603 257.70)"
+        ],
+        "canonical": "#153d75"
       },
-      "recruiter-ground": {
-        "role": "neutral",
-        "displayName": "Soft Warm Ground",
+      "discovery-subtle": {
+        "role": "secondary",
+        "displayName": "Content Blue Wash",
         "tonalRamp": [
-          "oklch(15% 0.004 70)",
-          "oklch(26% 0.004 70)",
-          "oklch(38% 0.004 70)",
-          "oklch(49% 0.004 70)",
-          "oklch(61% 0.004 70)",
-          "oklch(72% 0.004 70)",
-          "oklch(84% 0.004 70)",
-          "oklch(95% 0.004 70)"
-        ]
-      },
-      "recruiter-inset": {
-        "role": "neutral",
-        "displayName": "Warm Inset",
-        "tonalRamp": [
-          "oklch(15% 0.004 70)",
-          "oklch(26% 0.004 70)",
-          "oklch(38% 0.004 70)",
-          "oklch(49% 0.004 70)",
-          "oklch(61% 0.004 70)",
-          "oklch(72% 0.004 70)",
-          "oklch(84% 0.004 70)",
-          "oklch(95% 0.004 70)"
-        ]
-      },
-      "recruiter-ink": {
-        "role": "neutral",
-        "displayName": "Recruiter Charcoal",
-        "tonalRamp": [
-          "oklch(15% 0.004 70)",
-          "oklch(26% 0.004 70)",
-          "oklch(38% 0.004 70)",
-          "oklch(49% 0.004 70)",
-          "oklch(61% 0.004 70)",
-          "oklch(72% 0.004 70)",
-          "oklch(84% 0.004 70)",
-          "oklch(95% 0.004 70)"
-        ]
-      },
-      "recruiter-muted": {
-        "role": "neutral",
-        "displayName": "Supporting Gray",
-        "tonalRamp": [
-          "oklch(15% 0.004 70)",
-          "oklch(26% 0.004 70)",
-          "oklch(38% 0.004 70)",
-          "oklch(49% 0.004 70)",
-          "oklch(61% 0.004 70)",
-          "oklch(72% 0.004 70)",
-          "oklch(84% 0.004 70)",
-          "oklch(95% 0.004 70)"
-        ]
-      },
-      "recruiter-muted-2": {
-        "role": "neutral",
-        "displayName": "Quiet Gray",
-        "tonalRamp": [
-          "oklch(15% 0.004 70)",
-          "oklch(26% 0.004 70)",
-          "oklch(38% 0.004 70)",
-          "oklch(49% 0.004 70)",
-          "oklch(61% 0.004 70)",
-          "oklch(72% 0.004 70)",
-          "oklch(84% 0.004 70)",
-          "oklch(95% 0.004 70)"
-        ]
-      },
-      "recruiter-border": {
-        "role": "neutral",
-        "displayName": "Warm Rule",
-        "tonalRamp": [
-          "oklch(15% 0.004 70)",
-          "oklch(26% 0.004 70)",
-          "oklch(38% 0.004 70)",
-          "oklch(49% 0.004 70)",
-          "oklch(61% 0.004 70)",
-          "oklch(72% 0.004 70)",
-          "oklch(84% 0.004 70)",
-          "oklch(95% 0.004 70)"
-        ]
-      },
-      "recruiter-border-strong": {
-        "role": "neutral",
-        "displayName": "Strong Gray Rule",
-        "tonalRamp": [
-          "oklch(15% 0.004 70)",
-          "oklch(26% 0.004 70)",
-          "oklch(38% 0.004 70)",
-          "oklch(49% 0.004 70)",
-          "oklch(61% 0.004 70)",
-          "oklch(72% 0.004 70)",
-          "oklch(84% 0.004 70)",
-          "oklch(95% 0.004 70)"
-        ]
+          "oklch(15.00% 0.01198 259.82)",
+          "oklch(26.43% 0.01198 259.82)",
+          "oklch(37.86% 0.01198 259.82)",
+          "oklch(49.29% 0.01198 259.82)",
+          "oklch(60.71% 0.01198 259.82)",
+          "oklch(72.14% 0.01198 259.82)",
+          "oklch(83.57% 0.01198 259.82)",
+          "oklch(95.00% 0.01198 259.82)"
+        ],
+        "canonical": "#eef3fb"
       }
     },
     "typographyMeta": {
@@ -486,7 +528,7 @@
       {
         "name": "workspace-sidebar-toggle",
         "value": "240ms cubic-bezier(0.2, 0.8, 0.2, 1)",
-        "purpose": "Candidate/recruiter grid adjustment on explicit toggle only, with 90–140ms label fades. Preference restoration and viewport changes do not animate; reduced-motion disables the transition."
+        "purpose": "Candidate/Recruiter rail changes only on its one header toggle and uses the saved shared preference; restoration and viewport changes do not animate. The Staff rail retains its existing local toggle. Reduced-motion disables transitions."
       },
       {
         "name": "hero-settle",
@@ -511,6 +553,10 @@
       {
         "name": "public-phone-max",
         "value": "640px"
+      },
+      {
+        "name": "workspace-drawer-max",
+        "value": "1100px"
       }
     ]
   },
@@ -519,41 +565,41 @@
       "name": "Primary Button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "Main public recruitment action. Base rounded variant from DESIGN.md; modern public surfaces override corners to square.",
-      "html": "<button class=\"ds-button\">Tìm việc</button>",
-      "css": ".ds-button{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:13px 24px;min-height:48px;border:1px solid transparent;border-radius:8px;background:var(--color-accent);color:var(--color-accent-ink);font-family:var(--font-body);font-size:15px;font-weight:700;cursor:pointer;transition:background-color 160ms ease}.ds-button:hover{background:var(--color-accent-hover)}.ds-button:focus-visible{outline:3px solid var(--color-focus);outline-offset:3px}.ds-button:disabled{opacity:.55;cursor:not-allowed}"
+      "description": "Primary action. It resolves to blue in public discovery and workspace main content, and charcoal in the surrounding monochrome chrome.",
+      "html": "<div class=\"ds-content-scope\"><button class=\"ds-button\">Tìm việc ngay</button></div>",
+      "css": ".ds-content-scope{--color-accent:var(--color-discovery-accent);--color-accent-hover:var(--color-discovery-hover);--color-accent-deep:var(--color-discovery-deep);--color-accent-subtle:var(--color-discovery-subtle);--color-focus:var(--color-discovery-accent)}.ds-button{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:13px 24px;min-height:48px;border:1px solid transparent;border-radius:8px;background:var(--color-accent);color:var(--color-accent-ink);font-family:var(--font-body);font-size:15px;font-weight:700;cursor:pointer;transition:background-color 160ms ease}.ds-button:hover{background:var(--color-accent-hover)}.ds-button:focus-visible{outline:3px solid var(--color-focus);outline-offset:3px}.ds-button:disabled{opacity:.55;cursor:not-allowed}"
     },
     {
       "name": "Outline Button",
       "kind": "button",
       "refersTo": "button-outline",
-      "description": "Supporting action beside a primary action. Base rounded variant from DESIGN.md; modern public surfaces override corners to square.",
-      "html": "<button class=\"ds-outline\">Xem công việc</button>",
-      "css": ".ds-outline{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:13px 24px;min-height:48px;border:1px solid transparent;border-radius:8px;background:var(--color-accent);color:var(--color-accent-ink);font-family:var(--font-body);font-size:15px;font-weight:700;cursor:pointer;transition:background-color 160ms ease}.ds-outline:hover{background:var(--color-accent-hover)}.ds-outline:focus-visible{outline:3px solid var(--color-focus);outline-offset:3px}.ds-outline:disabled{opacity:.55;cursor:not-allowed}.ds-outline{background:var(--color-paper);color:var(--color-accent);border-color:var(--color-accent)}.ds-outline:hover{background:var(--color-accent-subtle)}"
+      "description": "Supporting action; its color and focus treatment follow the same public/workspace content scope as the primary action.",
+      "html": "<div class=\"ds-content-scope\"><button class=\"ds-outline\">Xem công việc</button></div>",
+      "css": ".ds-content-scope{--color-accent:var(--color-discovery-accent);--color-accent-hover:var(--color-discovery-hover);--color-accent-deep:var(--color-discovery-deep);--color-accent-subtle:var(--color-discovery-subtle);--color-focus:var(--color-discovery-accent)}.ds-outline{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:13px 24px;min-height:48px;border:1px solid transparent;border-radius:8px;background:var(--color-accent);color:var(--color-accent-ink);font-family:var(--font-body);font-size:15px;font-weight:700;cursor:pointer;transition:background-color 160ms ease}.ds-outline:hover{background:var(--color-accent-hover)}.ds-outline:focus-visible{outline:3px solid var(--color-focus);outline-offset:3px}.ds-outline:disabled{opacity:.55;cursor:not-allowed}.ds-outline{background:var(--color-paper);color:var(--color-accent);border-color:var(--color-accent)}.ds-outline:hover{background:var(--color-accent-subtle)}"
     },
     {
       "name": "Search Input",
       "kind": "input",
       "refersTo": "search-input",
-      "description": "Keyword input inside the public search form.",
-      "html": "<label class=\"ds-field\"><span>Từ khóa</span><input placeholder=\"Chức danh, kỹ năng hoặc công ty\" /></label>",
-      "css": ".ds-field{display:flex;flex-direction:column;gap:8px;padding:10px 16px;background:var(--color-paper);color:var(--color-ink);font-family:var(--font-body);font-size:15px}.ds-field input{min-height:44px;border:0;background:transparent;color:var(--color-ink);font:inherit;caret-color:var(--color-accent)}.ds-field input::placeholder{color:var(--color-ink-3)}.ds-field input:focus-visible{outline:3px solid var(--color-focus);outline-offset:3px}"
+      "description": "Keyword input inside public discovery; its caret and focus use the scoped blue accent.",
+      "html": "<div class=\"ds-content-scope\"><label class=\"ds-field\"><span>Từ khóa</span><input placeholder=\"Chức danh, kỹ năng hoặc công ty\" /></label></div>",
+      "css": ".ds-content-scope{--color-accent:var(--color-discovery-accent);--color-accent-hover:var(--color-discovery-hover);--color-accent-deep:var(--color-discovery-deep);--color-accent-subtle:var(--color-discovery-subtle);--color-focus:var(--color-discovery-accent)}.ds-field{display:flex;flex-direction:column;gap:8px;padding:10px 16px;background:var(--color-paper);color:var(--color-ink);font-family:var(--font-body);font-size:15px}.ds-field input{min-height:44px;border:0;background:transparent;color:var(--color-ink);font:inherit;caret-color:var(--color-accent)}.ds-field input::placeholder{color:var(--color-ink-3)}.ds-field input:focus-visible{outline:3px solid var(--color-focus);outline-offset:3px}"
     },
     {
       "name": "Popular Skill Chip",
       "kind": "chip",
       "refersTo": "popular-chip",
-      "description": "A linked popular keyword beneath search.",
-      "html": "<a class=\"ds-chip\" href=\"#jobs\">Kinh doanh</a>",
-      "css": ".ds-chip{display:inline-block;padding:4px 12px;border-radius:5px;background:var(--color-paper);color:var(--color-ink-2);font-family:var(--font-body);font-size:13px;text-decoration:none}.ds-chip:hover{color:var(--color-accent);text-decoration:underline}.ds-chip:focus-visible{outline:3px solid var(--color-focus);outline-offset:3px}"
+      "description": "A linked popular keyword beneath search; hover and focus use the public content accent.",
+      "html": "<div class=\"ds-content-scope\"><a class=\"ds-chip\" href=\"#jobs\">Kinh doanh</a></div>",
+      "css": ".ds-content-scope{--color-accent:var(--color-discovery-accent);--color-accent-hover:var(--color-discovery-hover);--color-accent-deep:var(--color-discovery-deep);--color-accent-subtle:var(--color-discovery-subtle);--color-focus:var(--color-discovery-accent)}.ds-chip{display:inline-block;padding:4px 12px;border-radius:5px;background:var(--color-paper);color:var(--color-ink-2);font-family:var(--font-body);font-size:13px;text-decoration:none}.ds-chip:hover{color:var(--color-accent);text-decoration:underline}.ds-chip:focus-visible{outline:3px solid var(--color-focus);outline-offset:3px}"
     },
     {
       "name": "Job Card",
       "kind": "card",
       "refersTo": "job-card",
-      "description": "Documented base listing primitive; modern.css presents public collections as unboxed rows.",
-      "html": "<a class=\"ds-card\" href=\"#job\"><span class=\"ds-company\">GuardianWork</span><h3>Chuyên viên kinh doanh</h3><span class=\"ds-salary\">Thỏa thuận</span><span class=\"ds-location\">TP. Hồ Chí Minh</span></a>",
-      "css": ".ds-card{display:flex;flex-direction:column;gap:10px;padding:22px;border:1px solid var(--color-rule);border-radius:12px;background:var(--color-paper);color:var(--color-ink);font-family:var(--font-body);text-decoration:none;transition:border-color 160ms ease,background-color 160ms ease}.ds-card:hover{border-color:var(--color-accent);background:var(--color-paper-2)}.ds-card:focus-visible{outline:3px solid var(--color-focus);outline-offset:3px}.ds-company,.ds-location{color:var(--color-ink-2);font-size:13px}.ds-card h3{font-size:18px;font-weight:700;line-height:1.45;margin:8px 0 0}.ds-salary{font-size:14px;font-weight:650;color:var(--color-accent)}"
+      "description": "Public listing card; job title, salary, hover, focus, and selected states use the content accent.",
+      "html": "<div class=\"ds-content-scope\"><a class=\"ds-card\" href=\"#job\"><span class=\"ds-company\">GuardianWork</span><h3>Chuyên viên kinh doanh</h3><span class=\"ds-salary\">Thỏa thuận</span><span class=\"ds-location\">TP. Hồ Chí Minh</span></a></div>",
+      "css": ".ds-content-scope{--color-accent:var(--color-discovery-accent);--color-accent-hover:var(--color-discovery-hover);--color-accent-deep:var(--color-discovery-deep);--color-accent-subtle:var(--color-discovery-subtle);--color-focus:var(--color-discovery-accent)}.ds-card{display:flex;flex-direction:column;gap:10px;padding:22px;border:1px solid var(--color-rule);border-radius:12px;background:var(--color-paper);color:var(--color-ink);font-family:var(--font-body);text-decoration:none;transition:border-color 160ms ease,background-color 160ms ease}.ds-card:hover{border-color:var(--color-accent);background:var(--color-paper-2)}.ds-card:focus-visible{outline:3px solid var(--color-focus);outline-offset:3px}.ds-company,.ds-location{color:var(--color-ink-2);font-size:13px}.ds-card h3{font-size:18px;font-weight:700;line-height:1.45;margin:8px 0 0}.ds-salary{font-size:14px;font-weight:650;color:var(--color-accent)}"
     },
     {
       "name": "Public Navigation",
@@ -564,56 +610,56 @@
       "css": ".ds-nav{display:flex;flex-wrap:wrap;gap:2px;background:var(--color-paper);font-family:var(--font-body)}.ds-nav a{display:inline-flex;align-items:center;min-height:40px;padding:0 13px;border-radius:8px;color:var(--color-ink-2);font-size:14px;font-weight:600;text-decoration:none;transition:background-color 160ms ease-out,color 160ms ease-out}.ds-nav a:hover{background:var(--color-paper-2);color:var(--color-ink)}.ds-nav a[aria-current=\"page\"]{background:var(--color-accent-subtle);color:var(--color-accent-deep)}.ds-nav a:focus-visible{outline:3px solid var(--color-focus);outline-offset:3px}"
     },
     {
-      "name": "Candidate and Recruiter Workspace Sidebar",
+      "name": "Candidate and Recruiter Workspace Frame",
       "kind": "nav",
-      "refersTo": "navigation",
-      "description": "Compact, collapsible role navigation inside the persistent Candidate/recruiter frame; Staff navigation remains separate. The 44×44 collapse control sits in the persistent header.",
-      "html": "<aside class=\"ds-workspace\" aria-label=\"Điều hướng ứng viên\"><div class=\"ds-workspace-brand\">GuardianWork</div><nav aria-label=\"Điều hướng chính\"><a class=\"ds-workspace-link\" href=\"#jobs\" aria-label=\"Tìm việc làm\" aria-current=\"page\"><svg viewBox=\"0 0 20 20\" aria-hidden=\"true\"><path d=\"M3 4h14v12H3zM7 4v12\"/></svg><span>Tìm việc làm</span></a></nav><nav class=\"ds-workspace-footer\" aria-label=\"Điều hướng nhanh\"><a class=\"ds-workspace-link\" href=\"#account\" aria-label=\"Cài đặt tài khoản\"><span>Cài đặt tài khoản</span></a><a class=\"ds-workspace-link\" href=\"#switch\" aria-label=\"Chuyển phân hệ\"><span>Chuyển phân hệ</span></a><a class=\"ds-workspace-link\" href=\"#home\" aria-label=\"Trang chủ\"><span>Trang chủ</span></a></nav></aside>",
-      "css": ".ds-workspace{display:flex;flex-direction:column;justify-content:space-between;box-sizing:border-box;width:244px;height:calc(100vh - 16px);margin:8px;padding:12px;border:1px solid var(--color-rule);border-radius:16px;background:var(--color-paper);color:var(--color-ink);font-family:var(--font-body)}.ds-workspace nav{display:grid;gap:6px}.ds-workspace-brand{padding:12px;color:var(--color-accent);font-weight:700}.ds-workspace-link{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 12px;border-radius:8px;color:var(--color-ink-2);font-size:14px;text-decoration:none}.ds-workspace-link svg{width:20px;height:20px;flex:0 0 20px;fill:none;stroke:currentColor;stroke-width:1.7}.ds-workspace-link:hover{background:var(--color-paper-2)}.ds-workspace-link[aria-current=\"page\"]{background:var(--color-accent-subtle);color:var(--color-accent-deep);font-weight:600}.ds-workspace-link:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}.ds-workspace-footer{border-top:1px solid var(--color-rule);padding-top:10px}.ds-workspace--collapsed{width:76px}.ds-workspace--collapsed .ds-workspace-link{justify-content:center;gap:0;padding-inline:0}.ds-workspace--collapsed .ds-workspace-link span,.ds-workspace--collapsed .ds-workspace-brand{max-width:0;overflow:hidden;opacity:0}"
+      "refersTo": "workspace-rail",
+      "description": "Persistent 244px/76px charcoal frame; its main region uses blue content accents, with one saved header collapse control and the three role-aware footer links.",
+      "html": "<section class=\"ds-user-frame\"><aside class=\"ds-workspace\" aria-label=\"Điều hướng ứng viên\"><div class=\"ds-workspace-brand\">GuardianWork</div><nav aria-label=\"Điều hướng chính\"><a class=\"ds-workspace-link\" href=\"#jobs\" aria-label=\"Tìm việc làm\" aria-current=\"page\"><svg viewBox=\"0 0 20 20\" aria-hidden=\"true\"><path d=\"M3 4h14v12H3zM7 4v12\"/></svg><span>Tìm việc làm</span></a></nav><nav class=\"ds-workspace-footer\" aria-label=\"Điều hướng nhanh\"><a class=\"ds-workspace-link\" href=\"#account\" aria-label=\"Cài đặt tài khoản\"><span>Cài đặt tài khoản</span></a><a class=\"ds-workspace-link\" href=\"#switch\" aria-label=\"Chuyển phân hệ\"><span>Chuyển phân hệ</span></a><a class=\"ds-workspace-link\" href=\"#home\" aria-label=\"Trang chủ\"><span>Trang chủ</span></a></nav></aside><div class=\"ds-user-content\"><header class=\"ds-user-header\"><button class=\"ds-collapse\" aria-label=\"Thu gọn điều hướng\" aria-expanded=\"true\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M4 6h16M4 12h16M4 18h16\"/></svg></button><button class=\"ds-mobile-menu\" aria-label=\"Mở menu điều hướng\" aria-expanded=\"false\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M4 6h16M4 12h16M4 18h16\"/></svg></button><strong>GuardianWork</strong></header><main><h2>Không gian làm việc</h2><p>Chọn bước tiếp theo để tiếp tục.</p><button class=\"ds-workspace-action\" type=\"button\">Tạo mục mới</button></main></div></section>",
+      "css": ".ds-user-frame{display:grid;grid-template-columns:244px minmax(0,1fr);gap:8px;min-height:500px;background:var(--color-paper-2);color:var(--color-ink);font-family:\"Hanken Grotesk\",system-ui,sans-serif}.ds-workspace{display:flex;flex-direction:column;justify-content:space-between;box-sizing:border-box;min-height:484px;margin:8px;padding:12px;border:1px solid var(--color-rail-rule);border-radius:14px;background:var(--color-ink);color:var(--color-paper)}.ds-workspace nav{display:grid;gap:4px}.ds-workspace-brand{padding:12px;color:var(--color-paper);font-weight:700}.ds-workspace-link{display:flex;align-items:center;gap:12px;min-height:44px;padding:10px 12px;border-radius:8px;color:var(--color-paper);font-size:14px;text-decoration:none}.ds-workspace-link svg{width:20px;height:20px;flex:0 0 20px;fill:none;stroke:currentColor;stroke-width:1.7}.ds-workspace-link:hover{background:var(--color-rail-hover)}.ds-workspace-link[aria-current=\"page\"]{background:var(--color-paper);color:var(--color-ink);font-weight:650}.ds-workspace-link:focus-visible,.ds-collapse:focus-visible,.ds-mobile-menu:focus-visible{outline:2px solid var(--color-paper);outline-offset:2px}.ds-workspace-footer{align-content:end;border-top:1px solid var(--color-rail-rule);padding-top:10px}.ds-user-content{min-width:0}.ds-user-header{display:flex;align-items:center;gap:12px;min-height:76px;padding:0 24px;border-bottom:1px solid var(--color-rule);background:var(--color-paper)}.ds-user-header strong{font-size:20px}.ds-user-header button{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border:1px solid var(--color-rule);border-radius:6px;background:var(--color-paper);color:var(--color-ink-2)}.ds-user-header button svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2}.ds-mobile-menu{display:none!important}.ds-user-content main{--color-accent:var(--color-discovery-accent);--color-accent-hover:var(--color-discovery-hover);--color-accent-deep:var(--color-discovery-deep);--color-accent-subtle:var(--color-discovery-subtle);--color-focus:var(--color-discovery-accent);min-height:400px;padding:28px;background:var(--color-paper)}.ds-user-content main h2{color:var(--color-discovery-deep)}.ds-workspace-action{min-height:44px;padding:10px 16px;border:0;border-radius:8px;background:var(--color-accent);color:var(--color-paper);font:700 14px \"Hanken Grotesk\",system-ui,sans-serif}.ds-workspace-action:hover{background:var(--color-accent-hover)}.ds-workspace-action:focus-visible{outline:3px solid var(--color-focus);outline-offset:3px}.ds-user-frame[data-collapsed=\"true\"]{grid-template-columns:76px minmax(0,1fr)}.ds-user-frame[data-collapsed=\"true\"] .ds-workspace{width:60px}.ds-user-frame[data-collapsed=\"true\"] .ds-workspace-brand,.ds-user-frame[data-collapsed=\"true\"] .ds-workspace-link span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}.ds-user-frame[data-collapsed=\"true\"] .ds-workspace-link{justify-content:center;gap:0;padding-inline:0}@media(max-width:1100px){.ds-user-frame{display:block;position:relative}.ds-workspace{position:absolute;z-index:2;inset:8px auto 8px 8px;width:min(300px,calc(100vw - 32px));margin:0}.ds-collapse{display:none!important}.ds-mobile-menu{display:inline-flex!important}.ds-user-header{min-height:68px;padding:0 12px}}"
     },
     {
-      "name": "Recruiter Rail Navigation",
+      "name": "Staff Workspace Rail",
       "kind": "nav",
-      "description": "Dark recruiter destination rail with a white current-page row.",
-      "html": "<nav class=\"ds-recruiter-nav\" aria-label=\"Điều hướng nhà tuyển dụng\"><a href=\"#overview\" aria-current=\"page\"><svg aria-hidden=\"true\" viewBox=\"0 0 24 24\"><rect x=\"4\" y=\"4\" width=\"6\" height=\"6\" rx=\"1\"/><rect x=\"14\" y=\"4\" width=\"6\" height=\"6\" rx=\"1\"/><rect x=\"4\" y=\"14\" width=\"6\" height=\"6\" rx=\"1\"/><rect x=\"14\" y=\"14\" width=\"6\" height=\"6\" rx=\"1\"/></svg><span>Tổng quan</span></a><a href=\"#jobs\"><svg aria-hidden=\"true\" viewBox=\"0 0 24 24\"><path d=\"M6 4h12v16H6zM4 8h16M9 12h6M9 16h6\"/></svg><span>Tin tuyển dụng</span></a></nav>",
-      "css": ".ds-recruiter-nav{display:flex;flex-direction:column;gap:8px;width:280px;padding:20px 12px;background:#2d2d2d;color:#fff;font-family:'Hanken Grotesk',system-ui,sans-serif}.ds-recruiter-nav a{display:flex;align-items:center;gap:12px;min-height:56px;padding:8px 12px;border:1px solid transparent;border-radius:8px;color:#fff;font-size:14px;font-weight:600;text-decoration:none}.ds-recruiter-nav svg{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.ds-recruiter-nav a:hover{background:#424242;border-color:#666}.ds-recruiter-nav a[aria-current='page']{background:#fff;border-color:#fff;color:#2d2d2d}.ds-recruiter-nav a:focus-visible{outline:2px solid #a6c6ff;outline-offset:2px}"
+      "refersTo": "staff-rail",
+      "description": "Staff retains its charcoal 280px/80px rail and its existing local toggle while using the shared site palette.",
+      "html": "<aside class=\"ds-staff-rail\" aria-label=\"Điều hướng nhân viên\"><nav><a href=\"#review\" aria-current=\"page\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M4 5h16v14H4zM8 9h8M8 13h8\"/></svg><span>Hàng đợi xét duyệt</span></a><a href=\"#companies\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M4 20V6l8-3 8 3v14M8 10h2m4 0h2m-8 4h2m4 0h2\"/></svg><span>Doanh nghiệp</span></a></nav></aside>",
+      "css": ".ds-staff-rail{box-sizing:border-box;display:flex;flex-direction:column;width:280px;min-height:500px;padding:18px 12px;background:var(--color-ink);color:var(--color-paper);font-family:\"Hanken Grotesk\",system-ui,sans-serif}.ds-staff-rail nav{display:grid;gap:8px}.ds-staff-rail a{display:flex;align-items:center;gap:10px;min-height:56px;padding:8px 10px;border:1px solid transparent;border-radius:12px;color:var(--color-paper);font-size:14px;text-decoration:none}.ds-staff-rail svg{display:block;width:40px;height:40px;flex:none;padding:9px;border-radius:12px;fill:none;stroke:currentColor;stroke-width:1.7}.ds-staff-rail a:hover{background:var(--color-rail-hover);border-color:var(--color-rail-rule)}.ds-staff-rail a[aria-current=\"page\"]{background:var(--color-paper);color:var(--color-ink);font-weight:650}.ds-staff-rail a:focus-visible{outline:2px solid var(--color-paper);outline-offset:2px}.ds-staff-rail[data-collapsed=\"true\"]{width:80px}.ds-staff-rail[data-collapsed=\"true\"] a{justify-content:center}.ds-staff-rail[data-collapsed=\"true\"] span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}"
     },
     {
-      "name": "Recruiter Primary Action",
-      "kind": "button",
-      "refersTo": "recruiter-primary-action",
-      "description": "Primary overview and recruiter setup action.",
-      "html": "<button class=\"ds-recruiter-action\">Đăng tin tuyển dụng</button>",
-      "css": ".ds-recruiter-action{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10.4px 16px;border:0;border-radius:6px;background:#2557a7;color:#fff;font-family:'Hanken Grotesk',system-ui,sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:background-color 160ms ease}.ds-recruiter-action:hover{background:#595959}.ds-recruiter-action:focus-visible{outline:2px solid #2557a7;outline-offset:3px}.ds-recruiter-action:disabled{opacity:.5;cursor:not-allowed}"
-    },
-    {
-      "name": "Recruiter Job Field",
+      "name": "Account and Recovery Controls",
       "kind": "input",
-      "refersTo": "recruiter-job-field",
-      "description": "Labeled job-editor control with recruiter focus and validation states.",
-      "html": "<label class=\"ds-recruiter-field\"><span>Chức danh</span><input placeholder=\"Tên vị trí tuyển dụng\" /></label>",
-      "css": ".ds-recruiter-field{display:flex;flex-direction:column;gap:9px;color:#2d2d2d;font-family:'Hanken Grotesk',system-ui,sans-serif;font-size:16px;font-weight:600}.ds-recruiter-field input{width:100%;min-height:48px;padding:10px 12px;border:1px solid #949494;border-radius:8px;background:#fff;color:#2d2d2d;font:400 16px/1.5 'Hanken Grotesk',system-ui,sans-serif}.ds-recruiter-field input::placeholder{color:#666;opacity:1}.ds-recruiter-field input:focus-visible{outline:3px solid #2557a7;outline-offset:3px}.ds-recruiter-field input[aria-invalid='true']{border-color:#b42318}"
+      "refersTo": "account-field",
+      "description": "Shared 48px account and recovery field; account controls in workspace main content use the scoped blue treatment, while standalone recovery remains monochrome. The example shows the account-in-workspace context; standalone recovery inherits the monochrome root tokens.",
+      "html": "<section class=\"ds-account-content\"><form class=\"ds-account-form\"><label>Email<input type=\"email\" placeholder=\"ten@congty.vn\" /></label><div><button class=\"ds-account-primary\" type=\"button\">Lưu thay đổi</button><button class=\"ds-account-quiet\" type=\"button\">Hủy</button></div></form></section>",
+      "css": ".ds-account-content{--color-accent:var(--color-discovery-accent);--color-accent-hover:var(--color-discovery-hover);--color-accent-deep:var(--color-discovery-deep);--color-accent-subtle:var(--color-discovery-subtle);--color-focus:var(--color-discovery-accent)}.ds-account-form{display:grid;gap:16px;max-width:420px;color:var(--color-ink);font-family:\"Hanken Grotesk\",system-ui,sans-serif}.ds-account-form label{display:grid;gap:8px;font-size:14px;font-weight:600}.ds-account-form input{box-sizing:border-box;width:100%;min-height:48px;padding:10px 12px;border:1px solid var(--color-rule-2);border-radius:8px;background:var(--color-paper);color:var(--color-ink);font:400 16px/1.5 \"Hanken Grotesk\",system-ui,sans-serif}.ds-account-form input:focus-visible{outline:2px solid var(--color-focus);outline-offset:2px}.ds-account-form>div{display:flex;flex-wrap:wrap;gap:12px}.ds-account-form button{min-height:48px;padding:10px 18px;border:1px solid var(--color-accent);border-radius:8px;font:700 15px \"Hanken Grotesk\",system-ui,sans-serif;cursor:pointer}.ds-account-primary{background:var(--color-accent);color:var(--color-paper);transition:background-color 160ms ease}.ds-account-primary:hover{background:var(--color-accent-hover)}.ds-account-quiet{background:var(--color-paper);color:var(--color-ink);border-color:var(--color-rule-2)!important}.ds-account-quiet:hover{background:var(--color-paper-2)}.ds-account-form button:focus-visible{outline:2px solid var(--color-focus);outline-offset:2px}"
     },
     {
-      "name": "Recruiter Job Editor Section",
+      "name": "Attention Notice",
       "kind": "custom",
-      "description": "One labeled group in the existing sectioned job editor.",
-      "html": "<section class=\"ds-recruiter-editor-section\" aria-labelledby=\"job-basic-heading\"><h3 id=\"job-basic-heading\">Thông tin cơ bản</h3><p>Thông tin giúp ứng viên hiểu về vị trí.</p><label>Chức danh<input value=\"Chuyên viên tuyển dụng\" /></label></section>",
-      "css": ".ds-recruiter-editor-section{display:flex;flex-direction:column;gap:20px;padding:32px;background:#fff;color:#2d2d2d;font-family:'Hanken Grotesk',system-ui,sans-serif}.ds-recruiter-editor-section+.ds-recruiter-editor-section{border-top:1px solid #e4e2e0}.ds-recruiter-editor-section h3{margin:0;font-size:18px;font-weight:700;line-height:1.4}.ds-recruiter-editor-section p{margin:0;color:#595959;font-size:14px}.ds-recruiter-editor-section label{display:flex;flex-direction:column;gap:9px;font-size:16px;font-weight:600}.ds-recruiter-editor-section input{min-height:48px;padding:10px 12px;border:1px solid #949494;border-radius:8px;color:#2d2d2d;font:400 16px/1.5 'Hanken Grotesk',system-ui,sans-serif}.ds-recruiter-editor-section input:focus-visible{outline:3px solid #2557a7;outline-offset:3px}"
+      "refersTo": "attention-notice",
+      "description": "Pale-pink semantic alert with a red circle-exclamation icon and readable charcoal copy.",
+      "html": "<div class=\"ds-attention\" role=\"alert\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"11\"/><path d=\"M12 6v7M12 17v1\"/></svg><div><strong>Không thể lưu thay đổi</strong><p>Kiểm tra thông tin và thử lại.</p></div></div>",
+      "css": ".ds-attention{position:relative;display:flex;align-items:flex-start;min-height:64px;margin:16px 0;padding:20px 24px 20px 58px;border:0;border-radius:16px;background:var(--color-attention-ground);color:var(--color-ink);font-family:\"Hanken Grotesk\",system-ui,sans-serif;font-size:15px;line-height:1.6;overflow-wrap:anywhere}.ds-attention svg{position:absolute;top:22px;left:24px;width:20px;height:20px;fill:var(--color-attention);stroke:var(--color-paper);stroke-width:2;stroke-linecap:round}.ds-attention strong{display:block;margin-bottom:4px;color:var(--color-ink);font-weight:700}.ds-attention p{margin:0;color:var(--color-ink)}@media(max-width:640px){.ds-attention{padding:18px 18px 18px 48px;font-size:14px}.ds-attention svg{top:20px;left:18px}}"
     }
   ],
   "narrative": {
     "northStar": "Familiar recruitment, clear next steps",
-    "overview": "Guardian Blue is a familiar, clear recruitment interface: white surfaces, cool blue-gray supporting grounds, dark blue text, and decisive blue actions. The user selected the category-standard direction with VietnamWorks as the craft reference. The implementation is code-first; the reference was not accessible for direct visual comparison.\n\nGuardianWork is a multi-industry recruitment platform. Public browsing uses generous search and listing areas, with business, marketing, finance, HR, operations and technology as peer categories. Candidate, recruiter, administrator, and authentication surfaces use the same tokens with task-appropriate density. Existing role boundaries and workflows remain the source of product behavior.",
+    "overview": "GuardianWork uses a monochrome frame across public chrome, authentication and recovery, and Candidate, Recruiter, and Staff workspace shells. Blue highlights content within public discovery and each workspace main area, while headers, footers, and sidebars stay charcoal and white. The approved `/rec` reference also informs pale-pink attention notices with a red exclamation mark and readable dark copy. Hanken Grotesk and existing task flows remain in place.\n\nGuardianWork remains a multi-industry recruitment platform. Public browsing keeps its familiar search and listing structure, while the three workspaces retain their role-specific navigation and density. The scoped palette adds emphasis to actionable content without changing role boundaries, content, or workflows.",
     "keyCharacteristics": [
-      "White and cool blue-gray surfaces with Guardian Blue actions.",
+      "Black, white, charcoal, and gray frame every site; blue highlights public discovery and workspace main content.",
+      "Pale-pink notices and red exclamation marks communicate attention with dark readable copy.",
       "Hanken Grotesk for headings, body copy, labels, and workspace UI.",
-      "Quiet borders, gently curved controls, and compact information hierarchy."
+      "Quiet borders, gently rounded controls, and compact information hierarchy."
     ],
     "rules": [
       {
-        "name": "The Guardian Blue Rule",
-        "body": "Guardian Blue is the only product theme. Keep primary actions and focus consistent across public pages, authentication, and workspaces.",
+        "name": "The Monochrome Chrome Rule",
+        "body": "Use black, white, charcoal, and gray for public chrome, authentication and recovery, and workspace headers and sidebars. Keep the surrounding frame monochrome and do not create role-specific themes.",
+        "section": "colors"
+      },
+      {
+        "name": "The Blue Main Content Rule",
+        "body": "Use the scoped blue accent in public discovery and in Candidate, Recruiter, and Staff workspace main content for actions, links, focus, selected content, section headings, account overview, and key figures. Keep headers, footers, and sidebars monochrome.",
         "section": "colors"
       },
       {
@@ -623,20 +669,24 @@
       }
     ],
     "dos": [
-      "Do use Guardian Blue for primary actions, active navigation, and keyboard focus.",
+      "Do keep public and workspace chrome, authentication, and standalone recovery in the shared monochrome palette.",
+      "Do use blue accents in public discovery and the main content areas of Candidate, Recruiter, and Staff workspaces.",
+      "Do reserve the pale-pink/red treatment for attention notices and keep their title and body dark.",
       "Do keep muted text on light surfaces and preserve visible field labels and focus outlines.",
       "Do adapt grids and search controls to a single column on small phones.",
       "Do preserve role-specific routes, existing content, and the distinction between simulated and integrated capabilities.",
-      "Do keep the Candidate/recruiter sidebar and header mounted while nested navigation changes only the main view.",
-      "Do keep the exact three role-aware quick links at the bottom of both Candidate and recruiter sidebars.",
-      "Do keep the compact collapsible rail scoped to Candidate and recruiter; preserve the Staff sidebar."
+      "Do keep the Candidate and Recruiter sidebars mounted and restore their shared saved collapse preference; nested routes change only the main view.",
+      "Do keep the exact Candidate and Recruiter footer links, in order: Cài đặt tài khoản, Chuyển phân hệ, Trang chủ.",
+      "Do retain the existing single header collapse control for Candidate/Recruiter and Staff's 280px/80px frame with its local toggle.",
+      "Do preserve the shared 48px account and recovery form controls."
     ],
     "donts": [
       "Don't expose a theme selector or restore a saved palette preference.",
-      "Don't introduce a different visual identity for a workspace or authentication page.",
+      "Don't introduce role-specific palettes or use attention colors for routine status decoration.",
+      "Don't extend blue content accents to public headers/footers, authentication, standalone recovery, or workspace headers/sidebars.",
       "Don't strengthen unverified product claims or document simulated actions as production integrations.",
       "Don't inherit legacy icon-font or decorative eyebrow treatments as new component patterns.",
-      "Don't restore large icon wells or oversized sidebar icons to the Candidate/recruiter rail."
+      "Don't add a second collapse toggle to the Candidate or Recruiter frame."
     ]
   }
 }

@@ -191,8 +191,8 @@
   line-height: 1.6;
 }
 .approval-notice {
-  background: #e8f5ee;
-  color: #146341;
+  background: var(--color-paper-2);
+  color: var(--color-ink);
 }
 .approval-error {
   background: var(--error-container);

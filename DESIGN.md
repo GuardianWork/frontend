@@ -1,37 +1,39 @@
 ---
 name: GuardianWork
-description: Guardian Blue recruitment with a scoped employer workspace palette.
+description: Monochrome chrome with blue-highlighted content across GuardianWork.
 colors:
-  primary: "#0868c9"
-  primary-hover: "#0755a3"
-  primary-deep: "#064887"
-  primary-subtle: "#e9f3ff"
+  primary: "#2d2d2d"
+  primary-hover: "#111111"
+  primary-deep: "#1f1f1f"
+  primary-subtle: "#f3f3f2"
+  discovery-accent: "#2557a7"
+  discovery-hover: "#164081"
+  discovery-deep: "#153d75"
+  discovery-subtle: "#eef3fb"
+  accent-ink: "#ffffff"
+  support-gray: "#595959"
   paper: "#ffffff"
-  paper-2: "#f3f6fb"
-  paper-3: "#e8eff8"
-  paper-inverse: "#152a46"
-  ink: "#172d49"
-  ink-2: "#435771"
-  ink-3: "#5a6d84"
-  rule: "#dde5ef"
-  rule-2: "#afbed0"
-  support-orange: "#df650d"
-  success: "#147953"
-  error: "#b42318"
-  error-container: "#fee4e2"
-  on-error-container: "#912018"
-  recruiter-accent: "#2557a7"
-  recruiter-accent-hover: "#164081"
-  recruiter-accent-deep: "#153d75"
-  recruiter-accent-subtle: "#eef3fb"
-  recruiter-paper: "#ffffff"
-  recruiter-ground: "#f7f7f6"
-  recruiter-inset: "#eeeeec"
-  recruiter-ink: "#2d2d2d"
-  recruiter-muted: "#595959"
-  recruiter-muted-2: "#666666"
-  recruiter-border: "#e4e2e0"
-  recruiter-border-strong: "#949494"
+  paper-2: "#f7f7f6"
+  paper-3: "#eeeeec"
+  paper-inverse: "#2d2d2d"
+  ink: "#2d2d2d"
+  ink-2: "#595959"
+  ink-3: "#666666"
+  rule: "#e4e2e0"
+  rule-2: "#949494"
+  rail: "#2d2d2d"
+  rail-hover: "#424242"
+  rail-rule: "#505050"
+  on-rail: "#ffffff"
+  on-rail-muted: "#d4d2d0"
+  on-rail-focus: "#ffffff"
+  mint: "#2d2d2d"
+  lavender: "#eeeeec"
+  error: "#b3261e"
+  error-container: "#fdefef"
+  on-error-container: "#83231d"
+  attention: "#b3261e"
+  attention-ground: "#fdefef"
 typography:
   display:
     fontFamily: Hanken Grotesk, system-ui, sans-serif
@@ -63,7 +65,8 @@ rounded:
   lg: 0.75rem
   xl: 1rem
   2xl: 1.5rem
-  recruiter-control: 6px
+  workspace-frame: 14px
+  notice: 16px
   pill: 9999px
 spacing:
   xs: 8px
@@ -75,11 +78,25 @@ spacing:
 components:
   button-primary:
     backgroundColor: "{colors.primary}"
-    textColor: "{colors.paper}"
+    textColor: "{colors.accent-ink}"
     rounded: "{rounded.md}"
     padding: 13px 24px
   button-primary-hover:
     backgroundColor: "{colors.primary-hover}"
+  button-content-primary:
+    backgroundColor: "{colors.discovery-accent}"
+    textColor: "{colors.accent-ink}"
+    rounded: "{rounded.md}"
+    padding: 13px 24px
+  button-content-primary-hover:
+    backgroundColor: "{colors.discovery-hover}"
+  button-content-outline:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.discovery-deep}"
+    rounded: "{rounded.md}"
+    padding: 13px 24px
+  button-content-outline-hover:
+    backgroundColor: "{colors.discovery-subtle}"
   button-outline:
     backgroundColor: "{colors.paper}"
     textColor: "{colors.primary}"
@@ -105,31 +122,37 @@ components:
   navigation:
     backgroundColor: "{colors.paper}"
     textColor: "{colors.ink}"
-  recruiter-primary-action:
-    backgroundColor: "{colors.recruiter-accent}"
-    textColor: "{colors.recruiter-paper}"
-    rounded: "{rounded.recruiter-control}"
-    padding: 10.4px 16px
-  recruiter-primary-action-hover:
-    backgroundColor: "{colors.recruiter-muted}"
-  recruiter-job-action:
-    backgroundColor: "{colors.recruiter-accent}"
-    textColor: "{colors.recruiter-paper}"
+  workspace-rail:
+    backgroundColor: "{colors.rail}"
+    textColor: "{colors.on-rail}"
+    rounded: "{rounded.workspace-frame}"
+    width: 244px
+  workspace-rail-collapsed:
+    width: 76px
+  staff-rail:
+    backgroundColor: "{colors.rail}"
+    textColor: "{colors.on-rail}"
+    width: 280px
+  staff-rail-collapsed:
+    width: 80px
+  account-primary-button:
+    backgroundColor: "{colors.primary}"
+    textColor: "{colors.accent-ink}"
     rounded: "{rounded.md}"
     height: 48px
-    padding: 10px 20px
-  recruiter-job-action-hover:
-    backgroundColor: "{colors.recruiter-accent-hover}"
-  recruiter-job-field:
-    backgroundColor: "{colors.recruiter-paper}"
-    textColor: "{colors.recruiter-ink}"
+    padding: 10px 18px
+  account-primary-button-hover:
+    backgroundColor: "{colors.primary-hover}"
+  account-field:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.ink}"
     rounded: "{rounded.md}"
     height: 48px
-  recruiter-overview-shortcut:
-    backgroundColor: "{colors.recruiter-paper}"
-    textColor: "{colors.recruiter-ink}"
-    rounded: "{rounded.xl}"
-    padding: 28px 24px
+  attention-notice:
+    backgroundColor: "{colors.attention-ground}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.notice}"
+    padding: 20px 24px 20px 58px
 ---
 
 # Design System: GuardianWork
@@ -138,52 +161,47 @@ components:
 
 **Creative North Star: "Familiar recruitment, clear next steps"**
 
-Guardian Blue is a familiar, clear recruitment interface: white surfaces, cool blue-gray supporting grounds, dark blue text, and decisive blue actions. The user selected the category-standard direction with VietnamWorks as the craft reference. The VietnamWorks reference was not accessible for direct visual comparison; supplied Indeed employer screens guide the scoped recruiter extension.
+GuardianWork uses the `/rec` black, white, charcoal, and gray palette for public chrome, authentication and recovery, and all workspace frames. Blue highlights content inside public discovery and the main content area of Candidate, Recruiter, and Staff workspaces; headers, footers, and sidebars stay monochrome. Pale pink and red remain reserved for attention notices, with dark readable titles and body copy.
 
-GuardianWork is a multi-industry recruitment platform. Public browsing uses generous search and listing areas, with business, marketing, finance, HR, operations and technology as peer categories. Public, candidate, staff, and authentication surfaces keep the shared Guardian Blue system. The recruiter workspace has a user-requested, Indeed-inspired local palette and denser employer-console layout; this is a scoped surface extension, not a product-wide identity change. Existing role boundaries and workflows remain the source of product behavior.
+GuardianWork remains a multi-industry recruitment platform. Public browsing keeps its familiar search and listing structure, while the three workspaces retain their role-specific navigation and density. The shared palette applies across those different layouts without changing role boundaries, content, or workflows.
 
 **Key Characteristics:**
 
-- White and cool blue-gray surfaces with Guardian Blue actions.
+- Black, white, charcoal, and gray as the main color system; blue marks discovery content and pale pink/red marks attention notices.
 - Hanken Grotesk for headings, body copy, labels, and workspace UI.
-- Quiet borders, gently curved controls, and compact information hierarchy.
-- An Indeed-inspired blue and warm-neutral palette scoped to recruiter surfaces.
+- Quiet borders, gently rounded controls, and compact information hierarchy.
+- The `/rec` monochrome palette for site chrome, with blue accents scoped to public discovery and workspace main content.
 
 ## Colors
 
-The palette is light, cool, and practical. Frontmatter values are normative; the names below describe their roles.
+The approved `/rec` palette uses charcoal for site-wide actions, wayfinding, and text; white and grays carry the page. Blue is a scoped content accent for search and job discovery, while pale pink and red identify attention notices. Frontmatter values are normative; the names below describe their roles.
 
 ### Primary
 
-- **Guardian Blue** (`primary`): primary actions, active links, salaries, search icons, and brand emphasis. Hover and deep variants serve interaction states.
-- **Clear Blue Wash** (`primary-subtle`): hero backgrounds, selected navigation, and supporting panels.
+- **Charcoal** (`primary`): the base action and emphasis color, used throughout the monochrome site chrome and in surfaces outside the blue content scopes. Near-black hover and deep-charcoal variants serve interaction states.
+- **Content Blue** (`discovery-accent`, `discovery-hover`, `discovery-deep`): search and apply actions, links, focus, selected rows and tabs, section headings, account-overview emphasis, and key figures inside public discovery and Candidate, Recruiter, and Staff workspace main content.
+- **Content Blue Wash** (`discovery-subtle`): selected results and supporting states within those content regions.
+- **Soft Gray Wash** (`primary-subtle`): selected navigation and supporting monochrome panels.
 
 ### Secondary
 
-- **Supporting Orange** (`support-orange`): existing secondary emphasis, used sparingly; it does not replace Guardian Blue actions.
-- **Success Green** (`success`): affirmative status. Error tokens belong to validation and failure states.
+- **Supporting Gray** (`support-gray`): secondary emphasis for icons and labels, not a second accent color.
+- **Charcoal Success** (`mint`): affirmative status keeps the monochrome system.
+- **Attention Red / Pale Pink / Dark Attention Text** (`error`, `error-container`, `on-error-container`): the notice icon, notice background, and readable title/body.
 
 ### Neutral
 
-- **White Paper** (`paper`): navigation, cards, and form surfaces.
-- **Cool Ground / Cool Inset** (`paper-2`, `paper-3`): page grounds, grouped content, and company marks.
-- **Deep Ink / Supporting Ink / Muted Ink** (`ink`, `ink-2`, `ink-3`): primary text, explanatory copy, and metadata.
-- **Quiet Rule / Strong Rule** (`rule`, `rule-2`): dividers, borders, and dashed upload boundaries.
-- **Inverse Ground** (`paper-inverse`): available shared inverse surface token; ordinary application surfaces remain light.
+- **White Paper / Soft Warm Ground / Warm Inset** (`paper`, `paper-2`, `paper-3`): cards and forms, page grounds, and grouped content.
+- **Neutral Lavender** (`lavender`): a further neutral inset surface.
+- **Charcoal / Supporting Gray / Quiet Gray** (`ink`, `ink-2`, `ink-3`): primary text, explanatory copy, and metadata.
+- **Warm Rule / Strong Gray Rule** (`rule`, `rule-2`): dividers, card borders, and control outlines.
+- **Charcoal Rail / Rail Hover / Rail Divider** (`rail`, `rail-hover`, `rail-rule`): shared workspace navigation surfaces and their boundaries.
+- **Rail Text / Muted Rail Text / Rail Focus** (`on-rail`, `on-rail-muted`, `on-rail-focus`): navigation labels, supporting states, and visible keyboard focus.
+- **Inverse Ground** (`paper-inverse`): the shared charcoal inverse surface.
 
-**The Guardian Blue Rule.** Keep Guardian Blue primary actions and focus consistent on public, candidate, staff, and authentication surfaces. The recruiter workspace alone uses its documented local blue and neutral palette; do not propagate that surface treatment elsewhere.
+**The Monochrome Chrome Rule.** Use black, white, charcoal, and gray for public headers and footers, authentication and recovery, and workspace headers and sidebars. Reserve pale pink and red for attention notices. Do not create role-specific themes.
 
-### Recruiter workspace extension
-
-The recruiter workspace uses a restrained, Indeed-inspired blue with warm-neutral grounds. The named recruiter tokens in the frontmatter are scoped to `/recruiter` surfaces, including the workspace shell, overview, verification and membership pages, and job creation. The white brand header and existing GuardianWork identity remain visible within that local treatment.
-
-- **Recruiter Blue** (`recruiter-accent`, `recruiter-accent-hover`, `recruiter-accent-deep`): recruiter actions, active text links, form focus, and selected steps.
-- **Recruiter Blue Wash** (`recruiter-accent-subtle`): selected or supporting recruiter surfaces.
-- **Warm White / Soft Warm Ground / Warm Inset** (`recruiter-paper`, `recruiter-ground`, `recruiter-inset`): cards and main content, page grounds, and grouped rows.
-- **Recruiter Charcoal / Supporting Gray / Quiet Gray** (`recruiter-ink`, `recruiter-muted`, `recruiter-muted-2`): primary content, supporting copy, and secondary metadata.
-- **Warm Rule / Strong Gray Rule** (`recruiter-border`, `recruiter-border-strong`): separators, control borders, and hover boundaries.
-
-**The Scoped Recruiter Palette Rule.** Apply these local tokens only inside the recruiter workspace. Other GuardianWork roles keep their existing palette.
+**The Blue Main Content Rule.** Scope blue highlights to `.career-site > #main-content` and `.workspace-content > main`. This covers public discovery plus Candidate, Recruiter, and Staff content, including account pages within those workspace mains. Keep public and workspace chrome, authentication, and standalone recovery monochrome; keep semantic attention notices pink and red.
 
 ## Typography
 
@@ -197,9 +215,7 @@ The recruiter workspace uses a restrained, Indeed-inspired blue with warm-neutra
 - **Body:** global leading from frontmatter. Actual surface sizes vary: hero description (17px, leading 1.7), ordinary descriptions (15px), and supporting workspace copy (14px).
 - **Label:** compact navigation and information labels. Primary button labels are larger and bolder (15px, weight 700); metadata generally uses smaller type (12–13px).
 
-Authentication headlines and workspace headings retain local responsive type scales. Do not force the public hero scale into dense task views. The repository includes Geist Mono for legacy metadata; the redesigned public footer and workspace metadata use the body family.
-
-The recruiter workspace keeps Hanken Grotesk while using a compact employer-console hierarchy: page headings range from 28px to 38px on wide screens and reduce to 25px on narrow phones; ordinary job-editor text is 16px and labels are 16px. Recruiter metadata stays secondary and readable in the existing body family.
+Authentication headlines and workspace headings retain local responsive type scales. Do not force the public hero scale into dense task views. All sites use Hanken Grotesk for workspace and metadata text; there is no role-specific display face.
 
 ## Layout
 
@@ -213,13 +229,13 @@ Observed public breakpoints are width ceilings (1100px, 950px, 640px). Workspace
 
 The frontmatter spacing values are recurring observed intervals, not a claim that the application exposes a CSS spacing-token API. Public section spacing is generally larger (32–60px); listing interiors use compact padding (22px desktop, 20px phone).
 
-Candidate and recruiter workspaces use a persistent full-height frame: a light inset sidebar sits beside a fixed header and a separately scrolling main area. The sidebar panel is 244px wide when expanded and 76px in its icon-only rail; links are 44px high with simple 20px icons. Nested navigation keeps the sidebar and header mounted and changes only the main view. Below the desktop rail breakpoint, navigation opens as a full mobile drawer.
+Candidate and recruiter workspaces use a persistent full-height frame: an inset charcoal sidebar sits beside a fixed header and separately scrolling main area. The sidebar is 244px wide when expanded and 76px in its icon-only rail; links are 44px high with 20px icons. One existing 44px header control drives the shared saved `SidebarProvider` preference. Nested navigation keeps the sidebar and header mounted and changes only the main view. At 1100px and below, navigation uses the existing mobile drawer and explicit open/close controls. Staff keeps its charcoal workspace frame at 280px expanded and 80px compact with its existing local toggle.
 
 ## Elevation & Depth
 
-Depth comes primarily from light tonal surfaces and quiet borders. Listing cards change their border and ground on hover rather than lifting. Redesigned workspace content suppresses small and medium utility shadows. The public search assembly is the deliberate exception: a soft shadow distinguishes the working search form from the blue hero ground. Its exact shadow lives in the sidecar.
+Depth comes primarily from light tonal surfaces and quiet borders. Listing cards change their border and ground on hover rather than lifting. Redesigned workspace content suppresses small and medium utility shadows. The public search assembly is the deliberate exception: a soft shadow distinguishes the working search form from the neutral hero ground. Its exact shadow lives in the sidecar.
 
-The recruiter workspace is flat at rest: the dark rail, white top bar, warm page ground, and thin rules create separation without new shadows. Recruiter cards and editor sections change their ground or border for interaction and grouping.
+Workspace frames are flat at rest: charcoal rails, white headers, warm-neutral page grounds, and thin rules create separation without new shadows. Cards and editor sections change their ground or border for interaction and grouping.
 
 **The Quiet Surface Rule.** Use tonal grounds and thin rules for ordinary content; preserve the search form's soft elevation as a functional exception.
 
@@ -227,72 +243,71 @@ The recruiter workspace is flat at rest: the dark rail, white top bar, warm page
 
 Controls use gently curved corners (8px); search assemblies, listings, and upload areas use larger corners (12px). Supporting employer panels use the larger panel radius (16px). The shared radius scale also retains small and pill values for existing controls and status shapes. Popular skill chips have their own compact corners (5px). Borders are generally thin (1px); upload affordances use a dashed rule. Circular step markers and status shapes remain valid exceptions to rectangular containers.
 
-Recruiter controls use 6px corners where the existing employer action specifies them, while job-editor controls use 8px and list/editor surfaces use 12px. Overview shortcuts are softly rectangular (16px), with a thin warm-gray border. Keep the overall recruiter surface square-edged and information-led; use radius only to group a card or control.
+Public search and cards use 12px corners; common controls and account/recovery fields use 8px. Candidate/recruiter inset workspace frames use 14px corners, while Staff retains its own existing frame geometry. Borders stay thin and neutral. Attention notices use the existing rounded container shape with pale pink fill; their red icon remains distinct from dark title and body text.
 
 ## Components
 
 ### Buttons
 
-Confident and compact: a blue face with white text, bold labels, and a minimum public action height (48px). Outline buttons keep a white face, blue text, and blue border; hover adds the blue wash. Shared application buttons also exist with a slightly shorter minimum height (44px). Focus uses a visible blue outline (3px) and offset (3px). Disabled controls reduce opacity and change the cursor. Color transitions are brief (160ms, ease).
-
-Recruiter actions are an existing local variant with smaller label text (13px), smaller corners (6px), and a muted-ink hover face. Record this as a local implementation exception; use the common public button pattern when creating a new general-purpose action.
+Confident and compact: the shared primary button uses the charcoal base face with white text, bold labels, and a minimum public action height (48px). Within public discovery and workspace main content, token-based actions use Content Blue. Outline buttons keep a white face and neutral border; scoped content uses the blue text treatment, while chrome uses charcoal. Shared application buttons also exist with a slightly shorter minimum height (44px). Focus uses a visible outline (3px) and offset (3px), charcoal in chrome and blue inside the two content scopes. Disabled controls retain readable labels and communicate their unavailable state. Color transitions are brief (160ms, ease).
 
 ### Chips
 
-Popular skill links use white grounds, supporting ink, and compact padding. Hover turns their text blue and adds an underline. Status chips elsewhere communicate semantic states rather than acting as theme accents.
+Popular skill links use white grounds, supporting ink, and compact padding. Hover turns their text charcoal and adds an underline. Status chips elsewhere communicate semantic states rather than introducing another palette.
 
 ### Cards / Containers
 
-Job cards are white, thinly bordered, and softly rectangular. Hover shifts to the cool ground and blue border. A company mark precedes the job title; salary and location follow it, and a divided metadata row closes the card. Supporting panels use cool ground or blue wash. Authentication preserves its larger rounded form panel (16px), while redesigned workspace content normalizes large card corners to the listing radius.
+Job cards are white, thinly bordered, and softly rectangular. Hover shifts to the warm-neutral ground and charcoal border. A company mark precedes the job title; salary and location follow it, and a divided metadata row closes the card. Supporting panels use neutral gray wash. Authentication preserves its larger rounded form panel (16px), while redesigned workspace content normalizes large card corners to the listing radius.
 
 ### Inputs / Fields
 
-Search fields use transparent backgrounds inside a shared white assembly, dark text, and muted placeholders. The desktop keyword/location separator becomes a horizontal separator when stacked. Inputs retain a usable minimum height (44px), visible keyboard focus, and blue carets. Validation uses semantic error colors. Ordinary authentication fields retain their local bordered form styling; search assemblies are not the universal form field pattern.
+Search fields use transparent backgrounds inside a shared white assembly, charcoal text, and muted placeholders. The desktop keyword/location separator becomes a horizontal separator when stacked. Search fields use blue carets and focus; token-based inputs in workspace main content use the same blue focus. Authentication and standalone recovery remain monochrome. Account-security fields in workspace main content keep their 48px controls and may use the scoped blue focus/action treatment. Validation retains semantic error colors; attention notices use a pale pink background, red icon, and dark title/body. Search assemblies are not the universal form field pattern.
 
 ### Navigation
 
-Public navigation uses a white sticky band, thin bottom rule, and medium-weight labels. Current and hovered links become blue with a bottom indicator. At narrower widths, the inline links give way to an explicit expandable mobile menu. Workspace side navigation highlights the current destination with a blue wash and blue text. Preserve current-page semantics and mobile menu expanded state.
+Public navigation uses a white sticky band, thin bottom rule, and medium-weight labels. Current and hovered header links use the shared charcoal palette. Public discovery content and each workspace's main area use Content Blue for interactive and selected content emphasis. At narrower widths, inline links give way to an explicit expandable mobile menu. All workspace side navigation uses a charcoal rail with readable light labels and icons; the current destination is a white row with charcoal text. Preserve current-page semantics and mobile menu expanded state.
 
-Candidate and recruiter navigation uses the compact inset sidebar described above. Keep its header toggle, icon-only collapsed rail, and three-link footer inside the persistent role layout; Staff navigation remains unchanged.
+Candidate and recruiter navigation uses the persistent inset sidebar described above. Keep its single header toggle, saved collapsed state, icon-only rail, and three-link footer inside the role layout. Staff keeps its existing 280px/80px rail and local toggle while sharing the same palette.
 
 ### Search Assembly
 
-Keyword, location, and action share a gently rounded, softly elevated white surface. This is the recurring public-to-workspace discovery pattern. Guests and signed-in candidates share one public job browser: the guest catalogue is the default, a keyword reveals the two-column list and detail layout, and the filter panel appears with that keyword view. Job titles link to the full listing page, while selecting a card updates the detail pane in place. A keyword or location field must remain independently focusable on every device.
+Keyword, location, and action share a gently rounded, softly elevated white surface. Content Blue marks public search/apply actions, job titles, salaries, focus, and selected results; the public header/footer remain monochrome. Workspace main content uses the same blue hierarchy for actions, links, selected rows/tabs, section headings, account overview, and key figures, while workspace headers and rails stay monochrome. Guests and signed-in candidates share one public job browser: the guest catalogue is the default, a keyword reveals the two-column list and detail layout, and the filter panel appears with that keyword view. Job titles link to the full listing page, while selecting a card updates the detail pane in place. A keyword or location field must remain independently focusable on every device.
 
 Short color and border transitions support state changes. Reduced-motion preference suppresses animation and transition duration. No new motion system is implied by the remaining legacy effects.
 
-### Recruiter workspace extension (scoped)
+### Account and recovery controls
 
-The employer console reuses the shared workspace shell, semantic icon set, `Button`, job forms, and `GuardianIllustration`; recruiter styling is applied locally around those pieces.
+Account settings and `/account-recovery` reuse the shared 48px field and action treatment, with white fields and quiet actions, visible keyboard focus, and semantic states. Account settings within Candidate `/can/account` and Recruiter `/rec/account` receive the blue content treatment; standalone `/account-recovery` remains monochrome. The same `USER` account is available from both workspace routes; the exact quick-link labels and order in those workspace footers are part of the navigation pattern.
 
-- **Navigation:** a charcoal desktop rail with light labels and icons. The current destination reverses to a white row with charcoal text. Hover stays on the rail and does not imply current-page state. At widths up to 1100px, use the existing explicit drawer controls and Escape dismissal. Desktop rail widths are 280px expanded and 80px compact.
-- **Primary actions:** recruiter actions use Recruiter Blue with white text; supporting job-editor actions use a white face and warm border. Keep page actions stronger than header shortcuts. Job-editor buttons and fields have 48px minimum height; navigation and icon controls retain usable hit areas from the shared components.
-- **Overview shortcuts:** white bordered cards with centered existing Guardian illustrations (180px by 120px), generous internal spacing (28px 24px), and a soft-warm hover ground. They remain links to actual recruiter tasks.
-- **Job editor:** a white bordered surface with divided form sections (32px padding on desktop, 24px by 20px on phones), labeled fields, and visible focus and validation states. Inputs use a warm-gray border, white background, and 8px corners. The current step uses a blue marker; unavailable steps keep readable supporting-gray labels. Error treatment continues to use the established semantic error tokens.
+### Attention Notices
 
-The overview's candidate counts are visibly disclosed as illustrative data. Keep that disclosure and existing service-backed company and job workflows intact when changing presentation.
+The shared `Alert` and existing `[role="alert"]` surfaces use a pale-pink rounded panel (16px), a red circle-exclamation mark (20px), and dark title/body text. Desktop padding is 20px 24px 20px 58px; on phones the notice uses 18px 18px 18px 48px and 14px text. The icon supplements the live-region message and does not carry the alert content by itself.
 
 ## Do's and Don'ts
 
 ### Do:
 
-- Do use Guardian Blue for primary actions, active navigation, and keyboard focus on public, candidate, staff, and authentication surfaces.
+- Do use the shared monochrome palette for public and workspace chrome, authentication, and standalone recovery.
+- Do use Content Blue for public discovery and the main content area of Candidate, Recruiter, and Staff workspaces, including account settings within those workspaces.
+- Do reserve the pale-pink/red treatment for attention notices and keep their title and body dark.
 - Do keep muted text on light surfaces and preserve visible field labels and focus outlines.
 - Do adapt grids and search controls to a single column on small phones.
 - Do preserve role-specific routes, existing content, and the distinction between simulated and integrated capabilities.
-- Do keep the Candidate/recruiter sidebar and header mounted while nested navigation changes only the main view.
-- Do keep the exact three role-aware quick links at the bottom of both Candidate and recruiter sidebars.
-- Do keep the compact collapsible rail scoped to Candidate and recruiter; preserve the Staff sidebar.
+- Do keep the Candidate and Recruiter sidebars mounted and restore their shared saved collapse preference; nested routes change only the main view.
+- Do keep the exact Candidate and Recruiter footer links, in order: **Cài đặt tài khoản**, **Chuyển phân hệ**, **Trang chủ**.
+- Do retain the existing single header collapse control for Candidate/Recruiter and Staff's 280px/80px frame with its local toggle.
+- Do preserve the shared 48px account and recovery form controls.
 
 ### Don't:
 
 - Don't expose a theme selector or restore a saved palette preference.
-- Don't introduce a different visual identity beyond the recruiter workspace exception documented here.
+- Don't introduce role-specific palettes or use attention colors for routine status decoration.
+- Don't extend Content Blue to public headers/footers, authentication, standalone recovery, or workspace headers/sidebars.
 - Don't strengthen unverified product claims or document simulated actions as production integrations.
 - Don't inherit legacy icon-font or decorative eyebrow treatments as new component patterns.
-- Don't restore large icon wells or oversized sidebar icons to the Candidate/recruiter rail.
+- Don't add a second collapse toggle to the Candidate or Recruiter frame.
 
-This record is extracted from `src/styles.css`, `src/career.css`, shared shells, authentication layout, the fixed theme provider, and the Guardian landing implementation. Existing Material Symbols usage in some workspace components and uppercase workspace eyebrows are legacy exceptions, not patterns for new UI. The stale stylesheet comment about saved themes does not represent runtime behavior: the theme provider fixes Guardian Blue and clears the legacy preference.
+This record is extracted from `src/styles.css`, `src/site-polish.css`, `src/career.css`, shared shells, account forms, authentication layout, and the Guardian landing implementation. Existing Material Symbols usage in some workspace components and uppercase workspace eyebrows are legacy exceptions, not patterns for new UI. The fixed theme provider keeps the monochrome root palette and clears legacy saved-theme preferences; scoped main-content tokens supply the blue emphasis.
 
 ## Semantic icons and supporting illustrations
 
@@ -306,7 +321,7 @@ Illustrations are supporting content, not evidence of verification, safety, or l
 
 ### Shared workspace navigation
 
-The GW-95 sidebar update applies to Candidate and recruiter workspaces; Staff navigation keeps its existing layout. Candidate and recruiter use a light inset panel with 44px navigation targets, standalone 20px icons, muted ink, and a quiet blue selected ground. Do not add the old large icon wells to these two rails. Locked recruiter rows remain non-interactive and keep their permission explanation.
+The GW-95 sidebar update applies to Candidate and Recruiter workspaces; Staff keeps its existing 280px/80px layout and local toggle. Candidate and Recruiter use a charcoal inset panel with 44px navigation targets, standalone 20px icons, light labels, and a white selected row. Do not add the old large icon wells to these two rails. Locked Recruiter rows remain non-interactive and keep their permission explanation.
 
 The sidebar expands to 244px and collapses to a 76px icon rail. A 44×44 header control toggles it; only an explicit toggle animates the grid for 240ms with short label fades (90–140ms). Restoring the saved display preference or changing viewport size does not animate; reduced-motion preference disables the transition. Labels stay accessible through their names and tooltips while collapsed. On mobile, use the full drawer, explicit open/close controls, Escape dismissal, and focus handling.
 

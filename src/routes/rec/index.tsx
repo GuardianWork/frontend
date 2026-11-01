@@ -115,10 +115,10 @@ const stageLabels = {
 };
 
 function fitBadgeClass(fit: CandidateItem["fit"]) {
-  if (fit === "STRONG FIT") return "bg-green-50 text-green-700 border border-green-200";
+  if (fit === "STRONG FIT") return "bg-paper-2 text-ink border border-rule";
   if (fit === "GOOD FIT")
     return "bg-surface-container text-charcoal-text border border-warm-border";
-  return "bg-amber-50 text-amber-700 border border-amber-200";
+  return "bg-paper-2 text-ink border border-rule";
 }
 
 function RecruiterIndexPage() {
@@ -282,7 +282,7 @@ function RecruiterIndexPage() {
               <div className="workspace-detail-header">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="px-2 py-0.5 rounded text-xs font-bold bg-green-50 text-green-700 border border-green-200">
+                    <span className="px-2 py-0.5 rounded text-xs font-bold bg-paper-2 text-ink border border-rule">
                       Mức độ phù hợp: {activeCandidate.matchRate}%
                     </span>
                     <span className="text-sm text-charcoal-40">
