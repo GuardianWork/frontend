@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { JobDescriptionEditor } from "./JobDescriptionEditor";
-import { Plus, Trash2 } from "lucide-react";
+import { CircleAlert, Plus, Trash2 } from "lucide-react";
 import type { JobContent, ScreeningQuestion } from "@/services/jobs";
 
 import { employmentTypes, workArrangements, payPeriods, questionTypes } from "@/lib/job-content";
+
+import { jobEditorIssues, basicJobFieldLabels } from "@/lib/job-content-validation";
 
 function RequiredMark() {
   return (
@@ -31,13 +34,48 @@ export function JobContentEditor({
   step?: number;
   invalidField?: string | null;
 }) {
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const issues = jobEditorIssues(content, step);
+  const errors = Object.fromEntries(issues.map(({ field, message }) => [field, message]));
+  const labels = Object.fromEntries(issues.map(({ field, label }) => [field, label]));
+  const visibleErrors = issues
+    .filter(({ field }) => touched[field] || invalidField === field)
+    .map(({ field }) => field);
+  const fieldError = (field: string) => (visibleErrors.includes(field) ? errors[field] : undefined);
   const fieldAttributes = (field: string, hint?: string) => ({
     "data-job-field": field,
-    "aria-invalid": invalidField === field || undefined,
+    "aria-invalid": Boolean(fieldError(field)) || undefined,
     "aria-describedby":
-      [hint, invalidField === field ? "job-workspace-error" : ""].filter(Boolean).join(" ") ||
-      undefined,
+      [hint, fieldError(field) ? `job-${field}-error` : ""].filter(Boolean).join(" ") || undefined,
+    onBlur: () => setTouched((previous) => ({ ...previous, [field]: true })),
   });
+  const inlineError = (field: string) =>
+    fieldError(field) ? (
+      <span className="jp-field-error" id={`job-${field}-error`}>
+        <CircleAlert size={16} className="jp-validation-icon" aria-hidden="true" />
+        {fieldError(field)}
+      </span>
+    ) : null;
+  const focusField = (field: string) => {
+    document.querySelector<HTMLElement>(`[data-job-field="${CSS.escape(field)}"]`)?.focus();
+  };
+  const validationSummary = () => (
+    <div className="jp-validation-summary" aria-live="polite" hidden={!visibleErrors.length}>
+      <CircleAlert size={30} className="jp-validation-icon" aria-hidden="true" />
+      <div>
+        <p className="jp-validation-heading">Vui lòng bổ sung các thông tin sau để tiếp tục.</p>
+        <ul>
+          {visibleErrors.map((field) => (
+            <li key={field}>
+              <button type="button" onClick={() => focusField(field)}>
+                {labels[field]}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
   const update = (patch: Partial<JobContent>) => onChange({ ...content, ...patch });
   const compensation = content.compensation;
   const questions = content.screeningQuestions ?? [];
@@ -48,9 +86,6 @@ export function JobContentEditor({
       {(step === undefined || step === 0) && (
         <section className="jp-form-section" aria-labelledby="job-basic-heading">
           <h3 id="job-basic-heading">Thông tin vị trí</h3>
-          <p>
-            Dấu * đánh dấu trường bắt buộc để gửi duyệt. Bạn vẫn có thể lưu bản nháp chưa hoàn tất.
-          </p>
           <label>
             <span>
               Chức danh công việc <RequiredMark />
@@ -64,6 +99,7 @@ export function JobContentEditor({
               maxLength={200}
               onChange={(e) => update({ title: e.target.value })}
             />
+            {inlineError("title")}
           </label>
           <div className="jp-field-grid">
             <label>
@@ -84,6 +120,7 @@ export function JobContentEditor({
                   </option>
                 ))}
               </select>
+              {inlineError("employmentType")}
             </label>
             <label>
               <span>
@@ -103,6 +140,7 @@ export function JobContentEditor({
                   </option>
                 ))}
               </select>
+              {inlineError("workArrangement")}
             </label>
             <label>
               <span>
@@ -110,6 +148,11 @@ export function JobContentEditor({
                   ? "Khu vực có thể làm việc từ xa"
                   : "Địa điểm làm việc"}{" "}
                 <RequiredMark />
+              </span>
+              <span className="jp-hint" id="job-location-hint">
+                {content.workArrangement === "REMOTE"
+                  ? "Ghi khu vực ứng viên được phép làm việc, ví dụ Việt Nam hoặc Toàn thế giới."
+                  : "Ghi địa điểm làm việc tại văn phòng hoặc theo hình thức kết hợp."}
               </span>
               <input
                 {...fieldAttributes("location", "job-location-hint")}
@@ -123,15 +166,14 @@ export function JobContentEditor({
                 maxLength={1000}
                 onChange={(e) => update({ location: e.target.value })}
               />
-              <span className="jp-hint" id="job-location-hint">
-                {content.workArrangement === "REMOTE"
-                  ? "Ghi khu vực ứng viên được phép làm việc, ví dụ Việt Nam hoặc Toàn thế giới."
-                  : "Ghi địa điểm làm việc tại văn phòng hoặc theo hình thức kết hợp."}
-              </span>
+              {inlineError("location")}
             </label>
             <label>
               <span>
                 Hạn ứng tuyển <RequiredMark />
+              </span>
+              <span className="jp-hint" id="job-deadline-hint">
+                Nhận hồ sơ đến hết ngày đã chọn.
               </span>
               <input
                 {...fieldAttributes("deadline", "job-deadline-hint")}
@@ -148,11 +190,10 @@ export function JobContentEditor({
                   })
                 }
               />
-              <span className="jp-hint" id="job-deadline-hint">
-                Nhận hồ sơ đến hết ngày đã chọn.
-              </span>
+              {inlineError("deadline")}
             </label>
           </div>
+          {step !== undefined && validationSummary()}
         </section>
       )}
       {(step === undefined || step === 1) && (
@@ -161,21 +202,24 @@ export function JobContentEditor({
             Mô tả công việc <RequiredMark />
           </h3>
           <JobDescriptionEditor
-            invalid={invalidField === "description"}
+            invalid={Boolean(fieldError("description"))}
+            onBlur={() => setTouched((previous) => ({ ...previous, description: true }))}
+            errorId={fieldError("description") ? "job-description-error" : undefined}
             value={content.description ?? ""}
             onChange={(description) => update({ description })}
             disabled={disabled}
           />
+          {inlineError("description")}
+          {step !== undefined && validationSummary()}
         </section>
       )}
       {(step === undefined || step === 2) && (
         <section className="jp-form-section" aria-labelledby="job-pay-heading">
-          <h3 id="job-pay-heading">
-            Thông tin bổ sung <span className="jp-optional">Không bắt buộc</span>
-          </h3>
+          <h3 id="job-pay-heading">Thông tin bổ sung</h3>
           <label>
             Số lượng tuyển <span className="jp-optional">Không bắt buộc</span>
             <input
+              {...fieldAttributes("headcount")}
               type="number"
               min={1}
               max={10000}
@@ -186,11 +230,13 @@ export function JobContentEditor({
                 update({ headcount: e.target.value ? Number(e.target.value) : undefined })
               }
             />
+            {inlineError("headcount")}
           </label>
 
           <label>
             Mức lương <span className="jp-optional">Không bắt buộc</span>
             <select
+              data-job-field="compensation-disclosed"
               aria-label="Mức lương"
               value={compensation ? String(compensation.disclosed) : ""}
               onChange={(e) =>
@@ -216,6 +262,7 @@ export function JobContentEditor({
                   Lương tối thiểu <RequiredMark />
                 </span>
                 <input
+                  {...fieldAttributes("compensation-minimum")}
                   type="number"
                   min={compensation.currency === "USD" ? "0.01" : "1"}
                   step={compensation.currency === "USD" ? "0.01" : "1"}
@@ -231,12 +278,14 @@ export function JobContentEditor({
                     })
                   }
                 />
+                {inlineError("compensation-minimum")}
               </label>
               <label>
                 <span>
                   Lương tối đa <RequiredMark />
                 </span>
                 <input
+                  {...fieldAttributes("compensation-maximum")}
                   type="number"
                   min={compensation.minimum ?? 0.01}
                   step={compensation.currency === "USD" ? "0.01" : "1"}
@@ -252,12 +301,14 @@ export function JobContentEditor({
                     })
                   }
                 />
+                {inlineError("compensation-maximum")}
               </label>
               <label>
                 <span>
                   Đơn vị tiền tệ <RequiredMark />
                 </span>
                 <select
+                  data-job-field="compensation-currency"
                   aria-required="true"
                   aria-label="Đơn vị tiền tệ"
                   value={compensation.currency ?? "VND"}
@@ -276,6 +327,7 @@ export function JobContentEditor({
                   Kỳ trả lương <RequiredMark />
                 </span>
                 <select
+                  data-job-field="compensation-payPeriod"
                   aria-required="true"
                   aria-label="Kỳ trả lương"
                   value={compensation.payPeriod ?? "MONTH"}
@@ -306,10 +358,7 @@ export function JobContentEditor({
           <h3 id="job-questions-heading">
             Câu hỏi sàng lọc <span className="jp-optional">Không bắt buộc</span>
           </h3>
-          <p>
-            Tối đa 10 câu hỏi. Khi thêm câu hỏi, cần điền các trường có dấu *. Câu hỏi lựa chọn cần
-            từ 2 đến 10 đáp án khác nhau.
-          </p>
+          <p>Tối đa 10 câu hỏi.</p>
           {questions.map((question, index) => (
             <div className="jp-question" key={question.key}>
               <div className="jp-row">
@@ -331,6 +380,7 @@ export function JobContentEditor({
                   Nội dung câu hỏi {index + 1} <RequiredMark />
                 </span>
                 <textarea
+                  {...fieldAttributes(`question-${question.key}-prompt`)}
                   rows={2}
                   maxLength={500}
                   aria-required="true"
@@ -338,6 +388,7 @@ export function JobContentEditor({
                   value={question.prompt}
                   onChange={(e) => changeQuestion(index, { ...question, prompt: e.target.value })}
                 />
+                {inlineError(`question-${question.key}-prompt`)}
               </label>
               <label>
                 <span>
@@ -370,7 +421,9 @@ export function JobContentEditor({
                   <span>
                     Đáp án câu {index + 1} <RequiredMark />
                   </span>
+                  <span className="jp-hint">Mỗi dòng một đáp án, tối đa 200 ký tự mỗi đáp án.</span>
                   <textarea
+                    {...fieldAttributes(`question-${question.key}-options`)}
                     rows={4}
                     aria-required="true"
                     aria-label={"Đáp án câu " + (index + 1)}
@@ -379,7 +432,7 @@ export function JobContentEditor({
                       changeQuestion(index, { ...question, options: e.target.value.split("\n") })
                     }
                   />
-                  <span className="jp-hint">Mỗi dòng một đáp án, tối đa 200 ký tự mỗi đáp án.</span>
+                  {inlineError(`question-${question.key}-options`)}
                 </label>
               )}
               <label className="jp-check">
@@ -397,6 +450,7 @@ export function JobContentEditor({
           <button
             className="jp-button"
             type="button"
+            data-job-field="screeningQuestions"
             disabled={questions.length >= 10}
             onClick={() =>
               update({
@@ -410,6 +464,7 @@ export function JobContentEditor({
             <Plus size={16} aria-hidden="true" />
             Thêm câu hỏi ({questions.length}/10)
           </button>
+          {validationSummary()}
         </section>
       )}
     </fieldset>

@@ -1,3 +1,4 @@
+import { JobReviewDetails } from "./JobReviewDetails";
 import type { JobContent } from "@/services/jobs";
 import {
   textSections,
@@ -8,7 +9,21 @@ import {
   formatJobDate,
 } from "@/lib/job-content";
 import { JobDescription } from "./JobDescription";
-export function JobContentView({ content }: { content: JobContent }) {
+export function JobContentView({
+  content,
+  onEdit,
+  editDisabled = false,
+}: {
+  content: JobContent;
+  onEdit?: (step: number, field?: string) => void;
+  editDisabled?: boolean;
+}) {
+  if (onEdit)
+    return (
+      <article className="jp-content-view jp-review-details">
+        <JobReviewDetails content={content} onEdit={onEdit} disabled={editDisabled} />
+      </article>
+    );
   const pay = content.compensation;
   return (
     <article className="jp-content-view">

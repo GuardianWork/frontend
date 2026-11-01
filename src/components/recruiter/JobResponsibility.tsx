@@ -141,10 +141,6 @@ export function JobResponsibility({
               ? "Chủ sở hữu công ty đang chịu trách nhiệm với tin này."
               : `${job.assignments.length} nhà tuyển dụng đang phụ trách tin này.`}
           </p>
-          <p className="jp-hint">
-            Bạn có quyền truy cập vì được phân công. Chỉ chủ sở hữu công ty có thể thay đổi người
-            phụ trách.
-          </p>
         </>
       )}
     </>

@@ -537,6 +537,15 @@
   background: var(--color-paper-2);
 }
 
+/* Recruiter navigation joins the viewport edge while content scrolls independently. */
+@media (min-width: 1101px) {
+  .workspace-shell.recruiter-workspace .workspace-sidebar {
+    height: 100dvh;
+    margin: 0;
+    border-radius: 0;
+  }
+}
+
 /* One interruptible transition connects expanded navigation to the compact rail. */
 @media (min-width: 1101px) {
   .workspace-shell:is(.candidate-workspace, .recruiter-workspace) {
@@ -550,6 +559,12 @@
   }
   .workspace-shell[data-sidebar-collapsed="true"]:is(.candidate-workspace, .recruiter-workspace) {
     grid-template-columns: 92px minmax(0, 1fr);
+  }
+  .workspace-shell.recruiter-workspace {
+    grid-template-columns: 244px minmax(0, 1fr);
+  }
+  .workspace-shell.recruiter-workspace[data-sidebar-collapsed="true"] {
+    grid-template-columns: 76px minmax(0, 1fr);
   }
   .workspace-shell:is(.candidate-workspace, .recruiter-workspace)
     .workspace-sidebar
