@@ -633,6 +633,22 @@ body {
 :is(.workspace-page, .auth-layout, .staff-login-page, .account-dialog) [role="alert"] strong {
   font-weight: 700;
 }
+/* Inline field validation keeps the compact semantic error treatment rather than the notice panel. */
+.workspace-page [role="alert"].field-error {
+  position: static;
+  min-height: 0;
+  margin: 6px 0 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-error);
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 500;
+}
+.workspace-page [role="alert"].field-error::before {
+  content: none;
+}
 [data-sonner-toast].staff-toast[data-type="error"] {
   border: 0;
   background: var(--color-attention-ground);
@@ -676,6 +692,12 @@ body {
 .career-site > #main-content .career-job__salary {
   color: var(--color-discovery-deep);
 }
+.career-site > #main-content .career-detail h1,
+.career-site > #main-content .career-detail__main h2,
+.career-site > #main-content .career-apply-card h2,
+.career-site > #main-content .career-facts h2 {
+  color: var(--color-discovery-deep);
+}
 .career-site > #main-content .career-job.is-active {
   border-color: var(--color-discovery-accent);
   background: var(--color-discovery-subtle);
@@ -716,6 +738,128 @@ body {
 .workspace-content > main .workspace-result.is-selected {
   border-color: var(--color-discovery-accent);
   background: var(--color-discovery-subtle);
+}
+
+/* Candidate application is public chrome around a blue-led task surface.
+   Hallmark · macrostructure: Form Sheet · tone: utilitarian · anchor hue: blue (discovery)
+   design-system: design.md (GuardianWork monochrome chrome + discovery blue content) */
+.apply-page {
+  --color-accent: var(--color-discovery-accent);
+  --color-accent-hover: var(--color-discovery-hover);
+  --color-accent-deep: var(--color-discovery-deep);
+  --color-accent-subtle: var(--color-discovery-subtle);
+  --color-focus: var(--color-discovery-accent);
+  --primary: var(--color-discovery-accent);
+  --primary-container: var(--color-discovery-deep);
+  --charcoal-04: var(--color-discovery-subtle);
+  background: transparent;
+}
+.apply-form-card {
+  max-width: 1040px;
+  margin-inline: auto;
+  overflow: visible;
+  font-variant-numeric: tabular-nums;
+}
+.apply-form-hero {
+  max-width: 960px;
+  margin-inline: auto;
+  background: transparent;
+}
+.apply-form-hero h1,
+.apply-form-section h2 {
+  color: var(--color-discovery-deep);
+}
+.apply-form-section {
+  max-width: 960px;
+  margin-inline: auto;
+  background: var(--color-paper);
+}
+.apply-form-actions {
+  max-width: 960px;
+  margin-inline: auto;
+}
+.apply-stepper {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-bottom: 1px solid var(--color-rule);
+}
+.apply-stepper li {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+  min-height: 64px;
+  padding: 8px 12px 12px;
+  color: var(--color-ink-3);
+}
+.apply-stepper li::after {
+  position: absolute;
+  right: 12px;
+  bottom: -1px;
+  left: 12px;
+  height: 2px;
+  background: transparent;
+  content: "";
+}
+.apply-stepper li.is-active {
+  color: var(--color-accent-deep);
+}
+.apply-stepper li.is-active::after {
+  background: var(--color-accent);
+}
+.apply-stepper li.is-complete {
+  color: var(--color-ink-2);
+}
+.apply-stepper-marker {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-rule-2);
+  border-radius: 999px;
+  color: inherit;
+  font-size: 12px;
+  font-weight: 700;
+}
+.apply-stepper li.is-active .apply-stepper-marker {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+}
+.apply-stepper li.is-complete .apply-stepper-marker {
+  border-color: var(--color-rule-2);
+}
+.apply-stepper-copy {
+  display: block;
+  min-width: 0;
+}
+.apply-stepper-label,
+.apply-stepper-detail {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.apply-stepper-label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.apply-stepper-detail {
+  margin-top: 2px;
+  color: var(--color-ink-3);
+  font-size: 12px;
+}
+.apply-stepper li.is-active .apply-stepper-detail {
+  color: var(--color-accent-deep);
+}
+.apply-form-section :is(input, select, textarea):focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-discovery-accent) 28%, transparent);
+  outline-offset: 1px;
 }
 
 /* Shared status colors: labels carry meaning alongside high-contrast semantic hues. */
