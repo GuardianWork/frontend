@@ -518,7 +518,10 @@ export function createMockApiServer() {
       send(200, "Email verified", { emailVerified: true });
       return;
     }
-    if (path === "/api/v1/candidates/profile" && ["GET", "PUT"].includes(req.method)) {
+    if (
+      (path === "/api/candidates/profile" || path === "/api/v1/candidates/profile") &&
+      ["GET", "PUT"].includes(req.method)
+    ) {
       const previous = candidateProfiles.get(user.id) || {
         id: randomUUID(),
         userId: user.id,
@@ -546,8 +549,8 @@ export function createMockApiServer() {
         Object.assign(previous, {
           avatarUrl: body.avatarUrl,
           skills: body.skills,
-          experienceSummary: body.experienceSummary,
-          educationSummary: body.educationSummary,
+          experience: Array.isArray(body.experience) ? body.experience : previous.experience,
+          education: Array.isArray(body.education) ? body.education : previous.education,
           isPublic: body.isPublic,
         });
         candidateProfiles.set(user.id, previous);

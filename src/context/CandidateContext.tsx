@@ -306,7 +306,6 @@ export function CandidateProvider({ children }: { children: ReactNode }) {
             avatarUrl: serverProfile.data.avatarUrl,
             isPublic: serverProfile.data.isPublic,
             skills: serverProfile.data.skills,
-            experience: serverProfile.data.experienceSummary || "",
           }
         : {}),
     }),
