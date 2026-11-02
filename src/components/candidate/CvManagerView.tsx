@@ -1,14 +1,13 @@
 /* Candidate CV management: old screen design wired to the GuardianWork backend. */
 import { useEffect, useRef, useState, type ChangeEvent, type DragEvent } from "react";
 import {
-  AlertTriangle,
   CheckCircle2,
+  CircleAlert,
   Download,
   FileText,
   HardDrive,
   Info,
   Loader2,
-  ShieldAlert,
   Star,
   Trash2,
   UploadCloud,
@@ -83,8 +82,9 @@ function mapCvError(error: unknown): string {
 
 const focusRing =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2";
-const primaryButton = `inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-accent px-5 text-sm font-bold text-accent-ink transition-colors hover:bg-accent-hover active:bg-accent-deep disabled:cursor-not-allowed disabled:bg-paper-3 disabled:text-ink-3 ${focusRing}`;
-const secondaryButton = `inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-rule bg-paper px-4 text-sm font-semibold text-ink transition-colors hover:bg-paper-2 active:bg-paper-3 ${focusRing}`;
+const primaryButton = `inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-accent px-5 text-sm font-bold text-accent-ink transition-colors hover:bg-accent-hover active:bg-accent-deep disabled:cursor-not-allowed disabled:bg-paper-3 disabled:text-ink-3 ${focusRing}`;
+const secondaryButton = `inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-rule bg-paper px-4 text-sm font-semibold text-ink transition-colors hover:bg-paper-2 active:bg-paper-3 ${focusRing}`;
+const dangerButton = `inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-[color:var(--error)] px-5 text-sm font-bold text-white transition-colors hover:brightness-95 active:brightness-90 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--error)] focus-visible:ring-offset-2`;
 const iconButton = `inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-ink-2 transition-colors hover:bg-paper-2 hover:text-ink active:bg-paper-3 disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:w-10 ${focusRing}`;
 
 function cvFormat(cv: CandidateCv): string {
@@ -293,14 +293,10 @@ export function CvManagerView() {
   return (
     <AdminShell title="Quản lý hồ sơ" role="candidate">
       <div className="mx-auto max-w-6xl">
-        <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="min-w-0">
-            <h1 className="text-2xl font-extrabold tracking-[-0.03em] text-ink md:text-3xl">
-              Quản lý hồ sơ xin việc
-            </h1>
-            <p className="mt-1.5 max-w-2xl text-sm leading-6 text-ink-2">
-              Tải lên, xem và tải xuống các hồ sơ dùng khi ứng tuyển.
-            </p>
+        <header className="workspace-heading">
+          <div>
+            <h1>Quản lý hồ sơ xin việc</h1>
+            <p>Tải lên, xem và tải xuống các hồ sơ dùng khi ứng tuyển.</p>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -316,49 +312,50 @@ export function CvManagerView() {
           </div>
         </header>
         {atLimit && (
-          <p
-            id="cv-limit-hint"
-            className="mb-4 rounded-lg border border-rule bg-paper px-4 py-3 text-sm text-ink-2"
-          >
-            Bạn đã đạt số lượng hồ sơ tối đa. Vui lòng xóa bớt hồ sơ cũ.
+          <p id="cv-limit-hint" className="workspace-inline-note flex items-start gap-2.5">
+            <Info size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
+            <span>
+              Bạn đã đạt số lượng hồ sơ tối đa. Vui lòng xóa bớt hồ sơ cũ để tải lên tệp mới.
+            </span>
           </p>
         )}
 
-        {notice && (
-          <div
-            role="status"
-            className={`mb-4 flex items-start gap-3 rounded-lg border px-4 py-3 ${
-              notice.tone === "error"
-                ? "border-error/25 bg-error-container/50"
-                : notice.tone === "info"
-                  ? "border-rule bg-accent-subtle"
-                  : "border-mint/25 bg-mint/5"
-            }`}
-          >
-            {notice.tone === "success" ? (
-              <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-mint" aria-hidden="true" />
-            ) : (
-              <Info size={18} className="mt-0.5 shrink-0 text-accent" aria-hidden="true" />
-            )}
-            <p className="min-w-0 flex-1 text-sm leading-6 text-ink-2">{notice.message}</p>
-            <button
-              type="button"
-              onClick={() => setNotice(null)}
-              aria-label="Đóng thông báo"
-              className={`-mr-1 -mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-ink-3 transition-colors hover:bg-paper hover:text-ink ${focusRing}`}
+        {notice &&
+          (notice.tone === "error" ? (
+            <div role="alert" className="flex items-start gap-3">
+              <p className="min-w-0 flex-1">{notice.message}</p>
+              <button
+                type="button"
+                onClick={() => setNotice(null)}
+                aria-label="Đóng thông báo"
+                className={`-my-2 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-ink-3 transition-colors hover:bg-paper hover:text-ink ${focusRing}`}
+              >
+                <X size={16} aria-hidden="true" />
+              </button>
+            </div>
+          ) : (
+            <div
+              role="status"
+              className="mb-4 flex items-start gap-3 rounded-xl border border-rule bg-paper-2 px-4 py-3"
             >
-              <X size={16} aria-hidden="true" />
-            </button>
-          </div>
-        )}
+              <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-ink-2" aria-hidden="true" />
+              <p className="min-w-0 flex-1 text-sm leading-6 text-ink-2">{notice.message}</p>
+              <button
+                type="button"
+                onClick={() => setNotice(null)}
+                aria-label="Đóng thông báo"
+                className={`-my-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-ink-3 transition-colors hover:bg-paper hover:text-ink ${focusRing}`}
+              >
+                <X size={16} aria-hidden="true" />
+              </button>
+            </div>
+          ))}
 
         {!hasDefault && cvs.length > 0 && (
-          <div className="mb-4 flex items-start gap-3 rounded-lg border border-rule bg-paper px-4 py-3">
-            <Info size={18} className="mt-0.5 shrink-0 text-accent" aria-hidden="true" />
-            <p className="text-sm leading-6 text-ink-2">
-              Chưa có hồ sơ mặc định. Hồ sơ đầu tiên tải lên sẽ tự động thành mặc định.
-            </p>
-          </div>
+          <p className="workspace-inline-note flex items-start gap-2.5">
+            <Info size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
+            <span>Chưa có hồ sơ mặc định. Hồ sơ đầu tiên tải lên sẽ tự động thành mặc định.</span>
+          </p>
         )}
 
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
@@ -383,25 +380,26 @@ export function CvManagerView() {
                 Đang tải danh sách hồ sơ…
               </div>
             ) : loadError ? (
-              <div className="rounded-xl border border-error/25 bg-error-container/50 px-5 py-6 text-sm text-on-error-container">
-                <p role="alert">{loadError}</p>
+              <div role="alert">
+                <strong>Không tải được danh sách hồ sơ</strong>
+                <p>{loadError}</p>
                 <button
                   type="button"
                   onClick={() => void load()}
-                  className="mt-3 text-sm font-semibold text-accent"
+                  className="mt-3 text-sm font-semibold text-accent underline-offset-4 hover:underline"
                 >
                   Thử lại
                 </button>
               </div>
             ) : cvs.length === 0 ? (
-              <div className="px-5 py-12 text-center sm:px-8 rounded-xl border border-dashed border-rule bg-paper">
+              <div className="rounded-xl border border-dashed border-rule bg-paper px-5 py-12 text-center sm:px-8">
                 <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-accent-subtle text-accent">
                   <FileText size={24} aria-hidden="true" />
                 </span>
                 <h3 className="mt-4 text-base font-bold text-ink">
                   Bạn chưa tải lên hồ sơ xin việc nào.
                 </h3>
-                <p className="mx-auto mt-1 max-w-sm text-sm leading-6 text-ink-2">
+                <p className="mx-auto mt-1 max-w-sm text-[15px] leading-6 text-ink-2">
                   Tải lên CV đầu tiên để bắt đầu ứng tuyển. Tệp PDF, DOC hoặc DOCX, tối đa 10 MB.
                 </p>
                 <button
@@ -419,10 +417,8 @@ export function CvManagerView() {
                   {orderedCvs.map((cv) => (
                     <li key={cv.id}>
                       <article
-                        className={`flex flex-col gap-4 border-l-4 px-4 py-4 sm:px-5 lg:flex-row lg:items-center ${
-                          cv.isDefault
-                            ? "border-l-accent bg-accent-subtle/40"
-                            : "border-l-transparent"
+                        className={`flex flex-col gap-4 px-4 py-4 transition-colors sm:px-5 lg:flex-row lg:items-center ${
+                          cv.isDefault ? "bg-accent-subtle/60" : "hover:bg-paper-2"
                         }`}
                       >
                         <div className="flex min-w-0 flex-1 items-start gap-3.5">
@@ -449,8 +445,8 @@ export function CvManagerView() {
                                 {deriveCvLabel(cv.fileName)}
                               </h3>
                               {cv.isDefault && (
-                                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-accent-ink">
-                                  <Star size={10} fill="currentColor" aria-hidden="true" />
+                                <span className="status-tag status-tag--success shrink-0 gap-1">
+                                  <Star size={11} fill="currentColor" aria-hidden="true" />
                                   Mặc định
                                 </span>
                               )}
@@ -563,25 +559,6 @@ export function CvManagerView() {
                 </li>
               </ul>
             </section>
-
-            {/*
-            <section className="rounded-xl border border-rule border-l-4 border-l-accent-2 bg-paper-2 p-5">
-              <div className="flex items-start gap-2.5">
-                <ShieldAlert
-                  size={19}
-                  className="mt-0.5 shrink-0 text-accent-2"
-                  aria-hidden="true"
-                />
-                <div className="min-w-0">
-                  <h2 className="text-sm font-bold text-ink">Trước khi tải lên</h2>
-                  <p className="mt-1 text-xs leading-5 text-ink-2">
-                    Không đưa số căn cước công dân, thông tin tài khoản ngân hàng hoặc mật khẩu vào
-                    tệp CV. Bạn sẽ xác nhận điều này trước mỗi lần tải lên.
-                  </p>
-                </div>
-              </div>
-            </section>
-*/}
           </aside>
         </div>
       </div>
@@ -598,16 +575,18 @@ export function CvManagerView() {
           </DialogHeader>
 
           <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
-            <div className="flex gap-3 rounded-lg border border-rule border-l-4 border-l-accent-2 bg-paper-2 p-3.5">
-              <AlertTriangle
-                size={19}
-                className="mt-0.5 shrink-0 text-accent-2"
+            <div className="flex items-start gap-3 rounded-2xl bg-error-container px-4 py-3.5">
+              <CircleAlert
+                size={20}
+                className="mt-0.5 shrink-0 text-[color:var(--color-attention)]"
                 aria-hidden="true"
               />
-              <p className="text-xs leading-5 text-ink-2">
-                <strong className="text-ink">Không đưa thông tin nhạy cảm vào tệp.</strong> Bao gồm
-                số căn cước công dân, thông tin tài khoản ngân hàng hoặc mật khẩu.
-              </p>
+              <div className="min-w-0 text-sm leading-6 text-ink">
+                <strong className="font-bold">Không đưa thông tin nhạy cảm vào tệp.</strong>{" "}
+                <span>
+                  Bao gồm số căn cước công dân, thông tin tài khoản ngân hàng hoặc mật khẩu.
+                </span>
+              </div>
             </div>
 
             <div className="mt-4 flex items-start gap-3 rounded-lg border border-rule bg-paper-2 p-3.5">
@@ -690,23 +669,31 @@ export function CvManagerView() {
             )}
 
             {fileError && (
-              <p
+              <div
                 role="alert"
-                className="mt-3 flex items-start gap-2 rounded-lg border border-error/25 bg-error-container px-3.5 py-2.5 text-xs font-medium leading-5 text-on-error-container"
+                className="mt-3 flex items-start gap-3 rounded-2xl bg-error-container px-4 py-3"
               >
-                <AlertTriangle size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
-                {fileError}
-              </p>
+                <CircleAlert
+                  size={18}
+                  className="mt-0.5 shrink-0 text-[color:var(--color-attention)]"
+                  aria-hidden="true"
+                />
+                <p className="min-w-0 text-sm leading-6 text-ink">{fileError}</p>
+              </div>
             )}
 
             {uploadError && (
-              <p
+              <div
                 role="alert"
-                className="mt-3 flex items-start gap-2 rounded-lg border border-error/25 bg-error-container px-3.5 py-2.5 text-xs font-medium leading-5 text-on-error-container"
+                className="mt-3 flex items-start gap-3 rounded-2xl bg-error-container px-4 py-3"
               >
-                <AlertTriangle size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
-                {uploadError}
-              </p>
+                <CircleAlert
+                  size={18}
+                  className="mt-0.5 shrink-0 text-[color:var(--color-attention)]"
+                  aria-hidden="true"
+                />
+                <p className="min-w-0 text-sm leading-6 text-ink">{uploadError}</p>
+              </div>
             )}
 
             {(phase === "uploading" || phase === "requesting" || phase === "registering") && (
@@ -772,7 +759,7 @@ export function CvManagerView() {
           if (!open && !deleting) setConfirmDeleteCv(null);
         }}
       >
-        <DialogContent className="max-w-md border-rule bg-paper p-0">
+        <DialogContent className="max-w-md gap-0 border-rule bg-paper p-0">
           <DialogHeader className="border-b border-rule px-6 pb-4 pt-6 text-left">
             <DialogTitle className="text-lg font-bold text-ink">Xóa hồ sơ xin việc</DialogTitle>
             <DialogDescription className="mt-1 text-sm leading-6 text-ink-2">
@@ -796,7 +783,7 @@ export function CvManagerView() {
               type="button"
               onClick={() => void handleConfirmDelete()}
               disabled={deleting}
-              className={primaryButton}
+              className={dangerButton}
             >
               {deleting && <Loader2 size={17} className="animate-spin" aria-hidden="true" />}
               Xóa
