@@ -9,136 +9,66 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as VnRouteImport } from './routes/vn'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as RegisterRouteImport } from './routes/register'
-import { Route as RecruitRouteImport } from './routes/recruit'
-import { Route as RecRouteImport } from './routes/rec'
-import { Route as ProfileRouteImport } from './routes/profile'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as JobsRouteImport } from './routes/jobs'
-import { Route as CopilotRouteImport } from './routes/copilot'
-import { Route as ComplianceRouteImport } from './routes/compliance'
-import { Route as CompanyInvitationsRouteImport } from './routes/company-invitations'
-import { Route as CandidatesRouteImport } from './routes/candidates'
-import { Route as CanRouteImport } from './routes/can'
-import { Route as AnalyticsRouteImport } from './routes/analytics'
-import { Route as AccountRecoveryRouteImport } from './routes/account-recovery'
-import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as StaffIndexRouteImport } from './routes/staff/index'
-import { Route as RecIndexRouteImport } from './routes/rec/index'
-import { Route as CanIndexRouteImport } from './routes/can/index'
+import { Route as AccountRouteImport } from './routes/account'
+import { Route as AccountRecoveryRouteImport } from './routes/account-recovery'
+import { Route as AnalyticsRouteImport } from './routes/analytics'
+import { Route as CanRouteImport } from './routes/can'
+import { Route as CandidatesRouteImport } from './routes/candidates'
+import { Route as CompanyInvitationsRouteImport } from './routes/company-invitations'
+import { Route as ComplianceRouteImport } from './routes/compliance'
+import { Route as CopilotRouteImport } from './routes/copilot'
+import { Route as JobsRouteImport } from './routes/jobs'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as RecRouteImport } from './routes/rec'
+import { Route as RecruitRouteImport } from './routes/recruit'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as VnRouteImport } from './routes/vn'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
-import { Route as StaffVerificationsRouteImport } from './routes/staff/verifications'
-import { Route as StaffTasksRouteImport } from './routes/staff/tasks'
-import { Route as StaffReportsRouteImport } from './routes/staff/reports'
-import { Route as StaffMonitoringRouteImport } from './routes/staff/monitoring'
-import { Route as StaffJobsRouteImport } from './routes/staff/jobs'
-import { Route as StaffComplianceRouteImport } from './routes/staff/compliance'
-import { Route as StaffCandidatesRouteImport } from './routes/staff/candidates'
-import { Route as StaffAuditLogsRouteImport } from './routes/staff/audit-logs'
-import { Route as StaffAnalyticsRouteImport } from './routes/staff/analytics'
-import { Route as StaffAccountsRouteImport } from './routes/staff/accounts'
-import { Route as RecVerificationRouteImport } from './routes/rec/verification'
-import { Route as RecTalentRouteImport } from './routes/rec/talent'
-import { Route as RecProfileRouteImport } from './routes/rec/profile'
-import { Route as RecMembersRouteImport } from './routes/rec/members'
-import { Route as RecJobsRouteImport } from './routes/rec/jobs'
-import { Route as RecHubRouteImport } from './routes/rec/hub'
-import { Route as RecApplicationsRouteImport } from './routes/rec/applications'
-import { Route as RecAccountRouteImport } from './routes/rec/account'
-import { Route as CanProfileRouteImport } from './routes/can/profile'
-import { Route as CanJobsRouteImport } from './routes/can/jobs'
-import { Route as CanCvsRouteImport } from './routes/can/cvs'
-import { Route as CanCopilotRouteImport } from './routes/can/copilot'
-import { Route as CanAccountRouteImport } from './routes/can/account'
-import { Route as AdminVerificationsRouteImport } from './routes/admin/verifications'
-import { Route as AdminTasksRouteImport } from './routes/admin/tasks'
-import { Route as AdminReportsRouteImport } from './routes/admin/reports'
-import { Route as AdminMonitoringRouteImport } from './routes/admin/monitoring'
-import { Route as AdminJobsRouteImport } from './routes/admin/jobs'
-import { Route as AdminJobApprovalsRouteImport } from './routes/admin/job-approvals'
-import { Route as AdminComplianceRouteImport } from './routes/admin/compliance'
-import { Route as AdminCandidatesRouteImport } from './routes/admin/candidates'
-import { Route as AdminAnalyticsRouteImport } from './routes/admin/analytics'
-import { Route as AdminAccountsRouteImport } from './routes/admin/accounts'
 import { Route as AdminSplatRouteImport } from './routes/admin/$'
+import { Route as AdminAccountsRouteImport } from './routes/admin/accounts'
+import { Route as AdminAnalyticsRouteImport } from './routes/admin/analytics'
+import { Route as AdminCandidatesRouteImport } from './routes/admin/candidates'
+import { Route as AdminComplianceRouteImport } from './routes/admin/compliance'
+import { Route as AdminJobApprovalsRouteImport } from './routes/admin/job-approvals'
+import { Route as AdminJobsRouteImport } from './routes/admin/jobs'
+import { Route as AdminMonitoringRouteImport } from './routes/admin/monitoring'
+import { Route as AdminReportsRouteImport } from './routes/admin/reports'
+import { Route as AdminTasksRouteImport } from './routes/admin/tasks'
+import { Route as AdminVerificationsRouteImport } from './routes/admin/verifications'
+import { Route as CanIndexRouteImport } from './routes/can/index'
+import { Route as CanAccountRouteImport } from './routes/can/account'
+import { Route as CanCopilotRouteImport } from './routes/can/copilot'
+import { Route as CanCvsRouteImport } from './routes/can/cvs'
+import { Route as CanJobsRouteImport } from './routes/can/jobs'
+import { Route as CanProfileRouteImport } from './routes/can/profile'
+import { Route as RecIndexRouteImport } from './routes/rec/index'
+import { Route as RecAccountRouteImport } from './routes/rec/account'
+import { Route as RecApplicationsRouteImport } from './routes/rec/applications'
+import { Route as RecHubRouteImport } from './routes/rec/hub'
+import { Route as RecJobsRouteImport } from './routes/rec/jobs'
+import { Route as RecMembersRouteImport } from './routes/rec/members'
+import { Route as RecProfileRouteImport } from './routes/rec/profile'
+import { Route as RecTalentRouteImport } from './routes/rec/talent'
+import { Route as RecVerificationRouteImport } from './routes/rec/verification'
+import { Route as StaffIndexRouteImport } from './routes/staff/index'
+import { Route as StaffAccountsRouteImport } from './routes/staff/accounts'
+import { Route as StaffAnalyticsRouteImport } from './routes/staff/analytics'
+import { Route as StaffAuditLogsRouteImport } from './routes/staff/audit-logs'
+import { Route as StaffCandidatesRouteImport } from './routes/staff/candidates'
+import { Route as StaffComplianceRouteImport } from './routes/staff/compliance'
+import { Route as StaffJobsRouteImport } from './routes/staff/jobs'
+import { Route as StaffMonitoringRouteImport } from './routes/staff/monitoring'
+import { Route as StaffReportsRouteImport } from './routes/staff/reports'
+import { Route as StaffTasksRouteImport } from './routes/staff/tasks'
+import { Route as StaffVerificationsRouteImport } from './routes/staff/verifications'
 import { Route as CanJobsApplyRouteImport } from './routes/can/jobs_.apply'
 
-const VnRoute = VnRouteImport.update({
-  id: '/vn',
-  path: '/vn',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RegisterRoute = RegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RecruitRoute = RecruitRouteImport.update({
-  id: '/recruit',
-  path: '/recruit',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RecRoute = RecRouteImport.update({
-  id: '/rec',
-  path: '/rec',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProfileRoute = ProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const JobsRoute = JobsRouteImport.update({
-  id: '/jobs',
-  path: '/jobs',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CopilotRoute = CopilotRouteImport.update({
-  id: '/copilot',
-  path: '/copilot',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ComplianceRoute = ComplianceRouteImport.update({
-  id: '/compliance',
-  path: '/compliance',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CompanyInvitationsRoute = CompanyInvitationsRouteImport.update({
-  id: '/company-invitations',
-  path: '/company-invitations',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CandidatesRoute = CandidatesRouteImport.update({
-  id: '/candidates',
-  path: '/candidates',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CanRoute = CanRouteImport.update({
-  id: '/can',
-  path: '/can',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AnalyticsRoute = AnalyticsRouteImport.update({
-  id: '/analytics',
-  path: '/analytics',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AccountRecoveryRoute = AccountRecoveryRouteImport.update({
-  id: '/account-recovery',
-  path: '/account-recovery',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AccountRoute = AccountRouteImport.update({
@@ -146,189 +76,89 @@ const AccountRoute = AccountRouteImport.update({
   path: '/account',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AccountRecoveryRoute = AccountRecoveryRouteImport.update({
+  id: '/account-recovery',
+  path: '/account-recovery',
   getParentRoute: () => rootRouteImport,
 } as any)
-const StaffIndexRoute = StaffIndexRouteImport.update({
-  id: '/staff/',
-  path: '/staff/',
+const AnalyticsRoute = AnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RecIndexRoute = RecIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => RecRoute,
+const CanRoute = CanRouteImport.update({
+  id: '/can',
+  path: '/can',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const CanIndexRoute = CanIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => CanRoute,
+const CandidatesRoute = CandidatesRouteImport.update({
+  id: '/candidates',
+  path: '/candidates',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompanyInvitationsRoute = CompanyInvitationsRouteImport.update({
+  id: '/company-invitations',
+  path: '/company-invitations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComplianceRoute = ComplianceRouteImport.update({
+  id: '/compliance',
+  path: '/compliance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CopilotRoute = CopilotRouteImport.update({
+  id: '/copilot',
+  path: '/copilot',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JobsRoute = JobsRouteImport.update({
+  id: '/jobs',
+  path: '/jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecRoute = RecRouteImport.update({
+  id: '/rec',
+  path: '/rec',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecruitRoute = RecruitRouteImport.update({
+  id: '/recruit',
+  path: '/recruit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VnRoute = VnRouteImport.update({
+  id: '/vn',
+  path: '/vn',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const StaffVerificationsRoute = StaffVerificationsRouteImport.update({
-  id: '/staff/verifications',
-  path: '/staff/verifications',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const StaffTasksRoute = StaffTasksRouteImport.update({
-  id: '/staff/tasks',
-  path: '/staff/tasks',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const StaffReportsRoute = StaffReportsRouteImport.update({
-  id: '/staff/reports',
-  path: '/staff/reports',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const StaffMonitoringRoute = StaffMonitoringRouteImport.update({
-  id: '/staff/monitoring',
-  path: '/staff/monitoring',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const StaffJobsRoute = StaffJobsRouteImport.update({
-  id: '/staff/jobs',
-  path: '/staff/jobs',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const StaffComplianceRoute = StaffComplianceRouteImport.update({
-  id: '/staff/compliance',
-  path: '/staff/compliance',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const StaffCandidatesRoute = StaffCandidatesRouteImport.update({
-  id: '/staff/candidates',
-  path: '/staff/candidates',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const StaffAuditLogsRoute = StaffAuditLogsRouteImport.update({
-  id: '/staff/audit-logs',
-  path: '/staff/audit-logs',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const StaffAnalyticsRoute = StaffAnalyticsRouteImport.update({
-  id: '/staff/analytics',
-  path: '/staff/analytics',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const StaffAccountsRoute = StaffAccountsRouteImport.update({
-  id: '/staff/accounts',
-  path: '/staff/accounts',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RecVerificationRoute = RecVerificationRouteImport.update({
-  id: '/verification',
-  path: '/verification',
-  getParentRoute: () => RecRoute,
-} as any)
-const RecTalentRoute = RecTalentRouteImport.update({
-  id: '/talent',
-  path: '/talent',
-  getParentRoute: () => RecRoute,
-} as any)
-const RecProfileRoute = RecProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => RecRoute,
-} as any)
-const RecMembersRoute = RecMembersRouteImport.update({
-  id: '/members',
-  path: '/members',
-  getParentRoute: () => RecRoute,
-} as any)
-const RecJobsRoute = RecJobsRouteImport.update({
-  id: '/jobs',
-  path: '/jobs',
-  getParentRoute: () => RecRoute,
-} as any)
-const RecHubRoute = RecHubRouteImport.update({
-  id: '/hub',
-  path: '/hub',
-  getParentRoute: () => RecRoute,
-} as any)
-const RecApplicationsRoute = RecApplicationsRouteImport.update({
-  id: '/applications',
-  path: '/applications',
-  getParentRoute: () => RecRoute,
-} as any)
-const RecAccountRoute = RecAccountRouteImport.update({
-  id: '/account',
-  path: '/account',
-  getParentRoute: () => RecRoute,
-} as any)
-const CanProfileRoute = CanProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => CanRoute,
-} as any)
-const CanJobsRoute = CanJobsRouteImport.update({
-  id: '/jobs',
-  path: '/jobs',
-  getParentRoute: () => CanRoute,
-} as any)
-const CanCvsRoute = CanCvsRouteImport.update({
-  id: '/cvs',
-  path: '/cvs',
-  getParentRoute: () => CanRoute,
-} as any)
-const CanCopilotRoute = CanCopilotRouteImport.update({
-  id: '/copilot',
-  path: '/copilot',
-  getParentRoute: () => CanRoute,
-} as any)
-const CanAccountRoute = CanAccountRouteImport.update({
-  id: '/account',
-  path: '/account',
-  getParentRoute: () => CanRoute,
-} as any)
-const AdminVerificationsRoute = AdminVerificationsRouteImport.update({
-  id: '/admin/verifications',
-  path: '/admin/verifications',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminTasksRoute = AdminTasksRouteImport.update({
-  id: '/admin/tasks',
-  path: '/admin/tasks',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminReportsRoute = AdminReportsRouteImport.update({
-  id: '/admin/reports',
-  path: '/admin/reports',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminMonitoringRoute = AdminMonitoringRouteImport.update({
-  id: '/admin/monitoring',
-  path: '/admin/monitoring',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminJobsRoute = AdminJobsRouteImport.update({
-  id: '/admin/jobs',
-  path: '/admin/jobs',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminJobApprovalsRoute = AdminJobApprovalsRouteImport.update({
-  id: '/admin/job-approvals',
-  path: '/admin/job-approvals',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminComplianceRoute = AdminComplianceRouteImport.update({
-  id: '/admin/compliance',
-  path: '/admin/compliance',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminCandidatesRoute = AdminCandidatesRouteImport.update({
-  id: '/admin/candidates',
-  path: '/admin/candidates',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
-  id: '/admin/analytics',
-  path: '/admin/analytics',
+const AdminSplatRoute = AdminSplatRouteImport.update({
+  id: '/admin/$',
+  path: '/admin/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminAccountsRoute = AdminAccountsRouteImport.update({
@@ -336,9 +166,179 @@ const AdminAccountsRoute = AdminAccountsRouteImport.update({
   path: '/admin/accounts',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminSplatRoute = AdminSplatRouteImport.update({
-  id: '/admin/$',
-  path: '/admin/$',
+const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
+  id: '/admin/analytics',
+  path: '/admin/analytics',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminCandidatesRoute = AdminCandidatesRouteImport.update({
+  id: '/admin/candidates',
+  path: '/admin/candidates',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminComplianceRoute = AdminComplianceRouteImport.update({
+  id: '/admin/compliance',
+  path: '/admin/compliance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminJobApprovalsRoute = AdminJobApprovalsRouteImport.update({
+  id: '/admin/job-approvals',
+  path: '/admin/job-approvals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminJobsRoute = AdminJobsRouteImport.update({
+  id: '/admin/jobs',
+  path: '/admin/jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminMonitoringRoute = AdminMonitoringRouteImport.update({
+  id: '/admin/monitoring',
+  path: '/admin/monitoring',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminReportsRoute = AdminReportsRouteImport.update({
+  id: '/admin/reports',
+  path: '/admin/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminTasksRoute = AdminTasksRouteImport.update({
+  id: '/admin/tasks',
+  path: '/admin/tasks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminVerificationsRoute = AdminVerificationsRouteImport.update({
+  id: '/admin/verifications',
+  path: '/admin/verifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CanIndexRoute = CanIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CanRoute,
+} as any)
+const CanAccountRoute = CanAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => CanRoute,
+} as any)
+const CanCopilotRoute = CanCopilotRouteImport.update({
+  id: '/copilot',
+  path: '/copilot',
+  getParentRoute: () => CanRoute,
+} as any)
+const CanCvsRoute = CanCvsRouteImport.update({
+  id: '/cvs',
+  path: '/cvs',
+  getParentRoute: () => CanRoute,
+} as any)
+const CanJobsRoute = CanJobsRouteImport.update({
+  id: '/jobs',
+  path: '/jobs',
+  getParentRoute: () => CanRoute,
+} as any)
+const CanProfileRoute = CanProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => CanRoute,
+} as any)
+const RecIndexRoute = RecIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => RecRoute,
+} as any)
+const RecAccountRoute = RecAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => RecRoute,
+} as any)
+const RecApplicationsRoute = RecApplicationsRouteImport.update({
+  id: '/applications',
+  path: '/applications',
+  getParentRoute: () => RecRoute,
+} as any)
+const RecHubRoute = RecHubRouteImport.update({
+  id: '/hub',
+  path: '/hub',
+  getParentRoute: () => RecRoute,
+} as any)
+const RecJobsRoute = RecJobsRouteImport.update({
+  id: '/jobs',
+  path: '/jobs',
+  getParentRoute: () => RecRoute,
+} as any)
+const RecMembersRoute = RecMembersRouteImport.update({
+  id: '/members',
+  path: '/members',
+  getParentRoute: () => RecRoute,
+} as any)
+const RecProfileRoute = RecProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => RecRoute,
+} as any)
+const RecTalentRoute = RecTalentRouteImport.update({
+  id: '/talent',
+  path: '/talent',
+  getParentRoute: () => RecRoute,
+} as any)
+const RecVerificationRoute = RecVerificationRouteImport.update({
+  id: '/verification',
+  path: '/verification',
+  getParentRoute: () => RecRoute,
+} as any)
+const StaffIndexRoute = StaffIndexRouteImport.update({
+  id: '/staff/',
+  path: '/staff/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffAccountsRoute = StaffAccountsRouteImport.update({
+  id: '/staff/accounts',
+  path: '/staff/accounts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffAnalyticsRoute = StaffAnalyticsRouteImport.update({
+  id: '/staff/analytics',
+  path: '/staff/analytics',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffAuditLogsRoute = StaffAuditLogsRouteImport.update({
+  id: '/staff/audit-logs',
+  path: '/staff/audit-logs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffCandidatesRoute = StaffCandidatesRouteImport.update({
+  id: '/staff/candidates',
+  path: '/staff/candidates',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffComplianceRoute = StaffComplianceRouteImport.update({
+  id: '/staff/compliance',
+  path: '/staff/compliance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffJobsRoute = StaffJobsRouteImport.update({
+  id: '/staff/jobs',
+  path: '/staff/jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffMonitoringRoute = StaffMonitoringRouteImport.update({
+  id: '/staff/monitoring',
+  path: '/staff/monitoring',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffReportsRoute = StaffReportsRouteImport.update({
+  id: '/staff/reports',
+  path: '/staff/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffTasksRoute = StaffTasksRouteImport.update({
+  id: '/staff/tasks',
+  path: '/staff/tasks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffVerificationsRoute = StaffVerificationsRouteImport.update({
+  id: '/staff/verifications',
+  path: '/staff/verifications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CanJobsApplyRoute = CanJobsApplyRouteImport.update({
@@ -740,109 +740,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/vn': {
-      id: '/vn'
-      path: '/vn'
-      fullPath: '/vn'
-      preLoaderRoute: typeof VnRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/register': {
-      id: '/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof RegisterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/recruit': {
-      id: '/recruit'
-      path: '/recruit'
-      fullPath: '/recruit'
-      preLoaderRoute: typeof RecruitRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/rec': {
-      id: '/rec'
-      path: '/rec'
-      fullPath: '/rec'
-      preLoaderRoute: typeof RecRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/profile': {
-      id: '/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof ProfileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/jobs': {
-      id: '/jobs'
-      path: '/jobs'
-      fullPath: '/jobs'
-      preLoaderRoute: typeof JobsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/copilot': {
-      id: '/copilot'
-      path: '/copilot'
-      fullPath: '/copilot'
-      preLoaderRoute: typeof CopilotRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/compliance': {
-      id: '/compliance'
-      path: '/compliance'
-      fullPath: '/compliance'
-      preLoaderRoute: typeof ComplianceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/company-invitations': {
-      id: '/company-invitations'
-      path: '/company-invitations'
-      fullPath: '/company-invitations'
-      preLoaderRoute: typeof CompanyInvitationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/candidates': {
-      id: '/candidates'
-      path: '/candidates'
-      fullPath: '/candidates'
-      preLoaderRoute: typeof CandidatesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/can': {
-      id: '/can'
-      path: '/can'
-      fullPath: '/can'
-      preLoaderRoute: typeof CanRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/analytics': {
-      id: '/analytics'
-      path: '/analytics'
-      fullPath: '/analytics'
-      preLoaderRoute: typeof AnalyticsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/account-recovery': {
-      id: '/account-recovery'
-      path: '/account-recovery'
-      fullPath: '/account-recovery'
-      preLoaderRoute: typeof AccountRecoveryRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/account': {
@@ -852,33 +754,110 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/account-recovery': {
+      id: '/account-recovery'
+      path: '/account-recovery'
+      fullPath: '/account-recovery'
+      preLoaderRoute: typeof AccountRecoveryRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/staff/': {
-      id: '/staff/'
-      path: '/staff'
-      fullPath: '/staff/'
-      preLoaderRoute: typeof StaffIndexRouteImport
+    '/analytics': {
+      id: '/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AnalyticsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/rec/': {
-      id: '/rec/'
-      path: '/'
-      fullPath: '/rec/'
-      preLoaderRoute: typeof RecIndexRouteImport
-      parentRoute: typeof RecRoute
+    '/can': {
+      id: '/can'
+      path: '/can'
+      fullPath: '/can'
+      preLoaderRoute: typeof CanRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/can/': {
-      id: '/can/'
-      path: '/'
-      fullPath: '/can/'
-      preLoaderRoute: typeof CanIndexRouteImport
-      parentRoute: typeof CanRoute
+    '/candidates': {
+      id: '/candidates'
+      path: '/candidates'
+      fullPath: '/candidates'
+      preLoaderRoute: typeof CandidatesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/company-invitations': {
+      id: '/company-invitations'
+      path: '/company-invitations'
+      fullPath: '/company-invitations'
+      preLoaderRoute: typeof CompanyInvitationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/compliance': {
+      id: '/compliance'
+      path: '/compliance'
+      fullPath: '/compliance'
+      preLoaderRoute: typeof ComplianceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/copilot': {
+      id: '/copilot'
+      path: '/copilot'
+      fullPath: '/copilot'
+      preLoaderRoute: typeof CopilotRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jobs': {
+      id: '/jobs'
+      path: '/jobs'
+      fullPath: '/jobs'
+      preLoaderRoute: typeof JobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rec': {
+      id: '/rec'
+      path: '/rec'
+      fullPath: '/rec'
+      preLoaderRoute: typeof RecRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recruit': {
+      id: '/recruit'
+      path: '/recruit'
+      fullPath: '/recruit'
+      preLoaderRoute: typeof RecruitRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vn': {
+      id: '/vn'
+      path: '/vn'
+      fullPath: '/vn'
+      preLoaderRoute: typeof VnRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/': {
       id: '/admin/'
@@ -887,228 +866,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/staff/verifications': {
-      id: '/staff/verifications'
-      path: '/staff/verifications'
-      fullPath: '/staff/verifications'
-      preLoaderRoute: typeof StaffVerificationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/staff/tasks': {
-      id: '/staff/tasks'
-      path: '/staff/tasks'
-      fullPath: '/staff/tasks'
-      preLoaderRoute: typeof StaffTasksRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/staff/reports': {
-      id: '/staff/reports'
-      path: '/staff/reports'
-      fullPath: '/staff/reports'
-      preLoaderRoute: typeof StaffReportsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/staff/monitoring': {
-      id: '/staff/monitoring'
-      path: '/staff/monitoring'
-      fullPath: '/staff/monitoring'
-      preLoaderRoute: typeof StaffMonitoringRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/staff/jobs': {
-      id: '/staff/jobs'
-      path: '/staff/jobs'
-      fullPath: '/staff/jobs'
-      preLoaderRoute: typeof StaffJobsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/staff/compliance': {
-      id: '/staff/compliance'
-      path: '/staff/compliance'
-      fullPath: '/staff/compliance'
-      preLoaderRoute: typeof StaffComplianceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/staff/candidates': {
-      id: '/staff/candidates'
-      path: '/staff/candidates'
-      fullPath: '/staff/candidates'
-      preLoaderRoute: typeof StaffCandidatesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/staff/audit-logs': {
-      id: '/staff/audit-logs'
-      path: '/staff/audit-logs'
-      fullPath: '/staff/audit-logs'
-      preLoaderRoute: typeof StaffAuditLogsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/staff/analytics': {
-      id: '/staff/analytics'
-      path: '/staff/analytics'
-      fullPath: '/staff/analytics'
-      preLoaderRoute: typeof StaffAnalyticsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/staff/accounts': {
-      id: '/staff/accounts'
-      path: '/staff/accounts'
-      fullPath: '/staff/accounts'
-      preLoaderRoute: typeof StaffAccountsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/rec/verification': {
-      id: '/rec/verification'
-      path: '/verification'
-      fullPath: '/rec/verification'
-      preLoaderRoute: typeof RecVerificationRouteImport
-      parentRoute: typeof RecRoute
-    }
-    '/rec/talent': {
-      id: '/rec/talent'
-      path: '/talent'
-      fullPath: '/rec/talent'
-      preLoaderRoute: typeof RecTalentRouteImport
-      parentRoute: typeof RecRoute
-    }
-    '/rec/profile': {
-      id: '/rec/profile'
-      path: '/profile'
-      fullPath: '/rec/profile'
-      preLoaderRoute: typeof RecProfileRouteImport
-      parentRoute: typeof RecRoute
-    }
-    '/rec/members': {
-      id: '/rec/members'
-      path: '/members'
-      fullPath: '/rec/members'
-      preLoaderRoute: typeof RecMembersRouteImport
-      parentRoute: typeof RecRoute
-    }
-    '/rec/jobs': {
-      id: '/rec/jobs'
-      path: '/jobs'
-      fullPath: '/rec/jobs'
-      preLoaderRoute: typeof RecJobsRouteImport
-      parentRoute: typeof RecRoute
-    }
-    '/rec/hub': {
-      id: '/rec/hub'
-      path: '/hub'
-      fullPath: '/rec/hub'
-      preLoaderRoute: typeof RecHubRouteImport
-      parentRoute: typeof RecRoute
-    }
-    '/rec/applications': {
-      id: '/rec/applications'
-      path: '/applications'
-      fullPath: '/rec/applications'
-      preLoaderRoute: typeof RecApplicationsRouteImport
-      parentRoute: typeof RecRoute
-    }
-    '/rec/account': {
-      id: '/rec/account'
-      path: '/account'
-      fullPath: '/rec/account'
-      preLoaderRoute: typeof RecAccountRouteImport
-      parentRoute: typeof RecRoute
-    }
-    '/can/profile': {
-      id: '/can/profile'
-      path: '/profile'
-      fullPath: '/can/profile'
-      preLoaderRoute: typeof CanProfileRouteImport
-      parentRoute: typeof CanRoute
-    }
-    '/can/jobs': {
-      id: '/can/jobs'
-      path: '/jobs'
-      fullPath: '/can/jobs'
-      preLoaderRoute: typeof CanJobsRouteImport
-      parentRoute: typeof CanRoute
-    }
-    '/can/cvs': {
-      id: '/can/cvs'
-      path: '/cvs'
-      fullPath: '/can/cvs'
-      preLoaderRoute: typeof CanCvsRouteImport
-      parentRoute: typeof CanRoute
-    }
-    '/can/copilot': {
-      id: '/can/copilot'
-      path: '/copilot'
-      fullPath: '/can/copilot'
-      preLoaderRoute: typeof CanCopilotRouteImport
-      parentRoute: typeof CanRoute
-    }
-    '/can/account': {
-      id: '/can/account'
-      path: '/account'
-      fullPath: '/can/account'
-      preLoaderRoute: typeof CanAccountRouteImport
-      parentRoute: typeof CanRoute
-    }
-    '/admin/verifications': {
-      id: '/admin/verifications'
-      path: '/admin/verifications'
-      fullPath: '/admin/verifications'
-      preLoaderRoute: typeof AdminVerificationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/tasks': {
-      id: '/admin/tasks'
-      path: '/admin/tasks'
-      fullPath: '/admin/tasks'
-      preLoaderRoute: typeof AdminTasksRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/reports': {
-      id: '/admin/reports'
-      path: '/admin/reports'
-      fullPath: '/admin/reports'
-      preLoaderRoute: typeof AdminReportsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/monitoring': {
-      id: '/admin/monitoring'
-      path: '/admin/monitoring'
-      fullPath: '/admin/monitoring'
-      preLoaderRoute: typeof AdminMonitoringRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/jobs': {
-      id: '/admin/jobs'
-      path: '/admin/jobs'
-      fullPath: '/admin/jobs'
-      preLoaderRoute: typeof AdminJobsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/job-approvals': {
-      id: '/admin/job-approvals'
-      path: '/admin/job-approvals'
-      fullPath: '/admin/job-approvals'
-      preLoaderRoute: typeof AdminJobApprovalsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/compliance': {
-      id: '/admin/compliance'
-      path: '/admin/compliance'
-      fullPath: '/admin/compliance'
-      preLoaderRoute: typeof AdminComplianceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/candidates': {
-      id: '/admin/candidates'
-      path: '/admin/candidates'
-      fullPath: '/admin/candidates'
-      preLoaderRoute: typeof AdminCandidatesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/analytics': {
-      id: '/admin/analytics'
-      path: '/admin/analytics'
-      fullPath: '/admin/analytics'
-      preLoaderRoute: typeof AdminAnalyticsRouteImport
+    '/admin/$': {
+      id: '/admin/$'
+      path: '/admin/$'
+      fullPath: '/admin/$'
+      preLoaderRoute: typeof AdminSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/accounts': {
@@ -1118,11 +880,249 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAccountsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/$': {
-      id: '/admin/$'
-      path: '/admin/$'
-      fullPath: '/admin/$'
-      preLoaderRoute: typeof AdminSplatRouteImport
+    '/admin/analytics': {
+      id: '/admin/analytics'
+      path: '/admin/analytics'
+      fullPath: '/admin/analytics'
+      preLoaderRoute: typeof AdminAnalyticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/candidates': {
+      id: '/admin/candidates'
+      path: '/admin/candidates'
+      fullPath: '/admin/candidates'
+      preLoaderRoute: typeof AdminCandidatesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/compliance': {
+      id: '/admin/compliance'
+      path: '/admin/compliance'
+      fullPath: '/admin/compliance'
+      preLoaderRoute: typeof AdminComplianceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/job-approvals': {
+      id: '/admin/job-approvals'
+      path: '/admin/job-approvals'
+      fullPath: '/admin/job-approvals'
+      preLoaderRoute: typeof AdminJobApprovalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/jobs': {
+      id: '/admin/jobs'
+      path: '/admin/jobs'
+      fullPath: '/admin/jobs'
+      preLoaderRoute: typeof AdminJobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/monitoring': {
+      id: '/admin/monitoring'
+      path: '/admin/monitoring'
+      fullPath: '/admin/monitoring'
+      preLoaderRoute: typeof AdminMonitoringRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/reports': {
+      id: '/admin/reports'
+      path: '/admin/reports'
+      fullPath: '/admin/reports'
+      preLoaderRoute: typeof AdminReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/tasks': {
+      id: '/admin/tasks'
+      path: '/admin/tasks'
+      fullPath: '/admin/tasks'
+      preLoaderRoute: typeof AdminTasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/verifications': {
+      id: '/admin/verifications'
+      path: '/admin/verifications'
+      fullPath: '/admin/verifications'
+      preLoaderRoute: typeof AdminVerificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/can/': {
+      id: '/can/'
+      path: '/'
+      fullPath: '/can/'
+      preLoaderRoute: typeof CanIndexRouteImport
+      parentRoute: typeof CanRoute
+    }
+    '/can/account': {
+      id: '/can/account'
+      path: '/account'
+      fullPath: '/can/account'
+      preLoaderRoute: typeof CanAccountRouteImport
+      parentRoute: typeof CanRoute
+    }
+    '/can/copilot': {
+      id: '/can/copilot'
+      path: '/copilot'
+      fullPath: '/can/copilot'
+      preLoaderRoute: typeof CanCopilotRouteImport
+      parentRoute: typeof CanRoute
+    }
+    '/can/cvs': {
+      id: '/can/cvs'
+      path: '/cvs'
+      fullPath: '/can/cvs'
+      preLoaderRoute: typeof CanCvsRouteImport
+      parentRoute: typeof CanRoute
+    }
+    '/can/jobs': {
+      id: '/can/jobs'
+      path: '/jobs'
+      fullPath: '/can/jobs'
+      preLoaderRoute: typeof CanJobsRouteImport
+      parentRoute: typeof CanRoute
+    }
+    '/can/profile': {
+      id: '/can/profile'
+      path: '/profile'
+      fullPath: '/can/profile'
+      preLoaderRoute: typeof CanProfileRouteImport
+      parentRoute: typeof CanRoute
+    }
+    '/rec/': {
+      id: '/rec/'
+      path: '/'
+      fullPath: '/rec/'
+      preLoaderRoute: typeof RecIndexRouteImport
+      parentRoute: typeof RecRoute
+    }
+    '/rec/account': {
+      id: '/rec/account'
+      path: '/account'
+      fullPath: '/rec/account'
+      preLoaderRoute: typeof RecAccountRouteImport
+      parentRoute: typeof RecRoute
+    }
+    '/rec/applications': {
+      id: '/rec/applications'
+      path: '/applications'
+      fullPath: '/rec/applications'
+      preLoaderRoute: typeof RecApplicationsRouteImport
+      parentRoute: typeof RecRoute
+    }
+    '/rec/hub': {
+      id: '/rec/hub'
+      path: '/hub'
+      fullPath: '/rec/hub'
+      preLoaderRoute: typeof RecHubRouteImport
+      parentRoute: typeof RecRoute
+    }
+    '/rec/jobs': {
+      id: '/rec/jobs'
+      path: '/jobs'
+      fullPath: '/rec/jobs'
+      preLoaderRoute: typeof RecJobsRouteImport
+      parentRoute: typeof RecRoute
+    }
+    '/rec/members': {
+      id: '/rec/members'
+      path: '/members'
+      fullPath: '/rec/members'
+      preLoaderRoute: typeof RecMembersRouteImport
+      parentRoute: typeof RecRoute
+    }
+    '/rec/profile': {
+      id: '/rec/profile'
+      path: '/profile'
+      fullPath: '/rec/profile'
+      preLoaderRoute: typeof RecProfileRouteImport
+      parentRoute: typeof RecRoute
+    }
+    '/rec/talent': {
+      id: '/rec/talent'
+      path: '/talent'
+      fullPath: '/rec/talent'
+      preLoaderRoute: typeof RecTalentRouteImport
+      parentRoute: typeof RecRoute
+    }
+    '/rec/verification': {
+      id: '/rec/verification'
+      path: '/verification'
+      fullPath: '/rec/verification'
+      preLoaderRoute: typeof RecVerificationRouteImport
+      parentRoute: typeof RecRoute
+    }
+    '/staff/': {
+      id: '/staff/'
+      path: '/staff'
+      fullPath: '/staff/'
+      preLoaderRoute: typeof StaffIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff/accounts': {
+      id: '/staff/accounts'
+      path: '/staff/accounts'
+      fullPath: '/staff/accounts'
+      preLoaderRoute: typeof StaffAccountsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff/analytics': {
+      id: '/staff/analytics'
+      path: '/staff/analytics'
+      fullPath: '/staff/analytics'
+      preLoaderRoute: typeof StaffAnalyticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff/audit-logs': {
+      id: '/staff/audit-logs'
+      path: '/staff/audit-logs'
+      fullPath: '/staff/audit-logs'
+      preLoaderRoute: typeof StaffAuditLogsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff/candidates': {
+      id: '/staff/candidates'
+      path: '/staff/candidates'
+      fullPath: '/staff/candidates'
+      preLoaderRoute: typeof StaffCandidatesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff/compliance': {
+      id: '/staff/compliance'
+      path: '/staff/compliance'
+      fullPath: '/staff/compliance'
+      preLoaderRoute: typeof StaffComplianceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff/jobs': {
+      id: '/staff/jobs'
+      path: '/staff/jobs'
+      fullPath: '/staff/jobs'
+      preLoaderRoute: typeof StaffJobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff/monitoring': {
+      id: '/staff/monitoring'
+      path: '/staff/monitoring'
+      fullPath: '/staff/monitoring'
+      preLoaderRoute: typeof StaffMonitoringRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff/reports': {
+      id: '/staff/reports'
+      path: '/staff/reports'
+      fullPath: '/staff/reports'
+      preLoaderRoute: typeof StaffReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff/tasks': {
+      id: '/staff/tasks'
+      path: '/staff/tasks'
+      fullPath: '/staff/tasks'
+      preLoaderRoute: typeof StaffTasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff/verifications': {
+      id: '/staff/verifications'
+      path: '/staff/verifications'
+      fullPath: '/staff/verifications'
+      preLoaderRoute: typeof StaffVerificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/can/jobs_/apply': {
