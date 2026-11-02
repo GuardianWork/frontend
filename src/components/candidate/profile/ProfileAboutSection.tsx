@@ -24,7 +24,9 @@ export function ProfileAboutSection({
       handle={handle}
       action={<ProfileEditButton label={copy.aboutEdit} onClick={onEdit} />}
     >
-      <p className={`mt-3 max-w-[68ch] text-base leading-7 ${about ? "text-ink-2" : "text-ink-3"}`}>
+      <p
+        className={`mt-3 max-w-[68ch] text-[15px] leading-7 ${about ? "text-ink-2" : "text-ink-3"}`}
+      >
         {about || copy.aboutPlaceholder}
       </p>
     </ProfileSection>

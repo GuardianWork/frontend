@@ -29,7 +29,7 @@ export function ProfileSkillsSection({
           {skills.map((skill) => (
             <li
               key={skill}
-              className="rounded-md border border-rule bg-paper-2 px-2.5 py-1.5 text-xs font-semibold text-ink-2"
+              className="rounded-md border border-rule bg-paper-2 px-2.5 py-1.5 text-[13px] font-semibold text-ink-2"
             >
               {skill}
             </li>

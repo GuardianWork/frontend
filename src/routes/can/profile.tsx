@@ -45,7 +45,6 @@ import {
   Eye,
   EyeOff,
   FileText,
-  Info,
   Mail,
   MapPin,
   Pencil,
@@ -541,12 +540,10 @@ function CandidateProfilePage() {
   return (
     <AdminShell title={copy.shellTitle} role="candidate">
       <div className="mx-auto max-w-6xl caret-accent selection:bg-accent selection:text-accent-ink">
-        <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="min-w-0">
-            <h1 className="text-[clamp(32px,3.8vw,52px)] font-extrabold leading-[1.2] tracking-[-0.035em] text-ink">
-              {copy.pageTitle}
-            </h1>
-            <p className="mt-1.5 max-w-[62ch] text-sm leading-6 text-ink-2">{copy.intro}</p>
+        <header className="workspace-heading">
+          <div>
+            <h1>{copy.pageTitle}</h1>
+            <p>{copy.intro}</p>
           </div>
           <button
             type="button"
@@ -558,7 +555,6 @@ function CandidateProfilePage() {
           </button>
         </header>
 
-        <p className="mb-5 text-sm leading-6 text-ink-3">{copy.metaNote}</p>
         {isEditing && (
           <FloatingPanel isOpen={true} onClose={closeEditForm} labelledBy="edit-profile-title">
             <form onSubmit={handleSave} noValidate className="flex min-h-0 flex-1 flex-col">
@@ -592,28 +588,14 @@ function CandidateProfilePage() {
 
               <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-7">
                 {errorCount > 0 && (
-                  <div
-                    role="alert"
-                    className="mb-5 flex items-start gap-3 rounded-xl border border-error/25 bg-error-container px-4 py-3"
-                  >
-                    <CircleAlert
-                      size={18}
-                      className="mt-0.5 shrink-0 text-on-error-container"
-                      aria-hidden="true"
-                    />
-                    <div className="min-w-0">
-                      <p className="text-sm font-bold text-on-error-container">
-                        {copy.editor.errorTitle}
-                      </p>
-                      <p className="mt-0.5 text-xs leading-5 text-on-error-container">
-                        {copy.editor.errorCount(errorCount)}
-                      </p>
-                    </div>
+                  <div role="alert" className="mb-5">
+                    <strong>{copy.editor.errorTitle}</strong>
+                    <p>{copy.editor.errorCount(errorCount)}</p>
                   </div>
                 )}
 
                 {saveError && (
-                  <p role="alert" className="mb-4 text-sm text-error">
+                  <p role="alert" className="mb-4">
                     {saveError}
                   </p>
                 )}
@@ -679,12 +661,6 @@ function CandidateProfilePage() {
                           }
                           className={fieldClass(fieldErrors.phone)}
                         />
-                        <p
-                          id="profile-phone-hint"
-                          className="mt-1 text-xs leading-4 font-normal text-ink-3"
-                        >
-                          {copy.editor.phoneHint}
-                        </p>
                         <FieldError id="profile-phone-error" message={fieldErrors.phone} />
                       </div>
                       <div className="md:col-span-2">
@@ -720,7 +696,7 @@ function CandidateProfilePage() {
                                 )}`,
                               )
                             }
-                            className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-md border border-rule bg-paper px-4 text-xs font-semibold text-ink transition-colors hover:bg-paper-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                            className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-md border border-rule bg-paper px-4 text-xs font-semibold text-ink transition-colors hover:bg-paper-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
                           >
                             {copy.editor.avatarDefault}
                           </button>
@@ -780,7 +756,7 @@ function CandidateProfilePage() {
                       <div className="flex items-baseline justify-between gap-3">
                         <label
                           htmlFor="profile-skill-input"
-                          className="text-sm font-semibold text-ink-2"
+                          className="text-[15px] font-semibold text-ink-2"
                         >
                           {copy.editor.skillsHeading}
                         </label>
@@ -794,7 +770,7 @@ function CandidateProfilePage() {
                             document.getElementById("profile-skill-input")?.focus();
                           }
                         }}
-                        className={`mt-1.5 flex min-h-11 w-full flex-wrap items-center gap-1.5 rounded-lg border bg-paper px-2 py-1.5 transition-colors focus-within:ring-2 focus-within:ring-accent/20 ${
+                        className={`mt-1.5 flex min-h-12 w-full flex-wrap items-center gap-1.5 rounded-lg border bg-paper px-2 py-1.5 transition-colors focus-within:ring-2 focus-within:ring-accent/20 ${
                           fieldErrors.skills
                             ? "border-error"
                             : "border-rule focus-within:border-accent"
@@ -1059,7 +1035,7 @@ function CandidateProfilePage() {
                           <button
                             type="button"
                             onClick={addExperience}
-                            className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-rule bg-paper px-4 text-sm font-semibold text-accent transition-colors hover:border-accent/40 hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                            className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-rule bg-paper px-4 text-sm font-semibold text-accent transition-colors hover:border-accent/40 hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
                           >
                             <Plus size={16} aria-hidden="true" />
                             {copy.editor.addExperience}
@@ -1175,7 +1151,7 @@ function CandidateProfilePage() {
                         <button
                           type="button"
                           onClick={addEducation}
-                          className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-lg border border-rule bg-paper px-4 text-sm font-semibold text-accent transition-colors hover:border-accent/40 hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                          className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-lg border border-rule bg-paper px-4 text-sm font-semibold text-accent transition-colors hover:border-accent/40 hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
                         >
                           <Plus size={16} aria-hidden="true" />
                           {copy.editor.addEducation}
@@ -1226,7 +1202,7 @@ function CandidateProfilePage() {
               <button
                 type="button"
                 onClick={() => setIsSuccessDialogOpen(false)}
-                className="btn min-h-10 px-5 text-sm"
+                className="btn min-h-11 px-5 text-sm"
               >
                 {copy.editor.close}
               </button>
@@ -1234,7 +1210,7 @@ function CandidateProfilePage() {
           </DialogContent>
         </Dialog>
 
-        <div className="grid overflow-hidden rounded-2xl border border-rule bg-paper lg:grid-cols-[minmax(17rem,0.85fr)_minmax(0,2fr)]">
+        <div className="grid overflow-hidden rounded-xl border border-rule bg-paper lg:grid-cols-[minmax(17rem,0.85fr)_minmax(0,2fr)]">
           <aside className="border-b border-rule bg-paper-2 px-5 py-6 sm:px-6 lg:border-b-0 lg:border-r lg:px-7 lg:py-8">
             <div>
               <div className="relative w-fit">
@@ -1485,7 +1461,7 @@ function fieldIdFromError(key: string) {
 }
 
 function fieldClass(hasError?: string) {
-  return `mt-1.5 min-h-11 w-full rounded-lg border bg-paper px-3.5 py-2.5 text-sm font-normal text-ink outline-none transition-colors placeholder:text-ink-3 focus:ring-2 focus:ring-accent/20 ${
+  return `mt-1.5 min-h-12 w-full rounded-lg border bg-paper px-3.5 py-2.5 text-sm font-normal text-ink outline-none transition-colors placeholder:text-ink-3 focus:ring-2 focus:ring-accent/20 ${
     hasError ? "border-error" : "border-rule focus:border-accent"
   }`;
 }
@@ -1503,7 +1479,7 @@ function FieldHeader({
 }) {
   return (
     <div className="flex items-baseline justify-between gap-3">
-      <label htmlFor={htmlFor} className="text-sm font-semibold text-ink-2">
+      <label htmlFor={htmlFor} className="text-[15px] font-semibold text-ink-2">
         {label}
         {required ? (
           <span className="ml-0.5 text-error" aria-hidden="true">
@@ -1577,8 +1553,9 @@ function FieldError({ id, message }: { id: string; message?: string }) {
   if (!message) return null;
 
   return (
-    <span id={id} role="alert" className="mt-1 block text-sm font-medium text-error">
-      {message}
+    <span id={id} role="alert" className="field-error mt-1.5 flex items-start gap-1.5">
+      <CircleAlert size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
+      <span>{message}</span>
     </span>
   );
 }

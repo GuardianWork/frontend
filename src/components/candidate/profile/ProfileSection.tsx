@@ -19,7 +19,7 @@ export function ProfileSection({
   children: React.ReactNode;
 }) {
   return (
-    <section aria-labelledby={`${id}-title`} className={cn("px-5 py-6 sm:px-7 sm:py-7", className)}>
+    <section aria-labelledby={`${id}-title`} className={cn("px-5 py-6 sm:px-8 sm:py-8", className)}>
       <div className="flex items-start justify-between gap-3">
         <h2
           id={`${id}-title`}
