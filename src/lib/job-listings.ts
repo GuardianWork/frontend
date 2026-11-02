@@ -5,7 +5,11 @@ export type JobItem = {
   location: string;
   salaryRange: string;
   badge:
-    "100% Audited" | "Điều 98 Verified" | "High Salary" | "Công ty đã xác thực" | "Tin minh họa";
+    | "100% Audited"
+    | "Điều 98 Verified"
+    | "High Salary"
+    | "Công ty đã xác thực"
+    | "Tin minh họa";
   badgeTone: "primary" | "warning" | "success";
   time: string;
   department: string;
