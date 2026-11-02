@@ -1,14 +1,7 @@
 import type { ReactNode } from "react";
 
 export type StaffStatusTone =
-  | "info"
-  | "neutral"
-  | "pending"
-  | "verified"
-  | "rejected"
-  | "purple"
-  | "orange"
-  | "teal";
+  "info" | "neutral" | "pending" | "verified" | "rejected" | "purple" | "orange" | "teal";
 
 export function StaffStatusBadge({
   tone,
