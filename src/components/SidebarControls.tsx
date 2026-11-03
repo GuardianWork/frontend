@@ -2,6 +2,8 @@ import { useContext, type ReactElement } from "react";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { SidebarState } from "@/context/sidebar-state";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useLanguage } from "@/context/LanguageContext";
+import { candidateWorkspaceCopy } from "@/lib/candidateWorkspace";
 
 export function SidebarLabel({ label, children }: { label: string; children: ReactElement }) {
   const { collapsed, enabled } = useContext(SidebarState);
@@ -17,8 +19,10 @@ export function SidebarLabel({ label, children }: { label: string; children: Rea
 }
 export function SidebarCollapseButton({ controls }: { controls: string }) {
   const { collapsed, toggle, enabled } = useContext(SidebarState);
+  const { locale } = useLanguage();
+  const copy = candidateWorkspaceCopy[locale].chrome;
   if (!enabled) return null;
-  const label = collapsed ? "Mở rộng thanh điều hướng" : "Thu gọn thanh điều hướng";
+  const label = collapsed ? copy.expandNav : copy.collapseNav;
   return (
     <SidebarLabel label={label}>
       <button

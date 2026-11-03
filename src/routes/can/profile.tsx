@@ -1,10 +1,13 @@
 import { useCandidateProfile, useRefreshIdentity } from "@/hooks/useAccountIdentity";
-import { updateCandidatePhone } from "@/services/candidateProfile";
+import { useLanguage } from "@/context/LanguageContext";
+import { candidateWorkspaceCopy, type CandidateWorkspaceCopy } from "@/lib/candidateWorkspace";
 import { accountError } from "@/services/accountControl";
 import { useEffect, useState, type FormEvent, type KeyboardEvent } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AdminShell } from "@/components/AdminShell";
 import { FloatingPanel } from "@/components/FloatingPanel";
+import { ProfileSections } from "@/components/candidate/profile/ProfileSections";
+import { ProfileEditButton } from "@/components/candidate/profile/ProfileSection";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Dialog,
@@ -28,6 +31,7 @@ import {
   loadCandidateProfile as loadApiProfile,
   updateCandidateProfile as saveApiProfile,
   toLocalPhone,
+  toCanonicalPhone,
   type ExperienceEntry as ApiExperienceEntry,
   type EducationEntry as ApiEducationEntry,
   type CandidateProfile as ApiCandidateProfile,
@@ -41,7 +45,6 @@ import {
   Eye,
   EyeOff,
   FileText,
-  Info,
   Mail,
   MapPin,
   Pencil,
@@ -70,6 +73,10 @@ const PROFILE_ROLE_OPTIONS = [
   "Kỹ sư phần mềm",
   "Quản lý",
 ];
+
+function roleLabel(copy: CandidateWorkspaceCopy["profile"], role: string) {
+  return (copy.roles as Record<string, string>)[role] ?? role;
+}
 
 export const Route = createFileRoute("/can/profile")({
   head: () => ({
@@ -152,6 +159,8 @@ function currentAvatarUrl(profile: CandidateProfileDetails): string | undefined 
 }
 
 function CandidateProfilePage() {
+  const { locale } = useLanguage();
+  const copy = candidateWorkspaceCopy[locale].profile;
   const user = useAuthUser();
   const serverProfile = useCandidateProfile();
   const refreshIdentity = useRefreshIdentity();
@@ -174,7 +183,7 @@ function CandidateProfilePage() {
   const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false);
   const [editSection, setEditSection] = useState<EditSection>("all");
   const [editIndex, setEditIndex] = useState<number | null>(null);
-  const currentRole = profile.experiences[0]?.title || "Chưa cập nhật chức danh";
+  const currentRole = profile.experiences[0]?.title || copy.defaultRole;
   const contactEmail = profile.email.trim() || user?.email || "";
   const errorCount = Object.keys(fieldErrors).length;
 
@@ -202,7 +211,7 @@ function CandidateProfilePage() {
           window.location.assign("/login?role=candidate");
           return;
         }
-        setApiError("Không tải được hồ sơ. Vui lòng thử lại.");
+        setApiError(copy.loadError);
       })
       .finally(() => {
         if (active) setIsApiLoading(false);
@@ -210,7 +219,7 @@ function CandidateProfilePage() {
     return () => {
       active = false;
     };
-  }, [setProfileDetails]);
+  }, [copy.loadError, setProfileDetails]);
 
   useEffect(() => {
     let active = true;
@@ -344,15 +353,15 @@ function CandidateProfilePage() {
     const value = raw.replace(/\s+/g, " ").trim();
     if (!value) return;
     if (value.length > MAX_SKILL_LENGTH) {
-      setSkillNotice(`Mỗi kỹ năng tối đa ${MAX_SKILL_LENGTH} ký tự.`);
+      setSkillNotice(copy.notices.skillTooLong(MAX_SKILL_LENGTH));
       return;
     }
     if (skillsDraft.length >= MAX_SKILLS) {
-      setSkillNotice(`Đã đạt tối đa ${MAX_SKILLS} kỹ năng. Xóa bớt để thêm kỹ năng mới.`);
+      setSkillNotice(copy.notices.skillsLimitReached(MAX_SKILLS));
       return;
     }
     if (skillsDraft.some((skill) => skill.toLowerCase() === value.toLowerCase())) {
-      setSkillNotice("Kỹ năng này đã có trong danh sách.");
+      setSkillNotice(copy.notices.skillDuplicate);
       return;
     }
     setSkillsDraft((current) => [...current, value]);
@@ -389,7 +398,7 @@ function CandidateProfilePage() {
         ? [...skillsDraft, pendingSkill]
         : skillsDraft;
 
-    const errors = validateDraft(draft, skillsForSave, editSection, editIndex);
+    const errors = validateDraft(draft, skillsForSave, editSection, editIndex, copy);
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       setSuccessMessage("");
@@ -445,64 +454,70 @@ function CandidateProfilePage() {
       education,
     };
 
+    const apiExperience = touches("experience")
+      ? profile.experiences === experiences
+        ? apiProfileExperiences(nextProfile.experiences)
+        : apiProfileExperiences(experiences)
+      : apiProfileExperiences(profile.experiences);
+    const apiEducation = touches("education")
+      ? apiProfileEducation(education)
+      : apiProfileEducation(profile.education);
+
+    const phoneValue = toCanonicalPhone(nextProfile.phone);
     setSaving(true);
+    setSaveError("");
     try {
-      const persisted = await updateCandidatePhone(
-        {
-          ...serverProfile.data,
-          firstName: nextProfile.firstName,
-          lastName: nextProfile.lastName,
-          skills: nextProfile.skills,
-          experienceSummary: nextProfile.experience,
-          // Detailed experience/education records keep their incumbent local flow;
-          // never discard the server education summary in a full PUT.
-          avatarUrl: nextProfile.avatarUrl,
-          isPublic: nextProfile.isPublic,
-        },
-        nextProfile.phone,
-      );
-      nextProfile.fullName = persisted.fullName;
-      nextProfile.firstName = persisted.firstName;
-      nextProfile.lastName = persisted.lastName;
-      nextProfile.phone = persisted.phoneNumber || "";
+      const saved = await saveApiProfile({
+        firstName: nextProfile.firstName,
+        lastName: nextProfile.lastName,
+        phoneNumber: phoneValue ?? null,
+        avatarUrl: currentAvatarUrl(draft),
+        skills: nextProfile.skills,
+        experience: apiExperience,
+        education: apiEducation,
+        isPublic: touches("basics") ? draft.isPublic : profile.isPublic,
+      });
+      const merged = mapApiProfileToDetails(saved, nextProfile);
+      const finalProfile: CandidateProfileDetails = {
+        ...merged,
+        experience: nextProfile.experience,
+      };
+      nextProfile.fullName = saved.fullName;
+      setProfileDetails(finalProfile);
+      setDraft(finalProfile);
+      setSkillsDraft(finalProfile.skills);
+      setSkillInput("");
+      setSkillNotice("");
+      setFieldErrors({});
+      try {
+        await refreshIdentity();
+      } catch {
+        setSaveError(copy.editor.refreshIdentityError);
+      }
+      setSuccessMessage(getSuccessMessage(editSection, copy));
+      setIsSuccessDialogOpen(true);
+      setIsEditing(false);
     } catch (cause) {
       setSaveError(accountError(cause, "identity"));
+    } finally {
       setSaving(false);
-      return;
     }
-    try {
-      await refreshIdentity();
-    } catch {
-      setSaveError(
-        "Đã lưu nhưng chưa tải lại được danh tính. Hãy tải lại trang trước khi tiếp tục.",
-      );
-    }
-    setSaving(false);
-    setProfileDetails(nextProfile);
-    setDraft(nextProfile);
-    setSkillsDraft(nextProfile.skills);
-    setSkillInput("");
-    setSkillNotice("");
-    setFieldErrors({});
-    setSuccessMessage(getSuccessMessage(editSection));
-    setIsSuccessDialogOpen(true);
-    setIsEditing(false);
   };
 
   const readinessItems = [
     {
-      label: "Thông tin cá nhân",
+      label: copy.readiness.basics,
       done: Boolean(
         profile.fullName.trim() &&
         EMAIL_PATTERN.test(contactEmail) &&
         PHONE_PATTERN.test(profile.phone),
       ),
     },
-    { label: "Giới thiệu", done: Boolean(profile.experience.trim()) },
-    { label: "Kinh nghiệm", done: profile.experiences.length > 0 },
-    { label: "Học vấn", done: profile.education.length > 0 },
-    { label: "Kỹ năng", done: profile.skills.length > 0 },
-    { label: "Hồ sơ xin việc", done: candidateCvs.length > 0 },
+    { label: copy.readiness.about, done: Boolean(profile.experience.trim()) },
+    { label: copy.readiness.experience, done: profile.experiences.length > 0 },
+    { label: copy.readiness.education, done: profile.education.length > 0 },
+    { label: copy.readiness.skills, done: profile.skills.length > 0 },
+    { label: copy.readiness.cv, done: candidateCvs.length > 0 },
   ];
   const completedCount = readinessItems.filter((item) => item.done).length;
   const missingLabels = readinessItems.filter((item) => !item.done).map((item) => item.label);
@@ -510,29 +525,25 @@ function CandidateProfilePage() {
 
   if (serverProfile.isPending || serverProfile.isError)
     return (
-      <AdminShell title="Hồ sơ của tôi" role="candidate">
-        <h1>Hồ sơ cá nhân</h1>
+      <AdminShell title={copy.shellTitle} role="candidate">
+        <h1>{copy.pageTitle}</h1>
         <p role={serverProfile.isError ? "alert" : "status"}>
-          {serverProfile.isError ? accountError(serverProfile.error) : "Đang tải hồ sơ…"}
+          {serverProfile.isError ? accountError(serverProfile.error) : copy.loading}
         </p>
         {serverProfile.isError && (
           <button className="btn mt-4" onClick={() => void serverProfile.refetch()}>
-            Tải lại hồ sơ
+            {copy.reload}
           </button>
         )}
       </AdminShell>
     );
   return (
-    <AdminShell title="Hồ sơ của tôi" role="candidate">
+    <AdminShell title={copy.shellTitle} role="candidate">
       <div className="mx-auto max-w-6xl caret-accent selection:bg-accent selection:text-accent-ink">
-        <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="min-w-0">
-            <h1 className="text-[clamp(32px,3.8vw,52px)] font-extrabold leading-[1.2] tracking-[-0.035em] text-ink">
-              Hồ sơ cá nhân
-            </h1>
-            <p className="mt-1.5 max-w-[62ch] text-sm leading-6 text-ink-2">
-              Thông tin hiển thị với nhà tuyển dụng và trạng thái hồ sơ của bạn.
-            </p>
+        <header className="workspace-heading">
+          <div>
+            <h1>{copy.pageTitle}</h1>
+            <p>{copy.intro}</p>
           </div>
           <button
             type="button"
@@ -540,14 +551,10 @@ function CandidateProfilePage() {
             className="btn min-h-11 shrink-0 px-5 text-sm"
           >
             <Pencil size={16} strokeWidth={2.2} aria-hidden="true" />
-            Chỉnh sửa hồ sơ
+            {copy.editProfile}
           </button>
         </header>
 
-        <p className="mb-5 text-sm leading-6 text-ink-3">
-          Họ, tên, liên hệ, kỹ năng và giới thiệu được lưu trên tài khoản. Các mục kinh nghiệm, học
-          vấn chi tiết bên dưới là bản minh họa cục bộ trong trình duyệt.
-        </p>
         {isEditing && (
           <FloatingPanel isOpen={true} onClose={closeEditForm} labelledBy="edit-profile-title">
             <form onSubmit={handleSave} noValidate className="flex min-h-0 flex-1 flex-col">
@@ -558,19 +565,20 @@ function CandidateProfilePage() {
                       id="edit-profile-title"
                       className="text-lg font-bold leading-[1.45] tracking-[-0.02em] text-ink"
                     >
-                      {getEditorTitle(editSection)}
+                      {getEditorTitle(editSection, copy)}
                     </h2>
                     <p className="mt-1 text-sm leading-6 text-ink-2">
-                      {getEditorDescription(editSection)}
+                      {getEditorDescription(editSection, copy)}
                     </p>
                     <p className="mt-2 text-xs leading-4 font-medium text-ink-3">
-                      Trường đánh dấu <span className="font-bold text-error">*</span> là bắt buộc.
+                      {copy.editor.requiredPrefix} <span className="font-bold text-error">*</span>{" "}
+                      {copy.editor.requiredSuffix}
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={closeEditForm}
-                    aria-label="Đóng"
+                    aria-label={copy.editor.close}
                     className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink-3 transition-colors hover:bg-paper-2 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
                   >
                     <X size={18} aria-hidden="true" />
@@ -580,28 +588,14 @@ function CandidateProfilePage() {
 
               <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-7">
                 {errorCount > 0 && (
-                  <div
-                    role="alert"
-                    className="mb-5 flex items-start gap-3 rounded-xl border border-error/25 bg-error-container px-4 py-3"
-                  >
-                    <CircleAlert
-                      size={18}
-                      className="mt-0.5 shrink-0 text-on-error-container"
-                      aria-hidden="true"
-                    />
-                    <div className="min-w-0">
-                      <p className="text-sm font-bold text-on-error-container">
-                        Chưa lưu được thay đổi
-                      </p>
-                      <p className="mt-0.5 text-xs leading-5 text-on-error-container">
-                        {errorCount} trường chưa hợp lệ. Kiểm tra các ô được đánh dấu rồi lưu lại.
-                      </p>
-                    </div>
+                  <div role="alert" className="mb-5">
+                    <strong>{copy.editor.errorTitle}</strong>
+                    <p>{copy.editor.errorCount(errorCount)}</p>
                   </div>
                 )}
 
                 {saveError && (
-                  <p role="alert" className="mb-4 text-sm text-error">
+                  <p role="alert" className="mb-4">
                     {saveError}
                   </p>
                 )}
@@ -610,13 +604,13 @@ function CandidateProfilePage() {
                     <>
                       {editSection === "all" && (
                         <div className="md:col-span-2">
-                          <FormSectionLabel title="Thông tin cá nhân" />
+                          <FormSectionLabel title={copy.editor.sectionBasics} />
                         </div>
                       )}
                       {(
                         [
-                          ["lastName", "Họ", "family-name"],
-                          ["firstName", "Tên", "given-name"],
+                          ["lastName", copy.editor.lastName, "family-name"],
+                          ["firstName", copy.editor.firstName, "given-name"],
                         ] as const
                       ).map(([field, label, autoComplete]) => (
                         <div key={field}>
@@ -643,19 +637,17 @@ function CandidateProfilePage() {
                         </div>
                       ))}
                       <div className="md:col-span-2">
-                        <FieldHeader htmlFor="profile-email" label="Email đã đăng ký" />
+                        <FieldHeader htmlFor="profile-email" label={copy.editor.email} />
                         <input
                           id="profile-email"
                           value={profile.email}
                           readOnly
                           className={fieldClass()}
                         />
-                        <p className="mt-2 text-sm text-ink-3">
-                          Email cố định của tài khoản, không thể thay đổi.
-                        </p>
+                        <p className="mt-2 text-sm text-ink-3">{copy.editor.emailHint}</p>
                       </div>
                       <div>
-                        <FieldHeader htmlFor="profile-phone" label="Số điện thoại" />
+                        <FieldHeader htmlFor="profile-phone" label={copy.editor.phone} />
                         <input
                           id="profile-phone"
                           maxLength={30}
@@ -669,18 +661,12 @@ function CandidateProfilePage() {
                           }
                           className={fieldClass(fieldErrors.phone)}
                         />
-                        <p
-                          id="profile-phone-hint"
-                          className="mt-1 text-xs leading-4 font-normal text-ink-3"
-                        >
-                          Số di động Việt Nam dạng 0… hoặc +84… Để trống và lưu để xóa.
-                        </p>
                         <FieldError id="profile-phone-error" message={fieldErrors.phone} />
                       </div>
                       <div className="md:col-span-2">
                         <FieldHeader
                           htmlFor="profile-avatar"
-                          label="Ảnh đại diện"
+                          label={copy.editor.avatar}
                           counter={`${(draft.avatarUrl ?? "").length}/512`}
                         />
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -710,16 +696,16 @@ function CandidateProfilePage() {
                                 )}`,
                               )
                             }
-                            className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-md border border-rule bg-paper px-4 text-xs font-semibold text-ink transition-colors hover:bg-paper-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                            className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-md border border-rule bg-paper px-4 text-xs font-semibold text-ink transition-colors hover:bg-paper-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
                           >
-                            Dùng ảnh mặc định
+                            {copy.editor.avatarDefault}
                           </button>
                         </div>
                         <p
                           id="profile-avatar-hint"
                           className="mt-1 text-xs leading-4 font-normal text-ink-3"
                         >
-                          Dán liên kết ảnh hoặc dùng ảnh mặc định.
+                          {copy.editor.avatarHint}
                         </p>
                         <FieldError id="profile-avatar-error" message={fieldErrors.avatarUrl} />
                       </div>
@@ -736,7 +722,7 @@ function CandidateProfilePage() {
                             }
                             className="h-4 w-4"
                           />
-                          Cho phép nhà tuyển dụng xem hồ sơ của tôi
+                          {copy.editor.publicToggle}
                         </label>
                       </div>
                     </>
@@ -746,7 +732,7 @@ function CandidateProfilePage() {
                     <div className="md:col-span-2">
                       <FieldHeader
                         htmlFor="profile-about"
-                        label="Giới thiệu bản thân"
+                        label={copy.editor.about}
                         counter={`${draft.experience.length}/${MAX_ABOUT_LENGTH}`}
                       />
                       <textarea
@@ -770,9 +756,9 @@ function CandidateProfilePage() {
                       <div className="flex items-baseline justify-between gap-3">
                         <label
                           htmlFor="profile-skill-input"
-                          className="text-sm font-semibold text-ink-2"
+                          className="text-[15px] font-semibold text-ink-2"
                         >
-                          Kỹ năng chuyên môn
+                          {copy.editor.skillsHeading}
                         </label>
                         <span className="text-xs font-medium tabular-nums text-ink-3">
                           {skillsDraft.length}/{MAX_SKILLS}
@@ -784,7 +770,7 @@ function CandidateProfilePage() {
                             document.getElementById("profile-skill-input")?.focus();
                           }
                         }}
-                        className={`mt-1.5 flex min-h-11 w-full flex-wrap items-center gap-1.5 rounded-lg border bg-paper px-2 py-1.5 transition-colors focus-within:ring-2 focus-within:ring-accent/20 ${
+                        className={`mt-1.5 flex min-h-12 w-full flex-wrap items-center gap-1.5 rounded-lg border bg-paper px-2 py-1.5 transition-colors focus-within:ring-2 focus-within:ring-accent/20 ${
                           fieldErrors.skills
                             ? "border-error"
                             : "border-rule focus-within:border-accent"
@@ -799,7 +785,7 @@ function CandidateProfilePage() {
                             <button
                               type="button"
                               onClick={() => removeSkill(skill)}
-                              aria-label={`Xóa kỹ năng ${skill}`}
+                              aria-label={copy.editor.removeSkill(skill)}
                               className="inline-flex h-5 w-5 items-center justify-center rounded text-ink-3 transition-colors hover:bg-paper-3 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                             >
                               <X size={12} aria-hidden="true" />
@@ -820,8 +806,8 @@ function CandidateProfilePage() {
                           }}
                           placeholder={
                             skillsDraft.length >= MAX_SKILLS
-                              ? "Đã đạt tối đa 20 kỹ năng"
-                              : "Nhập kỹ năng rồi nhấn Enter"
+                              ? copy.editor.skillsMaxReached
+                              : copy.editor.skillsInputHint
                           }
                           disabled={skillsDraft.length >= MAX_SKILLS}
                           aria-invalid={Boolean(fieldErrors.skills)}
@@ -835,8 +821,7 @@ function CandidateProfilePage() {
                         id="profile-skill-hint"
                         className="mt-1 text-xs leading-4 font-normal text-ink-3"
                       >
-                        Nhấn Enter hoặc dấu phẩy để thêm. Tối đa {MAX_SKILLS} kỹ năng, mỗi kỹ năng
-                        từ 1 đến {MAX_SKILL_LENGTH} ký tự.
+                        {copy.editor.skillsHelp(MAX_SKILLS, MAX_SKILL_LENGTH)}
                       </p>
                       {skillNotice ? (
                         <p role="status" className="mt-1 text-xs font-medium text-ink-3">
@@ -849,7 +834,9 @@ function CandidateProfilePage() {
 
                   {(editSection === "all" || editSection === "experience") && (
                     <div className="md:col-span-2">
-                      {editIndex === null && <FormSectionLabel title="Kinh nghiệm làm việc" />}
+                      {editIndex === null && (
+                        <FormSectionLabel title={copy.editor.sectionExperience} />
+                      )}
                       <div className="space-y-5">
                         {draft.experiences.map((entry, index) =>
                           editIndex === null || editIndex === index ? (
@@ -859,7 +846,7 @@ function CandidateProfilePage() {
                             >
                               <div className="mb-3 flex items-center justify-between gap-3">
                                 <p className="text-xs font-bold text-accent-deep">
-                                  Kinh nghiệm {index + 1}
+                                  {copy.editor.entryExperience(index + 1)}
                                 </p>
                                 <button
                                   type="button"
@@ -867,14 +854,14 @@ function CandidateProfilePage() {
                                   className="inline-flex min-h-8 items-center gap-1.5 rounded-md px-2 text-xs font-semibold text-error transition-colors hover:bg-error-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error focus-visible:ring-offset-2"
                                 >
                                   <Trash2 size={14} aria-hidden="true" />
-                                  Xóa
+                                  {copy.editor.removeEntry}
                                 </button>
                               </div>
                               <div className="grid gap-3 md:grid-cols-2">
                                 <div>
                                   <FieldHeader
                                     htmlFor={`experience-${index}-title`}
-                                    label="Chức danh"
+                                    label={copy.editor.role}
                                     required
                                   />
                                   {customRoleIndexes[index] ||
@@ -886,7 +873,7 @@ function CandidateProfilePage() {
                                         type="text"
                                         maxLength={100}
                                         value={entry.title}
-                                        placeholder="Nhập chức danh khác"
+                                        placeholder={copy.editor.customRolePlaceholder}
                                         onChange={(event) =>
                                           updateExperience(index, "title", event.target.value)
                                         }
@@ -909,7 +896,7 @@ function CandidateProfilePage() {
                                         }}
                                         className="shrink-0 text-xs font-semibold text-accent underline-offset-2 hover:underline"
                                       >
-                                        Chọn từ danh sách
+                                        {copy.editor.roleList}
                                       </button>
                                     </div>
                                   ) : (
@@ -941,14 +928,14 @@ function CandidateProfilePage() {
                                       )}
                                     >
                                       <option value="" disabled>
-                                        Chọn chức danh
+                                        {copy.editor.roleSelect}
                                       </option>
                                       {PROFILE_ROLE_OPTIONS.map((role) => (
                                         <option key={role} value={role}>
-                                          {role}
+                                          {roleLabel(copy, role)}
                                         </option>
                                       ))}
-                                      <option value="custom">Khác (tự nhập)</option>
+                                      <option value="custom">{copy.editor.customRole}</option>
                                     </select>
                                   )}
                                   <FieldError
@@ -957,7 +944,13 @@ function CandidateProfilePage() {
                                   />
                                 </div>
                                 {(
-                                  [["company", "Công ty / Địa điểm", "Nhập công ty."]] as const
+                                  [
+                                    [
+                                      "company",
+                                      copy.editor.company,
+                                      copy.editor.companyPlaceholder,
+                                    ],
+                                  ] as const
                                 ).map(([field, label, requiredMessage]) => (
                                   <div key={field}>
                                     <FieldHeader
@@ -1004,7 +997,7 @@ function CandidateProfilePage() {
                                 <div className="md:col-span-2">
                                   <FieldHeader
                                     htmlFor={`experience-${index}-description`}
-                                    label="Mô tả công việc"
+                                    label={copy.editor.jobDescription}
                                     counter={`${entry.description.length}/1000`}
                                   />
                                   <textarea
@@ -1042,10 +1035,10 @@ function CandidateProfilePage() {
                           <button
                             type="button"
                             onClick={addExperience}
-                            className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-rule bg-paper px-4 text-sm font-semibold text-accent transition-colors hover:border-accent/40 hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                            className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-rule bg-paper px-4 text-sm font-semibold text-accent transition-colors hover:border-accent/40 hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
                           >
                             <Plus size={16} aria-hidden="true" />
-                            Thêm kinh nghiệm làm việc
+                            {copy.editor.addExperience}
                           </button>
                         )}
                       </div>
@@ -1054,7 +1047,9 @@ function CandidateProfilePage() {
 
                   {(editSection === "all" || editSection === "education") && (
                     <div className="md:col-span-2">
-                      {editIndex === null && <FormSectionLabel title="Trình độ học vấn" />}
+                      {editIndex === null && (
+                        <FormSectionLabel title={copy.editor.sectionEducation} />
+                      )}
                       <div className="space-y-5">
                         {draft.education.map((education, index) =>
                           editIndex === null || editIndex === index ? (
@@ -1064,7 +1059,7 @@ function CandidateProfilePage() {
                             >
                               <div className="mb-3 flex items-center justify-between gap-3">
                                 <p className="text-xs font-bold text-accent-deep">
-                                  Học vấn {index + 1}
+                                  {copy.editor.entryEducation(index + 1)}
                                 </p>
                                 <button
                                   type="button"
@@ -1072,14 +1067,14 @@ function CandidateProfilePage() {
                                   className="inline-flex min-h-8 items-center gap-1.5 rounded-md px-2 text-xs font-semibold text-error transition-colors hover:bg-error-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error focus-visible:ring-offset-2"
                                 >
                                   <Trash2 size={14} aria-hidden="true" />
-                                  Xóa
+                                  {copy.editor.removeEntry}
                                 </button>
                               </div>
                               <div className="grid gap-3 md:grid-cols-2">
                                 {(
                                   [
-                                    ["degree", "Bằng cấp"],
-                                    ["school", "Trường / Cơ sở đào tạo"],
+                                    ["degree", copy.editor.degree],
+                                    ["school", copy.editor.school],
                                   ] as const
                                 ).map(([field, label]) => (
                                   <div key={field}>
@@ -1122,12 +1117,12 @@ function CandidateProfilePage() {
                                   toError={fieldErrors[`education.${index}.to`]}
                                   onChange={(field, value) => updateEducation(index, field, value)}
                                   idPrefix={`education-${index}`}
-                                  toHint="Bỏ trống nếu bạn vẫn đang theo học."
+                                  toHint={copy.editor.toHintStudy}
                                 />
                                 <div className="md:col-span-2">
                                   <FieldHeader
                                     htmlFor={`education-${index}-description`}
-                                    label="Mô tả học vấn"
+                                    label={copy.editor.educationDescription}
                                     counter={`${(education.description || "").length}/1000`}
                                   />
                                   <textarea
@@ -1156,10 +1151,10 @@ function CandidateProfilePage() {
                         <button
                           type="button"
                           onClick={addEducation}
-                          className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-lg border border-rule bg-paper px-4 text-sm font-semibold text-accent transition-colors hover:border-accent/40 hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                          className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-lg border border-rule bg-paper px-4 text-sm font-semibold text-accent transition-colors hover:border-accent/40 hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
                         >
                           <Plus size={16} aria-hidden="true" />
-                          Thêm trình độ học vấn
+                          {copy.editor.addEducation}
                         </button>
                       )}
                     </div>
@@ -1175,10 +1170,10 @@ function CandidateProfilePage() {
                     onClick={closeEditForm}
                     className="btn btn--secondary min-h-11 px-4 text-sm"
                   >
-                    Hủy
+                    {copy.editor.cancel}
                   </button>
                   <button type="submit" disabled={saving} className="btn min-h-11 px-5 text-sm">
-                    {saving ? "Đang lưu…" : "Lưu thay đổi"}
+                    {saving ? copy.editor.saving : copy.editor.save}
                   </button>
                 </div>
               </div>
@@ -1194,9 +1189,11 @@ function CandidateProfilePage() {
                   <Check size={20} strokeWidth={2.5} aria-hidden="true" />
                 </span>
                 <div className="min-w-0">
-                  <DialogTitle className="text-lg font-bold text-ink">Đã lưu thay đổi</DialogTitle>
+                  <DialogTitle className="text-lg font-bold text-ink">
+                    {copy.editor.savedTitle}
+                  </DialogTitle>
                   <DialogDescription className="mt-1 text-sm leading-6 text-ink-2">
-                    {successMessage} Các thông tin còn lại trong hồ sơ được giữ nguyên.
+                    {successMessage} {copy.editor.savedBody}
                   </DialogDescription>
                 </div>
               </div>
@@ -1205,22 +1202,22 @@ function CandidateProfilePage() {
               <button
                 type="button"
                 onClick={() => setIsSuccessDialogOpen(false)}
-                className="btn min-h-10 px-5 text-sm"
+                className="btn min-h-11 px-5 text-sm"
               >
-                Đóng
+                {copy.editor.close}
               </button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
 
-        <div className="grid overflow-hidden rounded-2xl border border-rule bg-paper lg:grid-cols-[minmax(17rem,0.85fr)_minmax(0,2fr)]">
+        <div className="grid overflow-hidden rounded-xl border border-rule bg-paper lg:grid-cols-[minmax(17rem,0.85fr)_minmax(0,2fr)]">
           <aside className="border-b border-rule bg-paper-2 px-5 py-6 sm:px-6 lg:border-b-0 lg:border-r lg:px-7 lg:py-8">
             <div>
               <div className="relative w-fit">
                 {profile.avatarUrl ? (
                   <img
                     src={profile.avatarUrl}
-                    alt="Ảnh đại diện"
+                    alt={copy.editor.avatar}
                     className="h-[72px] w-[72px] rounded-full object-cover ring-1 ring-rule sm:h-20 sm:w-20"
                   />
                 ) : (
@@ -1239,29 +1236,29 @@ function CandidateProfilePage() {
                 {profile.fullName}
               </h2>
               <p className="mt-1 text-sm font-semibold leading-5 text-ink-2">
-                <span className="text-xs font-medium text-ink-3">Vị trí hiện tại: </span>
+                <span className="text-xs font-medium text-ink-3">{copy.currentRoleLabel}</span>
                 {currentRole}
               </p>
               <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-ink-3">
                 <MapPin size={14} aria-hidden="true" />
-                Việt Nam
+                {copy.country}
               </p>
             </div>
 
             <div className="mt-5 flex flex-wrap gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-md border border-accent/15 bg-accent-subtle px-2.5 py-1 text-xs font-semibold text-accent-deep">
                 <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-accent" />
-                Ứng viên đang hoạt động
+                {copy.activeCandidate}
               </span>
             </div>
 
             <section className="mt-6 border-t border-rule pt-5" aria-labelledby="contact-title">
               <div className="flex items-center justify-between gap-3">
                 <h2 id="contact-title" className="text-base font-bold text-ink">
-                  Liên hệ
+                  {copy.sidebar.contact}
                 </h2>
-                <EditButton
-                  label="Chỉnh sửa thông tin cá nhân"
+                <ProfileEditButton
+                  label={copy.sidebar.editContact}
                   onClick={() => openEditForm("basics")}
                   muted
                 />
@@ -1273,7 +1270,7 @@ function CandidateProfilePage() {
                 >
                   <Mail size={16} className="mt-0.5 shrink-0 text-ink-3" aria-hidden="true" />
                   <span className={`min-w-0 break-all ${contactEmail ? "" : "text-ink-3"}`}>
-                    {contactEmail || "Chưa cập nhật email."}
+                    {contactEmail || copy.sidebar.noEmail}
                   </span>
                 </a>
                 <a
@@ -1282,7 +1279,7 @@ function CandidateProfilePage() {
                 >
                   <Phone size={16} className="shrink-0 text-ink-3" aria-hidden="true" />
                   <span className={profile.phone ? "" : "text-ink-3"}>
-                    {profile.phone || "Chưa cập nhật số điện thoại."}
+                    {profile.phone || copy.sidebar.noPhone}
                   </span>
                 </a>
               </div>
@@ -1292,23 +1289,23 @@ function CandidateProfilePage() {
               <div className="flex items-center justify-between gap-3">
                 <h2 id="cv-title" className="flex items-center gap-2 text-base font-bold text-ink">
                   <FileText size={16} className="text-accent" aria-hidden="true" />
-                  Hồ sơ xin việc
+                  {copy.sidebar.cvTitle}
                 </h2>
                 <span className="rounded-md border border-rule bg-paper px-2 py-0.5 text-xs font-bold tabular-nums text-ink-2">
                   {candidateCvs.length}/{MAX_CV_COUNT}
                 </span>
               </div>
               <p className="mt-2 text-xs leading-5 text-ink-2" style={{ overflowWrap: "anywhere" }}>
-                {defaultCv ? defaultCv.fileName : "Chưa chọn hồ sơ mặc định."}
+                {defaultCv ? defaultCv.fileName : copy.sidebar.noDefaultCv}
               </p>
               {defaultCv ? (
-                <p className="mt-1 text-xs text-ink-3">Đang là hồ sơ mặc định.</p>
+                <p className="mt-1 text-xs text-ink-3">{copy.sidebar.defaultCv}</p>
               ) : null}
               <Link
                 to="/can/cvs"
                 className="mt-2.5 inline-flex min-h-10 items-center gap-1 text-xs font-bold text-accent underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
               >
-                Quản lý hồ sơ
+                {copy.sidebar.manageCv}
                 <ArrowRight size={14} aria-hidden="true" />
               </Link>
             </section>
@@ -1316,7 +1313,7 @@ function CandidateProfilePage() {
             <section className="mt-6 border-t border-rule pt-5" aria-labelledby="readiness-title">
               <div className="flex items-center justify-between gap-3">
                 <h2 id="readiness-title" className="text-base font-bold text-ink">
-                  Mức độ hoàn thiện
+                  {copy.sidebar.readinessTitle}
                 </h2>
                 <span className="text-xs font-bold tabular-nums text-ink-2">
                   {completedCount}/{readinessItems.length}
@@ -1324,8 +1321,8 @@ function CandidateProfilePage() {
               </div>
               <p className="mt-1 text-xs leading-5 text-ink-3">
                 {completedCount === readinessItems.length
-                  ? "Hồ sơ đã có đủ thông tin."
-                  : `Còn thiếu: ${missingLabels.join(", ")}.`}
+                  ? copy.sidebar.readinessComplete
+                  : copy.sidebar.readinessMissing(missingLabels.join(", "))}
               </p>
             </section>
 
@@ -1336,136 +1333,25 @@ function CandidateProfilePage() {
                 ) : (
                   <EyeOff size={16} className="text-ink-3" aria-hidden="true" />
                 )}
-                Hiển thị hồ sơ
+                {copy.sidebar.visibility}
               </span>
               <span className="text-base font-bold text-ink">
-                {profile.isPublic ? "Đang hiển thị" : "Riêng tư"}
+                {profile.isPublic ? copy.sidebar.visible : copy.sidebar.private}
               </span>
             </div>
-            <p className="mt-5 text-sm text-ink-3">
-              Họ, tên và số điện thoại dùng chung với tài khoản.
-            </p>
+            <p className="mt-5 text-sm text-ink-3">{copy.sidebar.sharedIdentity}</p>
             <Link
               to="/account"
               className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-primary"
             >
-              Cài đặt tài khoản và bảo mật
+              {copy.sidebar.accountSettings}
             </Link>
           </aside>
 
-          <div className="min-w-0 divide-y divide-rule">
-            <section aria-labelledby="about-title" className="px-5 py-6 sm:px-7 sm:py-7">
-              <SectionHeader
-                id="about-title"
-                title="Giới thiệu bản thân"
-                action={
-                  <EditButton
-                    label="Cập nhật giới thiệu bản thân"
-                    onClick={() => openEditForm("about")}
-                  />
-                }
-              />
-              <p
-                className={`mt-3 max-w-[68ch] text-base leading-7 ${
-                  profile.experience ? "text-ink-2" : "text-ink-3"
-                }`}
-              >
-                {profile.experience || "Giới thiệu điểm mạnh và số năm kinh nghiệm của bạn."}
-              </p>
-            </section>
-
-            <section aria-labelledby="experience-title" className="px-5 py-6 sm:px-7 sm:py-7">
-              <SectionHeader
-                id="experience-title"
-                title="Kinh nghiệm làm việc"
-                action={
-                  <EditButton
-                    label="Chỉnh sửa kinh nghiệm làm việc"
-                    onClick={() => openEditForm("experience")}
-                  />
-                }
-              />
-              {profile.experiences.length > 0 ? (
-                <div className="mt-5 space-y-6">
-                  {profile.experiences.map((entry, index) => (
-                    <RecordEntry
-                      key={`${entry.title}-${entry.from}-${index}`}
-                      title={entry.title}
-                      meta={entry.company}
-                      period={formatPeriod(entry.from, entry.to)}
-                      description={entry.description}
-                      editLabel={`Chỉnh sửa ${entry.title}`}
-                      onEdit={() => openEditForm("experience", index)}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <EmptyState
-                  text="Chưa có kinh nghiệm làm việc."
-                  actionLabel="Thêm kinh nghiệm"
-                  onClick={() => openEditForm("experience")}
-                />
-              )}
-            </section>
-
-            <section aria-labelledby="education-title" className="px-5 py-6 sm:px-7 sm:py-7">
-              <SectionHeader
-                id="education-title"
-                title="Học vấn"
-                action={
-                  <EditButton label="Chỉnh sửa học vấn" onClick={() => openEditForm("education")} />
-                }
-              />
-              {profile.education.length > 0 ? (
-                <div className="mt-5 space-y-6">
-                  {profile.education.map((education, index) => (
-                    <RecordEntry
-                      key={`${education.school}-${education.from}-${index}`}
-                      title={education.degree}
-                      meta={education.school}
-                      period={formatPeriod(education.from, education.to)}
-                      editLabel={`Chỉnh sửa ${education.degree || "học vấn"}`}
-                      onEdit={() => openEditForm("education", index)}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <EmptyState
-                  text="Chưa có thông tin học vấn."
-                  actionLabel="Thêm học vấn"
-                  onClick={() => openEditForm("education")}
-                />
-              )}
-            </section>
-
-            <section aria-labelledby="skills-title" className="px-5 py-6 sm:px-7 sm:py-7">
-              <SectionHeader
-                id="skills-title"
-                title="Kỹ năng"
-                action={
-                  <EditButton label="Chỉnh sửa kỹ năng" onClick={() => openEditForm("skills")} />
-                }
-              />
-              {profile.skills.length > 0 ? (
-                <ul className="mt-4 flex flex-wrap gap-2">
-                  {profile.skills.map((skill) => (
-                    <li
-                      key={skill}
-                      className="rounded-md border border-rule bg-paper-2 px-2.5 py-1.5 text-xs font-semibold text-ink-2"
-                    >
-                      {skill}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <EmptyState
-                  text="Chưa cập nhật kỹ năng."
-                  actionLabel="Cập nhật kỹ năng"
-                  onClick={() => openEditForm("skills")}
-                />
-              )}
-            </section>
-          </div>
+          <ProfileSections
+            profile={profile}
+            onEditSection={(section, index) => openEditForm(section, index ?? null)}
+          />
         </div>
       </div>
     </AdminShell>
@@ -1477,29 +1363,30 @@ function validateDraft(
   skills: string[],
   section: EditSection,
   editIndex: number | null,
+  copy: CandidateWorkspaceCopy["profile"],
 ) {
   const errors: Record<string, string> = {};
   const touches = (target: EditSection) => section === "all" || section === target;
 
   if (touches("basics")) {
     for (const field of ["firstName", "lastName"] as const) {
-      if (!draft[field].trim()) errors[field] = "Nhập họ và tên của bạn.";
+      if (!draft[field].trim()) errors[field] = copy.errors.nameRequired;
       else if (draft[field].trim().length > MAX_NAME_LENGTH)
-        errors[field] = `Mỗi trường tối đa ${MAX_NAME_LENGTH} ký tự.`;
+        errors[field] = copy.errors.nameTooLong(MAX_NAME_LENGTH);
     }
-    if (draft.phone.trim() && !PHONE_PATTERN.test(draft.phone.trim()))
-      errors.phone = "Nhập số di động Việt Nam dạng 0… hoặc +84…";
+    const phone = draft.phone.trim();
+    if (phone && !PHONE_PATTERN.test(phone)) errors.phone = copy.errors.phoneInvalid;
   }
 
   if (touches("about") && draft.experience.length > MAX_ABOUT_LENGTH) {
-    errors.experience = `Phần giới thiệu tối đa ${MAX_ABOUT_LENGTH} ký tự.`;
+    errors.experience = copy.errors.aboutTooLong(MAX_ABOUT_LENGTH);
   }
 
   if (touches("skills")) {
     if (skills.length > MAX_SKILLS) {
-      errors.skills = `Chỉ lưu tối đa ${MAX_SKILLS} kỹ năng. Xóa bớt trước khi lưu.`;
+      errors.skills = copy.errors.skillsTooMany(MAX_SKILLS);
     } else if (skills.some((skill) => skill.length < 1 || skill.length > MAX_SKILL_LENGTH)) {
-      errors.skills = `Mỗi kỹ năng phải dài từ 1 đến ${MAX_SKILL_LENGTH} ký tự.`;
+      errors.skills = copy.errors.skillLength(MAX_SKILL_LENGTH);
     }
   }
 
@@ -1512,14 +1399,15 @@ function validateDraft(
     indices.forEach((index) => {
       const entry = draft.experiences[index];
       if (!entry) return;
-      if (!entry.title.trim()) errors[`experiences.${index}.title`] = "Nhập chức danh.";
-      if (!entry.company.trim()) errors[`experiences.${index}.company`] = "Nhập công ty.";
-      if (!entry.from) errors[`experiences.${index}.from`] = "Chọn ngày bắt đầu.";
+      if (!entry.title.trim()) errors[`experiences.${index}.title`] = copy.errors.roleRequired;
+      if (!entry.company.trim())
+        errors[`experiences.${index}.company`] = copy.errors.companyRequired;
+      if (!entry.from) errors[`experiences.${index}.from`] = copy.errors.startRequired;
       if (entry.description.length > 1000) {
-        errors[`experiences.${index}.description`] = "Mô tả công việc tối đa 1.000 ký tự.";
+        errors[`experiences.${index}.description`] = copy.errors.experienceDescriptionTooLong;
       }
       if (entry.from && entry.to && entry.to < entry.from) {
-        errors[`experiences.${index}.to`] = "Ngày kết thúc phải sau ngày bắt đầu.";
+        errors[`experiences.${index}.to`] = copy.errors.endBeforeStart;
       }
     });
   }
@@ -1533,16 +1421,17 @@ function validateDraft(
     indices.forEach((index) => {
       const education = draft.education[index];
       if (!education) return;
-      if (!education.degree.trim()) errors[`education.${index}.degree`] = "Nhập bằng cấp.";
+      if (!education.degree.trim())
+        errors[`education.${index}.degree`] = copy.errors.degreeRequired;
       if (!education.school.trim()) {
-        errors[`education.${index}.school`] = "Nhập trường hoặc cơ sở đào tạo.";
+        errors[`education.${index}.school`] = copy.errors.schoolRequired;
       }
-      if (!education.from) errors[`education.${index}.from`] = "Chọn ngày bắt đầu.";
+      if (!education.from) errors[`education.${index}.from`] = copy.errors.startRequired;
       if (education.description && education.description.length > 1000) {
-        errors[`education.${index}.description`] = "Mô tả tối đa 1.000 ký tự.";
+        errors[`education.${index}.description`] = copy.errors.educationDescriptionTooLong;
       }
       if (education.from && education.to && education.to < education.from) {
-        errors[`education.${index}.to`] = "Ngày kết thúc phải sau ngày bắt đầu.";
+        errors[`education.${index}.to`] = copy.errors.endBeforeStart;
       }
     });
   }
@@ -1572,7 +1461,7 @@ function fieldIdFromError(key: string) {
 }
 
 function fieldClass(hasError?: string) {
-  return `mt-1.5 min-h-11 w-full rounded-lg border bg-paper px-3.5 py-2.5 text-sm font-normal text-ink outline-none transition-colors placeholder:text-ink-3 focus:ring-2 focus:ring-accent/20 ${
+  return `mt-1.5 min-h-12 w-full rounded-lg border bg-paper px-3.5 py-2.5 text-sm font-normal text-ink outline-none transition-colors placeholder:text-ink-3 focus:ring-2 focus:ring-accent/20 ${
     hasError ? "border-error" : "border-rule focus:border-accent"
   }`;
 }
@@ -1590,7 +1479,7 @@ function FieldHeader({
 }) {
   return (
     <div className="flex items-baseline justify-between gap-3">
-      <label htmlFor={htmlFor} className="text-sm font-semibold text-ink-2">
+      <label htmlFor={htmlFor} className="text-[15px] font-semibold text-ink-2">
         {label}
         {required ? (
           <span className="ml-0.5 text-error" aria-hidden="true">
@@ -1605,160 +1494,58 @@ function FieldHeader({
   );
 }
 
-function SectionHeader({
-  id,
-  title,
-  action,
-}: {
-  id: string;
-  title: string;
-  action?: React.ReactNode;
-}) {
-  return (
-    <div className="flex items-start justify-between gap-3">
-      <h2 id={id} className="text-lg font-bold leading-[1.45] tracking-[-0.02em] text-ink">
-        {title}
-      </h2>
-      {action}
-    </div>
-  );
-}
-
-function EditButton({
-  label,
-  onClick,
-  muted = false,
-  className = "",
-}: {
-  label: string;
-  onClick: () => void;
-  muted?: boolean;
-  className?: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
-        muted ? "text-ink-3 hover:text-accent" : "text-accent"
-      } ${className}`}
-    >
-      <Pencil size={16} strokeWidth={2.2} aria-hidden="true" />
-    </button>
-  );
-}
-
-function RecordEntry({
-  title,
-  meta,
-  period,
-  description,
-  editLabel,
-  onEdit,
-}: {
-  title: string;
-  meta: string;
-  period: string;
-  description?: string;
-  editLabel: string;
-  onEdit: () => void;
-}) {
-  return (
-    <article>
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <h3 className="text-base font-bold leading-6 text-ink">{title}</h3>
-            <span className="text-xs font-semibold tabular-nums text-ink-3">{period}</span>
-          </div>
-          <p className="mt-1 text-sm font-medium text-ink-2">{meta}</p>
-          {description ? (
-            <p className="mt-2 max-w-[64ch] text-sm leading-6 text-ink-2">{description}</p>
-          ) : null}
-        </div>
-        <EditButton label={editLabel} onClick={onEdit} muted />
-      </div>
-    </article>
-  );
-}
-
-function EmptyState({
-  text,
-  actionLabel,
-  onClick,
-}: {
-  text: string;
-  actionLabel: string;
-  onClick: () => void;
-}) {
-  return (
-    <div className="mt-4 flex flex-col items-start gap-3 rounded-xl border border-dashed border-rule bg-paper-2/60 px-4 py-5 sm:flex-row sm:items-center sm:justify-between">
-      <p className="text-sm text-ink-3">{text}</p>
-      <button
-        type="button"
-        onClick={onClick}
-        className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-rule bg-paper px-3.5 text-xs font-bold text-accent transition-colors hover:border-accent/40 hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
-      >
-        <Plus size={14} aria-hidden="true" />
-        {actionLabel}
-      </button>
-    </div>
-  );
-}
-
 function FormSectionLabel({ title }: { title: string }) {
   return <h3 className="mb-3 text-base font-bold text-ink">{title}</h3>;
 }
 
-function getEditorTitle(section: EditSection) {
+function getEditorTitle(section: EditSection, copy: CandidateWorkspaceCopy["profile"]) {
   switch (section) {
     case "basics":
-      return "Chỉnh sửa thông tin cá nhân";
+      return copy.editor.titles.basics;
     case "about":
-      return "Chỉnh sửa giới thiệu bản thân";
+      return copy.editor.titles.about;
     case "experience":
-      return "Chỉnh sửa kinh nghiệm làm việc";
+      return copy.editor.titles.experience;
     case "education":
-      return "Chỉnh sửa học vấn";
+      return copy.editor.titles.education;
     case "skills":
-      return "Chỉnh sửa kỹ năng";
+      return copy.editor.titles.skills;
     default:
-      return "Chỉnh sửa thông tin hồ sơ";
+      return copy.editor.titles.all;
   }
 }
 
-function getEditorDescription(section: EditSection) {
+function getEditorDescription(section: EditSection, copy: CandidateWorkspaceCopy["profile"]) {
   switch (section) {
     case "basics":
-      return "Cập nhật họ, tên và số điện thoại dùng chung với tài khoản. Email đã đăng ký không thể thay đổi.";
+      return copy.editor.descriptions.basics;
     case "about":
-      return "Viết phần giới thiệu ngắn gọn để nhà tuyển dụng hiểu điểm mạnh của bạn.";
+      return copy.editor.descriptions.about;
     case "experience":
-      return "Cập nhật vị trí, công ty, thời gian và mô tả công việc đã làm.";
+      return copy.editor.descriptions.experience;
     case "education":
-      return "Bổ sung bằng cấp, cơ sở đào tạo và thời gian học tập của bạn.";
+      return copy.editor.descriptions.education;
     case "skills":
-      return "Thêm hoặc bớt kỹ năng chuyên môn bạn muốn nhà tuyển dụng nhìn thấy.";
+      return copy.editor.descriptions.skills;
     default:
-      return "Cập nhật các thông tin được hiển thị nổi bật với nhà tuyển dụng.";
+      return copy.editor.descriptions.all;
   }
 }
 
-function getSuccessMessage(section: EditSection) {
+function getSuccessMessage(section: EditSection, copy: CandidateWorkspaceCopy["profile"]) {
   switch (section) {
     case "basics":
-      return "Thông tin cá nhân đã được cập nhật.";
+      return copy.editor.success.basics;
     case "about":
-      return "Phần giới thiệu bản thân đã được cập nhật.";
+      return copy.editor.success.about;
     case "experience":
-      return "Kinh nghiệm làm việc đã được cập nhật.";
+      return copy.editor.success.experience;
     case "education":
-      return "Học vấn đã được cập nhật.";
+      return copy.editor.success.education;
     case "skills":
-      return "Kỹ năng đã được cập nhật.";
+      return copy.editor.success.skills;
     default:
-      return "Thông tin hồ sơ đã được cập nhật.";
+      return copy.editor.success.all;
   }
 }
 
@@ -1766,8 +1553,9 @@ function FieldError({ id, message }: { id: string; message?: string }) {
   if (!message) return null;
 
   return (
-    <span id={id} role="alert" className="mt-1 block text-sm font-medium text-error">
-      {message}
+    <span id={id} role="alert" className="field-error mt-1.5 flex items-start gap-1.5">
+      <CircleAlert size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
+      <span>{message}</span>
     </span>
   );
 }
@@ -1779,7 +1567,7 @@ function DateRangeFields({
   toError,
   onChange,
   idPrefix,
-  toHint = "Bỏ trống nếu đang làm việc tại đây.",
+  toHint,
 }: {
   from: string;
   to: string;
@@ -1789,10 +1577,13 @@ function DateRangeFields({
   idPrefix: string;
   toHint?: string;
 }) {
+  const { locale } = useLanguage();
+  const copy = candidateWorkspaceCopy[locale].profile.editor;
+
   return (
     <>
       <div>
-        <FieldHeader htmlFor={`${idPrefix}-from`} label="Từ ngày" required />
+        <FieldHeader htmlFor={`${idPrefix}-from`} label={copy.from} required />
         <input
           id={`${idPrefix}-from`}
           type="month"
@@ -1807,7 +1598,7 @@ function DateRangeFields({
         <FieldError id={`${idPrefix}-from-error`} message={fromError} />
       </div>
       <div>
-        <FieldHeader htmlFor={`${idPrefix}-to`} label="Đến ngày" />
+        <FieldHeader htmlFor={`${idPrefix}-to`} label={copy.to} />
         <input
           id={`${idPrefix}-to`}
           type="month"
@@ -1820,18 +1611,9 @@ function DateRangeFields({
         />
         <FieldError id={`${idPrefix}-to-error`} message={toError} />
         <span id={`${idPrefix}-to-hint`} className="mt-1 block text-xs font-normal text-ink-3">
-          {toHint}
+          {toHint ?? copy.toHintWork}
         </span>
       </div>
     </>
   );
-}
-
-function formatPeriod(from: string, to: string) {
-  const format = (value: string) => {
-    if (!value) return "";
-    const [year, month] = value.split("-");
-    return month ? `${month}/${year}` : year;
-  };
-  return `${format(from)} – ${to ? format(to) : "Hiện tại"}`;
 }

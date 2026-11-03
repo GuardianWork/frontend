@@ -1,6 +1,8 @@
 import { SidebarState } from "@/context/sidebar-state";
 import { SidebarCollapseButton, SidebarLabel } from "./SidebarControls";
 import { useWorkspaceLayout } from "@/context/WorkspaceLayoutContext";
+import { useLanguage } from "@/context/LanguageContext";
+import { candidateWorkspaceCopy } from "@/lib/candidateWorkspace";
 import { WorkspaceFooter } from "./WorkspaceFooter";
 import { WorkspaceBrand } from "./WorkspaceChrome";
 import { useNavigationFocus } from "@/hooks/useNavigationFocus";
@@ -36,13 +38,6 @@ const ADMIN_NAV: NavItem[] = [
 const ADMIN_JOB_NAV: NavItem[] = [
   { to: "/admin/jobs", label: "Tất cả tin tuyển dụng", icon: "work" },
   { to: "/admin/compliance", label: "JD bị AI gắn cờ", icon: "gavel" },
-];
-
-const CANDIDATE_NAV: NavItem[] = [
-  { to: "/can/jobs", label: "Tìm việc làm", icon: "work" },
-  { to: "/can/cvs", label: "Hồ sơ xin việc", icon: "description" },
-  { to: "/can/profile", label: "Hồ sơ của tôi", icon: "badge" },
-  { to: "/can/copilot", label: "Trợ lý pháp lý", icon: "gavel" },
 ];
 
 const RECRUITER_NAV: NavItem[] = [
@@ -126,6 +121,9 @@ function AdminShellFrame({
   children: ReactNode;
 }) {
   const { collapsed, animate } = useContext(SidebarState);
+  const { locale, setLocale } = useLanguage();
+  const copy = candidateWorkspaceCopy[locale].chrome;
+  const [localeReady, setLocaleReady] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   useNavigationFocus(menuOpen, "workspace-navigation");
   useEffect(() => {
@@ -137,6 +135,7 @@ function AdminShellFrame({
   }, []);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [jobGroupOpen, setJobGroupOpen] = useState<boolean | null>(null);
+  useEffect(() => setLocaleReady(true), []);
   useEffect(() => {
     if (
       pathname.startsWith("/admin/jobs") ||
@@ -172,17 +171,38 @@ function AdminShellFrame({
     );
   }
 
+  const candidateNav: NavItem[] = [
+    { to: "/can/jobs", label: copy.nav.jobs, icon: "work" },
+    { to: "/can/cvs", label: copy.nav.cvs, icon: "description" },
+    { to: "/can/profile", label: copy.nav.profile, icon: "badge" },
+    { to: "/can/copilot", label: copy.nav.copilot, icon: "gavel" },
+  ];
+
   const navItems =
     currentRole === "candidate"
-      ? CANDIDATE_NAV
+      ? candidateNav
       : currentRole === "recruiter"
         ? RECRUITER_NAV
         : ADMIN_NAV;
 
+  const candidatePageTitle =
+    pathname === "/can/jobs"
+      ? copy.pageTitles.jobs
+      : pathname === "/can/cvs"
+        ? copy.pageTitles.cvs
+        : pathname === "/can/profile"
+          ? copy.pageTitles.profile
+          : pathname === "/can/copilot"
+            ? copy.pageTitles.copilot
+            : pathname === "/can/account"
+              ? copy.pageTitles.account
+              : null;
+  const pageTitle = currentRole === "candidate" ? (candidatePageTitle ?? title) : title;
+
   const roleMeta =
     currentRole === "candidate"
       ? {
-          title: "Ứng viên",
+          title: copy.roleLabel,
           sub: "Talent Safeguard & Jobs",
           icon: "person",
           cta: "Tìm việc chuẩn Luật",
@@ -269,7 +289,7 @@ function AdminShellFrame({
       {menuOpen && (
         <button
           className="fixed inset-0 z-40 bg-black/30 md:hidden"
-          aria-label="Đóng điều hướng"
+          aria-label={copy.closeNav}
           onClick={() => setMenuOpen(false)}
         />
       )}
@@ -308,7 +328,7 @@ function AdminShellFrame({
 
         {/* Nav Items */}
         <nav
-          aria-label="Điều hướng chính"
+          aria-label={copy.mainNav}
           className={`${currentRole === "candidate" ? "workspace-navigation " : ""}flex-1 flex flex-col gap-1 p-3 overflow-y-auto`}
         >
           {currentRole === "admin" ? (
@@ -357,7 +377,7 @@ function AdminShellFrame({
         ) : (
           <div className="workspace-sidebar-footer">
             <Link to="/vn" className="workspace-footer-link">
-              <GlobeIcon size={18} /> Trang chủ GuardianWork
+              <GlobeIcon size={18} /> {copy.homeBrand}
             </Link>
           </div>
         )}
@@ -371,7 +391,7 @@ function AdminShellFrame({
               <SidebarCollapseButton controls="workspace-navigation" />
             )}
             <button
-              aria-label="Mở điều hướng"
+              aria-label={copy.openNav}
               aria-expanded={menuOpen}
               aria-controls="workspace-navigation"
               onClick={() => setMenuOpen(!menuOpen)}
@@ -382,7 +402,7 @@ function AdminShellFrame({
             <WorkspaceBrand to={currentRole === "candidate" ? "/can/jobs" : "/staff"} />
             <div className="min-w-0">
               <p className="workspace-page-title font-bold text-sm md:text-xl text-charcoal-text tracking-tight">
-                {title}
+                {pageTitle}
               </p>
             </div>
           </div>
@@ -400,6 +420,19 @@ function AdminShellFrame({
             )}
 
             {topNavExtras}
+
+            {currentRole === "candidate" && (
+              <button
+                type="button"
+                disabled={!localeReady}
+                aria-label={locale === "en" ? copy.switchToVietnamese : copy.switchToEnglish}
+                onClick={() => setLocale(locale === "en" ? "vn" : "en")}
+                className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border border-warm-border bg-paper-white px-2.5 py-2 text-xs font-semibold text-charcoal-83 transition-colors hover:bg-surface-container hover:text-charcoal-text disabled:opacity-60"
+              >
+                <GlobeIcon size={16} aria-hidden="true" />
+                <span>{locale === "en" ? "EN" : "VI"}</span>
+              </button>
+            )}
 
             <div className="flex items-center gap-2">
               <LogoutButton />

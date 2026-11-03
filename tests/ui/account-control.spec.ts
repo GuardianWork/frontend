@@ -64,7 +64,7 @@ test("unverified account edits immutable identity and synchronizes with Candidat
   await page.getByRole("textbox", { name: "Tên", exact: true }).fill("Minh");
   await page.getByLabel("Số điện thoại", { exact: true }).fill("");
   const profilePut = page.waitForRequest(
-    (r) => r.url().endsWith("/api/v1/candidates/profile") && r.method() === "PUT",
+    (r) => r.url().endsWith("/api/candidates/profile") && r.method() === "PUT",
   );
   await page.getByRole("button", { name: "Lưu thay đổi", exact: true }).click();
   const payload = (await profilePut).postDataJSON();
@@ -77,8 +77,8 @@ test("unverified account edits immutable identity and synchronizes with Candidat
   expect(payload).toHaveProperty("skills");
   expect(payload).toHaveProperty("isPublic");
   expect(payload).toHaveProperty("avatarUrl");
-  expect(payload).toHaveProperty("educationSummary");
-  expect(payload).toHaveProperty("experienceSummary");
+  expect(payload).toHaveProperty("education");
+  expect(payload).toHaveProperty("experience");
   await expect(page.getByRole("dialog")).toContainText("Đã lưu thay đổi");
   await account(page);
   await expect(page.getByRole("textbox", { name: "Tên", exact: true })).toHaveValue("Minh");
