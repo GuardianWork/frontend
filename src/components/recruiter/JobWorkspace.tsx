@@ -1,7 +1,7 @@
 import { jobEditorIssues } from "@/lib/job-content-validation";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useBlocker } from "@tanstack/react-router";
+import { Link, useBlocker } from "@tanstack/react-router";
 import {
   ArrowLeft,
   ArrowRight,
@@ -347,16 +347,23 @@ export function JobWorkspace({
           </h1>
           {!job && <p>Soạn nội dung, xem trước và gửi tin để xét duyệt.</p>}
         </div>
-        {job && (
-          <button
-            className="jp-button"
-            disabled={busy}
-            onClick={() => (dirty ? setConfirmation("reload") : reload())}
-          >
-            <RotateCw size={16} aria-hidden="true" />
-            Tải dữ liệu mới
-          </button>
-        )}
+        <div className="jp-actions">
+          {job && job.status !== "SUSPENDED" && (
+            <Link className="jp-button" to="/rec/applications" search={{ jobId: job.id }}>
+              Xem đơn ứng tuyển
+            </Link>
+          )}
+          {job && (
+            <button
+              className="jp-button"
+              disabled={busy}
+              onClick={() => (dirty ? setConfirmation("reload") : reload())}
+            >
+              <RotateCw size={16} aria-hidden="true" />
+              Tải dữ liệu mới
+            </button>
+          )}
+        </div>
       </header>
       {job && !guided && (
         <div className="jp-status-strip">

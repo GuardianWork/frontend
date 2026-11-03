@@ -5,24 +5,58 @@ export function ListSearch({
   onChange,
   label,
   count,
+  describedBy,
+  invalid,
+  searchAction = false,
+  placeholder,
 }: {
   value: string;
   onChange: (value: string) => void;
   label: string;
   count?: number;
+  describedBy?: string;
+  invalid?: boolean;
+  searchAction?: boolean;
+  placeholder?: string;
 }) {
   return (
     <div className="list-search-row">
-      <label className="list-search-field">
-        <SearchIcon size={18} aria-hidden="true" />
-        <span className="sr-only">{label}</span>
-        <input
-          type="search"
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          placeholder={label}
-        />
-      </label>
+      {searchAction ? (
+        <div className="application-search-control">
+          <label className="application-search-label">
+            <span className="sr-only">{label}</span>
+            <input
+              className="application-search-input"
+              type="search"
+              aria-describedby={describedBy}
+              aria-invalid={invalid || undefined}
+              value={value}
+              onChange={(event) => onChange(event.target.value)}
+              placeholder={placeholder || label}
+            />
+          </label>
+          <button
+            className="application-search-submit"
+            type="submit"
+            aria-label="Tìm kiếm ứng viên"
+          >
+            <SearchIcon size={18} aria-hidden="true" />
+          </button>
+        </div>
+      ) : (
+        <label className="list-search-field">
+          <SearchIcon size={18} aria-hidden="true" />
+          <span className="sr-only">{label}</span>
+          <input
+            type="search"
+            aria-describedby={describedBy}
+            aria-invalid={invalid || undefined}
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            placeholder={placeholder || label}
+          />
+        </label>
+      )}
       {value && (
         <button
           type="button"

@@ -167,6 +167,9 @@ export function PublicJobsView({
   const publicJobSearch = useQuery({
     queryKey: [
       "public-job-search",
+      user?.id ?? "anonymous",
+      user?.activeMembership?.companyId ?? null,
+      user?.activeMembership?.joinedAt ?? null,
       search.q ?? "",
       search.location ?? "",
       search.salaryMin ?? "",

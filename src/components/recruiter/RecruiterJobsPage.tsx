@@ -282,6 +282,11 @@ function JobRow({ job, scope }: { job: Job; scope: string }) {
         </span>
         <small>Hạn đã duyệt: {formatJobDate(job.approvedDeadline)}</small>
       </div>
+      {job.status !== "SUSPENDED" && (
+        <Link className="jp-button" to="/rec/applications" search={{ jobId: job.id }}>
+          Xem đơn ứng tuyển
+        </Link>
+      )}
       <Link
         className="jp-button"
         to="/rec/jobs"

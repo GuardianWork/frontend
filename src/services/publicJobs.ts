@@ -1,4 +1,5 @@
 import { apiRequest } from "./api.ts";
+import { authenticatedRequest, hasAuthSession } from "./auth.ts";
 
 export interface CompensationDetail {
   disclosed: boolean;
@@ -85,5 +86,6 @@ export async function searchPublicJobs(
   query.set("page", String(params.page ?? 0));
   query.set("size", String(params.size ?? 6));
 
-  return (await apiRequest(`/jobs/search?${query.toString()}`)) as ApiPage<PublicJobSearchResult>;
+  const request = hasAuthSession() ? authenticatedRequest : apiRequest;
+  return (await request(`/jobs/search?${query.toString()}`)) as ApiPage<PublicJobSearchResult>;
 }

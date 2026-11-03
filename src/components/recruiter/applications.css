@@ -1,0 +1,194 @@
+.application-help {
+  color: #595959;
+  font-size: 14px;
+  margin: 8px 0 20px;
+}
+.application-table {
+  width: 100%;
+  table-layout: fixed;
+}
+.application-table th:first-child {
+  width: 45%;
+}
+.application-table td {
+  overflow-wrap: anywhere;
+}
+.application-table time {
+  font-variant-numeric: tabular-nums;
+}
+.application-page h1:focus {
+  outline: 2px solid #2557a7;
+  outline-offset: 4px;
+}
+.application-page .jp-info {
+  color: #153d75;
+  background: #e8f0ff;
+}
+@media (max-width: 640px) {
+  .application-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .application-table,
+  .application-table tbody,
+  .application-table tr,
+  .application-table td {
+    display: block;
+    width: 100%;
+  }
+  .application-table tr {
+    padding: 16px 0;
+    border-bottom: 1px solid #e4e2e0;
+  }
+  .application-table td {
+    border: 0;
+    padding: 6px 0;
+  }
+  .application-table td::before {
+    content: attr(data-label);
+    display: block;
+    color: #595959;
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+}
+
+.application-results {
+  min-height: 320px;
+}
+.application-page form {
+  margin-bottom: 0;
+}
+.application-page form .application-help {
+  margin-bottom: 8px;
+}
+.application-context {
+  margin-top: 16px;
+}
+.application-search-error {
+  color: var(--color-destructive, #b3261e);
+  font-size: 14px;
+  margin: 8px 0;
+}
+.application-loading > p {
+  color: #595959;
+  font-size: 14px;
+  margin: 0 0 16px;
+}
+.application-placeholder-row {
+  display: grid;
+  grid-template-columns: 45fr 25fr 30fr;
+  gap: 24px;
+  padding: 22px 16px;
+  border-bottom: 1px solid #e4e2e0;
+}
+.application-placeholder-row span {
+  display: block;
+  height: 16px;
+  max-width: 180px;
+  background: #eeeeec;
+  border-radius: 4px;
+}
+.application-placeholder-row span:nth-child(2) {
+  max-width: 64px;
+}
+.application-table th:nth-child(2) {
+  width: 25%;
+}
+.application-table td {
+  vertical-align: top;
+}
+@media (max-width: 640px) {
+  .application-placeholder-row {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 20px 0;
+  }
+  .application-page .list-search-row {
+    flex-wrap: wrap;
+  }
+  .application-page .list-search-field {
+    min-width: 0;
+  }
+}
+
+.application-page .application-search-control {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  max-width: 560px;
+  height: 48px;
+  padding: 0;
+  background: var(--color-paper);
+  border: 1px solid var(--color-rule-2);
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+.application-page .application-search-label {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+.application-page .application-search-control .application-search-input[type="search"] {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  margin: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  outline: 0;
+  box-shadow: none;
+  color: var(--color-ink);
+  font:
+    400 15px/1.5 "Hanken Grotesk",
+    sans-serif;
+  caret-color: var(--color-accent);
+}
+.application-page .application-search-input::placeholder {
+  color: var(--color-ink-2);
+  opacity: 1;
+}
+.application-page .application-search-control:has(.application-search-input:focus) {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+.application-page .application-search-control:has(input[aria-invalid="true"]) {
+  border-color: var(--error);
+}
+.application-page .application-search-control .application-search-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 40px;
+  padding: 0;
+  margin: 3px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  cursor: pointer;
+}
+.application-page .application-search-submit:hover {
+  background: var(--color-accent-hover);
+}
+.application-page .application-search-submit:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.recruiter-workspace .application-page
+  .application-search-control
+  .application-search-input[type="search"]:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
