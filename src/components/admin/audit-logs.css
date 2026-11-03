@@ -4,6 +4,88 @@
   font-weight: 700;
   color: var(--color-ink);
 }
+.activity-table td {
+  vertical-align: top;
+  line-height: 1.5;
+}
+.activity-table td:nth-child(2) {
+  min-width: 180px;
+}
+.activity-table td:nth-child(3) {
+  min-width: 150px;
+}
+.activity-table td:nth-child(6) {
+  min-width: 200px;
+  max-width: 320px;
+  overflow-wrap: anywhere;
+}
+.activity-table .admin-record-status {
+  white-space: normal;
+  text-align: left;
+}
+.activity-missing {
+  color: var(--color-ink-3);
+}
+.activity-reason {
+  white-space: pre-wrap;
+}
+.activity-feedback {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--color-ink-3);
+}
+.activity-feedback strong {
+  display: block;
+  color: var(--color-ink);
+  font-size: 18px;
+}
+.activity-feedback p {
+  margin: 8px 0 0;
+}
+.activity-error {
+  margin: 20px 24px;
+  padding: 20px 24px;
+  border-radius: 16px;
+  background: #fde9e7;
+  color: var(--color-ink);
+  text-align: left;
+}
+.activity-error p {
+  margin: 0 0 14px;
+}
+.activity-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px 24px;
+  border-top: 1px solid var(--color-rule);
+  color: var(--color-ink-3);
+  font-size: 14px;
+}
+.activity-pagination div {
+  display: flex;
+  gap: 8px;
+}
+.activity-pagination button {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--color-rule);
+  border-radius: 8px;
+  background: var(--color-paper);
+  color: var(--color-accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.activity-pagination button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.activity-pagination button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
 .audit-panel .admin-panel-heading p {
   margin-top: 6px;
   font-size: 13px;
@@ -16,15 +98,25 @@
   flex-basis: 100%;
 }
 .audit-filters {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
+  display: grid;
+  grid-template-columns: 150px 150px minmax(0, 1.35fr) minmax(0, 1.35fr) minmax(0, 1fr) minmax(
+      0,
+      1fr
+    );
+  align-items: end;
   gap: 16px;
   width: 100%;
 }
+.audit-filters > label {
+  min-width: 0;
+}
+.audit-filters :is(input, select) {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 46px;
+}
 .audit-filters input {
-  min-height: 46px;
-  min-width: 160px;
   padding: 0 12px;
   border: 1px solid var(--color-rule);
   border-radius: 8px;
@@ -39,7 +131,13 @@
 }
 .audit-filters > button {
   min-height: 44px;
-  margin-left: auto;
+  grid-column: 1 / -1;
+  justify-self: end;
+}
+@media (min-width: 641px) and (max-width: 1300px) {
+  .audit-filters {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 .audit-date-error {
   width: 100%;
