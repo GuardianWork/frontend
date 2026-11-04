@@ -1,14 +1,17 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import {
   ArrowDownWideNarrow,
   ArrowRight,
   BriefcaseBusiness,
+  CalendarClock,
+  ChevronDown,
   FileText,
   Loader2,
+  MapPin,
   SearchX,
-  ShieldCheck,
+  ShieldAlert,
 } from "lucide-react";
 import { AdminPagination } from "@/components/admin/AdminPagination";
 import { ApplicationIcon, SearchIcon } from "@/components/icons";
@@ -19,7 +22,7 @@ import {
   listApplicationPage,
   type SubmittedApplication,
 } from "@/services/candidateApplications";
-import "./applications.css";
+import "./my-jobs.css";
 
 const PAGE_SIZE = 10;
 const MAX_SEARCH_LENGTH = 150;
@@ -28,43 +31,55 @@ type StatusTone = "info" | "success" | "warning" | "danger" | "neutral";
 
 const STATUS_META: Record<
   string,
-  { vi: string; en: string; tone: StatusTone; description: string }
+  {
+    vi: string;
+    en: string;
+    tone: StatusTone;
+    viDetail: string;
+    enDetail: string;
+  }
 > = {
   SUBMITTED: {
     vi: "Đã nộp",
     en: "Submitted",
     tone: "info",
-    description: "Hồ sơ đã được gửi tới nhà tuyển dụng và đang chờ phản hồi.",
+    viDetail: "Hồ sơ đã được gửi tới nhà tuyển dụng và đang chờ phản hồi.",
+    enDetail: "Your CV has been sent to the recruiter and is awaiting a response.",
   },
   VIEWED: {
     vi: "Đã xem",
     en: "Viewed",
     tone: "warning",
-    description: "Nhà tuyển dụng đã mở hồ sơ ứng tuyển của bạn.",
+    viDetail: "Nhà tuyển dụng đã mở hồ sơ ứng tuyển của bạn.",
+    enDetail: "The recruiter has opened your application.",
   },
   UNDER_REVIEW: {
     vi: "Đang xem xét",
     en: "Under review",
     tone: "warning",
-    description: "Nhà tuyển dụng đang xem xét hồ sơ ứng tuyển của bạn.",
+    viDetail: "Nhà tuyển dụng đang xem xét hồ sơ ứng tuyển của bạn.",
+    enDetail: "The recruiter is reviewing your application.",
   },
   SHORTLISTED: {
     vi: "Vào vòng trong",
     en: "Shortlisted",
     tone: "success",
-    description: "Hồ sơ của bạn đã được đưa vào danh sách xem xét tiếp theo.",
+    viDetail: "Hồ sơ của bạn đã được đưa vào danh sách xem xét tiếp theo.",
+    enDetail: "Your application has moved to the next review round.",
   },
   REJECTED: {
     vi: "Từ chối",
     en: "Rejected",
     tone: "danger",
-    description: "Nhà tuyển dụng đã từ chối hồ sơ ứng tuyển này.",
+    viDetail: "Nhà tuyển dụng đã từ chối hồ sơ ứng tuyển này.",
+    enDetail: "The recruiter has rejected this application.",
   },
   WITHDRAWN: {
     vi: "Đã rút",
     en: "Withdrawn",
     tone: "neutral",
-    description: "Đơn ứng tuyển đã được rút khỏi quy trình tuyển dụng.",
+    viDetail: "Đơn ứng tuyển đã được rút khỏi quy trình tuyển dụng.",
+    enDetail: "This application has been withdrawn from the hiring process.",
   },
 };
 
@@ -81,6 +96,15 @@ const STATUS_COUNT_KEYS = {
   VIEWED: "viewed",
   REJECTED: "rejected",
 } as const;
+
+const WORK_MODE_LABELS: Record<string, { vn: string; en: string }> = {
+  ONSITE: { vn: "Tại văn phòng", en: "On-site" },
+  ON_SITE: { vn: "Tại văn phòng", en: "On-site" },
+  OFFICE: { vn: "Tại văn phòng", en: "On-site" },
+  REMOTE: { vn: "Từ xa", en: "Remote" },
+  HYBRID: { vn: "Kết hợp", en: "Hybrid" },
+  FIELD: { vn: "Ngoài thực địa", en: "Field" },
+};
 
 const COMPANY_PREFIXES = new Set([
   "công",
@@ -130,11 +154,17 @@ function companyInitials(name: string) {
 
 function statusMeta(status: string) {
   return (
-    STATUS_META[status] ?? { vi: status, en: status, tone: "neutral" as const, description: "" }
+    STATUS_META[status] ?? {
+      vi: status,
+      en: status,
+      tone: "neutral" as const,
+      viDetail: "",
+      enDetail: "",
+    }
   );
 }
 
-function formatAppliedAt(value: string, locale: "vn" | "en") {
+function formatDate(value: string, locale: "vn" | "en") {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "vi-VN", {
@@ -144,7 +174,7 @@ function formatAppliedAt(value: string, locale: "vn" | "en") {
   }).format(date);
 }
 
-function formatRelativeAppliedAt(value: string, locale: "vn" | "en") {
+function formatRelativeDate(value: string, locale: "vn" | "en") {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
   const difference = date.getTime() - Date.now();
@@ -163,7 +193,23 @@ function formatRelativeAppliedAt(value: string, locale: "vn" | "en") {
   return formatter.format(Math.round(difference / (365 * day)), "year");
 }
 
-function ApplicationRow({
+function workModeLabel(value: string, locale: "vn" | "en") {
+  const key = value
+    .trim()
+    .toUpperCase()
+    .replace(/[\s-]+/g, "_");
+  return WORK_MODE_LABELS[key]?.[locale] ?? value;
+}
+
+/** Date-only deadlines stay open through the end of that local day. */
+function hasDeadlinePassed(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return false;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value.trim())) date.setHours(23, 59, 59, 999);
+  return date.getTime() < Date.now();
+}
+
+function ApplicationCard({
   application,
   locale,
 }: {
@@ -171,88 +217,158 @@ function ApplicationRow({
   locale: "vn" | "en";
 }) {
   const en = locale === "en";
+  const [open, setOpen] = useState(false);
+  const receiptId = `application-receipt-${useId()}`;
   const status = statusMeta(application.status);
   const statusLabel = en ? status.en : status.vi;
+  const statusDetail = en ? status.enDetail : status.viDetail;
   const jobTitle = application.jobTitle || (en ? "Untitled job" : "Tin tuyển dụng chưa có tên");
   const companyName =
     application.companyName || (en ? "Unknown company" : "Doanh nghiệp chưa cập nhật");
   const cvFileName = application.cvFileName || (en ? "No attached CV" : "Chưa đính kèm hồ sơ");
-  const appliedAt = formatAppliedAt(application.appliedAt, locale);
-  const relativeAppliedAt = formatRelativeAppliedAt(application.appliedAt, locale);
+  const appliedAt = formatDate(application.appliedAt, locale);
+  const relativeAppliedAt = formatRelativeDate(application.appliedAt, locale);
+  const deadline = application.deadline ? formatDate(application.deadline, locale) : "";
+  const deadlinePassed = application.deadline ? hasDeadlinePassed(application.deadline) : false;
+  const workMode = application.workMode
+    ? workModeLabel(application.workMode, locale)
+    : en
+      ? "Not available"
+      : "Chưa cập nhật";
+  const location = application.location || (en ? "Not available" : "Chưa cập nhật");
+  const deadlineLabel =
+    deadline && !deadlinePassed
+      ? `${en ? "Apply by" : "Hạn nộp"} ${deadline}`
+      : deadlinePassed
+        ? ""
+        : en
+          ? "No deadline"
+          : "Chưa có hạn nộp";
+  // Every declared data point keeps its place in the card; missing values are
+  // shown as explicit placeholders rather than collapsing the row.
+  const showMeta = true;
+
+  const jobHref = application.jobId > 0 ? { job: String(application.jobId) } : null;
 
   return (
-    <li className="application-ledger__item">
-      <span className="application-ledger__mark" aria-hidden="true">
-        {companyInitials(companyName)}
-      </span>
+    <li className="application-card">
+      <div className="application-card__head">
+        <span className="application-card__mark" aria-hidden="true">
+          {companyInitials(companyName)}
+        </span>
 
-      <div className="application-ledger__body">
-        {application.jobId > 0 ? (
-          <Link
-            to="/can/jobs"
-            search={{ job: String(application.jobId) }}
-            className="application-ledger__title"
-          >
-            {jobTitle}
-          </Link>
-        ) : (
-          <h3 className="application-ledger__title">{jobTitle}</h3>
-        )}
-        <p className="application-ledger__company">{companyName}</p>
+        <div className="application-card__identity">
+          {jobHref ? (
+            <h2 className="application-card__title">
+              <Link to="/can/jobs" search={jobHref}>
+                {jobTitle}
+              </Link>
+            </h2>
+          ) : (
+            <h2 className="application-card__title">{jobTitle}</h2>
+          )}
+          <p className="application-card__company">{companyName}</p>
+          <ul className="application-card__meta">
+            <li className={application.location ? "" : "application-card__meta-item--empty"}>
+              <MapPin size={15} aria-hidden="true" />
+              <span>{location}</span>
+            </li>
+            <li className={application.workMode ? "" : "application-card__meta-item--empty"}>
+              <BriefcaseBusiness size={15} aria-hidden="true" />
+              <span>{workMode}</span>
+            </li>
+            <li
+              className={
+                deadlineLabel === (en ? "No deadline" : "Chưa có hạn nộp")
+                  ? "application-card__meta-item--empty"
+                  : ""
+              }
+            >
+              <CalendarClock size={15} aria-hidden="true" />
+              <span>{deadlineLabel}</span>
+            </li>
+          </ul>
+        </div>
+
+        <div className="application-card__aside">
+          <p className="application-card__applied">
+            <span>{en ? "Applied" : "Ứng tuyển"}</span>{" "}
+            <time dateTime={application.appliedAt}>{appliedAt}</time>
+          </p>
+          {deadlinePassed ? (
+            <span className="status-tag status-tag--neutral application-card__expiry">
+              {en ? "Posting closed" : "Hết hạn ứng tuyển"}
+            </span>
+          ) : null}
+        </div>
       </div>
 
-      <div className="application-ledger__date">
-        <span className="sr-only">{en ? "Applied on" : "Ngày ứng tuyển"}: </span>
-        <time dateTime={application.appliedAt}>{appliedAt}</time>
-        {relativeAppliedAt ? (
-          <span className="application-ledger__relative" aria-hidden="true">
-            {relativeAppliedAt}
-          </span>
-        ) : null}
-      </div>
-
-      <div className="application-ledger__cv">
-        <FileText size={15} aria-hidden="true" />
-        <span className="sr-only">{en ? "Attached CV" : "Hồ sơ đã đính kèm"}: </span>
-        <span title={cvFileName}>{cvFileName}</span>
-      </div>
-
-      <span
-        className={`status-tag status-tag--${status.tone} application-ledger__status`}
-        title={status.description || undefined}
+      <button
+        type="button"
+        className="application-card__status"
+        aria-expanded={open}
+        aria-controls={receiptId}
+        onClick={() => setOpen((value) => !value)}
       >
-        {statusLabel}
-      </span>
+        <span className={`status-tag status-tag--${status.tone} application-card__status-tag`}>
+          {statusLabel}
+        </span>
+        <span className="application-card__status-text">{statusDetail}</span>
+        <ChevronDown
+          size={18}
+          className="application-card__chevron"
+          data-open={open || undefined}
+          aria-hidden="true"
+        />
+      </button>
 
-      <div className="application-ledger__tail">
-        {application.jobId > 0 && (
+      <div className="application-card__receipt" id={receiptId} hidden={!open}>
+        <dl className="application-card__facts">
+          <div>
+            <dt>{en ? "Applied on" : "Ngày ứng tuyển"}</dt>
+            <dd>
+              <time dateTime={application.appliedAt}>{appliedAt}</time>
+              {relativeAppliedAt ? (
+                <span className="application-card__age">{relativeAppliedAt}</span>
+              ) : null}
+            </dd>
+          </div>
+          <div>
+            <dt>{en ? "CV sent" : "Hồ sơ đã gửi"}</dt>
+            <dd className="application-card__cv">
+              <FileText size={15} aria-hidden="true" />
+              <span title={cvFileName}>{cvFileName}</span>
+            </dd>
+          </div>
+        </dl>
+        {jobHref ? (
           <Link
             to="/can/jobs"
-            search={{ job: String(application.jobId) }}
-            className="application-ledger__action"
-            aria-label={`${en ? "Open job" : "Xem tin"}: ${jobTitle}`}
+            search={jobHref}
+            className="application-card__open"
+            aria-label={`${en ? "Open job posting" : "Xem tin tuyển dụng"}: ${jobTitle}`}
           >
-            {en ? "Open job" : "Xem tin"}
-            <ArrowRight size={15} aria-hidden="true" />
+            {en ? "Open job posting" : "Xem tin tuyển dụng"}
+            <ArrowRight size={16} aria-hidden="true" />
           </Link>
-        )}
+        ) : null}
       </div>
     </li>
   );
 }
 
-function LoadingRows() {
+function LoadingCards({ en }: { en: boolean }) {
   return (
-    <div className="application-ledger__loading" role="status">
-      <p>Đang tải danh sách đơn ứng tuyển…</p>
+    <div className="my-jobs-loading" role="status">
+      <p>{en ? "Loading applications…" : "Đang tải danh sách đơn ứng tuyển…"}</p>
       {[0, 1, 2].map((row) => (
-        <span className="application-ledger__skeleton" key={row} aria-hidden="true" />
+        <span className="my-jobs-skeleton" key={row} aria-hidden="true" />
       ))}
     </div>
   );
 }
 
-export function ApplicationsView() {
+export function MyJobsView() {
   const { locale } = useLanguage();
   const en = locale === "en";
   const [input, setInput] = useState("");
@@ -293,6 +409,16 @@ export function ApplicationsView() {
     placeholderData: keepPreviousData,
   });
 
+  // The collection tab states the whole collection, not the current search scope.
+  const totalResult = useQuery({
+    queryKey: ["candidate-application-total"],
+    queryFn: ({ signal }) => listApplicationPage({ size: 1, signal }),
+    retry: false,
+    staleTime: 30_000,
+    refetchOnWindowFocus: true,
+    placeholderData: keepPreviousData,
+  });
+
   const data = result.data;
   const counts = countsResult.data;
   const statusCode = result.error instanceof ApiError ? result.error.status : 0;
@@ -325,15 +451,18 @@ export function ApplicationsView() {
     setPage(0);
   };
 
+  const appliedTabLabel = en ? "Applied" : "Đã ứng tuyển";
+  const appliedTabCount = totalResult.data?.totalElements;
+
   return (
-    <div className="workspace-page candidate-applications">
+    <div className="workspace-page candidate-my-jobs">
       <header className="workspace-heading">
         <div>
-          <h1>{en ? "Jobs you have applied to" : "Công việc đã ứng tuyển"}</h1>
+          <h1>{en ? "My jobs" : "Công việc của tôi"}</h1>
           <p>
             {en
               ? "Track every application you have sent and the current status of each one."
-              : "Theo dõi toàn bộ hồ sơ bạn đã nộp và trạng thái xử lý hiện tại của từng đơn."}
+              : "Theo dõi các công việc bạn đã ứng tuyển và trạng thái xử lý của từng đơn."}
           </p>
         </div>
         <div>
@@ -344,14 +473,32 @@ export function ApplicationsView() {
         </div>
       </header>
 
-      <section className="application-ledger" aria-labelledby="application-ledger-title">
-        <h2 id="application-ledger-title" className="sr-only">
+      <nav className="my-jobs-tabs" aria-label={en ? "Job collections" : "Nhóm việc làm"}>
+        <Link
+          to="/can/applied"
+          className="my-jobs-tab"
+          aria-current="page"
+          aria-label={
+            appliedTabCount === undefined
+              ? appliedTabLabel
+              : `${appliedTabLabel} (${appliedTabCount})`
+          }
+        >
+          <span>{appliedTabLabel}</span>
+          <span className="my-jobs-tab__count" aria-hidden="true">
+            {appliedTabCount ?? "–"}
+          </span>
+        </Link>
+      </nav>
+
+      <section aria-labelledby="my-jobs-list-title">
+        <h2 id="my-jobs-list-title" className="sr-only">
           {en ? "Application list" : "Danh sách đơn ứng tuyển"}
         </h2>
 
-        <div className="application-ledger__toolbar">
+        <div className="my-jobs-toolbar">
           <div
-            className="application-ledger__tabs"
+            className="my-jobs-filters"
             role="group"
             aria-label={en ? "Filter by status" : "Lọc theo trạng thái"}
           >
@@ -362,7 +509,7 @@ export function ApplicationsView() {
                 <button
                   key={filter.value || "all"}
                   type="button"
-                  className="application-ledger__tab"
+                  className="my-jobs-filter"
                   aria-pressed={status === filter.value}
                   aria-label={count === undefined ? label : `${label} (${count})`}
                   onClick={() => {
@@ -371,7 +518,7 @@ export function ApplicationsView() {
                   }}
                 >
                   <span>{label}</span>
-                  <span className="application-ledger__tab-count" aria-hidden="true">
+                  <span className="my-jobs-filter__count" aria-hidden="true">
                     {count ?? "–"}
                   </span>
                 </button>
@@ -379,29 +526,29 @@ export function ApplicationsView() {
             })}
           </div>
 
-          <div className="application-ledger__search">
-            <div className="application-ledger__search-field">
+          <div className="my-jobs-search">
+            <div className="my-jobs-search__field">
               <SearchIcon size={18} aria-hidden="true" />
-              <label htmlFor="application-search" className="sr-only">
+              <label htmlFor="my-jobs-search" className="sr-only">
                 {en ? "Search by job or company" : "Tìm theo tên công việc hoặc công ty"}
               </label>
               <input
-                id="application-search"
+                id="my-jobs-search"
                 type="search"
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
                 placeholder={en ? "Search job or company…" : "Tìm tên công việc hoặc công ty…"}
                 aria-invalid={invalid || undefined}
-                aria-describedby="application-search-help"
+                aria-describedby="my-jobs-search-help"
               />
             </div>
-            <p id="application-search-help" className="sr-only">
+            <p id="my-jobs-search-help" className="sr-only">
               {en
                 ? "Search ignores case and Vietnamese accents. Up to 150 characters."
                 : "Tìm kiếm không phân biệt chữ hoa, chữ thường và dấu. Tối đa 150 ký tự."}
             </p>
             {invalid && (
-              <p className="application-ledger__error" role="alert">
+              <p className="my-jobs-search__error" role="alert">
                 {en
                   ? "The search term is too long. Use at most 150 characters."
                   : "Từ khóa quá dài. Vui lòng nhập tối đa 150 ký tự."}
@@ -410,34 +557,34 @@ export function ApplicationsView() {
           </div>
         </div>
 
-        <div className="application-ledger__utility">
-          <p className="application-ledger__order">
-            <ArrowDownWideNarrow size={15} aria-hidden="true" />
-            {en ? "Newest application first" : "Đơn nộp mới nhất trước"}
-          </p>
-          <p className="application-ledger__count" role="status" aria-live="polite">
+        <div className="my-jobs-list-meta">
+          <p className="my-jobs-count" role="status" aria-live="polite">
             {result.isFetching && !waiting ? (
-              <Loader2 size={14} className="application-ledger__spinner" aria-hidden="true" />
+              <Loader2 size={14} className="my-jobs-spinner" aria-hidden="true" />
             ) : null}
             {data ? (en ? `${totalElements} applications` : `${totalElements} đơn`) : ""}
+          </p>
+          <p className="my-jobs-order">
+            <ArrowDownWideNarrow size={15} aria-hidden="true" />
+            {en ? "Newest application first" : "Đơn nộp mới nhất trước"}
           </p>
         </div>
 
         {result.isError && !waiting && !invalid ? (
-          <div className="application-ledger__state" role="alert">
-            <span className="application-ledger__state-icon is-error" aria-hidden="true">
-              <ShieldCheck size={22} />
+          <div className="my-jobs-state" role="alert">
+            <span className="my-jobs-state__icon is-error" aria-hidden="true">
+              <ShieldAlert size={22} />
             </span>
             <h2>{en ? "Applications are unavailable" : "Chưa tải được đơn ứng tuyển"}</h2>
             <p>{errorMessage}</p>
             {statusCode === 401 ? (
-              <Link to="/login" className="application-ledger__cta">
+              <Link to="/login" className="my-jobs-state__cta">
                 {en ? "Sign in" : "Đăng nhập"}
               </Link>
             ) : (
               <button
                 type="button"
-                className="application-ledger__cta"
+                className="my-jobs-state__cta"
                 onClick={() => void result.refetch()}
               >
                 {en ? "Try again" : "Thử lại"}
@@ -445,10 +592,10 @@ export function ApplicationsView() {
             )}
           </div>
         ) : !data && (waiting || result.isFetching) ? (
-          <LoadingRows />
+          <LoadingCards en={en} />
         ) : data && data.items.length === 0 ? (
-          <div className="application-ledger__state">
-            <span className="application-ledger__state-icon" aria-hidden="true">
+          <div className="my-jobs-state">
+            <span className="my-jobs-state__icon" aria-hidden="true">
               {hasFilters ? <SearchX size={22} /> : <ApplicationIcon size={22} />}
             </span>
             <h2>
@@ -470,26 +617,20 @@ export function ApplicationsView() {
                   : "Khi bạn nộp hồ sơ, công việc và trạng thái xử lý sẽ xuất hiện tại đây."}
             </p>
             {hasFilters ? (
-              <button type="button" className="application-ledger__cta" onClick={clearFilters}>
+              <button type="button" className="my-jobs-state__cta" onClick={clearFilters}>
                 {en ? "Clear filters" : "Xóa bộ lọc"}
               </button>
             ) : (
-              <Link to="/can/jobs" className="application-ledger__cta">
+              <Link to="/can/jobs" className="my-jobs-state__cta">
                 {en ? "Find jobs" : "Tìm việc làm"}
               </Link>
             )}
           </div>
         ) : data ? (
           <>
-            <div className="application-ledger__columns" aria-hidden="true">
-              <span>{en ? "Job" : "Công việc"}</span>
-              <span>{en ? "Applied" : "Ngày ứng tuyển"}</span>
-              <span>{en ? "CV sent" : "Hồ sơ đã gửi"}</span>
-              <span>{en ? "Status" : "Trạng thái"}</span>
-            </div>
-            <ul className="application-ledger__list" aria-busy={result.isFetching}>
+            <ul className="application-card-list" aria-busy={result.isFetching}>
               {data.items.map((application) => (
-                <ApplicationRow key={application.id} application={application} locale={locale} />
+                <ApplicationCard key={application.id} application={application} locale={locale} />
               ))}
             </ul>
             {data.totalPages > 1 && (

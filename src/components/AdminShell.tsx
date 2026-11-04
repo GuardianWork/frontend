@@ -174,7 +174,7 @@ function AdminShellFrame({
 
   const candidateNav: NavItem[] = [
     { to: "/can/jobs", label: copy.nav.jobs, icon: "work" },
-    { to: "/can/applications", label: copy.nav.applications, icon: "application" },
+    { to: "/can/applied", label: copy.nav.myJobs, icon: "application" },
     { to: "/can/cvs", label: copy.nav.cvs, icon: "description" },
     { to: "/can/profile", label: copy.nav.profile, icon: "badge" },
     { to: "/can/copilot", label: copy.nav.copilot, icon: "gavel" },
@@ -190,8 +190,8 @@ function AdminShellFrame({
   const candidatePageTitle =
     pathname === "/can/jobs"
       ? copy.pageTitles.jobs
-      : pathname === "/can/applications"
-        ? copy.pageTitles.applications
+      : pathname === "/can/applied"
+        ? copy.pageTitles.myJobs
         : pathname === "/can/cvs"
           ? copy.pageTitles.cvs
           : pathname === "/can/profile"

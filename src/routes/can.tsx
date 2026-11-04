@@ -15,8 +15,8 @@ function CandidateLayout() {
     ? "Ứng tuyển"
     : path.startsWith("/can/jobs")
       ? "Tìm việc làm"
-      : path.startsWith("/can/applications")
-        ? "Công việc đã ứng tuyển"
+      : path.startsWith("/can/applied") || path.startsWith("/can/applications")
+        ? "Công việc của tôi"
         : path.startsWith("/can/profile")
           ? "Hồ sơ của tôi"
           : path.startsWith("/can/cvs")
