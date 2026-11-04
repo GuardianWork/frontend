@@ -16,22 +16,72 @@ export interface SubmittedApplication {
   status: string;
   appliedAt: string;
   cvFileName: string;
+  /** Empty until the applicant endpoint returns the job's published location. */
+  location: string;
+  /** Empty until the endpoint returns a work mode; raw backend values are tolerated. */
+  workMode: string;
+  /** ISO date or date-time; empty when the posting has no application deadline. */
+  deadline: string;
+}
+
+function textValue(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
 }
 
 export function parseSubmittedApplication(value: unknown): SubmittedApplication {
-  const application = value as Partial<SubmittedApplication>;
+  const application = value as Partial<SubmittedApplication> & {
+    workArrangement?: unknown;
+    applicationDeadline?: unknown;
+    jobLocation?: unknown;
+    workLocation?: unknown;
+    workType?: unknown;
+    employmentType?: unknown;
+    deadlineDate?: unknown;
+    applicationDeadlineDate?: unknown;
+    cvFile?: unknown;
+    resumeFileName?: unknown;
+    company?: unknown;
+    title?: unknown;
+    job?: { id?: unknown };
+  };
   if (!application || typeof application.id !== "string") {
     throw new ApiError("Phản hồi đơn ứng tuyển không hợp lệ. Vui lòng thử lại.", 500);
   }
+  // The applicant endpoint is being extended with the job snapshot. Read the
+  // documented names first, keep the public-job spellings as fallbacks, and
+  // leave ambiguous values empty so the card can show an explicit placeholder.
+  const location = textValue(
+    application.location ?? application.jobLocation ?? application.workLocation,
+  );
+  const workMode = textValue(
+    application.workMode ??
+      application.workArrangement ??
+      application.workType ??
+      application.employmentType,
+  );
+  const deadline = textValue(
+    application.deadline ??
+      application.applicationDeadline ??
+      application.deadlineDate ??
+      application.applicationDeadlineDate,
+  );
+  const cvFileName = textValue(
+    application.cvFileName ?? application.cvFile ?? application.resumeFileName,
+  );
+  const companyName = textValue(application.companyName ?? application.company);
+  const jobTitle = textValue(application.jobTitle ?? application.title);
   return {
-    id: application.id,
+    id: String(application.id),
     jobId: Number(application.jobId ?? 0),
-    jobTitle: String(application.jobTitle ?? ""),
+    jobTitle,
     companyId: Number(application.companyId ?? 0),
-    companyName: String(application.companyName ?? ""),
+    companyName,
     status: String(application.status ?? "SUBMITTED"),
     appliedAt: String(application.appliedAt ?? new Date().toISOString()),
-    cvFileName: String(application.cvFileName ?? ""),
+    cvFileName,
+    location,
+    workMode,
+    deadline,
   };
 }
 

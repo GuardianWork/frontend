@@ -60,6 +60,9 @@ export function createMockApiServer() {
           status: "VIEWED",
           appliedAt: "2026-10-30T09:00:00Z",
           cvFileName: "Nguyen_Van_An_Backend_CV_2026.pdf",
+          location: "TP. Hồ Chí Minh",
+          workMode: "ONSITE",
+          deadline: "2026-11-30",
         },
         {
           id: "app-02",
@@ -70,6 +73,9 @@ export function createMockApiServer() {
           status: "SUBMITTED",
           appliedAt: "2026-10-28T04:30:00Z",
           cvFileName: "Nguyen_Van_An_Data_CV_2026.pdf",
+          location: "Hà Nội",
+          workMode: "HYBRID",
+          deadline: "2026-12-15",
         },
         {
           id: "app-03",
@@ -80,6 +86,9 @@ export function createMockApiServer() {
           status: "REJECTED",
           appliedAt: "2026-10-21T08:15:00Z",
           cvFileName: "Nguyen_Van_An_Sales_CV_2026.pdf",
+          location: "TP. Hồ Chí Minh",
+          workMode: "ONSITE",
+          deadline: "2026-10-25",
         },
         {
           id: "app-04",
@@ -90,6 +99,9 @@ export function createMockApiServer() {
           status: "VIEWED",
           appliedAt: "2026-10-18T03:20:00Z",
           cvFileName: "Nguyen_Van_An_DevOps_CV_2026.pdf",
+          location: "TP. Hồ Chí Minh",
+          workMode: "REMOTE",
+          deadline: "2026-11-20",
         },
         {
           id: "app-05",
@@ -100,6 +112,9 @@ export function createMockApiServer() {
           status: "SUBMITTED",
           appliedAt: "2026-10-12T10:45:00Z",
           cvFileName: "Nguyen_Van_An_HR_CV_2026.pdf",
+          location: "Hà Nội",
+          workMode: "ONSITE",
+          deadline: "2026-11-10",
         },
         {
           id: "app-06",
@@ -110,6 +125,9 @@ export function createMockApiServer() {
           status: "SUBMITTED",
           appliedAt: "2026-10-05T02:10:00Z",
           cvFileName: "Nguyen_Van_An_Finance_CV_2026.pdf",
+          location: "Đà Nẵng",
+          workMode: "ONSITE",
+          deadline: "2026-12-01",
         },
         {
           id: "app-07",
@@ -120,6 +138,9 @@ export function createMockApiServer() {
           status: "VIEWED",
           appliedAt: "2026-09-29T07:00:00Z",
           cvFileName: "Nguyen_Van_An_Marketing_CV_2026.pdf",
+          location: "TP. Hồ Chí Minh",
+          workMode: "HYBRID",
+          deadline: "2026-10-15",
         },
         {
           id: "app-08",
@@ -130,6 +151,9 @@ export function createMockApiServer() {
           status: "REJECTED",
           appliedAt: "2026-09-20T11:25:00Z",
           cvFileName: "Nguyen_Van_An_Operations_CV_2026.pdf",
+          location: "Bình Dương",
+          workMode: "ONSITE",
+          deadline: "2026-11-05",
         },
         {
           id: "app-09",
@@ -140,6 +164,9 @@ export function createMockApiServer() {
           status: "SUBMITTED",
           appliedAt: "2026-09-14T05:40:00Z",
           cvFileName: "Nguyen_Van_An_Customer_CV_2026.pdf",
+          location: "TP. Hồ Chí Minh",
+          workMode: "ONSITE",
+          deadline: "2026-12-20",
         },
         {
           id: "app-10",
@@ -150,6 +177,9 @@ export function createMockApiServer() {
           status: "VIEWED",
           appliedAt: "2026-09-08T01:55:00Z",
           cvFileName: "Nguyen_Van_An_QA_CV_2026.pdf",
+          location: "Hà Nội",
+          workMode: "REMOTE",
+          deadline: "2026-11-25",
         },
         {
           id: "app-11",
@@ -160,6 +190,9 @@ export function createMockApiServer() {
           status: "SUBMITTED",
           appliedAt: "2026-08-30T09:05:00Z",
           cvFileName: "Nguyen_Van_An_Design_CV_2026.pdf",
+          location: "TP. Hồ Chí Minh",
+          workMode: "HYBRID",
+          deadline: "2026-09-30",
         },
       ],
     ],
@@ -711,8 +744,16 @@ export function createMockApiServer() {
       const totalPages = Math.max(1, Math.ceil(totalElements / pageSize));
       const safePage = Math.min(pageNumber, totalPages - 1);
       const start = safePage * pageSize;
+      const applicationWithAliases = (application) => ({
+        ...application,
+        company: application.companyName,
+        workArrangement: application.workMode,
+        applicationDeadline: application.deadline,
+        jobLocation: application.location,
+        cvFile: application.cvFileName,
+      });
       send(200, "Applications retrieved successfully", {
-        content: filtered.slice(start, start + pageSize),
+        content: filtered.slice(start, start + pageSize).map(applicationWithAliases),
         pageNumber: safePage,
         pageSize,
         totalElements,

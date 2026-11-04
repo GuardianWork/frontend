@@ -202,6 +202,32 @@ test("parseSubmittedApplication validates and normalizes primitive application d
   assert.equal(parsed.companyId, 0);
   assert.equal(parsed.cvFileName, "");
   assert.equal(parsed.status, "SUBMITTED");
+  assert.equal(parsed.location, "");
+  assert.equal(parsed.workMode, "");
+  assert.equal(parsed.deadline, "");
+});
+
+test("parseSubmittedApplication reads the optional job snapshot without inventing values", () => {
+  const snapshot = parseSubmittedApplication({
+    id: "app-3",
+    jobId: 12,
+    location: "  TP. Hồ Chí Minh ",
+    workMode: "ONSITE",
+    deadline: "2026-12-01T16:59:59Z",
+  });
+  assert.equal(snapshot.location, "TP. Hồ Chí Minh");
+  assert.equal(snapshot.workMode, "ONSITE");
+  assert.equal(snapshot.deadline, "2026-12-01T16:59:59Z");
+
+  const publicJobNames = parseSubmittedApplication({
+    id: "app-4",
+    jobId: 13,
+    workArrangement: "REMOTE",
+    applicationDeadline: "2026-11-15",
+  });
+  assert.equal(publicJobNames.workMode, "REMOTE");
+  assert.equal(publicJobNames.deadline, "2026-11-15");
+  assert.equal(publicJobNames.location, "");
 });
 
 test("listApplications unwraps the paginated candidate response", async () => {
