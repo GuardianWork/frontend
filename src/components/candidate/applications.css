@@ -1,0 +1,550 @@
+/* Candidate application tracker: counted status tabs over one aligned ledger. */
+.candidate-applications .application-ledger {
+  overflow: hidden;
+  border: 1px solid var(--color-rule);
+  border-radius: 12px;
+  background: var(--color-paper);
+}
+
+.candidate-applications .application-ledger__toolbar {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--color-rule);
+  background: var(--color-paper);
+}
+
+.candidate-applications .application-ledger__tabs {
+  display: flex;
+  min-width: 0;
+  align-items: stretch;
+  gap: 2px;
+}
+
+.candidate-applications .application-ledger__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 64px;
+  padding: 0 12px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  color: var(--color-ink-2);
+  background: transparent;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  transition:
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.candidate-applications .application-ledger__tab:first-child {
+  padding-left: 0;
+}
+
+.candidate-applications .application-ledger__tab:hover {
+  color: var(--color-accent-deep);
+}
+
+.candidate-applications .application-ledger__tab[aria-pressed="true"] {
+  border-bottom-color: var(--color-accent);
+  color: var(--color-accent-deep);
+  font-weight: 700;
+}
+
+.candidate-applications .application-ledger__tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 999px;
+  color: var(--color-ink-2);
+  background: var(--color-paper-3);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.candidate-applications
+  .application-ledger__tab[aria-pressed="true"]
+  .application-ledger__tab-count {
+  color: var(--color-accent-deep);
+  background: var(--color-accent-subtle);
+}
+
+.candidate-applications .application-ledger__search {
+  flex: 0 1 336px;
+  width: min(100%, 336px);
+  padding-block: 12px;
+}
+
+.candidate-applications .application-ledger__search-field {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--color-rule);
+  border-radius: 8px;
+  background: var(--color-paper);
+  color: var(--color-ink-3);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.candidate-applications .application-ledger__search-field:focus-within {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 14%, transparent);
+}
+
+.candidate-applications .application-ledger__search-field > svg {
+  flex-shrink: 0;
+}
+
+.candidate-applications .application-ledger__search-field input {
+  min-width: 0;
+  flex: 1;
+  min-height: 40px;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--color-ink);
+  font-size: 14px;
+}
+
+.candidate-applications .application-ledger__search-field input::placeholder {
+  color: var(--color-ink-3);
+}
+
+.candidate-applications .application-ledger__utility {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--color-rule);
+  background: var(--color-paper-2);
+}
+
+.candidate-applications .application-ledger__order {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--color-ink-2);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.candidate-applications .application-ledger__order > svg {
+  flex-shrink: 0;
+  color: var(--color-ink-3);
+}
+
+.candidate-applications .application-ledger__count {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-ink-2);
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.candidate-applications .application-ledger__spinner {
+  animation: application-ledger-spin 900ms linear infinite;
+}
+
+.candidate-applications .application-ledger__error {
+  margin: 6px 0 0;
+  color: var(--color-attention);
+  font-size: 14px;
+}
+
+.candidate-applications .application-ledger__columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 116px 190px 110px 88px;
+  gap: 16px;
+  align-items: center;
+  padding: 9px 20px 9px 84px;
+  border-bottom: 1px solid var(--color-rule);
+  color: var(--color-ink-3);
+  background: var(--color-paper);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.075em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.candidate-applications .application-ledger__columns > span:nth-child(3) {
+  padding-left: 22px;
+}
+
+.candidate-applications .application-ledger__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.candidate-applications .application-ledger__item {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) 116px 190px 110px 88px;
+  gap: 16px;
+  align-items: center;
+  min-height: 80px;
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--color-rule);
+  transition: background-color 160ms ease;
+}
+
+.candidate-applications .application-ledger__item:last-child {
+  border-bottom: 0;
+}
+
+.candidate-applications .application-ledger__item:hover {
+  background: var(--color-paper-2);
+}
+
+.candidate-applications .application-ledger__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 14%, var(--color-rule));
+  border-radius: 12px;
+  color: var(--color-accent-deep);
+  background: var(--color-accent-subtle);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.035em;
+  line-height: 1;
+}
+
+.candidate-applications .application-ledger__body {
+  min-width: 0;
+}
+
+.candidate-applications .application-ledger__title {
+  display: inline;
+  min-width: 0;
+  color: var(--color-accent-deep);
+  font-size: 18px;
+  font-weight: 650;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+a.application-ledger__title:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.candidate-applications .application-ledger__company {
+  margin-top: 2px;
+  color: var(--color-ink-2);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.candidate-applications .application-ledger__date {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1px;
+  color: var(--color-ink-2);
+  font-size: 14px;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+}
+
+.candidate-applications .application-ledger__date time {
+  font-weight: 600;
+}
+
+.candidate-applications .application-ledger__relative {
+  color: var(--color-ink-3);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.candidate-applications .application-ledger__cv {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 7px;
+  color: var(--color-ink-2);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.candidate-applications .application-ledger__cv > svg {
+  flex-shrink: 0;
+  color: var(--color-ink-3);
+}
+
+.candidate-applications .application-ledger__cv > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.candidate-applications .application-ledger__status {
+  justify-self: start;
+  padding: 2px 8px;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.candidate-applications .application-ledger__tail {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.candidate-applications .application-ledger__action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  padding: 8px 0 8px 8px;
+  color: var(--color-accent);
+  font-size: 14px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.candidate-applications .application-ledger__action:hover {
+  color: var(--color-accent-hover);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.candidate-applications .application-ledger__state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 56px 24px 60px;
+  text-align: center;
+}
+
+.candidate-applications .application-ledger__state-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 16px;
+  border-radius: 999px;
+  color: var(--color-accent);
+  background: var(--color-accent-subtle);
+}
+
+.candidate-applications .application-ledger__state-icon.is-error {
+  color: var(--color-attention);
+  background: var(--color-attention-ground);
+}
+
+.candidate-applications .application-ledger__state h2 {
+  color: var(--color-ink);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.candidate-applications .application-ledger__state p {
+  max-width: 46ch;
+  margin-top: 6px;
+  color: var(--color-ink-2);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.candidate-applications .application-ledger__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  margin-top: 18px;
+  padding: 9px 18px;
+  border: 1px solid var(--color-accent);
+  border-radius: 8px;
+  color: var(--color-accent-ink);
+  background: var(--color-accent);
+  font-size: 14px;
+  font-weight: 700;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+.candidate-applications .application-ledger__cta:hover {
+  border-color: var(--color-accent-hover);
+  background: var(--color-accent-hover);
+}
+
+.candidate-applications .application-ledger__loading {
+  padding: 20px;
+}
+
+.candidate-applications .application-ledger__loading > p {
+  margin-bottom: 14px;
+  color: var(--color-ink-2);
+  font-size: 14px;
+}
+
+.candidate-applications .application-ledger__skeleton {
+  display: block;
+  height: 80px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    var(--color-paper-2) 0%,
+    var(--color-paper-3) 50%,
+    var(--color-paper-2) 100%
+  );
+  background-size: 200% 100%;
+  animation: application-ledger-shimmer 1.4s ease-in-out infinite;
+}
+
+.candidate-applications .application-ledger__skeleton:last-child {
+  margin-bottom: 0;
+}
+
+.candidate-applications .application-ledger .admin-list-pagination {
+  margin: 0;
+  padding: 14px 20px;
+  border-top: 1px solid var(--color-rule);
+}
+
+.candidate-applications .application-ledger__tab:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.candidate-applications
+  :is(
+    .application-ledger__search-field input,
+    .application-ledger__action,
+    .application-ledger__title,
+    .application-ledger__cta
+  ):focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@keyframes application-ledger-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes application-ledger-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+@media (max-width: 1120px) {
+  .candidate-applications .application-ledger__columns {
+    display: none;
+  }
+
+  .candidate-applications .application-ledger__item {
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+    align-items: start;
+    row-gap: 4px;
+    padding-block: 18px;
+  }
+
+  .candidate-applications .application-ledger__body {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .candidate-applications .application-ledger__status {
+    grid-column: 3;
+    grid-row: 1;
+    align-self: start;
+    justify-self: end;
+  }
+
+  .candidate-applications .application-ledger__date {
+    grid-column: 2;
+    grid-row: 2;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .candidate-applications .application-ledger__cv {
+    grid-column: 2;
+    grid-row: 3;
+  }
+
+  .candidate-applications .application-ledger__tail {
+    grid-column: 3;
+    grid-row: 2;
+    align-self: start;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 960px) {
+  .candidate-applications .application-ledger__toolbar {
+    flex-direction: column;
+    gap: 0;
+    padding-top: 4px;
+  }
+
+  .candidate-applications .application-ledger__tabs {
+    overflow-x: auto;
+  }
+
+  .candidate-applications .application-ledger__tab {
+    min-height: 52px;
+  }
+
+  .candidate-applications .application-ledger__search {
+    flex: none;
+    width: 100%;
+    padding-block: 10px 14px;
+  }
+
+  .candidate-applications .application-ledger__utility {
+    flex-wrap: wrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .candidate-applications .application-ledger__spinner,
+  .candidate-applications .application-ledger__skeleton {
+    animation: none;
+  }
+
+  .candidate-applications .application-ledger__item,
+  .candidate-applications .application-ledger__tab,
+  .candidate-applications .application-ledger__cta {
+    transition: none;
+  }
+}
