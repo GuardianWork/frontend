@@ -489,6 +489,32 @@ export function MyJobsView() {
             {appliedTabCount ?? "–"}
           </span>
         </Link>
+        <button
+          type="button"
+          className="my-jobs-tab"
+          disabled
+          aria-disabled="true"
+          aria-label={en ? "Saved (coming soon)" : "Đã lưu (sắp ra mắt)"}
+          title={en ? "Coming soon" : "Sắp ra mắt"}
+        >
+          <span>{en ? "Saved" : "Đã lưu"}</span>
+          <span className="my-jobs-tab__count" aria-hidden="true">
+            –
+          </span>
+        </button>
+        <button
+          type="button"
+          className="my-jobs-tab"
+          disabled
+          aria-disabled="true"
+          aria-label={en ? "Recently viewed (coming soon)" : "Đã xem gần đây (sắp ra mắt)"}
+          title={en ? "Coming soon" : "Sắp ra mắt"}
+        >
+          <span>{en ? "Recently viewed" : "Đã xem gần đây"}</span>
+          <span className="my-jobs-tab__count" aria-hidden="true">
+            –
+          </span>
+        </button>
       </nav>
 
       <section aria-labelledby="my-jobs-list-title">
