@@ -34,13 +34,13 @@
   content: "";
   position: absolute;
   inset-inline: 0;
-  bottom: -2px;
-  height: 3px;
+  bottom: -1px;
+  height: 2px;
   background: transparent;
 }
 
 .candidate-my-jobs .my-jobs-tab:hover {
-  color: var(--color-discovery-deep);
+  color: var(--color-accent-deep);
   background: var(--color-paper-2);
 }
 
@@ -244,8 +244,7 @@
   border: 1px solid var(--color-rule);
   border-radius: 12px;
   background: var(--color-paper);
-  transition: border-color 160ms ease, box-shadow 160ms ease;
-  box-shadow: 0 1px 3px var(--color-rule-2);
+  transition: border-color 160ms ease;
 }
 
 .candidate-my-jobs .application-card:hover {
@@ -283,8 +282,8 @@
 .candidate-my-jobs .application-card__title {
   margin: 0;
   color: var(--color-ink);
-  font-size: 20px;
-  font-weight: 750;
+  font-size: 18px;
+  font-weight: 650;
   letter-spacing: -0.01em;
   line-height: 1.42;
   overflow-wrap: anywhere;
@@ -337,6 +336,11 @@
 
 .candidate-my-jobs .application-card__meta li > svg {
   flex-shrink: 0;
+}
+
+.candidate-my-jobs .application-card__meta-item--empty span {
+  color: var(--color-ink-3);
+  font-style: italic;
 }
 
 .candidate-my-jobs .application-card__aside {
