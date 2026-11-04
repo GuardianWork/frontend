@@ -14,7 +14,7 @@ This matrix was recorded before the comprehensive composition changes. Review st
 | Staff `/login` | `auth/StaffLoginPage` | Auth API; STAFF role required | Quiet single login form; no registration/audience chooser |
 | `/can` | `can/index` + persistent Candidate `AdminShell` | Illustrative introduction/quick links | Open welcome, useful next steps, compact accent |
 | `/can/jobs` | `can/jobs` | Static JOBS plus browser-local Company jobs/applications | Search → result rows → selected listing and apply action inside Candidate shell |
-| `/can/applications` | `can/applications` + ApplicationsView | API-backed candidate application tracker with counted status tabs, accent-insensitive search, paging, latest-first rows, and snapshot CV filenames | Counted status filter → aligned applied-job ledger → open original listing; genuine empty and filter-miss states |
+| `/can/applied` | `can/applied` + MyJobsView | API-backed "Công việc của tôi" collection with one counted collection tab, counted status filters, accent-insensitive search, paging, and latest-first application cards carrying job snapshot metadata when the API supplies it | Collection tab → status/search filter → expandable application cards with sent-CV receipt → open original listing; genuine empty and filter-miss states. `/can/applications` redirects here. |
 | `/can/profile` | `can/profile` + CandidateContact | Shared identity/profile APIs; illustrative skills and detailed experience/education records | Identity editing first; distinguish API-backed fields from local example records |
 | `/can/copilot` | `can/copilot` | Preset and generic local answers, no AI API | Questions → readable answer → references; preserve legal wording |
 | `/can/account` | Shared `AccountPage` in Candidate shell | Shared USER identity, email proof, password, eligibility and lifecycle APIs | Shared identity settings; separate verification, password and lifecycle actions |
@@ -39,6 +39,7 @@ This matrix was recorded before the comprehensive composition changes. Review st
 
 - `/` → `/vn` in public; Staff portal boundary sends non-Staff paths to Staff login.
 - `/jobs` remains public job discovery; `/can/jobs` presents the same discovery in the Candidate shell.
+- `/can/applications` redirects to `/can/applied`, the "Công việc của tôi" collection page.
 - Legacy `/candidate/*` and `/recruiter/*` deep links redirect to `/can/*` and `/rec/*` respectively, preserving query and hash. `/recruiter/profile` → `/rec/verification`; `/recruiter/hub` → `/rec`.
 - `/account` redirects to `/rec/account` when `/auth/me` has an active membership and otherwise to `/can/account`; the shared USER account component retains the route's role shell.
 - `/staff/compliance` → Staff jobs; `/staff/candidates` → accounts; `/staff/analytics`, `/staff/monitoring`, `/staff/tasks` → overview.
