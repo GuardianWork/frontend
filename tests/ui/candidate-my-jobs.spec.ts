@@ -11,8 +11,8 @@ test("candidate tracks applications under My jobs, filters, searches and opens a
   await expect(page.locator(".application-card")).toHaveCount(10);
   await expect(page.locator(".my-jobs-count")).toContainText("11 đơn");
   await expect(page.getByRole("button", { name: "Tất cả (11)", exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Đã nộp (5)", exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Đã xem (4)", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Đã ứng tuyển (5)", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Đang xem xét (4)", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Từ chối (2)", exact: true })).toBeVisible();
   await expect(page.locator(".my-jobs-order")).toContainText("Đơn nộp mới nhất trước");
 
@@ -51,8 +51,8 @@ test("candidate tracks applications under My jobs, filters, searches and opens a
   await expect(page.locator(".my-jobs-count")).toContainText("1 đơn");
   await expect(page.getByRole("link", { name: "Đã ứng tuyển (11)", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Tất cả (1)", exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Đã nộp (0)", exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Đã xem (1)", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Đã ứng tuyển (0)", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Đang xem xét (1)", exact: true })).toBeVisible();
 
   await page
     .getByRole("searchbox", { name: "Tìm theo tên công việc hoặc công ty", exact: true })

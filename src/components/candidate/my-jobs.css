@@ -34,13 +34,13 @@
   content: "";
   position: absolute;
   inset-inline: 0;
-  bottom: -1px;
-  height: 2px;
+  bottom: -2px;
+  height: 3px;
   background: transparent;
 }
 
 .candidate-my-jobs .my-jobs-tab:hover {
-  color: var(--color-accent-deep);
+  color: var(--color-discovery-deep);
   background: var(--color-paper-2);
 }
 
@@ -244,7 +244,8 @@
   border: 1px solid var(--color-rule);
   border-radius: 12px;
   background: var(--color-paper);
-  transition: border-color 160ms ease;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+  box-shadow: 0 1px 3px var(--color-rule-2);
 }
 
 .candidate-my-jobs .application-card:hover {
@@ -282,8 +283,8 @@
 .candidate-my-jobs .application-card__title {
   margin: 0;
   color: var(--color-ink);
-  font-size: 18px;
-  font-weight: 650;
+  font-size: 20px;
+  font-weight: 750;
   letter-spacing: -0.01em;
   line-height: 1.42;
   overflow-wrap: anywhere;

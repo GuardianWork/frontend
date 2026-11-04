@@ -260,7 +260,7 @@ test("listApplicationPage sends search, status and paging to the candidate endpo
       const parsed = new URL(String(url), "http://localhost");
       assert.equal(parsed.pathname, "/api/candidate/applications");
       assert.equal(parsed.searchParams.get("search"), "ky su");
-      assert.equal(parsed.searchParams.get("status"), "VIEWED");
+      assert.equal(parsed.searchParams.get("status"), "UNDER_REVIEW");
       assert.equal(parsed.searchParams.get("page"), "2");
       assert.equal(parsed.searchParams.get("size"), "10");
       return Response.json({
@@ -276,7 +276,7 @@ test("listApplicationPage sends search, status and paging to the candidate endpo
     };
     const page = await listApplicationPage({
       search: "  ky su  ",
-      status: "VIEWED",
+      status: "UNDER_REVIEW",
       page: 2,
       size: 10,
     });
@@ -293,7 +293,7 @@ test("listApplicationPage sends search, status and paging to the candidate endpo
 test("listApplicationCounts returns one exact total per status from size-one reads", async () => {
   globalThis.sessionStorage = session();
   try {
-    const totals = { "": 11, SUBMITTED: 5, VIEWED: 4, REJECTED: 2 };
+    const totals = { "": 11, SUBMITTED: 5, UNDER_REVIEW: 4, REJECTED: 2 };
     const seenStatuses = [];
 
     globalThis.fetch = async (url) => {
@@ -317,8 +317,8 @@ test("listApplicationCounts returns one exact total per status from size-one rea
     };
 
     const counts = await listApplicationCounts({ search: "  ky su  " });
-    assert.deepEqual(counts, { all: 11, submitted: 5, viewed: 4, rejected: 2 });
-    assert.deepEqual(new Set(seenStatuses), new Set(["", "SUBMITTED", "VIEWED", "REJECTED"]));
+    assert.deepEqual(counts, { all: 11, submitted: 5, underReview: 4, rejected: 2 });
+    assert.deepEqual(new Set(seenStatuses), new Set(["", "SUBMITTED", "UNDER_REVIEW", "REJECTED"]));
   } finally {
     globalThis.fetch = originalFetch;
     delete globalThis.sessionStorage;
@@ -327,13 +327,13 @@ test("listApplicationCounts returns one exact total per status from size-one rea
 
 test("parseApplicationPage filters and paginates an older array response locally", () => {
   const applications = [
-    { ...sampleApplication, id: "a-1", jobTitle: "Kỹ sư Backend", status: "VIEWED" },
+    { ...sampleApplication, id: "a-1", jobTitle: "Kỹ sư Backend", status: "UNDER_REVIEW" },
     { ...sampleApplication, id: "a-2", jobTitle: "Kế toán", status: "SUBMITTED" },
-    { ...sampleApplication, id: "a-3", jobTitle: "Ky su Frontend", status: "VIEWED" },
+    { ...sampleApplication, id: "a-3", jobTitle: "Ky su Frontend", status: "UNDER_REVIEW" },
   ];
   const page = parseApplicationPage(applications, {
     search: "ky su",
-    status: "VIEWED",
+    status: "UNDER_REVIEW",
     page: 0,
     size: 1,
   });

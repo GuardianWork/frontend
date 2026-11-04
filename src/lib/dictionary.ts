@@ -97,7 +97,7 @@ export const dictionaries = {
       institutionalAuditSynced: "Đã đồng bộ Kiểm toán",
       applicationsAndSavedDeck: "Đơn ứng tuyển & Việc đã lưu",
       totalSubmissions: "Tổng Số Lần Nộp",
-      appliedRoles: "Vai trò Đã nộp",
+      appliedRoles: "Vai trò Đã ứng tuyển",
       savedArchive: "Lưu trữ Đã lưu",
       noApplications: "Chưa có đơn ứng tuyển đã xác thực nào",
       noApplicationsDesc:

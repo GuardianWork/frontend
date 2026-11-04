@@ -40,7 +40,7 @@ const STATUS_META: Record<
   }
 > = {
   SUBMITTED: {
-    vi: "Đã nộp",
+    vi: "Đã ứng tuyển",
     en: "Submitted",
     tone: "info",
     viDetail: "Hồ sơ đã được gửi tới nhà tuyển dụng và đang chờ phản hồi.",
@@ -85,15 +85,15 @@ const STATUS_META: Record<
 
 const STATUS_FILTERS = [
   { value: "", vi: "Tất cả", en: "All" },
-  { value: "SUBMITTED", vi: "Đã nộp", en: "Submitted" },
-  { value: "VIEWED", vi: "Đã xem", en: "Viewed" },
+  { value: "SUBMITTED", vi: "Đã ứng tuyển", en: "Submitted" },
+  { value: "UNDER_REVIEW", vi: "Đang xem xét", en: "Under review" },
   { value: "REJECTED", vi: "Từ chối", en: "Rejected" },
 ] as const;
 
 const STATUS_COUNT_KEYS = {
   "": "all",
   SUBMITTED: "submitted",
-  VIEWED: "viewed",
+  UNDER_REVIEW: "underReview",
   REJECTED: "rejected",
 } as const;
 

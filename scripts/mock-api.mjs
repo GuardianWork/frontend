@@ -57,7 +57,7 @@ export function createMockApiServer() {
           jobTitle: "Kỹ sư Backend (Go)",
           companyId: 101,
           companyName: "Công ty TNHH Giải Pháp Alpha",
-          status: "VIEWED",
+          status: "UNDER_REVIEW",
           appliedAt: "2026-10-30T09:00:00Z",
           cvFileName: "Nguyen_Van_An_Backend_CV_2026.pdf",
           location: "TP. Hồ Chí Minh",
@@ -96,7 +96,7 @@ export function createMockApiServer() {
           jobTitle: "Kỹ sư DevOps",
           companyId: 104,
           companyName: "GuardianWork VN",
-          status: "VIEWED",
+          status: "UNDER_REVIEW",
           appliedAt: "2026-10-18T03:20:00Z",
           cvFileName: "Nguyen_Van_An_DevOps_CV_2026.pdf",
           location: "TP. Hồ Chí Minh",
@@ -135,7 +135,7 @@ export function createMockApiServer() {
           jobTitle: "Chuyên viên Tiếp thị",
           companyId: 107,
           companyName: "Công ty Cổ phần Truyền thông Mộc",
-          status: "VIEWED",
+          status: "UNDER_REVIEW",
           appliedAt: "2026-09-29T07:00:00Z",
           cvFileName: "Nguyen_Van_An_Marketing_CV_2026.pdf",
           location: "TP. Hồ Chí Minh",
@@ -174,7 +174,7 @@ export function createMockApiServer() {
           jobTitle: "Kỹ sư Kiểm thử Phần mềm",
           companyId: 110,
           companyName: "Công ty TNHH Công nghệ Tân Tiến",
-          status: "VIEWED",
+          status: "UNDER_REVIEW",
           appliedAt: "2026-09-08T01:55:00Z",
           cvFileName: "Nguyen_Van_An_QA_CV_2026.pdf",
           location: "Hà Nội",
@@ -718,7 +718,7 @@ export function createMockApiServer() {
 
     if (req.method === "GET" && path === "/api/candidate/applications") {
       const status = url.searchParams.get("status") || "";
-      if (status && !["SUBMITTED", "VIEWED", "REJECTED"].includes(status)) {
+      if (status && !["SUBMITTED", "UNDER_REVIEW", "REJECTED"].includes(status)) {
         send(400, "40001 INVALID_STATUS");
         return;
       }

@@ -246,7 +246,7 @@ function Applications({
                           <strong>{a.candidateName}</strong>
                         </td>
                         <td data-label="Trạng thái">
-                          <span className="jp-badge jp-info">Đã nộp</span>
+                          <span className="jp-badge jp-info">Đã ứng tuyển</span>
                         </td>
                         <td data-label="Thời điểm ứng tuyển">
                           <time dateTime={a.appliedAt}>

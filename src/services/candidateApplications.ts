@@ -243,7 +243,7 @@ export async function listApplicationPage(
 export interface CandidateApplicationCounts {
   all: number;
   submitted: number;
-  viewed: number;
+  underReview: number;
   rejected: number;
 }
 
@@ -261,16 +261,16 @@ export async function listApplicationCounts(
 ): Promise<CandidateApplicationCounts> {
   const search = options.search ?? "";
   const signal = options.signal;
-  const [all, submitted, viewed, rejected] = await Promise.all([
+  const [all, submitted, underReview, rejected] = await Promise.all([
     listApplicationPage({ search, size: 1, signal }),
     listApplicationPage({ search, size: 1, status: "SUBMITTED", signal }),
-    listApplicationPage({ search, size: 1, status: "VIEWED", signal }),
+    listApplicationPage({ search, size: 1, status: "UNDER_REVIEW", signal }),
     listApplicationPage({ search, size: 1, status: "REJECTED", signal }),
   ]);
   return {
     all: all.totalElements,
     submitted: submitted.totalElements,
-    viewed: viewed.totalElements,
+    underReview: underReview.totalElements,
     rejected: rejected.totalElements,
   };
 }
