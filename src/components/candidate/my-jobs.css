@@ -252,37 +252,53 @@
 .candidate-my-jobs .application-card {
   overflow: hidden;
   border: 1px solid var(--color-rule);
-  border-radius: 12px;
+  border-radius: 8px;
   background: var(--color-paper);
-  transition: border-color 160ms ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
 }
 
 .candidate-my-jobs .application-card:hover {
   border-color: var(--color-rule-2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+}
+.candidate-my-jobs .application-card--expired {
+  opacity: 0.6;
 }
 
 .candidate-my-jobs .application-card__head {
   display: grid;
-  grid-template-columns: 56px minmax(0, 1fr) auto;
-  gap: 18px;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  gap: 16px;
   align-items: start;
-  padding: 20px;
+  padding: 16px;
 }
 
 .candidate-my-jobs .application-card__mark {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 56px;
-  border: 1px solid color-mix(in srgb, var(--color-accent) 14%, var(--color-rule));
-  border-radius: 12px;
+  width: 48px;
+  height: 48px;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 12%, var(--color-rule));
+  border-radius: 8px;
   color: var(--color-accent-deep);
   background: var(--color-accent-subtle);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 800;
   letter-spacing: 0.04em;
   line-height: 1;
+}
+
+.candidate-my-jobs .default-company-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  object-fit: cover;
 }
 
 .candidate-my-jobs .application-card__identity {
@@ -292,20 +308,20 @@
 .candidate-my-jobs .application-card__title {
   margin: 0;
   color: var(--color-ink);
-  font-size: 18px;
-  font-weight: 650;
+  font-size: 20px;
+  font-weight: 700;
   letter-spacing: -0.01em;
-  line-height: 1.42;
+  line-height: 1.4;
   overflow-wrap: anywhere;
 }
 
 .candidate-my-jobs .application-card__title a {
-  color: var(--color-accent-deep);
+  color: var(--color-ink);
   text-decoration: none;
 }
 
 .candidate-my-jobs .application-card__title a:hover {
-  color: var(--color-accent-hover);
+  color: var(--color-ink);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -407,13 +423,57 @@
   background: var(--color-paper-3);
 }
 
-.candidate-my-jobs .application-card__status .status-tag {
+.candidate-my-jobs .application-card__status:active {
+  background: color-mix(in srgb, var(--color-paper-3) 92%, #000);
+}
+
+/* Status tag: text-only soft-tint pill on the shared status-tag tokens
+   (reference redesign 2026-11-04 — DESIGN.md keeps the 1px current-color border). */
+.candidate-my-jobs .application-card__status .application-card__status-tag {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 20px;
+  border-radius: var(--radius-pill);
+  font-size: 14px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.candidate-my-jobs .application-card__status:hover .application-card__status-tag,
+.candidate-my-jobs .application-card__status:focus-visible .application-card__status-tag {
+  background-image: linear-gradient(
+    color-mix(in srgb, currentColor 10%, transparent),
+    color-mix(in srgb, currentColor 10%, transparent)
+  );
+}
+
+.candidate-my-jobs .application-card__status .application-card__status-tag .status-text {
+  font-weight: 800;
   flex-shrink: 0;
 }
 
 .candidate-my-jobs .application-card__status-text {
+  display: grid;
+  grid-template-rows: 0fr;
   min-width: 0;
+  opacity: 0;
+  transition:
+    grid-template-rows 180ms ease,
+    opacity 180ms ease;
+}
+
+.candidate-my-jobs .application-card__status-text-inner {
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
   overflow-wrap: anywhere;
+}
+
+.candidate-my-jobs .application-card__status:hover .application-card__status-text,
+.candidate-my-jobs .application-card__status:focus-visible .application-card__status-text {
+  grid-template-rows: 1fr;
+  opacity: 1;
 }
 
 .candidate-my-jobs .application-card__chevron {
@@ -665,7 +725,7 @@
 }
 
 .candidate-my-jobs .application-card__status:focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 3px solid var(--color-accent);
   outline-offset: -3px;
 }
 
@@ -751,6 +811,7 @@
   .candidate-my-jobs .my-jobs-filter,
   .candidate-my-jobs .application-card,
   .candidate-my-jobs .application-card__status,
+  .candidate-my-jobs .application-card__status-text,
   .candidate-my-jobs .application-card__chevron,
   .candidate-my-jobs .my-jobs-state__cta {
     transition: none;

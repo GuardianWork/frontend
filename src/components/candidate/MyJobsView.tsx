@@ -5,6 +5,7 @@ import {
   ArrowDownWideNarrow,
   ArrowRight,
   BriefcaseBusiness,
+  Building2,
   CalendarClock,
   ChevronDown,
   FileText,
@@ -106,52 +107,6 @@ const WORK_MODE_LABELS: Record<string, { vn: string; en: string }> = {
   FIELD: { vn: "Ngoài thực địa", en: "Field" },
 };
 
-const COMPANY_PREFIXES = new Set([
-  "công",
-  "cong",
-  "ty",
-  "tnhh",
-  "cp",
-  "cổ",
-  "co",
-  "phần",
-  "phan",
-  "tập",
-  "tap",
-  "đoàn",
-  "doan",
-  "trách",
-  "trach",
-  "nhiệm",
-  "nhiem",
-  "hữu",
-  "huu",
-  "hạn",
-  "han",
-  "chi",
-  "nhánh",
-  "nhanh",
-  "việt",
-  "viet",
-  "nam",
-  "và",
-  "va",
-]);
-
-function companyInitials(name: string) {
-  const words = name
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .filter((word) => !COMPANY_PREFIXES.has(word.toLocaleLowerCase("vi")));
-  const source = words.length ? words : name.trim().split(/\s+/).filter(Boolean);
-  return source
-    .slice(0, 2)
-    .map((word) => word[0])
-    .join("")
-    .toLocaleUpperCase("vi");
-}
-
 function statusMeta(status: string) {
   return (
     STATUS_META[status] ?? {
@@ -251,10 +206,10 @@ function ApplicationCard({
   const jobHref = application.jobId > 0 ? { job: String(application.jobId) } : null;
 
   return (
-    <li className="application-card">
+    <li className={`application-card${deadlinePassed ? " application-card--expired" : ""}`}>
       <div className="application-card__head">
         <span className="application-card__mark" aria-hidden="true">
-          {companyInitials(companyName)}
+          <Building2 size={48} className="default-company-avatar" aria-label="Company" />
         </span>
 
         <div className="application-card__identity">
