@@ -31,6 +31,7 @@ import {
 } from "@/services/candidateCv";
 import { listApplications } from "@/services/candidateApplications";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { useLanguage } from "@/context/LanguageContext";
 import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
 import { badgeLabel, type JobItem } from "@/lib/job-listings";
 import { buildCandidateJobs, shortJobLocation } from "@/lib/candidate-jobs";
@@ -203,6 +204,8 @@ function mapBackendCv(cv: BackendCandidateCv): CandidateCv {
 export function JobApplyPage({ jobId }: { jobId?: string }) {
   const { workspace, company } = useCompanyWorkspace();
   const authUser = useAuthUser();
+  const { locale } = useLanguage();
+  const en = locale === "en";
   const [cvs, setCvs] = useState<CandidateCv[]>([]);
   const [profileDetails, setProfileDetails] = useState<CandidateProfileDetails>({
     firstName: "",
@@ -839,7 +842,7 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
       <div className="apply-form-card">
         <header className="apply-form-hero border-b border-rule px-0 pb-6 pt-0">
           <h1 className="text-balance text-[clamp(1.75rem,2.8vw,2.375rem)] font-extrabold leading-[1.2] tracking-[-0.03em] text-ink">
-            Ứng tuyển công việc
+            {en ? "Apply for this job" : "Ứng tuyển công việc"}
           </h1>
           <h2 className="mt-5 text-balance text-[clamp(1.375rem,2.4vw,1.9rem)] font-extrabold leading-[1.22] tracking-[-0.03em] text-ink [overflow-wrap:anywhere]">
             {job.title}

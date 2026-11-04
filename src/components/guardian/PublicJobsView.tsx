@@ -36,6 +36,7 @@ import { searchPublicJobs } from "../../services/publicJobs";
 import type { JobContent } from "@/services/jobs";
 import type { PublicJobSearchResult } from "../../services/publicJobs";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { useLanguage } from "@/context/LanguageContext";
 import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
 import { useCandidate } from "@/context/CandidateContext";
 import { badgeLabel, isSampleListing, type JobItem } from "@/lib/job-listings";
@@ -149,6 +150,8 @@ export function PublicJobsView({
   const user = useAuthUser();
   const { isApplied } = useCandidate();
   const { workspace } = useCompanyWorkspace();
+  const { locale } = useLanguage();
+  const en = locale === "en";
   const salaryBandBounds = (band?: string): { min?: number; max?: number } => {
     switch (band) {
       case "duoi-15":
@@ -882,6 +885,8 @@ function JobDetail({
 }) {
   const navigate = useNavigate();
   const jobsPath = useJobsPath();
+  const { locale } = useLanguage();
+  const en = locale === "en";
   const similar = embedded ? [] : similarJobs(jobs, job);
   const applyHref = `/can/jobs/apply?job=${encodeURIComponent(job.id)}`;
 
@@ -965,21 +970,25 @@ function JobDetail({
 
         <aside className="career-detail__aside">
           <div className="career-apply-card">
-            <h2>Ứng tuyển vị trí này</h2>
+            <h2>{en ? "Apply for this role" : "Ứng tuyển vị trí này"}</h2>
             {signedIn ? (
               applied ? (
                 <>
                   <p>Hồ sơ của bạn đã được gửi tới nhà tuyển dụng cho vị trí này.</p>
                   <span className="career-applied-state">
                     <CheckCircle2 size={18} aria-hidden="true" />
-                    Đã nộp hồ sơ
+                    {en ? "Applied" : "Đã nộp hồ sơ"}
                   </span>
                 </>
               ) : (
                 <>
-                  <p>Mở hồ sơ ứng viên để chọn CV và gửi đơn cho vị trí này.</p>
+                  <p>
+                    {en
+                      ? "Open your candidate profile to choose a CV and submit your application for this role."
+                      : "Mở hồ sơ ứng viên để chọn CV và gửi đơn cho vị trí này."}
+                  </p>
                   <Link to="/can/jobs/apply" search={{ job: job.id }} className="career-button">
-                    Ứng tuyển ngay
+                    {en ? "Apply now" : "Ứng tuyển ngay"}
                     <ArrowRight size={18} aria-hidden="true" />
                   </Link>
                 </>
@@ -987,14 +996,16 @@ function JobDetail({
             ) : (
               <>
                 <p>
-                  Bạn cần đăng nhập để nộp hồ sơ. Việc xem tin tuyển dụng không yêu cầu tài khoản.
+                  {en
+                    ? "You need to sign in to apply. Viewing job listings doesn’t require an account."
+                    : "Bạn cần đăng nhập để nộp hồ sơ. Việc xem tin tuyển dụng không yêu cầu tài khoản."}
                 </p>
                 <Link
                   to="/login"
                   search={{ role: "candidate", next: applyHref }}
                   className="career-button"
                 >
-                  Đăng nhập để ứng tuyển
+                  {en ? "Sign in to apply" : "Đăng nhập để ứng tuyển"}
                   <ArrowRight size={18} aria-hidden="true" />
                 </Link>
                 <Link
