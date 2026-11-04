@@ -441,9 +441,6 @@ export function MyJobsView() {
           }
         >
           <span>{appliedTabLabel}</span>
-          <span className="my-jobs-tab__count" aria-hidden="true">
-            {appliedTabCount ?? "–"}
-          </span>
         </Link>
         <button
           type="button"
@@ -454,9 +451,6 @@ export function MyJobsView() {
           title={en ? "Coming soon" : "Sắp ra mắt"}
         >
           <span>{en ? "Saved" : "Đã lưu"}</span>
-          <span className="my-jobs-tab__count" aria-hidden="true">
-            –
-          </span>
         </button>
         <button
           type="button"
@@ -467,9 +461,6 @@ export function MyJobsView() {
           title={en ? "Coming soon" : "Sắp ra mắt"}
         >
           <span>{en ? "Recently viewed" : "Đã xem gần đây"}</span>
-          <span className="my-jobs-tab__count" aria-hidden="true">
-            –
-          </span>
         </button>
       </nav>
 
