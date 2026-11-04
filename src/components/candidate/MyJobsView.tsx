@@ -47,29 +47,30 @@ const STATUS_META: Record<
     viDetail: "Hồ sơ đã được gửi tới nhà tuyển dụng và đang chờ phản hồi.",
     enDetail: "Your CV has been sent to the recruiter and is awaiting a response.",
   },
-  VIEWED: {
-    vi: "Đã xem",
+  UNDER_REVIEW: {
+    vi: "Nhà tuyển dụng đã xem",
     en: "Viewed",
     tone: "warning",
     viDetail: "Nhà tuyển dụng đã mở hồ sơ ứng tuyển của bạn.",
     enDetail: "The recruiter has opened your application.",
   },
-  UNDER_REVIEW: {
+  /* UNDER_REVIEW: {
     vi: "Đang xem xét",
     en: "Under review",
     tone: "warning",
     viDetail: "Nhà tuyển dụng đang xem xét hồ sơ ứng tuyển của bạn.",
     enDetail: "The recruiter is reviewing your application.",
   },
+  */
   SHORTLISTED: {
-    vi: "Vào vòng trong",
+    vi: "Hồ sơ đã vào vòng trong",
     en: "Shortlisted",
     tone: "success",
     viDetail: "Hồ sơ của bạn đã được đưa vào danh sách xem xét tiếp theo.",
     enDetail: "Your application has moved to the next review round.",
   },
   REJECTED: {
-    vi: "Từ chối",
+    vi: "Hồ sơ bị từ chối",
     en: "Rejected",
     tone: "danger",
     viDetail: "Nhà tuyển dụng đã từ chối hồ sơ ứng tuyển này.",
@@ -87,8 +88,8 @@ const STATUS_META: Record<
 const STATUS_FILTERS = [
   { value: "", vi: "Tất cả", en: "All" },
   { value: "SUBMITTED", vi: "Đã ứng tuyển", en: "Submitted" },
-  { value: "UNDER_REVIEW", vi: "Đang xem xét", en: "Under review" },
-  { value: "REJECTED", vi: "Từ chối", en: "Rejected" },
+  { value: "UNDER_REVIEW", vi: "Đã xem", en: "Under review" },
+  { value: "REJECTED", vi: "Đã từ chối", en: "Rejected" },
 ] as const;
 
 const STATUS_COUNT_KEYS = {
