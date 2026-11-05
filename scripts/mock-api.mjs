@@ -70,7 +70,7 @@ export function createMockApiServer() {
           jobTitle: "Chuyên viên Phân tích Dữ liệu",
           companyId: 102,
           companyName: "Công ty Cổ phần An Phát",
-          status: "SUBMITTED",
+          status: "SHORTLISTED",
           appliedAt: "2026-10-28T04:30:00Z",
           cvFileName: "Nguyen_Van_An_Data_CV_2026.pdf",
           location: "Hà Nội",
@@ -135,7 +135,7 @@ export function createMockApiServer() {
           jobTitle: "Chuyên viên Tiếp thị",
           companyId: 107,
           companyName: "Công ty Cổ phần Truyền thông Mộc",
-          status: "UNDER_REVIEW",
+          status: "WITHDRAWN",
           appliedAt: "2026-09-29T07:00:00Z",
           cvFileName: "Nguyen_Van_An_Marketing_CV_2026.pdf",
           location: "TP. Hồ Chí Minh",
@@ -718,7 +718,10 @@ export function createMockApiServer() {
 
     if (req.method === "GET" && path === "/api/candidate/applications") {
       const status = url.searchParams.get("status") || "";
-      if (status && !["SUBMITTED", "UNDER_REVIEW", "REJECTED"].includes(status)) {
+      if (
+        status &&
+        !["SUBMITTED", "UNDER_REVIEW", "SHORTLISTED", "REJECTED", "WITHDRAWN"].includes(status)
+      ) {
         send(400, "40001 INVALID_STATUS");
         return;
       }

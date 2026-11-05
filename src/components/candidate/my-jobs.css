@@ -94,63 +94,51 @@
 
 .candidate-my-jobs .my-jobs-filters {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  align-items: center;
 }
 
-.candidate-my-jobs .my-jobs-filter {
+.candidate-my-jobs .my-jobs-status-select {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  min-height: 40px;
-  padding: 0 12px;
+  min-width: 232px;
+}
+
+.candidate-my-jobs .my-jobs-status-select__input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 44px 0 16px;
   border: 1px solid var(--color-rule);
-  border-radius: 999px;
-  color: var(--color-ink-2);
+  border-radius: 8px;
+  color: var(--color-ink);
   background: var(--color-paper);
+  appearance: none;
   font: inherit;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
-  line-height: 1.4;
   cursor: pointer;
   transition:
     border-color 160ms ease,
-    background-color 160ms ease,
-    color 160ms ease;
+    box-shadow 160ms ease;
 }
 
-.candidate-my-jobs .my-jobs-filter:hover {
+.candidate-my-jobs .my-jobs-status-select__input:hover {
   border-color: var(--color-rule-2);
-  color: var(--color-ink);
   background: var(--color-paper-2);
 }
 
-.candidate-my-jobs .my-jobs-filter[aria-pressed="true"] {
+.candidate-my-jobs .my-jobs-status-select__input:focus-visible {
   border-color: var(--color-accent);
-  color: var(--color-accent-deep);
-  background: var(--color-accent-subtle);
-  font-weight: 700;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 14%, transparent);
+  outline: 0;
 }
 
-.candidate-my-jobs .my-jobs-filter__count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 22px;
-  height: 18px;
-  padding: 0 6px;
-  border-radius: 999px;
+.candidate-my-jobs .my-jobs-status-select > svg {
+  position: absolute;
+  right: 14px;
+  flex-shrink: 0;
   color: var(--color-ink-2);
-  background: var(--color-paper-3);
-  font-size: 12px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-}
-
-.candidate-my-jobs .my-jobs-filter[aria-pressed="true"] .my-jobs-filter__count {
-  color: var(--color-accent-deep);
-  background: color-mix(in srgb, var(--color-accent) 14%, var(--color-paper));
+  pointer-events: none;
 }
 
 .candidate-my-jobs .my-jobs-search {
@@ -433,8 +421,8 @@
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  padding: 5px 20px;
-  border-radius: var(--radius-pill);
+  padding: 5px 15px;
+
   font-size: 14px;
   line-height: 1;
   white-space: nowrap;
@@ -718,7 +706,6 @@
 }
 
 .candidate-my-jobs .my-jobs-tab:focus-visible,
-.candidate-my-jobs .my-jobs-filter:focus-visible,
 .candidate-my-jobs .my-jobs-state__cta:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
@@ -808,7 +795,7 @@
   }
 
   .candidate-my-jobs .my-jobs-tab,
-  .candidate-my-jobs .my-jobs-filter,
+  .candidate-my-jobs .my-jobs-status-select__input,
   .candidate-my-jobs .application-card,
   .candidate-my-jobs .application-card__status,
   .candidate-my-jobs .application-card__status-text,

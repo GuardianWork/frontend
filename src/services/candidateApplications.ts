@@ -16,6 +16,8 @@ export interface SubmittedApplication {
   status: string;
   appliedAt: string;
   cvFileName: string;
+  version: number;
+  candidateFeedback: string;
   /** Empty until the applicant endpoint returns the job's published location. */
   location: string;
   /** Empty until the endpoint returns a work mode; raw backend values are tolerated. */
@@ -79,6 +81,8 @@ export function parseSubmittedApplication(value: unknown): SubmittedApplication 
     status: String(application.status ?? "SUBMITTED"),
     appliedAt: String(application.appliedAt ?? new Date().toISOString()),
     cvFileName,
+    version: Number(application.version ?? 0),
+    candidateFeedback: textValue(application.candidateFeedback),
     location,
     workMode,
     deadline,
@@ -96,7 +100,6 @@ export interface SubmitApplicationInput {
 
 export const CANDIDATE_APPLICATION_STATUSES = [
   "SUBMITTED",
-  "VIEWED",
   "UNDER_REVIEW",
   "SHORTLISTED",
   "REJECTED",
@@ -244,7 +247,9 @@ export interface CandidateApplicationCounts {
   all: number;
   submitted: number;
   underReview: number;
+  shortlisted: number;
   rejected: number;
+  withdrawn: number;
 }
 
 export interface CandidateApplicationCountOptions {
@@ -261,17 +266,21 @@ export async function listApplicationCounts(
 ): Promise<CandidateApplicationCounts> {
   const search = options.search ?? "";
   const signal = options.signal;
-  const [all, submitted, underReview, rejected] = await Promise.all([
+  const [all, submitted, underReview, shortlisted, rejected, withdrawn] = await Promise.all([
     listApplicationPage({ search, size: 1, signal }),
     listApplicationPage({ search, size: 1, status: "SUBMITTED", signal }),
     listApplicationPage({ search, size: 1, status: "UNDER_REVIEW", signal }),
+    listApplicationPage({ search, size: 1, status: "SHORTLISTED", signal }),
     listApplicationPage({ search, size: 1, status: "REJECTED", signal }),
+    listApplicationPage({ search, size: 1, status: "WITHDRAWN", signal }),
   ]);
   return {
     all: all.totalElements,
     submitted: submitted.totalElements,
     underReview: underReview.totalElements,
+    shortlisted: shortlisted.totalElements,
     rejected: rejected.totalElements,
+    withdrawn: withdrawn.totalElements,
   };
 }
 

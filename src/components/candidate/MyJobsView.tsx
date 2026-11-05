@@ -48,20 +48,12 @@ const STATUS_META: Record<
     enDetail: "Your CV has been sent to the recruiter and is awaiting a response.",
   },
   UNDER_REVIEW: {
-    vi: "Nhà tuyển dụng đã xem",
-    en: "Viewed",
-    tone: "warning",
-    viDetail: "Nhà tuyển dụng đã mở hồ sơ ứng tuyển của bạn.",
-    enDetail: "The recruiter has opened your application.",
-  },
-  /* UNDER_REVIEW: {
     vi: "Đang xem xét",
     en: "Under review",
     tone: "warning",
     viDetail: "Nhà tuyển dụng đang xem xét hồ sơ ứng tuyển của bạn.",
     enDetail: "The recruiter is reviewing your application.",
   },
-  */
   SHORTLISTED: {
     vi: "Hồ sơ đã vào vòng trong",
     en: "Shortlisted",
@@ -88,15 +80,19 @@ const STATUS_META: Record<
 const STATUS_FILTERS = [
   { value: "", vi: "Tất cả", en: "All" },
   { value: "SUBMITTED", vi: "Đã ứng tuyển", en: "Submitted" },
-  { value: "UNDER_REVIEW", vi: "Đã xem", en: "Under review" },
+  { value: "UNDER_REVIEW", vi: "Đang xem xét", en: "Under review" },
+  { value: "SHORTLISTED", vi: "Hồ sơ qua vòng", en: "Shortlisted" },
   { value: "REJECTED", vi: "Đã từ chối", en: "Rejected" },
+  { value: "WITHDRAWN", vi: "Đã rút", en: "Withdrawn" },
 ] as const;
 
 const STATUS_COUNT_KEYS = {
   "": "all",
   SUBMITTED: "submitted",
   UNDER_REVIEW: "underReview",
+  SHORTLISTED: "shortlisted",
   REJECTED: "rejected",
+  WITHDRAWN: "withdrawn",
 } as const;
 
 const WORK_MODE_LABELS: Record<string, { vn: string; en: string }> = {
@@ -205,7 +201,6 @@ function ApplicationCard({
   const showMeta = true;
 
   const jobHref = application.jobId > 0 ? { job: String(application.jobId) } : null;
-
   return (
     <li className={`application-card${deadlinePassed ? " application-card--expired" : ""}`}>
       <div className="application-card__head">
@@ -470,33 +465,33 @@ export function MyJobsView() {
         </h2>
 
         <div className="my-jobs-toolbar">
-          <div
-            className="my-jobs-filters"
-            role="group"
-            aria-label={en ? "Filter by status" : "Lọc theo trạng thái"}
-          >
-            {STATUS_FILTERS.map((filter) => {
-              const label = en ? filter.en : filter.vi;
-              const count = counts?.[STATUS_COUNT_KEYS[filter.value]];
-              return (
-                <button
-                  key={filter.value || "all"}
-                  type="button"
-                  className="my-jobs-filter"
-                  aria-pressed={status === filter.value}
-                  aria-label={count === undefined ? label : `${label} (${count})`}
-                  onClick={() => {
-                    setStatus(filter.value);
-                    setPage(0);
-                  }}
-                >
-                  <span>{label}</span>
-                  <span className="my-jobs-filter__count" aria-hidden="true">
-                    {count ?? "–"}
-                  </span>
-                </button>
-              );
-            })}
+          <div className="my-jobs-filters">
+            <label htmlFor="my-jobs-status-filter" className="sr-only">
+              {en ? "Filter by status" : "Lọc theo trạng thái"}
+            </label>
+            <div className="my-jobs-status-select">
+              <select
+                id="my-jobs-status-filter"
+                className="my-jobs-status-select__input"
+                value={status}
+                aria-label={en ? "Filter by status" : "Lọc theo trạng thái"}
+                onChange={(event) => {
+                  setStatus(event.target.value);
+                  setPage(0);
+                }}
+              >
+                {STATUS_FILTERS.map((filter) => {
+                  const label = en ? filter.en : filter.vi;
+                  const count = counts?.[STATUS_COUNT_KEYS[filter.value]];
+                  return (
+                    <option key={filter.value || "all"} value={filter.value}>
+                      {label} ({count ?? "–"})
+                    </option>
+                  );
+                })}
+              </select>
+              <ChevronDown size={18} aria-hidden="true" />
+            </div>
           </div>
 
           <div className="my-jobs-search">

@@ -293,7 +293,14 @@ test("listApplicationPage sends search, status and paging to the candidate endpo
 test("listApplicationCounts returns one exact total per status from size-one reads", async () => {
   globalThis.sessionStorage = session();
   try {
-    const totals = { "": 11, SUBMITTED: 5, UNDER_REVIEW: 4, REJECTED: 2 };
+    const totals = {
+      "": 11,
+      SUBMITTED: 5,
+      UNDER_REVIEW: 4,
+      SHORTLISTED: 3,
+      REJECTED: 2,
+      WITHDRAWN: 1,
+    };
     const seenStatuses = [];
 
     globalThis.fetch = async (url) => {
@@ -317,8 +324,18 @@ test("listApplicationCounts returns one exact total per status from size-one rea
     };
 
     const counts = await listApplicationCounts({ search: "  ky su  " });
-    assert.deepEqual(counts, { all: 11, submitted: 5, underReview: 4, rejected: 2 });
-    assert.deepEqual(new Set(seenStatuses), new Set(["", "SUBMITTED", "UNDER_REVIEW", "REJECTED"]));
+    assert.deepEqual(counts, {
+      all: 11,
+      submitted: 5,
+      underReview: 4,
+      shortlisted: 3,
+      rejected: 2,
+      withdrawn: 1,
+    });
+    assert.deepEqual(
+      new Set(seenStatuses),
+      new Set(["", "SUBMITTED", "UNDER_REVIEW", "SHORTLISTED", "REJECTED", "WITHDRAWN"]),
+    );
   } finally {
     globalThis.fetch = originalFetch;
     delete globalThis.sessionStorage;
