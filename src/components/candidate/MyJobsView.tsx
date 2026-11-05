@@ -54,13 +54,6 @@ const STATUS_META: Record<
     viDetail: "Nhà tuyển dụng đang xem xét hồ sơ ứng tuyển của bạn.",
     enDetail: "The recruiter is reviewing your application.",
   },
- // SHORTLISTED: {
- //   vi: "Hồ sơ đã vào vòng trong",
- //   en: "Shortlisted",
- //   tone: "success",
- //   viDetail: "Hồ sơ của bạn đã được đưa vào danh sách xem xét tiếp theo.",
- //   enDetail: "Your application has moved to the next review round.",
- // },
   REJECTED: {
     vi: "Hồ sơ bị từ chối",
     en: "Rejected",
