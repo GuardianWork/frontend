@@ -15,15 +15,17 @@ function CandidateLayout() {
     ? "Ứng tuyển"
     : path.startsWith("/can/jobs")
       ? "Tìm việc làm"
-      : path.startsWith("/can/profile")
-        ? "Hồ sơ của tôi"
-        : path.startsWith("/can/cvs")
-          ? "Hồ sơ xin việc"
-          : path.startsWith("/can/copilot")
-            ? "Trợ lý pháp lý"
-            : path.startsWith("/can/account")
-              ? "Cài đặt tài khoản"
-              : "Không gian ứng viên";
+      : path.startsWith("/can/applied") || path.startsWith("/can/applications")
+        ? "Công việc của tôi"
+        : path.startsWith("/can/profile")
+          ? "Hồ sơ của tôi"
+          : path.startsWith("/can/cvs")
+            ? "Hồ sơ xin việc"
+            : path.startsWith("/can/copilot")
+              ? "Trợ lý pháp lý"
+              : path.startsWith("/can/account")
+                ? "Cài đặt tài khoản"
+                : "Không gian ứng viên";
   return (
     <SidebarProvider>
       <AdminShell title={title} role="candidate">

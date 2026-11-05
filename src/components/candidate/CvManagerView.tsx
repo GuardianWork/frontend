@@ -24,6 +24,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { MAX_CV_COUNT } from "@/context/CandidateContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { clearAuthSession } from "@/services/auth";
 import {
   getCandidateCvs,
@@ -98,6 +99,8 @@ function cvFormat(cv: CandidateCv): string {
 }
 
 export function CvManagerView() {
+  const { locale } = useLanguage();
+  const en = locale === "en";
   const [cvs, setCvs] = useState<CandidateCv[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -295,8 +298,12 @@ export function CvManagerView() {
       <div className="mx-auto max-w-6xl">
         <header className="workspace-heading">
           <div>
-            <h1>Quản lý hồ sơ xin việc</h1>
-            <p>Tải lên, xem và tải xuống các hồ sơ dùng khi ứng tuyển.</p>
+            <h1>{en ? "Manage your CVs" : "Quản lý hồ sơ xin việc"}</h1>
+            <p>
+              {en
+                ? "Upload, view, and download the CVs you use when applying."
+                : "Tải lên, xem và tải xuống các hồ sơ dùng khi ứng tuyển."}
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -307,7 +314,7 @@ export function CvManagerView() {
               className={primaryButton}
             >
               <UploadCloud size={18} aria-hidden="true" />
-              Tải lên hồ sơ mới
+              {en ? "Upload new CV" : "Tải lên hồ sơ mới"}
             </button>
           </div>
         </header>
@@ -408,7 +415,7 @@ export function CvManagerView() {
                   className={`mt-5 ${primaryButton}`}
                 >
                   <UploadCloud size={18} aria-hidden="true" />
-                  Tải lên hồ sơ mới
+                  {en ? "Upload new CV" : "Tải lên hồ sơ mới"}
                 </button>
               </div>
             ) : (

@@ -12,6 +12,7 @@ import {
   JobIcon,
   LegalReferenceIcon,
   CandidateProfileIcon,
+  ApplicationIcon,
   MenuIcon,
   CloseIcon,
   GlobeIcon,
@@ -173,6 +174,7 @@ function AdminShellFrame({
 
   const candidateNav: NavItem[] = [
     { to: "/can/jobs", label: copy.nav.jobs, icon: "work" },
+    { to: "/can/applied", label: copy.nav.myJobs, icon: "application" },
     { to: "/can/cvs", label: copy.nav.cvs, icon: "description" },
     { to: "/can/profile", label: copy.nav.profile, icon: "badge" },
     { to: "/can/copilot", label: copy.nav.copilot, icon: "gavel" },
@@ -188,15 +190,17 @@ function AdminShellFrame({
   const candidatePageTitle =
     pathname === "/can/jobs"
       ? copy.pageTitles.jobs
-      : pathname === "/can/cvs"
-        ? copy.pageTitles.cvs
-        : pathname === "/can/profile"
-          ? copy.pageTitles.profile
-          : pathname === "/can/copilot"
-            ? copy.pageTitles.copilot
-            : pathname === "/can/account"
-              ? copy.pageTitles.account
-              : null;
+      : pathname === "/can/applied"
+        ? copy.pageTitles.myJobs
+        : pathname === "/can/cvs"
+          ? copy.pageTitles.cvs
+          : pathname === "/can/profile"
+            ? copy.pageTitles.profile
+            : pathname === "/can/copilot"
+              ? copy.pageTitles.copilot
+              : pathname === "/can/account"
+                ? copy.pageTitles.account
+                : null;
   const pageTitle = currentRole === "candidate" ? (candidatePageTitle ?? title) : title;
 
   const roleMeta =
@@ -252,6 +256,8 @@ function AdminShellFrame({
               <span className="workspace-nav-icon">
                 {item.icon === "work" ? (
                   <JobIcon size={20} />
+                ) : item.icon === "application" ? (
+                  <ApplicationIcon size={20} />
                 ) : item.icon === "gavel" ? (
                   <LegalReferenceIcon size={20} />
                 ) : (

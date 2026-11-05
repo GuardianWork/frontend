@@ -59,6 +59,11 @@ typography:
     fontFamily: Hanken Grotesk, system-ui, sans-serif
     fontSize: 14px
     fontWeight: 600
+  caption:
+    fontFamily: Hanken Grotesk, system-ui, sans-serif
+    fontSize: 12px
+    fontWeight: 600
+    lineHeight: 1.4
 rounded:
   sm: 0.25rem
   md: 0.5rem
@@ -342,6 +347,7 @@ Mounted candidate/recruiter pages use explicit patterns in `src/components/works
 - Search and filters sit immediately beside their result collection. Selection collections use a single surface with divided rows, an explicit selected wash, keyboard activation, and visible focus. The selected detail is a separate quiet surface. At widths below 1100px these compose in one column; candidate selection scrolls to the detail at that same threshold.
 - Prose uses spacing, section headings, and rules rather than a stack of nested tinted boxes. Legal reference text remains unchanged; capability/sample context is visible in a concise disclosure. No legal or verification claim is strengthened by visual emphasis.
 - Applications use a comparison table with an accessible horizontal-scroll region. Member and job tables likewise expose their overflow regions to keyboard users. Independent profile and experience records can still use cards where grouping carries meaning.
+- The Candidate "Công việc của tôi" page (`/can/applied`, with `/can/applications` redirecting there) is a counted collection, not a metric dashboard. One "Đã ứng tuyển" tab with its total and a blue active underline sits above counted status pills and accent-insensitive search. A slim ordering line states latest-first order and the result count, then 12px application cards carry the company monogram, job title and company, location/work mode/upcoming deadline when the API supplies them, applied date with a posting-closed tag when the deadline has passed, semantic status tag, and a full-width status strip. The strip expands to the sent-CV filename, relative applied age, and a link to the original listing. Genuine empty and filter-miss states remain distinct; absent snapshot fields render nothing rather than placeholder claims.
 - Source disclosures distinguish API-backed identity/Company verification, browser-local records/actions, and illustrative records. Sample CV controls without a file or handler show an explicit unavailable state. Do not imply a real download, message delivery, AI connection, or legal certification from a simulated control.
 - Page actions outrank global shortcuts. Recruiter job creation in the shared header is a quiet outline action; the current page's primary task retains the strongest action treatment.
 - Dialogs have a viewport-bounded height, scrollable content, readable titles, a 44px close target with a Vietnamese accessible name, and a restrained overlay. Preserve Radix focus trapping, Escape behavior, and existing decision validation.

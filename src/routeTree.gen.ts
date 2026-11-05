@@ -40,6 +40,8 @@ import { Route as AdminTasksRouteImport } from './routes/admin/tasks'
 import { Route as AdminVerificationsRouteImport } from './routes/admin/verifications'
 import { Route as CanIndexRouteImport } from './routes/can/index'
 import { Route as CanAccountRouteImport } from './routes/can/account'
+import { Route as CanApplicationsRouteImport } from './routes/can/applications'
+import { Route as CanAppliedRouteImport } from './routes/can/applied'
 import { Route as CanCopilotRouteImport } from './routes/can/copilot'
 import { Route as CanCvsRouteImport } from './routes/can/cvs'
 import { Route as CanJobsRouteImport } from './routes/can/jobs'
@@ -221,6 +223,16 @@ const CanAccountRoute = CanAccountRouteImport.update({
   path: '/account',
   getParentRoute: () => CanRoute,
 } as any)
+const CanApplicationsRoute = CanApplicationsRouteImport.update({
+  id: '/applications',
+  path: '/applications',
+  getParentRoute: () => CanRoute,
+} as any)
+const CanAppliedRoute = CanAppliedRouteImport.update({
+  id: '/applied',
+  path: '/applied',
+  getParentRoute: () => CanRoute,
+} as any)
 const CanCopilotRoute = CanCopilotRouteImport.update({
   id: '/copilot',
   path: '/copilot',
@@ -377,6 +389,8 @@ export interface FileRoutesByFullPath {
   '/admin/tasks': typeof AdminTasksRoute
   '/admin/verifications': typeof AdminVerificationsRoute
   '/can/account': typeof CanAccountRoute
+  '/can/applications': typeof CanApplicationsRoute
+  '/can/applied': typeof CanAppliedRoute
   '/can/copilot': typeof CanCopilotRoute
   '/can/cvs': typeof CanCvsRoute
   '/can/jobs': typeof CanJobsRoute
@@ -433,6 +447,8 @@ export interface FileRoutesByTo {
   '/admin/tasks': typeof AdminTasksRoute
   '/admin/verifications': typeof AdminVerificationsRoute
   '/can/account': typeof CanAccountRoute
+  '/can/applications': typeof CanApplicationsRoute
+  '/can/applied': typeof CanAppliedRoute
   '/can/copilot': typeof CanCopilotRoute
   '/can/cvs': typeof CanCvsRoute
   '/can/jobs': typeof CanJobsRoute
@@ -492,6 +508,8 @@ export interface FileRoutesById {
   '/admin/tasks': typeof AdminTasksRoute
   '/admin/verifications': typeof AdminVerificationsRoute
   '/can/account': typeof CanAccountRoute
+  '/can/applications': typeof CanApplicationsRoute
+  '/can/applied': typeof CanAppliedRoute
   '/can/copilot': typeof CanCopilotRoute
   '/can/cvs': typeof CanCvsRoute
   '/can/jobs': typeof CanJobsRoute
@@ -552,6 +570,8 @@ export interface FileRouteTypes {
     | '/admin/tasks'
     | '/admin/verifications'
     | '/can/account'
+    | '/can/applications'
+    | '/can/applied'
     | '/can/copilot'
     | '/can/cvs'
     | '/can/jobs'
@@ -608,6 +628,8 @@ export interface FileRouteTypes {
     | '/admin/tasks'
     | '/admin/verifications'
     | '/can/account'
+    | '/can/applications'
+    | '/can/applied'
     | '/can/copilot'
     | '/can/cvs'
     | '/can/jobs'
@@ -666,6 +688,8 @@ export interface FileRouteTypes {
     | '/admin/tasks'
     | '/admin/verifications'
     | '/can/account'
+    | '/can/applications'
+    | '/can/applied'
     | '/can/copilot'
     | '/can/cvs'
     | '/can/jobs'
@@ -957,6 +981,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CanAccountRouteImport
       parentRoute: typeof CanRoute
     }
+    '/can/applications': {
+      id: '/can/applications'
+      path: '/applications'
+      fullPath: '/can/applications'
+      preLoaderRoute: typeof CanApplicationsRouteImport
+      parentRoute: typeof CanRoute
+    }
+    '/can/applied': {
+      id: '/can/applied'
+      path: '/applied'
+      fullPath: '/can/applied'
+      preLoaderRoute: typeof CanAppliedRouteImport
+      parentRoute: typeof CanRoute
+    }
     '/can/copilot': {
       id: '/can/copilot'
       path: '/copilot'
@@ -1137,6 +1175,8 @@ declare module '@tanstack/react-router' {
 
 interface CanRouteChildren {
   CanAccountRoute: typeof CanAccountRoute
+  CanApplicationsRoute: typeof CanApplicationsRoute
+  CanAppliedRoute: typeof CanAppliedRoute
   CanCopilotRoute: typeof CanCopilotRoute
   CanCvsRoute: typeof CanCvsRoute
   CanJobsRoute: typeof CanJobsRoute
@@ -1147,6 +1187,8 @@ interface CanRouteChildren {
 
 const CanRouteChildren: CanRouteChildren = {
   CanAccountRoute: CanAccountRoute,
+  CanApplicationsRoute: CanApplicationsRoute,
+  CanAppliedRoute: CanAppliedRoute,
   CanCopilotRoute: CanCopilotRoute,
   CanCvsRoute: CanCvsRoute,
   CanJobsRoute: CanJobsRoute,

@@ -14,12 +14,14 @@ const vn = {
     homeBrand: "Trang chủ GuardianWork",
     nav: {
       jobs: "Tìm việc làm",
+      myJobs: "Công việc của tôi",
       cvs: "Hồ sơ xin việc",
       profile: "Hồ sơ của tôi",
       copilot: "Trợ lý pháp lý",
     },
     pageTitles: {
       jobs: "Tìm việc làm",
+      myJobs: "Công việc của tôi",
       cvs: "Hồ sơ xin việc",
       profile: "Hồ sơ của tôi",
       copilot: "Trợ lý pháp lý",
@@ -248,12 +250,14 @@ const en: Copy = {
     homeBrand: "GuardianWork home",
     nav: {
       jobs: "Find jobs",
+      myJobs: "My jobs",
       cvs: "My CVs",
       profile: "My profile",
       copilot: "Legal assistant",
     },
     pageTitles: {
       jobs: "Find jobs",
+      myJobs: "My jobs",
       cvs: "My CVs",
       profile: "My profile",
       copilot: "Legal assistant",

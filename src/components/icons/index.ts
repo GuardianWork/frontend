@@ -55,3 +55,12 @@ export {
   LoadingIcon,
 } from "./actions";
 export { LocationIcon } from "./actions";
+export {
+  ApplicationStatusIcon,
+  SubmittedStatusIcon,
+  ViewedStatusIcon,
+  ReviewStatusIcon,
+  ShortlistedStatusIcon,
+  RejectedStatusIcon,
+  WithdrawnStatusIcon,
+} from "./ApplicationStatusIcon";

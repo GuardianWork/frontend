@@ -1,0 +1,810 @@
+/* Candidate "Công việc của tôi": one counted collection tab over rich application cards.
+   Blue stays scoped to the workspace main content; status tags keep their semantic colors. */
+
+.candidate-my-jobs .my-jobs-tabs {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  border-bottom: 1px solid var(--color-rule);
+}
+
+.candidate-my-jobs .my-jobs-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 50px;
+  padding: 0 16px;
+  border-radius: 4px 4px 0 0;
+  color: var(--color-ink-2);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-decoration: none;
+  transition:
+    color 160ms ease,
+    background-color 160ms ease;
+}
+
+.candidate-my-jobs .my-jobs-tab:first-child {
+  padding-left: 0;
+}
+
+.candidate-my-jobs .my-jobs-tab::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: -1px;
+  height: 2px;
+  background: transparent;
+}
+
+.candidate-my-jobs .my-jobs-tab:hover {
+  color: var(--color-accent-deep);
+  background: var(--color-paper-2);
+}
+
+.candidate-my-jobs .my-jobs-tab[aria-current="page"] {
+  color: var(--color-accent-deep);
+  font-weight: 700;
+}
+
+.candidate-my-jobs .my-jobs-tab[aria-current="page"]::after {
+  background: var(--color-accent);
+}
+
+.candidate-my-jobs .my-jobs-tab:disabled {
+  color: var(--color-ink-3);
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.candidate-my-jobs .my-jobs-tab:disabled .my-jobs-tab__count {
+  background: var(--color-paper-3);
+}
+
+.candidate-my-jobs .my-jobs-tab__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  color: var(--color-ink-2);
+  background: var(--color-paper-3);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.candidate-my-jobs .my-jobs-tab[aria-current="page"] .my-jobs-tab__count {
+  color: var(--color-accent-deep);
+  background: var(--color-accent-subtle);
+}
+
+.candidate-my-jobs .my-jobs-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding-top: 16px;
+}
+
+.candidate-my-jobs .my-jobs-filters {
+  display: flex;
+  align-items: center;
+}
+
+.candidate-my-jobs .my-jobs-status-select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-width: 232px;
+}
+
+.candidate-my-jobs .my-jobs-status-select__input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 44px 0 16px;
+  border: 1px solid var(--color-rule);
+  border-radius: 8px;
+  color: var(--color-ink);
+  background: var(--color-paper);
+  appearance: none;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.candidate-my-jobs .my-jobs-status-select__input:hover {
+  border-color: var(--color-rule-2);
+  background: var(--color-paper-2);
+}
+
+.candidate-my-jobs .my-jobs-status-select__input:focus-visible {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 14%, transparent);
+  outline: 0;
+}
+
+.candidate-my-jobs .my-jobs-status-select > svg {
+  position: absolute;
+  right: 14px;
+  flex-shrink: 0;
+  color: var(--color-ink-2);
+  pointer-events: none;
+}
+
+.candidate-my-jobs .my-jobs-search {
+  flex: 0 1 360px;
+  width: min(100%, 360px);
+}
+
+.candidate-my-jobs .my-jobs-search__field {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--color-rule);
+  border-radius: 8px;
+  color: var(--color-ink-3);
+  background: var(--color-paper);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.candidate-my-jobs .my-jobs-search__field:focus-within {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 14%, transparent);
+}
+
+.candidate-my-jobs .my-jobs-search__field > svg {
+  flex-shrink: 0;
+}
+
+.candidate-my-jobs .my-jobs-search__field input {
+  flex: 1;
+  min-width: 0;
+  min-height: 42px;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  color: var(--color-ink);
+  background: transparent;
+  font-size: 14px;
+}
+
+.candidate-my-jobs .my-jobs-search__field input::placeholder {
+  color: var(--color-ink-3);
+}
+
+.candidate-my-jobs .my-jobs-search__error {
+  margin: 6px 0 0;
+  color: var(--color-attention);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.candidate-my-jobs .my-jobs-list-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 2px 12px;
+  color: var(--color-ink-2);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.candidate-my-jobs .my-jobs-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.candidate-my-jobs .my-jobs-order {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.candidate-my-jobs .my-jobs-order > svg {
+  flex-shrink: 0;
+  color: var(--color-ink-3);
+}
+
+.candidate-my-jobs .my-jobs-spinner {
+  animation: my-jobs-spin 900ms linear infinite;
+}
+
+.candidate-my-jobs .application-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.candidate-my-jobs .application-card {
+  overflow: hidden;
+  border: 1px solid var(--color-rule);
+  border-radius: 8px;
+  background: var(--color-paper);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.candidate-my-jobs .application-card:hover {
+  border-color: var(--color-rule-2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+}
+.candidate-my-jobs .application-card--expired {
+  opacity: 0.6;
+}
+
+.candidate-my-jobs .application-card__head {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: start;
+  padding: 16px;
+}
+
+.candidate-my-jobs .application-card__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 12%, var(--color-rule));
+  border-radius: 8px;
+  color: var(--color-accent-deep);
+  background: var(--color-accent-subtle);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+.candidate-my-jobs .default-company-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.candidate-my-jobs .application-card__identity {
+  min-width: 0;
+}
+
+.candidate-my-jobs .application-card__title {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.candidate-my-jobs .application-card__title a {
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.candidate-my-jobs .application-card__title a:hover {
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.candidate-my-jobs .application-card__company {
+  margin-top: 2px;
+  color: var(--color-ink-2);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.candidate-my-jobs .application-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--color-ink-3);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.candidate-my-jobs .application-card__meta li {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+.candidate-my-jobs .application-card__meta-item--empty span {
+  color: var(--color-ink-3);
+  font-style: italic;
+}
+
+.candidate-my-jobs .application-card__meta li > svg {
+  flex-shrink: 0;
+}
+
+.candidate-my-jobs .application-card__meta-item--empty span {
+  color: var(--color-ink-3);
+  font-style: italic;
+}
+
+.candidate-my-jobs .application-card__aside {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  text-align: right;
+}
+
+.candidate-my-jobs .application-card__applied {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  color: var(--color-ink-3);
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.candidate-my-jobs .application-card__applied time {
+  color: var(--color-ink-2);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.candidate-my-jobs .application-card__expiry {
+  padding: 1px 8px;
+  font-size: 12px;
+  line-height: 1.7;
+  white-space: nowrap;
+}
+
+.candidate-my-jobs .application-card__status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  padding: 12px 20px;
+  border: 0;
+  border-top: 1px solid var(--color-rule);
+  color: var(--color-ink-2);
+  background: var(--color-paper-2);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 160ms ease;
+}
+
+.candidate-my-jobs .application-card__status:hover {
+  background: var(--color-paper-3);
+}
+
+.candidate-my-jobs .application-card__status:active {
+  background: color-mix(in srgb, var(--color-paper-3) 92%, #000);
+}
+
+/* Status tag: text-only soft-tint pill on the shared status-tag tokens
+   (reference redesign 2026-11-04 — DESIGN.md keeps the 1px current-color border). */
+.candidate-my-jobs .application-card__status .application-card__status-tag {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 15px;
+
+  font-size: 14px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.candidate-my-jobs .application-card__status:hover .application-card__status-tag,
+.candidate-my-jobs .application-card__status:focus-visible .application-card__status-tag {
+  background-image: linear-gradient(
+    color-mix(in srgb, currentColor 10%, transparent),
+    color-mix(in srgb, currentColor 10%, transparent)
+  );
+}
+
+.candidate-my-jobs .application-card__status .application-card__status-tag .status-text {
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.candidate-my-jobs .application-card__status-text {
+  display: grid;
+  grid-template-rows: 0fr;
+  min-width: 0;
+  opacity: 0;
+  transition:
+    grid-template-rows 180ms ease,
+    opacity 180ms ease;
+}
+
+.candidate-my-jobs .application-card__status-text-inner {
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.candidate-my-jobs .application-card__status:hover .application-card__status-text,
+.candidate-my-jobs .application-card__status:focus-visible .application-card__status-text {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.candidate-my-jobs .application-card__chevron {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--color-ink-3);
+  transition: transform 180ms ease;
+}
+
+.candidate-my-jobs .application-card__chevron[data-open] {
+  transform: rotate(180deg);
+}
+
+.candidate-my-jobs .application-card__receipt {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 28px;
+  padding: 18px 20px 20px;
+  border-top: 1px solid var(--color-rule);
+  background: var(--color-paper);
+  animation: my-jobs-receipt-in 180ms ease-out;
+}
+
+.candidate-my-jobs .application-card__receipt[hidden] {
+  display: none;
+}
+
+.candidate-my-jobs .application-card__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 48px;
+  min-width: 0;
+  margin: 0;
+}
+
+.candidate-my-jobs .application-card__facts > div {
+  min-width: 0;
+}
+
+.candidate-my-jobs .application-card__facts dt {
+  margin: 0 0 4px;
+  color: var(--color-ink-3);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.candidate-my-jobs .application-card__facts dd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  color: var(--color-ink-2);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.candidate-my-jobs .application-card__facts dd time {
+  color: var(--color-ink);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.candidate-my-jobs .application-card__age {
+  color: var(--color-ink-3);
+  font-size: 13px;
+}
+
+.candidate-my-jobs .application-card__cv {
+  max-width: 340px;
+}
+
+.candidate-my-jobs .application-card__cv > svg {
+  flex-shrink: 0;
+  color: var(--color-ink-3);
+}
+
+.candidate-my-jobs .application-card__cv > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.candidate-my-jobs .application-card__open {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px 0 8px 12px;
+  color: var(--color-accent);
+  font-size: 14px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.candidate-my-jobs .application-card__open:hover {
+  color: var(--color-accent-hover);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.candidate-my-jobs .my-jobs-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 52px 24px 56px;
+  border: 1px solid var(--color-rule);
+  border-radius: 12px;
+  background: var(--color-paper);
+  text-align: center;
+}
+
+.candidate-my-jobs .my-jobs-state__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 16px;
+  border-radius: 999px;
+  color: var(--color-accent);
+  background: var(--color-accent-subtle);
+}
+
+.candidate-my-jobs .my-jobs-state__icon.is-error {
+  color: var(--color-attention);
+  background: var(--color-attention-ground);
+}
+
+.candidate-my-jobs .my-jobs-state h2 {
+  color: var(--color-ink);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.candidate-my-jobs .my-jobs-state p {
+  max-width: 48ch;
+  margin-top: 6px;
+  color: var(--color-ink-2);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.candidate-my-jobs .my-jobs-state__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  margin-top: 18px;
+  padding: 9px 18px;
+  border: 1px solid var(--color-accent);
+  border-radius: 8px;
+  color: var(--color-accent-ink);
+  background: var(--color-accent);
+  font-size: 14px;
+  font-weight: 700;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+.candidate-my-jobs .my-jobs-state__cta:hover {
+  border-color: var(--color-accent-hover);
+  background: var(--color-accent-hover);
+}
+
+.candidate-my-jobs .my-jobs-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.candidate-my-jobs .my-jobs-loading > p {
+  margin-bottom: 2px;
+  color: var(--color-ink-2);
+  font-size: 14px;
+}
+
+.candidate-my-jobs .my-jobs-skeleton {
+  display: block;
+  height: 150px;
+  border: 1px solid var(--color-rule);
+  border-radius: 12px;
+  background: linear-gradient(
+    90deg,
+    var(--color-paper-2) 0%,
+    var(--color-paper-3) 50%,
+    var(--color-paper-2) 100%
+  );
+  background-size: 200% 100%;
+  animation: my-jobs-shimmer 1.4s ease-in-out infinite;
+}
+
+.candidate-my-jobs .admin-list-pagination.is-standalone {
+  margin-top: 16px;
+  border: 1px solid var(--color-rule);
+  border-radius: 12px;
+  background: var(--color-paper);
+}
+
+.candidate-my-jobs .admin-pagination-controls button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--color-rule);
+  border-radius: 8px;
+  color: var(--color-ink-2);
+  background: var(--color-paper);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.candidate-my-jobs .admin-pagination-controls button:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: var(--color-accent-subtle);
+}
+
+.candidate-my-jobs .admin-pagination-controls button:disabled {
+  color: var(--color-ink-3);
+  opacity: 0.5;
+  cursor: default;
+}
+
+.candidate-my-jobs .admin-pagination-controls button[aria-current="page"] {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: var(--color-accent-subtle);
+  font-weight: 650;
+  opacity: 1;
+}
+
+.candidate-my-jobs .my-jobs-tab:focus-visible,
+.candidate-my-jobs .my-jobs-state__cta:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.candidate-my-jobs .application-card__status:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: -3px;
+}
+
+.candidate-my-jobs .application-card__title a:focus-visible,
+.candidate-my-jobs .application-card__open:focus-visible {
+  border-radius: 4px;
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+@keyframes my-jobs-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes my-jobs-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+@keyframes my-jobs-receipt-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 1120px) {
+  .candidate-my-jobs .application-card__head {
+    grid-template-columns: 52px minmax(0, 1fr);
+    row-gap: 6px;
+  }
+
+  .candidate-my-jobs .application-card__aside {
+    grid-column: 2;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+    text-align: left;
+  }
+
+  .candidate-my-jobs .application-card__receipt {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 960px) {
+  .candidate-my-jobs .my-jobs-toolbar {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .candidate-my-jobs .my-jobs-search {
+    flex: none;
+    width: 100%;
+  }
+
+  .candidate-my-jobs .my-jobs-list-meta {
+    flex-wrap: wrap;
+    gap: 6px 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .candidate-my-jobs .my-jobs-spinner,
+  .candidate-my-jobs .my-jobs-skeleton {
+    animation: none;
+  }
+
+  .candidate-my-jobs .my-jobs-tab,
+  .candidate-my-jobs .my-jobs-status-select__input,
+  .candidate-my-jobs .application-card,
+  .candidate-my-jobs .application-card__status,
+  .candidate-my-jobs .application-card__status-text,
+  .candidate-my-jobs .application-card__chevron,
+  .candidate-my-jobs .my-jobs-state__cta {
+    transition: none;
+  }
+
+  .candidate-my-jobs .application-card__receipt {
+    animation: none;
+  }
+}
