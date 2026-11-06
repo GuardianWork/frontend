@@ -429,7 +429,7 @@ test("assignment preserves typed content and stale edits never report success", 
   await login(page, "owner_demo", true);
   await page.goto("/rec/jobs?jobId=83");
   await page.getByLabel("Chức danh công việc", { exact: true }).fill("Bản sửa chưa lưu");
-  await page.getByLabel("Tôi chịu trách nhiệm").click();
+  await page.getByLabel("Tôi chịu trách nhiệm với tư cách trưởng ban tuyển dụng").click();
   await expect(
     page.getByText("Chưa có người phụ trách. Cần phân công trước khi gửi duyệt.", { exact: true }),
   ).toBeVisible();
@@ -535,9 +535,11 @@ test("assigned recruiter cannot change responsibility; request failure has a ret
   );
   await page.goto("/rec/jobs?jobId=83");
   await expect(
-    page.getByText("Bạn có quyền truy cập vì được phân công.", { exact: false }),
+    page.getByText("Chủ sở hữu công ty đang chịu trách nhiệm với tin này.", { exact: true }),
   ).toBeVisible();
-  await expect(page.getByLabel("Tôi chịu trách nhiệm")).toHaveCount(0);
+  await expect(
+    page.getByLabel("Tôi chịu trách nhiệm với tư cách trưởng ban tuyển dụng"),
+  ).toHaveCount(0);
   await page.route("**/api/companies/me/jobs?**", (route) =>
     route.fulfill({ status: 503, json: { status: 503, message: "Unavailable", data: null } }),
   );

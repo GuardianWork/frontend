@@ -1,3 +1,4 @@
+import { STATUS_LABELS } from "@/components/recruiter/application-labels";
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -6,7 +7,12 @@ import { ListSearch } from "@/components/ListSearch";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { latestJobRevision } from "@/services/jobs";
 import { ApiError } from "@/services/api";
-import { listRecruiterApplications } from "@/services/recruiterApplications";
+import {
+  listRecruiterApplicationInbox,
+  APPLICATION_STATUSES,
+  type ApplicationStatus,
+} from "@/services/recruiterApplications";
+import { ApplicationReview } from "@/components/recruiter/ApplicationReview";
 import "@/components/recruiter/job-publishing.css";
 import "@/components/recruiter/applications.css";
 
@@ -51,6 +57,7 @@ function Applications({
   const [input, setInput] = useState("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
+  const [filter, setFilter] = useState<ApplicationStatus | "">("");
   const heading = useRef<HTMLHeadingElement>(null);
   const pageFocus = useRef(false);
   const client = useQueryClient();
@@ -67,11 +74,12 @@ function Applications({
     }, 600);
     return () => clearTimeout(timer);
   }, [input, invalid]);
-  const key = ["recruiter-applications", scope, jobId, search, page];
+  const key = ["recruiter-applications", scope, jobId, search, filter, page];
   const result = useQuery({
     queryKey: key,
-    queryFn: ({ signal }) => listRecruiterApplications(jobId!, search, page, signal),
-    enabled: allowed && Boolean(jobId) && !invalid && !waiting,
+    queryFn: ({ signal }) =>
+      listRecruiterApplicationInbox(jobId, search, page, signal, filter || undefined),
+    enabled: allowed && !invalid && !waiting,
     retry: false,
     gcTime: 0,
     staleTime: 0,
@@ -118,26 +126,26 @@ function Applications({
           <h1 ref={heading} tabIndex={-1}>
             Đơn ứng tuyển
           </h1>
-          {jobId && (
+          {jobId ? (
             <p>
               {!result.isError && title.data?.content.title
                 ? title.data.content.title
                 : `Tin tuyển dụng #${jobId}`}
             </p>
+          ) : (
+            <p>Đơn ứng tuyển vào các tin tuyển dụng bạn có quyền xử lý.</p>
           )}
         </div>
+        {jobId && (
+          <Link className="jp-button" to="/rec/applications">
+            Xem tất cả đơn ứng tuyển
+          </Link>
+        )}
       </header>
       {!allowed ? (
         <div className="jp-empty" role="alert">
           <h2>Bạn không có quyền xem danh sách đơn ứng tuyển này.</h2>
           {back}
-        </div>
-      ) : !jobId ? (
-        <div className="jp-empty">
-          <h2>Chọn tin tuyển dụng để xem đơn ứng tuyển</h2>
-          <Link className="jp-button jp-primary" to="/rec/jobs">
-            Chọn tin tuyển dụng
-          </Link>
         </div>
       ) : (
         <>
@@ -174,110 +182,173 @@ function Applications({
             )}
           </form>
 
-          <section
-            className="application-results"
-            aria-label="Kết quả đơn ứng tuyển"
-            aria-busy={!invalid && !result.isError && !data}
-          >
-            {result.isError && !waiting && !invalid ? (
-              <div className="jp-empty" role="alert">
-                <h2>
-                  {status === 404
-                    ? "Tin tuyển dụng không khả dụng"
-                    : status === 403
-                      ? "Bạn không có quyền xem danh sách đơn ứng tuyển này."
-                      : status === 401
-                        ? "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại."
-                        : status === 400
-                          ? "Thông tin tìm kiếm không hợp lệ. Vui lòng kiểm tra và thử lại."
-                          : "Không thể tải đơn ứng tuyển. Vui lòng thử lại."}
-                </h2>
-                {[403, 404].includes(status) ? (
-                  back
-                ) : status === 401 ? (
-                  <Link className="jp-button jp-primary" to="/login">
-                    Đăng nhập
-                  </Link>
-                ) : (
-                  <button className="jp-button jp-primary" onClick={() => void result.refetch()}>
-                    Thử lại
-                  </button>
-                )}
-              </div>
-            ) : invalid ? null : !data ? (
-              <div className="application-loading" role="status">
-                <p>Đang tải đơn ứng tuyển…</p>
-                <div className="application-placeholders" aria-hidden="true">
-                  {[0, 1, 2, 3, 4].map((row) => (
-                    <div className="application-placeholder-row" key={row}>
-                      <span />
-                      <span />
-                      <span />
-                    </div>
-                  ))}
+          <div className="application-status-filters" role="group" aria-label="Lọc theo trạng thái">
+            {["", ...APPLICATION_STATUSES].map((value) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={filter === value}
+                onClick={() => {
+                  setFilter(value as ApplicationStatus | "");
+                  setPage(0);
+                }}
+              >
+                {value ? STATUS_LABELS[value as ApplicationStatus] : "Tất cả"}
+              </button>
+            ))}
+          </div>
+          <div className="application-workspace">
+            <section
+              className="application-results"
+              aria-label="Kết quả đơn ứng tuyển"
+              aria-busy={!invalid && !result.isError && !data}
+            >
+              {result.isError && !waiting && !invalid ? (
+                <div className="jp-empty" role="alert">
+                  <h2>
+                    {status === 404
+                      ? "Tin tuyển dụng không khả dụng"
+                      : status === 403
+                        ? "Bạn không có quyền xem danh sách đơn ứng tuyển này."
+                        : status === 401
+                          ? "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại."
+                          : status === 400
+                            ? "Thông tin tìm kiếm không hợp lệ. Vui lòng kiểm tra và thử lại."
+                            : "Không thể tải đơn ứng tuyển. Vui lòng thử lại."}
+                  </h2>
+                  {[403, 404].includes(status) ? (
+                    back
+                  ) : status === 401 ? (
+                    <Link className="jp-button jp-primary" to="/login">
+                      Đăng nhập
+                    </Link>
+                  ) : (
+                    <button className="jp-button jp-primary" onClick={() => void result.refetch()}>
+                      Thử lại
+                    </button>
+                  )}
                 </div>
-              </div>
-            ) : !data.content.length ? (
-              <div className="jp-empty">
-                <h2>{search ? "Không tìm thấy ứng viên phù hợp" : "Chưa có đơn ứng tuyển"}</h2>
-                {search ? (
-                  <button className="jp-button" onClick={() => setInput("")}>
-                    Xóa tìm kiếm
-                  </button>
-                ) : (
-                  <p>Các đơn ứng tuyển vào tin này sẽ xuất hiện tại đây.</p>
-                )}
-              </div>
-            ) : (
-              <>
-                <table className="workspace-data-table application-table">
-                  <caption className="sr-only">Đơn ứng tuyển vào tin tuyển dụng đã chọn</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Tên ứng viên</th>
-                      <th scope="col">Trạng thái</th>
-                      <th scope="col">Thời điểm ứng tuyển</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.content.map((a) => (
-                      <tr key={a.id}>
-                        <td data-label="Tên ứng viên">
-                          <strong>{a.candidateName}</strong>
-                        </td>
-                        <td data-label="Trạng thái">
-                          <span className="jp-badge jp-info">Đã ứng tuyển</span>
-                        </td>
-                        <td data-label="Thời điểm ứng tuyển">
-                          <time dateTime={a.appliedAt}>
-                            {new Intl.DateTimeFormat("vi-VN", {
-                              day: "2-digit",
-                              month: "2-digit",
-                              year: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                              timeZone: "Asia/Ho_Chi_Minh",
-                            }).format(new Date(a.appliedAt))}
-                          </time>
-                        </td>
-                      </tr>
+              ) : invalid ? null : !data ? (
+                <div className="application-loading" role="status">
+                  <p>Đang tải đơn ứng tuyển…</p>
+                  <div className="application-placeholders" aria-hidden="true">
+                    {[0, 1, 2, 3, 4].map((row) => (
+                      <div className="application-placeholder-row" key={row}>
+                        <span />
+                        <span />
+                        <span />
+                      </div>
                     ))}
-                  </tbody>
-                </table>
-                <AdminPagination
-                  totalItems={data.totalElements}
-                  page={data.pageNumber}
-                  pageSize={data.pageSize}
-                  itemLabel="đơn ứng tuyển"
-                  label="Phân trang đơn ứng tuyển"
-                  onPageChange={(next) => {
-                    pageFocus.current = true;
-                    setPage(next);
-                  }}
-                />
-              </>
-            )}
-          </section>
+                  </div>
+                </div>
+              ) : !data.content.length ? (
+                <div className="jp-empty">
+                  <h2>
+                    {search || filter ? "Không tìm thấy ứng viên phù hợp" : "Chưa có đơn ứng tuyển"}
+                  </h2>
+                  {search || filter ? (
+                    <button
+                      className="jp-button"
+                      onClick={() => {
+                        setInput("");
+                        setFilter("");
+                        setPage(0);
+                      }}
+                    >
+                      Xóa bộ lọc
+                    </button>
+                  ) : (
+                    <p>
+                      {jobId
+                        ? "Các đơn ứng tuyển vào tin này sẽ xuất hiện tại đây."
+                        : "Các đơn ứng tuyển vào tin tuyển dụng bạn có quyền xử lý sẽ xuất hiện tại đây."}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <p className="application-order">
+                    Mới nhất trước · {data.totalElements} đơn ứng tuyển
+                  </p>
+                  <div
+                    className="application-table-scroll"
+                    role="region"
+                    aria-label="Danh sách ứng viên"
+                    tabIndex={0}
+                  >
+                    <table className="workspace-data-table application-table">
+                      <caption className="sr-only">
+                        {jobId
+                          ? "Đơn ứng tuyển vào tin tuyển dụng đã chọn"
+                          : "Đơn ứng tuyển từ các tin tuyển dụng bạn có quyền xử lý"}
+                      </caption>
+                      <thead>
+                        <tr>
+                          <th scope="col">Tên ứng viên</th>
+                          <th scope="col">Trạng thái</th>
+                          <th scope="col">Thời điểm ứng tuyển</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.content.map((a) => (
+                          <tr key={a.id}>
+                            <td data-label="Tên ứng viên">
+                              <Link
+                                className="application-candidate"
+                                to="/rec/applications/$jobId/$applicationId"
+                                params={{ jobId: String(a.jobId), applicationId: a.id }}
+                                search={{ fromJobId: jobId }}
+                              >
+                                {a.candidateName}
+                                <span>Xem hồ sơ</span>
+                              </Link>
+                              {!jobId && <p className="application-job-title">{a.jobTitle}</p>}
+                            </td>
+                            <td data-label="Trạng thái">
+                              <ApplicationReview
+                                mode="menu"
+                                jobId={a.jobId}
+                                id={a.id}
+                                scope={scope}
+                                candidateName={a.candidateName}
+                                status={a.status}
+                                onListRefresh={() => {
+                                  pageFocus.current = true;
+                                }}
+                              />
+                            </td>
+                            <td data-label="Thời điểm ứng tuyển">
+                              <time dateTime={a.appliedAt}>
+                                {new Intl.DateTimeFormat("vi-VN", {
+                                  day: "2-digit",
+                                  month: "2-digit",
+                                  year: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  timeZone: "Asia/Ho_Chi_Minh",
+                                }).format(new Date(a.appliedAt))}
+                              </time>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <AdminPagination
+                    totalItems={data.totalElements}
+                    page={data.pageNumber}
+                    pageSize={data.pageSize}
+                    itemLabel="đơn ứng tuyển"
+                    label="Phân trang đơn ứng tuyển"
+                    onPageChange={(next) => {
+                      pageFocus.current = true;
+                      setPage(next);
+                    }}
+                  />
+                </>
+              )}
+            </section>
+          </div>
         </>
       )}
     </div>

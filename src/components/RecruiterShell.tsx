@@ -13,7 +13,7 @@ import {
   GlobeIcon,
   JobIcon,
   ApplicationIcon,
-  TalentSearchIcon,
+  // TalentSearchIcon, // Enable when talent search is implemented.
   CompanyMembersIcon,
   VerificationDossierIcon,
   RecruitmentOverviewIcon,
@@ -32,7 +32,7 @@ import { ShieldCheck } from "lucide-react";
 const navigation = [
   { to: "/rec", label: "Tổng quan", icon: RecruitmentOverviewIcon },
   { to: "/rec/jobs", label: "Tin tuyển dụng", icon: JobIcon },
-  { to: "/rec/talent", label: "Tìm kiếm ứng viên", icon: TalentSearchIcon },
+  // { to: "/rec/talent", label: "Tìm kiếm ứng viên", icon: TalentSearchIcon },
   { to: "/rec/applications", label: "Đơn ứng tuyển", icon: ApplicationIcon },
   { to: "/rec/members", label: "Thành viên công ty", icon: CompanyMembersIcon },
   { to: "/rec/verification", label: "Hồ sơ công ty", icon: VerificationDossierIcon },

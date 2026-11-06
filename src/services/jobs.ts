@@ -226,8 +226,8 @@ export const listJobMembers = (page = 0) =>
   requestPage<JobMember>(`/companies/me/members?page=${page}&size=20`);
 
 export const jobStatusLabels: Record<JobStatus, string> = {
-  DRAFT: "Chưa xuất bản",
-  PUBLISHED: "Đang công khai",
+  DRAFT: "Chưa đăng tuyển",
+  PUBLISHED: "Đang tuyển",
   PAUSED: "Tạm dừng",
   SUSPENDED: "Đã ẩn bởi nhân viên",
   CLOSED: "Đã đóng",
