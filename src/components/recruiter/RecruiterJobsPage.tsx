@@ -1,7 +1,15 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, BriefcaseBusiness, Plus, RotateCw, Users } from "lucide-react";
+import {
+  ArrowRight,
+  BriefcaseBusiness,
+  CalendarDays,
+  MapPin,
+  Plus,
+  RotateCw,
+  Users,
+} from "lucide-react";
 import { AdminShell } from "@/components/AdminShell";
 import { AdminPagination } from "@/components/admin/AdminPagination";
 import { useAuthUser } from "@/hooks/useAuthUser";
@@ -251,6 +259,9 @@ function JobRow({ job, scope }: { job: Job; scope: string }) {
   return (
     <li className="jp-job-row">
       <div className="jp-job-main">
+        <Link className="jp-job-title" to="/rec/jobs" search={{ jobId: job.id }}>
+          {content?.title || `Tin tuyển dụng #${job.id}`}
+        </Link>
         <div className="jp-badges">
           <span className={`jp-badge jp-status-${job.status.toLowerCase()}`}>
             {jobStatusLabels[job.status]}
@@ -262,12 +273,12 @@ function JobRow({ job, scope }: { job: Job; scope: string }) {
           )}
           {job.needsReassignment && <span className="jp-badge jp-warning">Cần phân công lại</span>}
         </div>
-        <Link className="jp-job-title" to="/rec/jobs" search={{ jobId: job.id }}>
-          {content?.title || `Tin tuyển dụng #${job.id}`}
-        </Link>
-        <p>
-          {content?.location || "Chưa có địa điểm"} <span aria-hidden="true">·</span> Cập nhật{" "}
-          {formatJobDate(job.updatedAt)}
+        <p className="jp-job-meta">
+          <span>
+            <MapPin size={15} aria-hidden="true" />
+            {content?.location || "Chưa có địa điểm"}
+          </span>
+          <span>Cập nhật {formatJobDate(job.updatedAt)}</span>
         </p>
         {latest.isError && (
           <p className="jp-hint">Chưa tải được tiêu đề bản gần nhất. Mở tin để tải lại.</p>
@@ -280,22 +291,29 @@ function JobRow({ job, scope }: { job: Job; scope: string }) {
             ? "Chủ sở hữu phụ trách"
             : `${job.assignments.length} nhà tuyển dụng phụ trách`}
         </span>
+        <CalendarDays size={17} aria-hidden="true" />
         <small>Hạn đã duyệt: {formatJobDate(job.approvedDeadline)}</small>
       </div>
-      {job.status !== "SUSPENDED" && (
-        <Link className="jp-button" to="/rec/applications" search={{ jobId: job.id }}>
-          Xem đơn ứng tuyển
+      <div className="jp-job-actions">
+        {job.status !== "SUSPENDED" && (
+          <Link
+            className="jp-button jp-job-applications"
+            to="/rec/applications"
+            search={{ jobId: job.id }}
+          >
+            Xem đơn ứng tuyển
+          </Link>
+        )}
+        <Link
+          className="jp-button jp-quiet"
+          to="/rec/jobs"
+          search={{ jobId: job.id }}
+          aria-label={`Quản lý ${content?.title || `tin #${job.id}`}`}
+        >
+          Quản lý
+          <ArrowRight size={16} aria-hidden="true" />
         </Link>
-      )}
-      <Link
-        className="jp-button"
-        to="/rec/jobs"
-        search={{ jobId: job.id }}
-        aria-label={`Quản lý ${content?.title || `tin #${job.id}`}`}
-      >
-        Quản lý
-        <ArrowRight size={16} aria-hidden="true" />
-      </Link>
+      </div>
     </li>
   );
 }

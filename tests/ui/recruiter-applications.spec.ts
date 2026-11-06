@@ -430,7 +430,7 @@ test("row status menu advances with a fresh version and confirms rejection witho
     rejectionReason: "POSITION_FILLED",
   });
   await trigger.click();
-  await expect(page.getByRole("menu")).toContainText("Không thể thay đổi trạng thái");
+  await expect(page.getByRole("menu")).toContainText("Đơn ứng tuyển đã kết thúc");
   await expect(page.getByRole("menuitem", { name: "Từ chối", exact: true })).toHaveCount(0);
 });
 
@@ -441,7 +441,7 @@ test("row status conflict requires refreshing before another change", async ({ p
   await page.getByRole("menuitem", { name: "Tiềm năng", exact: true }).click();
   // Inbox refetch may close the row menu; reopening must read the changed terminal state.
   await page.getByRole("button", { name: "Cập nhật trạng thái của Nguyễn Thị Mai" }).click();
-  await expect(page.getByRole("menu")).toContainText("Không thể thay đổi trạng thái");
+  await expect(page.getByRole("menu")).toContainText("Đơn ứng tuyển đã kết thúc");
   expect(api.writes).toHaveLength(1);
 });
 

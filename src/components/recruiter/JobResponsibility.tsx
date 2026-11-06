@@ -49,7 +49,7 @@ export function JobResponsibility({
                 void run(async () => onChange(await setOwnerResponsibility(job, responsible)));
               }}
             />
-            Tôi chịu trách nhiệm với tư cách chủ sở hữu
+            Tôi chịu trách nhiệm với tư cách trưởng ban tuyển dụng
           </label>
           <p className="jp-hint">
             {job.assignments.length} nhà tuyển dụng được phân công. Bỏ người phụ trách cuối cùng sẽ

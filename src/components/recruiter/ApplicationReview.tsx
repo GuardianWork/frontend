@@ -267,9 +267,7 @@ export function ApplicationReview({
           {detail && (
             <>
               {terminal ? (
-                <p className="application-menu-message">
-                  Đơn ứng tuyển đã kết thúc. Không thể thay đổi trạng thái.
-                </p>
+                <p className="application-menu-message">Đơn ứng tuyển đã kết thúc</p>
               ) : (
                 <>
                   {detail.status === "SUBMITTED" && (
