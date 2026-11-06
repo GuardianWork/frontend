@@ -1,7 +1,7 @@
 import { ListSearch } from "@/components/ListSearch";
 import { matchesSearch } from "@/lib/list-search";
 import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { RecruiterOverview } from "@/components/RecruiterOverview";
 import { AdminShell, Icon } from "@/components/AdminShell";
 
@@ -161,9 +161,11 @@ function RecruiterIndexPage() {
       </details>
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-semibold">Theo dõi ứng viên</h2>
+        {/* Talent search is not implemented yet.
         <Link to="/rec/talent" className="text-sm font-semibold text-primary">
           Xem tất cả ứng viên →
         </Link>
+        */}
       </div>
       <ListSearch
         value={query}

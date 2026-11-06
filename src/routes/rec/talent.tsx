@@ -1,10 +1,14 @@
 import { ListSearch } from "@/components/ListSearch";
 import { matchesSearch } from "@/lib/list-search";
 import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { AdminShell, Icon } from "@/components/AdminShell";
 
 export const Route = createFileRoute("/rec/talent")({
+  // Keep the prototype for later; do not expose it until talent search is implemented.
+  beforeLoad: () => {
+    throw redirect({ to: "/rec", replace: true });
+  },
   head: () => ({
     meta: [
       { name: "robots", content: "noindex, nofollow" },
