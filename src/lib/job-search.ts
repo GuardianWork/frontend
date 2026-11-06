@@ -11,7 +11,7 @@ export interface JobSearchParams {
   mode?: string;
   employmentType?: string;
   job?: string;
-  page?: string;
+  page?: number;
 }
 
 export const JOB_SEARCH_KEYS = [
@@ -31,6 +31,13 @@ export function parseJobSearch(search: Record<string, unknown>): JobSearchParams
   const values: JobSearchParams = {};
   for (const key of JOB_SEARCH_KEYS) {
     const value = search[key];
+    if (key === "page") {
+      // Pagination is numeric and 0-based. Keep only valid, positive page numbers;
+      // page 0 is represented by omitting the parameter.
+      const number = typeof value === "number" ? value : Number(value);
+      if (Number.isInteger(number) && number > 0) values.page = number;
+      continue;
+    }
     // The router's URL parser decodes numeric query values (for example job=42)
     // as numbers. Normalize them before exposing the string-valued search state.
     if (typeof value === "string" || (typeof value === "number" && Number.isFinite(value)))
@@ -44,8 +51,13 @@ export function jobSearch(values: JobSearchParams): JobSearchParams {
   const next: JobSearchParams = {};
   for (const key of JOB_SEARCH_KEYS) {
     const value = values[key];
+    if (key === "page") {
+      const number = typeof value === "number" ? value : Number(value);
+      if (!Number.isInteger(number) || number <= 0) continue;
+      next.page = number;
+      continue;
+    }
     if (typeof value !== "string" || !value) continue;
-    if (key === "page" && (value === "0" || !/^\d+$/.test(value))) continue;
     next[key] = value;
   }
   return next;

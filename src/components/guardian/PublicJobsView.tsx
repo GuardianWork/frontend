@@ -46,7 +46,6 @@ import {
   SALARY_BANDS,
   WORK_MODES,
   WORK_MODE_LABELS,
-  filterJobs,
   hasActiveFilters,
   industryOptions,
   jobSearch,
@@ -61,7 +60,7 @@ function useJobsPath() {
       state.location.pathname.startsWith("/can/") ? ("/can/jobs" as const) : ("/jobs" as const),
   });
 }
-const PAGE_SIZE = 6;
+const PAGE_SIZE = 9;
 
 const POPULAR_QUERIES = ["Kinh doanh", "Kế toán", "Tiếp thị", "Nhân sự"];
 
@@ -179,7 +178,7 @@ export function PublicJobsView({
       search.salaryMax ?? "",
       search.mode ?? "",
       search.employmentType ?? "",
-      search.page ?? "",
+      search.page ?? 0,
     ],
     queryFn: () =>
       searchPublicJobs({
@@ -189,7 +188,7 @@ export function PublicJobsView({
         workArrangement: (search.mode || "").toUpperCase() || undefined,
         salaryMin: search.salaryMin ? Number(search.salaryMin) : undefined,
         salaryMax: search.salaryMax ? Number(search.salaryMax) : undefined,
-        page: Number.isFinite(Number(search.page)) ? Number(search.page) : 0,
+        page: search.page ?? 0,
         size: PAGE_SIZE,
       }),
     placeholderData: {
@@ -208,6 +207,14 @@ export function PublicJobsView({
       .filter((job): job is JobItem => Boolean(job)) ?? [];
   // UC-CAN-07: guest and candidate job search use the same backend postings.
   const jobs = publicApiJobs;
+
+  // Server-provided pagination is authoritative for both guests and signed-in
+  // candidates; the browser only ever receives one page of postings.
+  const serverPagination = {
+    pageNumber: publicJobSearch.data?.pageNumber ?? 0,
+    totalPages: publicJobSearch.data?.totalPages ?? 1,
+    totalElements: publicJobSearch.data?.totalElements ?? jobs.length,
+  };
 
   const selectedBackendJobId = search.job && /^[1-9]\d*$/.test(search.job) ? search.job : undefined;
   const backendDetail = useQuery({
@@ -283,11 +290,11 @@ export function PublicJobsView({
       salaryMin: "",
       salaryMax: "",
       mode: "",
-      page: "",
+      page: 0,
     });
   const submitSearch = (event: FormEvent) => {
     event.preventDefault();
-    update({ q: draftQuery.trim(), location: draftLocation, page: "" });
+    update({ q: draftQuery.trim(), location: draftLocation, page: 0 });
   };
 
   const activeJob = search.job ? jobs.find((job) => job.id === search.job) : undefined;
@@ -396,7 +403,7 @@ export function PublicJobsView({
                     <button
                       key={query}
                       type="button"
-                      onClick={() => update({ q: query, job: "", page: "" })}
+                      onClick={() => update({ q: query, job: "", page: 0 })}
                     >
                       {query}
                     </button>
@@ -428,15 +435,7 @@ export function PublicJobsView({
                 jobs={jobs}
                 signedIn={Boolean(user)}
                 applied={appliedFor}
-                remotePagination={
-                  user
-                    ? undefined
-                    : {
-                        pageNumber: publicJobSearch.data?.pageNumber ?? 0,
-                        totalPages: publicJobSearch.data?.totalPages ?? 1,
-                        totalElements: publicJobSearch.data?.totalElements ?? jobs.length,
-                      }
-                }
+                remotePagination={serverPagination}
               />
             )}
           </>
@@ -531,13 +530,11 @@ function Results({
     totalElements: number;
   };
 }) {
-  const filtered = signedIn ? filterJobs(jobs, search) : jobs;
-  const requestedPage = Number.parseInt(search.page ?? "0", 10);
-  const clientPagination = paginateItems(
-    filtered,
-    Number.isFinite(requestedPage) ? requestedPage : 0,
-    PAGE_SIZE,
-  );
+  // Backend pages and filters postings; the client must not re-filter a single
+  // server page, otherwise later pages and counts are ignored.
+  const filtered = jobs;
+  const requestedPage = search.page ?? 0;
+  const clientPagination = paginateItems(filtered, requestedPage, PAGE_SIZE);
   const pagination = remotePagination
     ? {
         page: remotePagination.pageNumber ?? 0,
@@ -652,7 +649,7 @@ function Results({
                         salaryMin: nextMin > 0 ? String(nextMin * 1_000_000) : "",
                         salaryMax: nextMax >= 100 ? "" : String(nextMax * 1_000_000),
                         job: "",
-                        page: "",
+                        page: 0,
                       });
                     };
 
@@ -711,7 +708,7 @@ function Results({
             <span>Hình thức làm việc từ xa</span>
             <select
               value={search.mode ?? ""}
-              onChange={(event) => update({ mode: event.target.value, job: "", page: "" })}
+              onChange={(event) => update({ mode: event.target.value, job: "", page: 0 })}
             >
               {WORK_MODES.map((mode) => (
                 <option key={mode.value} value={mode.value}>
@@ -724,9 +721,7 @@ function Results({
             <span>Loại công việc</span>
             <select
               value={search.employmentType ?? ""}
-              onChange={(event) =>
-                update({ employmentType: event.target.value, job: "", page: "" })
-              }
+              onChange={(event) => update({ employmentType: event.target.value, job: "", page: 0 })}
             >
               <option value="">Mọi loại</option>
               <option value="FULL_TIME">Toàn thời gian</option>
@@ -805,7 +800,7 @@ function Results({
                 type="button"
                 aria-label="Trang trước"
                 disabled={pagination.page === 0}
-                onClick={() => update({ page: String(pagination.page - 1) })}
+                onClick={() => update({ page: pagination.page - 1 })}
               >
                 <span className="career-pagination__full">Trang trước</span>
                 <span className="career-pagination__short" aria-hidden="true">
@@ -819,7 +814,7 @@ function Results({
                     type="button"
                     aria-current={pagination.page === index ? "page" : undefined}
                     aria-label={`Trang ${index + 1}`}
-                    onClick={() => update({ page: String(index) })}
+                    onClick={() => update({ page: index })}
                   >
                     {index + 1}
                   </button>
@@ -829,7 +824,7 @@ function Results({
                 type="button"
                 aria-label="Trang sau"
                 disabled={pagination.page >= pagination.totalPages - 1}
-                onClick={() => update({ page: String(pagination.page + 1) })}
+                onClick={() => update({ page: pagination.page + 1 })}
               >
                 <span className="career-pagination__full">Trang sau</span>
                 <span className="career-pagination__short" aria-hidden="true">
@@ -856,7 +851,7 @@ function Results({
                 key={query}
                 type="button"
                 className="career-chip"
-                onClick={() => update({ q: query, location: "", industry: "", page: "" })}
+                onClick={() => update({ q: query, location: "", industry: "", page: 0 })}
               >
                 {query}
               </button>
@@ -897,7 +892,7 @@ function JobDetail({
       {!embedded && (
         <Link
           to={jobsPath}
-          search={jobSearch({ ...search, job: "", page: search.page ?? "" })}
+          search={jobSearch({ ...search, job: "", page: search.page ?? 0 })}
           className="career-text-link career-back"
         >
           <ArrowLeft size={17} aria-hidden="true" />
@@ -1110,7 +1105,7 @@ function MissingJob({ search, jobs }: { search: JobSearchParams; jobs: JobItem[]
         <div className="career-empty__actions">
           <Link
             to={jobsPath}
-            search={jobSearch({ ...search, job: "", page: "" })}
+            search={jobSearch({ ...search, job: "", page: 0 })}
             className="career-button"
           >
             Xem tất cả việc làm
