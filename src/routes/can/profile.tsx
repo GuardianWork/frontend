@@ -1244,14 +1244,6 @@ function CandidateProfilePage() {
                 {copy.country}
               </p>
             </div>
-
-            <div className="mt-5 flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-md border border-accent/15 bg-accent-subtle px-2.5 py-1 text-xs font-semibold text-accent-deep">
-                <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-accent" />
-                {copy.activeCandidate}
-              </span>
-            </div>
-
             <section className="mt-6 border-t border-rule pt-5" aria-labelledby="contact-title">
               <div className="flex items-center justify-between gap-3">
                 <h2 id="contact-title" className="text-base font-bold text-ink">

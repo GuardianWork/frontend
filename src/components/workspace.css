@@ -537,11 +537,12 @@
   background: var(--color-paper-2);
 }
 
-/* Recruiter navigation joins the viewport edge while content scrolls independently. */
+/* Persistent user navigation joins the viewport edge while content scrolls independently. */
 @media (min-width: 1101px) {
-  .workspace-shell.recruiter-workspace .workspace-sidebar {
+  .workspace-shell:is(.candidate-workspace, .recruiter-workspace) .workspace-sidebar {
     height: 100dvh;
     margin: 0;
+    border: 0;
     border-radius: 0;
   }
 }
@@ -550,7 +551,7 @@
 @media (min-width: 1101px) {
   .workspace-shell:is(.candidate-workspace, .recruiter-workspace) {
     display: grid;
-    grid-template-columns: 260px minmax(0, 1fr);
+    grid-template-columns: 244px minmax(0, 1fr);
     transition: grid-template-columns 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
   }
   .workspace-shell:is(.candidate-workspace, .recruiter-workspace) .workspace-sidebar {
@@ -558,12 +559,6 @@
     min-width: 0;
   }
   .workspace-shell[data-sidebar-collapsed="true"]:is(.candidate-workspace, .recruiter-workspace) {
-    grid-template-columns: 92px minmax(0, 1fr);
-  }
-  .workspace-shell.recruiter-workspace {
-    grid-template-columns: 244px minmax(0, 1fr);
-  }
-  .workspace-shell.recruiter-workspace[data-sidebar-collapsed="true"] {
     grid-template-columns: 76px minmax(0, 1fr);
   }
   .workspace-shell:is(.candidate-workspace, .recruiter-workspace)

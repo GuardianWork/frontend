@@ -590,9 +590,6 @@ export function CvManagerView() {
               />
               <div className="min-w-0 text-sm leading-6 text-ink">
                 <strong className="font-bold">Không đưa thông tin nhạy cảm vào tệp.</strong>{" "}
-                <span>
-                  Bao gồm số căn cước công dân, thông tin tài khoản ngân hàng hoặc mật khẩu.
-                </span>
               </div>
             </div>
 

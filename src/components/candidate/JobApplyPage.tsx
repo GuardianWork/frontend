@@ -853,8 +853,8 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
           </p>
           <ol className="apply-stepper mt-6" aria-label="Tiến trình ứng tuyển">
             {[
-              ["CV review", "Hồ sơ xin việc"],
-              ["Thông tin", "Thông tin cá nhân"],
+              ["CV", "Hồ sơ xin việc"],
+              ["Thông tin", "Hồ sơ cá nhân"],
               ["Xác nhận", "Kiểm tra & gửi"],
             ].map(([label, detail], index) => {
               const stepNumber = (index + 1) as 1 | 2 | 3;

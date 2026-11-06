@@ -16,7 +16,7 @@ const vn = {
       jobs: "Tìm việc làm",
       myJobs: "Công việc của tôi",
       cvs: "Hồ sơ xin việc",
-      profile: "Hồ sơ của tôi",
+      profile: "Hồ sơ cá nhân",
       copilot: "Trợ lý pháp lý",
     },
     pageTitles: {
