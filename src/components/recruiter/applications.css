@@ -186,9 +186,471 @@
   outline-offset: 2px;
 }
 
-.recruiter-workspace .application-page
+.recruiter-workspace
+  .application-page
   .application-search-control
   .application-search-input[type="search"]:focus-visible {
   outline: none;
   box-shadow: none;
+}
+
+.application-status-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 20px 0 24px;
+}
+.application-status-filters button {
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid #e4e2e0;
+  border-radius: 8px;
+  background: #fff;
+  color: #595959;
+  font: inherit;
+  cursor: pointer;
+}
+.application-status-filters button:hover {
+  background: #f7f7f6;
+  color: #2d2d2d;
+}
+.application-status-filters button[aria-pressed="true"] {
+  color: #153d75;
+  background: #eef3fb;
+  border-color: #2557a7;
+  font-weight: 700;
+}
+.application-workspace {
+  display: grid;
+  gap: 24px;
+  align-items: start;
+}
+.application-workspace--reviewing {
+  grid-template-columns: minmax(0, 1fr) 460px;
+}
+.application-results {
+  min-width: 0;
+}
+.application-order {
+  margin: 0 0 12px;
+  color: #595959;
+  font-size: 14px;
+}
+.application-table-scroll {
+  overflow-x: auto;
+  scrollbar-color: #949494 #f7f7f6;
+}
+.application-table {
+  min-width: 500px;
+}
+.application-table th:first-child {
+  width: 38%;
+}
+.application-table th:nth-child(2) {
+  width: 29%;
+}
+.application-table tr[data-selected="true"] {
+  background: #eef3fb;
+}
+.application-table .status-tag {
+  white-space: normal;
+}
+.application-candidate {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #153d75;
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+.application-candidate span {
+  font-size: 13px;
+  font-weight: 400;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.application-candidate:hover {
+  color: #164081;
+}
+.application-review {
+  position: sticky;
+  top: 0;
+  border: 1px solid #e4e2e0;
+  border-radius: 12px;
+  background: #fff;
+  overflow: hidden;
+  min-width: 0;
+}
+.application-review-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 12px 14px 24px;
+  border-bottom: 1px solid #e4e2e0;
+}
+.application-review-header h2 {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.45;
+  font-weight: 700;
+}
+.application-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 8px;
+  background: #fff;
+  color: #595959;
+  cursor: pointer;
+}
+.application-close:hover {
+  background: #f3f3f2;
+  color: #2d2d2d;
+}
+.application-review-body {
+  padding: 24px;
+  max-height: calc(100dvh - 220px);
+  overflow-y: auto;
+  scrollbar-color: #949494 #f7f7f6;
+  font-size: 14px;
+  color: #2d2d2d;
+  line-height: 1.6;
+}
+.application-review-body h2 {
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.application-review-body section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e4e2e0;
+}
+.application-review-body p {
+  margin: 6px 0 12px;
+  overflow-wrap: anywhere;
+}
+.application-review-identity h2 {
+  font-size: 22px;
+  line-height: 1.35;
+  margin-bottom: 6px;
+}
+.application-review-identity .status-tag {
+  margin: 4px 0 8px;
+}
+.application-muted {
+  color: #595959;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.application-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.application-actions .jp-button {
+  padding: 9px 12px;
+  min-height: 44px;
+}
+.application-page .application-review .application-reject-action {
+  color: #b3261e;
+}
+.application-page .application-review .application-reject-action:hover {
+  background: #fdefef;
+}
+.application-contact {
+  margin: 0;
+}
+.application-contact > div {
+  display: grid;
+  grid-template-columns: 100px minmax(0, 1fr);
+  gap: 12px;
+  padding: 6px 0;
+}
+.application-contact dt {
+  color: #595959;
+}
+.application-contact dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.application-long-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.application-file-name {
+  font-weight: 600;
+}
+.application-pdf {
+  display: block;
+  width: 100%;
+  height: 440px;
+  border: 1px solid #e4e2e0;
+  border-radius: 8px;
+  margin: 16px 0 12px;
+}
+.application-history ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.application-history li {
+  padding: 14px 0;
+  border-bottom: 1px solid #eeeeec;
+}
+.application-history li:first-child {
+  padding-top: 0;
+}
+.application-history li:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.application-review-body .application-notice {
+  padding: 12px;
+  background: #eef3fb;
+  color: #153d75;
+  border-radius: 8px;
+}
+.application-terminal {
+  margin-top: 20px !important;
+  padding: 14px;
+  background: #f7f7f6;
+  border-radius: 8px;
+}
+.application-rejection-dialog {
+  background: #fff;
+  color: #2d2d2d;
+  font-family: "Hanken Grotesk", sans-serif;
+  box-shadow: none;
+}
+.application-rejection-dialog form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.application-rejection-dialog label {
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 12px;
+}
+.application-rejection-dialog select,
+.application-rejection-dialog textarea {
+  width: 100%;
+  border: 1px solid #949494;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 14px;
+  background: #fff;
+  color: #2d2d2d;
+  caret-color: #2557a7;
+}
+.application-rejection-dialog select {
+  min-height: 44px;
+}
+.application-rejection-dialog textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+.application-rejection-dialog p {
+  margin: 0;
+}
+.application-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+}
+.application-rejection-dialog .application-reject-confirm {
+  background: #b3261e;
+  border-color: #b3261e;
+  color: #fff;
+}
+.application-rejection-dialog .application-reject-confirm:hover {
+  background: #83231d;
+}
+.application-rejection-dialog [aria-invalid="true"] {
+  border-color: #b3261e;
+}
+.application-page button:focus-visible,
+.application-table-scroll:focus-visible,
+.application-review h2:focus-visible,
+.application-rejection-dialog select:focus-visible,
+.application-rejection-dialog textarea:focus-visible {
+  outline: 2px solid #2557a7;
+  outline-offset: 3px;
+}
+.application-page button:disabled,
+.application-rejection-dialog button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+.application-review ::selection,
+.application-rejection-dialog ::selection {
+  background: #eef3fb;
+  color: #153d75;
+}
+@media (prefers-reduced-motion: reduce) {
+  .application-review *,
+  .application-rejection-dialog {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+.application-job-title {
+  margin: 10px 0 0;
+  color: var(--color-ink-2);
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.application-candidate {
+  text-decoration: none;
+}
+.application-candidate:focus-visible,
+.application-status-trigger:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+.application-status-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-ink-2);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+.application-status-trigger:hover .status-tag {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.application-status-menu {
+  width: 304px;
+  max-width: calc(100vw - 32px);
+  padding: 0;
+  border: 1px solid var(--color-rule);
+  border-radius: 12px;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: "Hanken Grotesk", sans-serif;
+  box-shadow: none;
+}
+.application-status-menu p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.application-status-menu-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-rule);
+}
+.application-status-menu .application-menu-heading {
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.application-status-current {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--color-ink-2);
+  font-size: 13px;
+}
+.application-status-current .status-tag {
+  white-space: normal;
+}
+.application-menu-options {
+  padding: 6px;
+}
+.application-status-menu [role="menuitem"] {
+  min-height: 44px;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.application-status-menu [role="menuitem"] svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.application-status-menu [role="menuitem"][data-highlighted] {
+  background: #eef3fb;
+  color: #153d75;
+}
+.application-status-menu .application-menu-divider {
+  height: 1px;
+  margin: 6px 10px;
+  background: var(--color-rule);
+}
+.application-status-menu .application-menu-reject {
+  color: var(--color-destructive, #b3261e);
+}
+.application-status-menu .application-menu-reject[data-highlighted] {
+  color: #83231d;
+  background: #fdefef;
+}
+.application-status-menu .application-menu-message {
+  padding: 10px;
+  color: var(--color-ink-2);
+}
+.application-status-menu-footer {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--color-rule);
+  background: var(--color-paper-2);
+  color: var(--color-ink-2);
+}
+.application-status-menu-footer svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.application-status-menu-footer p {
+  font-size: 13px;
+  line-height: 1.5;
+}
+.application-review--page {
+  position: static;
+  border: 0;
+  border-radius: 0;
+  max-width: 1000px;
+  overflow: visible;
+}
+.application-review--page .application-review-header {
+  padding: 24px 0;
+}
+.application-review--page h1 {
+  margin: 0;
+}
+.application-review--page .application-review-body {
+  padding: 24px 0;
+  max-height: none;
+  overflow: visible;
+  font-size: 15px;
+}
+.application-review--page .application-long-text {
+  max-width: 75ch;
+}
+.application-review--page .application-pdf {
+  height: 700px;
 }

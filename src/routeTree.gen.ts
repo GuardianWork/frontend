@@ -67,6 +67,7 @@ import { Route as StaffReportsRouteImport } from './routes/staff/reports'
 import { Route as StaffTasksRouteImport } from './routes/staff/tasks'
 import { Route as StaffVerificationsRouteImport } from './routes/staff/verifications'
 import { Route as CanJobsApplyRouteImport } from './routes/can/jobs_.apply'
+import { Route as RecApplicationsJobIdApplicationIdRouteImport } from './routes/rec/applications_.$jobId.$applicationId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -358,6 +359,12 @@ const CanJobsApplyRoute = CanJobsApplyRouteImport.update({
   path: '/jobs/apply',
   getParentRoute: () => CanRoute,
 } as any)
+const RecApplicationsJobIdApplicationIdRoute =
+  RecApplicationsJobIdApplicationIdRouteImport.update({
+    id: '/applications_/$jobId/$applicationId',
+    path: '/applications/$jobId/$applicationId',
+    getParentRoute: () => RecRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -418,6 +425,7 @@ export interface FileRoutesByFullPath {
   '/rec/': typeof RecIndexRoute
   '/staff/': typeof StaffIndexRoute
   '/can/jobs/apply': typeof CanJobsApplyRoute
+  '/rec/applications/$jobId/$applicationId': typeof RecApplicationsJobIdApplicationIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -476,6 +484,7 @@ export interface FileRoutesByTo {
   '/rec': typeof RecIndexRoute
   '/staff': typeof StaffIndexRoute
   '/can/jobs/apply': typeof CanJobsApplyRoute
+  '/rec/applications/$jobId/$applicationId': typeof RecApplicationsJobIdApplicationIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -537,6 +546,7 @@ export interface FileRoutesById {
   '/rec/': typeof RecIndexRoute
   '/staff/': typeof StaffIndexRoute
   '/can/jobs_/apply': typeof CanJobsApplyRoute
+  '/rec/applications_/$jobId/$applicationId': typeof RecApplicationsJobIdApplicationIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -599,6 +609,7 @@ export interface FileRouteTypes {
     | '/rec/'
     | '/staff/'
     | '/can/jobs/apply'
+    | '/rec/applications/$jobId/$applicationId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -657,6 +668,7 @@ export interface FileRouteTypes {
     | '/rec'
     | '/staff'
     | '/can/jobs/apply'
+    | '/rec/applications/$jobId/$applicationId'
   id:
     | '__root__'
     | '/'
@@ -717,6 +729,7 @@ export interface FileRouteTypes {
     | '/rec/'
     | '/staff/'
     | '/can/jobs_/apply'
+    | '/rec/applications_/$jobId/$applicationId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1170,6 +1183,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CanJobsApplyRouteImport
       parentRoute: typeof CanRoute
     }
+    '/rec/applications_/$jobId/$applicationId': {
+      id: '/rec/applications_/$jobId/$applicationId'
+      path: '/applications/$jobId/$applicationId'
+      fullPath: '/rec/applications/$jobId/$applicationId'
+      preLoaderRoute: typeof RecApplicationsJobIdApplicationIdRouteImport
+      parentRoute: typeof RecRoute
+    }
   }
 }
 
@@ -1209,6 +1229,7 @@ interface RecRouteChildren {
   RecTalentRoute: typeof RecTalentRoute
   RecVerificationRoute: typeof RecVerificationRoute
   RecIndexRoute: typeof RecIndexRoute
+  RecApplicationsJobIdApplicationIdRoute: typeof RecApplicationsJobIdApplicationIdRoute
 }
 
 const RecRouteChildren: RecRouteChildren = {
@@ -1221,6 +1242,8 @@ const RecRouteChildren: RecRouteChildren = {
   RecTalentRoute: RecTalentRoute,
   RecVerificationRoute: RecVerificationRoute,
   RecIndexRoute: RecIndexRoute,
+  RecApplicationsJobIdApplicationIdRoute:
+    RecApplicationsJobIdApplicationIdRoute,
 }
 
 const RecRouteWithChildren = RecRoute._addFileChildren(RecRouteChildren)

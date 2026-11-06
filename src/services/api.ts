@@ -28,7 +28,7 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
     response = await fetch(`${getApiBaseUrl()}${path}`, {
       ...init,
       headers: {
-        Accept: "application/json",
+        ...(!new Headers(init.headers).has("Accept") ? { Accept: "application/json" } : {}),
         ...(init.body && !(init.body instanceof FormData)
           ? { "Content-Type": "application/json" }
           : {}),
