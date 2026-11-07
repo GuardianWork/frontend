@@ -20,7 +20,7 @@ const result = {
   deliveryStatus: "PROVIDER_ACCEPTED",
 };
 beforeEach(() => {
-  globalThis.sessionStorage = {
+  globalThis.localStorage = {
     getItem: (key) =>
       key === AUTH_SESSION_KEY
         ? JSON.stringify({
@@ -33,7 +33,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   globalThis.fetch = originalFetch;
-  delete globalThis.sessionStorage;
+  delete globalThis.localStorage;
 });
 test("create invitation calls the Owner API with Bearer auth and only the normalized email", async () => {
   globalThis.fetch = async (url, init) => {

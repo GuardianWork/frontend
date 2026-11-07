@@ -35,6 +35,7 @@ export interface JobRevision {
   content: JobContent;
 }
 export interface Job {
+  applicationCount?: number | null;
   id: number;
   companyId: number;
   creatorUserId: number;
@@ -101,6 +102,10 @@ function parseJob(value: unknown): Job {
     !Number.isSafeInteger(job.version) ||
     job.version < 0 ||
     !["DRAFT", "PUBLISHED", "PAUSED", "SUSPENDED", "CLOSED", "EXPIRED"].includes(job.status) ||
+    !(
+      job.applicationCount == null ||
+      (Number.isSafeInteger(job.applicationCount) && job.applicationCount >= 0)
+    ) ||
     typeof job.ownerResponsible !== "boolean" ||
     typeof job.needsReassignment !== "boolean" ||
     !Array.isArray(job.assignments) ||
@@ -147,8 +152,14 @@ async function requestPage<T>(path: string): Promise<ApiPage<T>> {
   }
   return page;
 }
-export async function listJobs(page: number, status: string, needsReassignment: boolean) {
+export async function listJobs(
+  page: number,
+  status: string,
+  needsReassignment: boolean,
+  keyword = "",
+) {
   const search = new URLSearchParams({ page: String(page), size: "20" });
+  if (keyword.trim()) search.set("keyword", keyword.trim());
   if (status) search.set("status", status);
   if (needsReassignment) search.set("needsReassignment", "true");
   const result = await requestPage<Job>(`${root}?${search}`);

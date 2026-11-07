@@ -13,10 +13,10 @@ import {
 const originalFetch = globalThis.fetch;
 afterEach(() => {
   globalThis.fetch = originalFetch;
-  delete globalThis.sessionStorage;
+  delete globalThis.localStorage;
 });
 function mock(handler) {
-  globalThis.sessionStorage = {
+  globalThis.localStorage = {
     removeItem: () => {},
     getItem: (key) =>
       key === AUTH_SESSION_KEY

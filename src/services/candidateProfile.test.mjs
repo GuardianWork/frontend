@@ -21,7 +21,7 @@ test("candidate contact updates preserve profile fields and clearing sends null"
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
-  globalThis.sessionStorage = {
+  globalThis.localStorage = {
     getItem: (key) =>
       key === AUTH_SESSION_KEY
         ? JSON.stringify({
@@ -53,6 +53,6 @@ test("candidate contact updates preserve profile fields and clearing sends null"
     }
   } finally {
     globalThis.fetch = originalFetch;
-    delete globalThis.sessionStorage;
+    delete globalThis.localStorage;
   }
 });

@@ -182,7 +182,11 @@ function RootComponent() {
       if (!hasAuthSession()) queryClient.clear();
     };
     window.addEventListener(AUTH_SESSION_EVENT, clearPrivateCache);
-    return () => window.removeEventListener(AUTH_SESSION_EVENT, clearPrivateCache);
+    window.addEventListener("storage", clearPrivateCache);
+    return () => {
+      window.removeEventListener(AUTH_SESSION_EVENT, clearPrivateCache);
+      window.removeEventListener("storage", clearPrivateCache);
+    };
   }, [queryClient]);
 
   return (

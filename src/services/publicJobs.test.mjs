@@ -52,8 +52,8 @@ test("toSalaryRange formats disclosed compensation", () => {
 
 test("signed-in job search sends authentication for company exclusion", async () => {
   const originalFetch = globalThis.fetch;
-  const originalStorage = globalThis.sessionStorage;
-  globalThis.sessionStorage = {
+  const originalStorage = globalThis.localStorage;
+  globalThis.localStorage = {
     getItem: (key) =>
       key === AUTH_SESSION_KEY
         ? JSON.stringify({
@@ -73,15 +73,15 @@ test("signed-in job search sends authentication for company exclusion", async ()
     assert.equal(authorization, "Bearer search-access");
   } finally {
     globalThis.fetch = originalFetch;
-    if (originalStorage === undefined) delete globalThis.sessionStorage;
-    else globalThis.sessionStorage = originalStorage;
+    if (originalStorage === undefined) delete globalThis.localStorage;
+    else globalThis.localStorage = originalStorage;
   }
 });
 
 test("anonymous job search remains public", async () => {
   const originalFetch = globalThis.fetch;
-  const originalStorage = globalThis.sessionStorage;
-  globalThis.sessionStorage = { getItem: () => null };
+  const originalStorage = globalThis.localStorage;
+  globalThis.localStorage = { getItem: () => null };
   let authorization;
   globalThis.fetch = async (_url, init) => {
     authorization = init.headers.Authorization;
@@ -92,7 +92,7 @@ test("anonymous job search remains public", async () => {
     assert.equal(authorization, undefined);
   } finally {
     globalThis.fetch = originalFetch;
-    if (originalStorage === undefined) delete globalThis.sessionStorage;
-    else globalThis.sessionStorage = originalStorage;
+    if (originalStorage === undefined) delete globalThis.localStorage;
+    else globalThis.localStorage = originalStorage;
   }
 });

@@ -22,7 +22,7 @@ beforeEach(() => {
     expiresAt: Date.now() + 60000,
     user: { id: 1, role: "USER" },
   });
-  globalThis.sessionStorage = {
+  globalThis.localStorage = {
     getItem: (key) => (key === AUTH_SESSION_KEY ? stored : null),
     removeItem: () => {
       stored = null;
@@ -31,7 +31,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   globalThis.fetch = originalFetch;
-  delete globalThis.sessionStorage;
+  delete globalThis.localStorage;
 });
 const projection = {
   firstName: "Minh",

@@ -176,7 +176,7 @@ test("staff operational screens and login remain readable across viewport sizes"
   );
   await page.evaluate(
     (session) =>
-      sessionStorage.setItem(
+      localStorage.setItem(
         "guardianwork_auth_session",
         JSON.stringify({ ...session, expiresAt: Date.now() + session.expiresIn * 1000 }),
       ),

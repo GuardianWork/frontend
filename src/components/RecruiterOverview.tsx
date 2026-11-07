@@ -1,31 +1,12 @@
-import { ArrowRightIcon, JobPostingsIcon, VerificationDossierIcon } from "@/components/icons";
+import { ArrowRightIcon, JobPostingsIcon } from "@/components/icons";
 
-import { useEffect, useState } from "react";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { Link } from "@tanstack/react-router";
 import { GuardianIllustration } from "./GuardianIllustration";
 
-import {
-  getStoredVerificationRecord,
-  type CompanyVerificationRecord,
-} from "@/services/companyVerification";
-
 export function RecruiterOverview() {
   const user = useAuthUser();
   const invitedRecruiter = user?.activeMembership?.companyRole === "RECRUITER";
-  const [company, setCompany] = useState<CompanyVerificationRecord | null>(null);
-  useEffect(() => {
-    setCompany(getStoredVerificationRecord());
-  }, []);
-  const status = company?.verificationStatus;
-  const statusText =
-    status === "VERIFIED"
-      ? "Doanh nghiệp đã được xác thực"
-      : status === "PENDING"
-        ? "Hồ sơ công ty đang được xét duyệt"
-        : status === "REJECTED"
-          ? "Hồ sơ công ty cần bổ sung"
-          : "Hoàn thiện xác thực doanh nghiệp";
   return (
     <div className="mb-8 space-y-6">
       <div className="guardian-welcome">
@@ -41,38 +22,6 @@ export function RecruiterOverview() {
             Đăng tin tuyển dụng
           </Link>
         </div>
-      </div>
-      <div className="flex flex-col justify-between gap-4 rounded-xl border border-warm-border bg-surface-container-low p-5 sm:flex-row sm:items-center">
-        <div className="flex items-start gap-3">
-          <VerificationDossierIcon size={20} className="shrink-0 text-ink-2" />
-          <div>
-            <h2 className="text-sm font-semibold text-charcoal-text">
-              {invitedRecruiter ? user?.activeMembership?.companyName : statusText}
-            </h2>
-            <p className="mt-1 max-w-xl text-sm leading-5 text-charcoal-83">
-              {invitedRecruiter
-                ? "Bạn đang tham gia công ty với vai trò Nhà tuyển dụng. Hồ sơ pháp lý do chủ sở hữu phụ trách."
-                : status === "VERIFIED"
-                  ? "Thông tin doanh nghiệp đã được phê duyệt. Bạn có thể xem lại thông tin tại Hồ sơ công ty."
-                  : status === "PENDING"
-                    ? "Hồ sơ đã được tiếp nhận. Theo dõi kết quả và yêu cầu bổ sung tại Hồ sơ công ty."
-                    : "Cập nhật thông tin công ty và giấy đăng ký doanh nghiệp để xây dựng uy tín với ứng viên."}
-            </p>
-          </div>
-        </div>
-        {!invitedRecruiter && (
-          <Link
-            to={status === "VERIFIED" ? "/rec/members" : "/rec/verification"}
-            className="flex shrink-0 items-center gap-2 text-sm font-semibold text-primary"
-          >
-            {status === "VERIFIED"
-              ? "Quản lý thành viên"
-              : status === "PENDING"
-                ? "Xem hồ sơ"
-                : "Xác thực ngay"}
-            <ArrowRightIcon size={16} />
-          </Link>
-        )}
       </div>
       <section aria-labelledby="recruiter-work-heading">
         <h2 id="recruiter-work-heading" className="mb-4 text-lg font-semibold">

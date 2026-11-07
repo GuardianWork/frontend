@@ -38,7 +38,7 @@ test("candidate pages accept search and profile edits", async ({ page }, info) =
   await expect(page.getByText("Chuyên viên kế toán", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Đăng xuất", exact: true }).click();
   await expect(page.locator("#login-identifier")).toBeEnabled();
-  expect(await page.evaluate(() => sessionStorage.getItem("guardianwork_auth_session"))).toBeNull();
+  expect(await page.evaluate(() => localStorage.getItem("guardianwork_auth_session"))).toBeNull();
   await info.attach("input-audit", {
     body: JSON.stringify(report),
     contentType: "application/json",
@@ -137,7 +137,7 @@ test("company onboarding sends entered data and retrieves OWNER membership", asy
     .poll(() =>
       page.evaluate(
         () =>
-          JSON.parse(sessionStorage.getItem("guardianwork_auth_session") || "null")?.user
+          JSON.parse(localStorage.getItem("guardianwork_auth_session") || "null")?.user
             ?.activeMembership?.companyRole,
       ),
     )

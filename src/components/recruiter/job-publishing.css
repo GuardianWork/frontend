@@ -212,7 +212,7 @@
 }
 .jp-job-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(180px, 210px) 184px;
+  grid-template-columns: minmax(0, 1fr) 120px minmax(180px, 210px) 140px;
   gap: 24px;
   align-items: center;
   padding: 24px;
@@ -260,8 +260,7 @@
 .jp-job-responsibility svg {
   flex-shrink: 0;
 }
-.jp-badges,
-.jp-status-strip {
+.jp-badges {
   display: flex;
   gap: 8px;
   align-items: center;
@@ -317,7 +316,10 @@
   border-color: var(--jp-blue);
 }
 .jp-job-actions > .jp-button.jp-quiet {
-  border-color: transparent;
+  align-self: flex-start;
+  justify-content: flex-start;
+  padding-inline: 0;
+  border: 0;
 }
 .jp-empty {
   padding: 56px 24px;
@@ -335,9 +337,6 @@
 }
 .jp-loading {
   padding: 40px 24px;
-}
-.jp-status-strip {
-  margin-bottom: 20px;
 }
 .jp-workspace-grid {
   display: grid;
@@ -843,58 +842,6 @@
   font-size: 13px;
   font-weight: 500;
 }
-.jp-validation-summary {
-  display: grid;
-  grid-template-columns: 30px minmax(0, 1fr);
-  align-items: start;
-  gap: 20px;
-  padding: 24px;
-  border-radius: 24px;
-  background: var(--error-container);
-  color: var(--jp-ink);
-  font-size: 16px;
-  line-height: 1.5;
-}
-.jp-validation-summary[hidden] {
-  display: none;
-}
-.jp-validation-summary .jp-validation-heading {
-  margin: 2px 0 8px;
-  color: inherit;
-  font-size: 18px;
-  font-weight: 700;
-  line-height: 1.5;
-}
-.jp-validation-summary ul {
-  margin: 0;
-  padding-left: 23px;
-  list-style: disc;
-}
-.jp-validation-summary li + li {
-  margin-top: 4px;
-}
-.jp-validation-summary button {
-  color: inherit;
-  text-align: left;
-  background: transparent;
-  border: 0;
-  padding: 0;
-  font: inherit;
-  cursor: pointer;
-}
-.jp-validation-summary button:hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-.jp-validation-summary button:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 3px;
-}
-.jp-validation-icon {
-  fill: var(--error);
-  stroke: var(--color-paper);
-  flex: none;
-}
 
 .jp-field-error > svg {
   flex: none;
@@ -1035,4 +982,59 @@
 }
 .jp-review-detail dd {
   margin: 0;
+}
+
+.jp-search {
+  padding: 24px 24px 0;
+}
+.jp-search-results {
+  padding: 18px 24px 0;
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.jp-job-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 120px minmax(180px, 210px) 140px;
+  gap: 24px;
+  padding: 14px 24px;
+  margin-top: 18px;
+  border-block: 1px solid var(--jp-rule);
+  background: var(--color-paper-2);
+  color: var(--color-ink-2);
+  font-size: 13px;
+  font-weight: 600;
+}
+.jp-candidate-count {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  color: var(--jp-blue);
+  font-size: 13px;
+}
+.jp-candidate-count > span:first-child {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.jp-candidate-count strong {
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+}
+.jp-candidate-count:hover,
+.jp-candidate-fallback:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.jp-candidate-fallback {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--jp-blue);
+  font-size: 14px;
+}
+.jp-candidate-unavailable {
+  color: var(--color-ink-3);
 }

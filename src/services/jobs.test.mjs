@@ -16,7 +16,7 @@ const job = {
   availableActions: ["SAVE_DRAFT", "PREVIEW"],
 };
 beforeEach(() => {
-  globalThis.sessionStorage = {
+  globalThis.localStorage = {
     getItem: (key) =>
       key === AUTH_SESSION_KEY
         ? JSON.stringify({
@@ -29,7 +29,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   globalThis.fetch = originalFetch;
-  delete globalThis.sessionStorage;
+  delete globalThis.localStorage;
 });
 
 test("invalid mutation and preview receipts never become confirmed job state", async () => {

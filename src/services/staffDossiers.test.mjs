@@ -21,7 +21,7 @@ const company = {
 };
 beforeEach(() => {
   const values = new Map();
-  globalThis.sessionStorage = {
+  globalThis.localStorage = {
     getItem: (key) => values.get(key) ?? null,
     setItem: (key, value) => values.set(key, value),
     removeItem: (key) => values.delete(key),
@@ -30,7 +30,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   globalThis.fetch = originalFetch;
-  delete globalThis.sessionStorage;
+  delete globalThis.localStorage;
 });
 
 test("queue and history use Staff endpoints and accept empty legacy history", async () => {
@@ -100,7 +100,7 @@ test("simultaneous JSON and binary 401 responses share one refresh and rotate bo
   assert.equal(await file.blob.text(), "pdf bytes");
   assert.equal(file.filename, "giay phep.pdf");
   assert.equal(refreshes, 1);
-  const stored = JSON.parse(sessionStorage.getItem(AUTH_SESSION_KEY));
+  const stored = JSON.parse(localStorage.getItem(AUTH_SESSION_KEY));
   assert.equal(stored.accessToken, "rotated");
   assert.equal(stored.refreshToken, "rotated-refresh");
 });
@@ -117,7 +117,7 @@ test("403 never refreshes; failed refresh clears session; retry 401 is final", a
     return new Response(null, { status: 401 });
   };
   await assert.rejects(authenticatedFetch("/protected"), (error) => error.status === 401);
-  assert.equal(sessionStorage.getItem(AUTH_SESSION_KEY), null);
+  assert.equal(localStorage.getItem(AUTH_SESSION_KEY), null);
   saveAuthSession(pair);
   calls = 0;
   globalThis.fetch = async (url) => {
@@ -128,7 +128,7 @@ test("403 never refreshes; failed refresh clears session; retry 401 is final", a
   };
   assert.equal((await authenticatedFetch("/protected")).status, 401);
   assert.equal(calls, 3);
-  assert.equal(sessionStorage.getItem(AUTH_SESSION_KEY), null);
+  assert.equal(localStorage.getItem(AUTH_SESSION_KEY), null);
 });
 test("Staff me does not require company membership; company ADMIN does not grant Staff access", async () => {
   globalThis.fetch = async () => Response.json({ data: user });

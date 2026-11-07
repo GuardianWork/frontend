@@ -85,7 +85,7 @@ test("logout clears local tokens and revokes the server refresh token", async ()
   const values = new Map([
     [AUTH_SESSION_KEY, JSON.stringify({ accessToken: "access", refreshToken: "refresh" })],
   ]);
-  globalThis.sessionStorage = {
+  globalThis.localStorage = {
     getItem: (key) => values.get(key) ?? null,
     removeItem: (key) => values.delete(key),
   };
@@ -100,14 +100,14 @@ test("logout clears local tokens and revokes the server refresh token", async ()
     await logoutAccount();
     assert.equal(values.size, 0);
   } finally {
-    delete globalThis.sessionStorage;
+    delete globalThis.localStorage;
   }
 });
 
 test("logout still clears the session when the API is offline", async () => {
   const { logoutAccount, AUTH_SESSION_KEY } = await import("./auth.ts");
   const values = new Map([[AUTH_SESSION_KEY, JSON.stringify({ refreshToken: "refresh" })]]);
-  globalThis.sessionStorage = {
+  globalThis.localStorage = {
     getItem: (key) => values.get(key) ?? null,
     removeItem: (key) => values.delete(key),
   };
@@ -118,13 +118,13 @@ test("logout still clears the session when the API is offline", async () => {
     await logoutAccount();
     assert.equal(values.size, 0);
   } finally {
-    delete globalThis.sessionStorage;
+    delete globalThis.localStorage;
   }
 });
 
 function browserSession(session) {
   const values = new Map();
-  globalThis.sessionStorage = {
+  globalThis.localStorage = {
     getItem: (key) => values.get(key) ?? null,
     setItem: (key, value) => values.set(key, value),
     removeItem: (key) => values.delete(key),
@@ -159,7 +159,7 @@ test("/me loads authoritative identity and OWNER membership without changing acc
   assert.equal(me.role, "USER");
   assert.deepEqual(getCurrentUser().activeMembership, activeMembership);
   assert.equal(getLoginDestination(me, "recruiter"), "/rec");
-  delete globalThis.sessionStorage;
+  delete globalThis.localStorage;
 });
 
 test("expired access tokens refresh once for concurrent requests and persist the rotated pair", async () => {
@@ -182,7 +182,7 @@ test("expired access tokens refresh once for concurrent requests and persist the
   await Promise.all([authenticatedRequest("/one"), authenticatedRequest("/two")]);
   assert.equal(rotations, 1);
   assert.equal(JSON.parse(values.get(AUTH_SESSION_KEY)).refreshToken, "new-refresh");
-  delete globalThis.sessionStorage;
+  delete globalThis.localStorage;
 });
 
 test("a server 401 refreshes and retries once; revoked refresh tokens clear both tokens", async () => {
@@ -203,9 +203,9 @@ test("a server 401 refreshes and retries once; revoked refresh tokens clear both
   globalThis.fetch = async () =>
     Response.json({ status: 401, message: "Revoked", data: null }, { status: 401 });
   await assert.rejects(authenticatedRequest("/protected"), /đăng nhập lại/);
-  assert.equal(sessionStorage.getItem(AUTH_SESSION_KEY), null);
+  assert.equal(localStorage.getItem(AUTH_SESSION_KEY), null);
   assert.ok(values.size);
-  delete globalThis.sessionStorage;
+  delete globalThis.localStorage;
 });
 
 test("logging out during token refresh never restores the signed-out session", async () => {
@@ -223,6 +223,6 @@ test("logging out during token refresh never restores the signed-out session", a
   await logoutAccount();
   finish(Response.json({ status: 200, data: { ...tokenPair, accessToken: "rotated" } }));
   await assert.rejects(refresh, /đăng nhập lại/);
-  assert.equal(sessionStorage.getItem(AUTH_SESSION_KEY), null);
-  delete globalThis.sessionStorage;
+  assert.equal(localStorage.getItem(AUTH_SESSION_KEY), null);
+  delete globalThis.localStorage;
 });
