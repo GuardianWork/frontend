@@ -20,6 +20,7 @@ import { Route as ComplianceRouteImport } from './routes/compliance'
 import { Route as CopilotRouteImport } from './routes/copilot'
 import { Route as JobsRouteImport } from './routes/jobs'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RecRouteImport } from './routes/rec'
 import { Route as RecruitRouteImport } from './routes/recruit'
@@ -45,6 +46,7 @@ import { Route as CanAppliedRouteImport } from './routes/can/applied'
 import { Route as CanCopilotRouteImport } from './routes/can/copilot'
 import { Route as CanCvsRouteImport } from './routes/can/cvs'
 import { Route as CanJobsRouteImport } from './routes/can/jobs'
+import { Route as CanNotificationsRouteImport } from './routes/can/notifications'
 import { Route as CanProfileRouteImport } from './routes/can/profile'
 import { Route as RecIndexRouteImport } from './routes/rec/index'
 import { Route as RecAccountRouteImport } from './routes/rec/account'
@@ -122,6 +124,11 @@ const JobsRoute = JobsRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -247,6 +254,11 @@ const CanCvsRoute = CanCvsRouteImport.update({
 const CanJobsRoute = CanJobsRouteImport.update({
   id: '/jobs',
   path: '/jobs',
+  getParentRoute: () => CanRoute,
+} as any)
+const CanNotificationsRoute = CanNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => CanRoute,
 } as any)
 const CanProfileRoute = CanProfileRouteImport.update({
@@ -378,6 +390,7 @@ export interface FileRoutesByFullPath {
   '/copilot': typeof CopilotRoute
   '/jobs': typeof JobsRoute
   '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/rec': typeof RecRouteWithChildren
   '/recruit': typeof RecruitRoute
@@ -401,6 +414,7 @@ export interface FileRoutesByFullPath {
   '/can/copilot': typeof CanCopilotRoute
   '/can/cvs': typeof CanCvsRoute
   '/can/jobs': typeof CanJobsRoute
+  '/can/notifications': typeof CanNotificationsRoute
   '/can/profile': typeof CanProfileRoute
   '/rec/account': typeof RecAccountRoute
   '/rec/applications': typeof RecApplicationsRoute
@@ -438,6 +452,7 @@ export interface FileRoutesByTo {
   '/copilot': typeof CopilotRoute
   '/jobs': typeof JobsRoute
   '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/recruit': typeof RecruitRoute
   '/register': typeof RegisterRoute
@@ -460,6 +475,7 @@ export interface FileRoutesByTo {
   '/can/copilot': typeof CanCopilotRoute
   '/can/cvs': typeof CanCvsRoute
   '/can/jobs': typeof CanJobsRoute
+  '/can/notifications': typeof CanNotificationsRoute
   '/can/profile': typeof CanProfileRoute
   '/rec/account': typeof RecAccountRoute
   '/rec/applications': typeof RecApplicationsRoute
@@ -499,6 +515,7 @@ export interface FileRoutesById {
   '/copilot': typeof CopilotRoute
   '/jobs': typeof JobsRoute
   '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/rec': typeof RecRouteWithChildren
   '/recruit': typeof RecruitRoute
@@ -522,6 +539,7 @@ export interface FileRoutesById {
   '/can/copilot': typeof CanCopilotRoute
   '/can/cvs': typeof CanCvsRoute
   '/can/jobs': typeof CanJobsRoute
+  '/can/notifications': typeof CanNotificationsRoute
   '/can/profile': typeof CanProfileRoute
   '/rec/account': typeof RecAccountRoute
   '/rec/applications': typeof RecApplicationsRoute
@@ -562,6 +580,7 @@ export interface FileRouteTypes {
     | '/copilot'
     | '/jobs'
     | '/login'
+    | '/notifications'
     | '/profile'
     | '/rec'
     | '/recruit'
@@ -585,6 +604,7 @@ export interface FileRouteTypes {
     | '/can/copilot'
     | '/can/cvs'
     | '/can/jobs'
+    | '/can/notifications'
     | '/can/profile'
     | '/rec/account'
     | '/rec/applications'
@@ -622,6 +642,7 @@ export interface FileRouteTypes {
     | '/copilot'
     | '/jobs'
     | '/login'
+    | '/notifications'
     | '/profile'
     | '/recruit'
     | '/register'
@@ -644,6 +665,7 @@ export interface FileRouteTypes {
     | '/can/copilot'
     | '/can/cvs'
     | '/can/jobs'
+    | '/can/notifications'
     | '/can/profile'
     | '/rec/account'
     | '/rec/applications'
@@ -682,6 +704,7 @@ export interface FileRouteTypes {
     | '/copilot'
     | '/jobs'
     | '/login'
+    | '/notifications'
     | '/profile'
     | '/rec'
     | '/recruit'
@@ -705,6 +728,7 @@ export interface FileRouteTypes {
     | '/can/copilot'
     | '/can/cvs'
     | '/can/jobs'
+    | '/can/notifications'
     | '/can/profile'
     | '/rec/account'
     | '/rec/applications'
@@ -744,6 +768,7 @@ export interface RootRouteChildren {
   CopilotRoute: typeof CopilotRoute
   JobsRoute: typeof JobsRoute
   LoginRoute: typeof LoginRoute
+  NotificationsRoute: typeof NotificationsRoute
   ProfileRoute: typeof ProfileRoute
   RecRoute: typeof RecRouteWithChildren
   RecruitRoute: typeof RecruitRoute
@@ -852,6 +877,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -1029,6 +1061,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CanJobsRouteImport
       parentRoute: typeof CanRoute
     }
+    '/can/notifications': {
+      id: '/can/notifications'
+      path: '/notifications'
+      fullPath: '/can/notifications'
+      preLoaderRoute: typeof CanNotificationsRouteImport
+      parentRoute: typeof CanRoute
+    }
     '/can/profile': {
       id: '/can/profile'
       path: '/profile'
@@ -1200,6 +1239,7 @@ interface CanRouteChildren {
   CanCopilotRoute: typeof CanCopilotRoute
   CanCvsRoute: typeof CanCvsRoute
   CanJobsRoute: typeof CanJobsRoute
+  CanNotificationsRoute: typeof CanNotificationsRoute
   CanProfileRoute: typeof CanProfileRoute
   CanIndexRoute: typeof CanIndexRoute
   CanJobsApplyRoute: typeof CanJobsApplyRoute
@@ -1212,6 +1252,7 @@ const CanRouteChildren: CanRouteChildren = {
   CanCopilotRoute: CanCopilotRoute,
   CanCvsRoute: CanCvsRoute,
   CanJobsRoute: CanJobsRoute,
+  CanNotificationsRoute: CanNotificationsRoute,
   CanProfileRoute: CanProfileRoute,
   CanIndexRoute: CanIndexRoute,
   CanJobsApplyRoute: CanJobsApplyRoute,
@@ -1260,6 +1301,7 @@ const rootRouteChildren: RootRouteChildren = {
   CopilotRoute: CopilotRoute,
   JobsRoute: JobsRoute,
   LoginRoute: LoginRoute,
+  NotificationsRoute: NotificationsRoute,
   ProfileRoute: ProfileRoute,
   RecRoute: RecRouteWithChildren,
   RecruitRoute: RecruitRoute,

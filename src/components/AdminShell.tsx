@@ -18,8 +18,10 @@ import {
   GlobeIcon,
 } from "@/components/icons";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { BriefcaseBusiness, ChevronDown, X, ShieldCheck } from "lucide-react";
+import { BriefcaseBusiness, ChevronDown, X, ShieldCheck, Bell as BellIcon } from "lucide-react";
+import { NotificationBell } from "./candidate/NotificationBell";
 import { useContext, useEffect, useState, type ReactNode } from "react";
+import { useNotifications } from "@/context/NotificationContext";
 import { StaffShell } from "./StaffShell";
 import { LogoutButton } from "./LogoutButton";
 import { RecruiterShell } from "./RecruiterShell";
@@ -124,6 +126,7 @@ function AdminShellFrame({
   const { collapsed, animate } = useContext(SidebarState);
   const { locale, setLocale } = useLanguage();
   const copy = candidateWorkspaceCopy[locale].chrome;
+  const { unreadCount } = useNotifications();
   const [localeReady, setLocaleReady] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   useNavigationFocus(menuOpen, "workspace-navigation");
@@ -178,6 +181,7 @@ function AdminShellFrame({
     { to: "/can/cvs", label: copy.nav.cvs, icon: "description" },
     { to: "/can/profile", label: copy.nav.profile, icon: "badge" },
     { to: "/can/copilot", label: copy.nav.copilot, icon: "gavel" },
+    { to: "/can/notifications", label: copy.nav.notifications, icon: "bell" },
   ];
 
   const navItems =
@@ -200,7 +204,9 @@ function AdminShellFrame({
               ? copy.pageTitles.copilot
               : pathname === "/can/account"
                 ? copy.pageTitles.account
-                : null;
+                : pathname === "/can/notifications"
+                  ? copy.pageTitles.notifications
+                  : null;
   const pageTitle = currentRole === "candidate" ? (candidatePageTitle ?? title) : title;
 
   const roleMeta =
@@ -260,11 +266,38 @@ function AdminShellFrame({
                   <ApplicationIcon size={20} />
                 ) : item.icon === "gavel" ? (
                   <LegalReferenceIcon size={20} />
+                ) : item.icon === "bell" ? (
+                  <BellIcon size={20} />
                 ) : (
                   <CandidateProfileIcon size={20} />
                 )}
               </span>
-              <span className="workspace-nav-label">{item.label}</span>
+              <span className="workspace-nav-label">
+                {item.label}
+                {item.icon === "bell" && unreadCount > 0 && (
+                  <span
+                    aria-label={`${unreadCount} thông báo chưa đọc`}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      minWidth: 18,
+                      height: 18,
+                      padding: "0 5px",
+                      marginLeft: 6,
+                      borderRadius: 9999,
+                      background: "var(--color-accent)",
+                      color: "var(--color-paper)",
+                      fontSize: 10,
+                      fontWeight: 700,
+                      lineHeight: 1,
+                      verticalAlign: "middle",
+                    }}
+                  >
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </span>
             </>
           ) : (
             <>
@@ -428,16 +461,19 @@ function AdminShellFrame({
             {topNavExtras}
 
             {currentRole === "candidate" && (
-              <button
-                type="button"
-                disabled={!localeReady}
-                aria-label={locale === "en" ? copy.switchToVietnamese : copy.switchToEnglish}
-                onClick={() => setLocale(locale === "en" ? "vn" : "en")}
-                className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border border-warm-border bg-paper-white px-2.5 py-2 text-xs font-semibold text-charcoal-83 transition-colors hover:bg-surface-container hover:text-charcoal-text disabled:opacity-60"
-              >
-                <GlobeIcon size={16} aria-hidden="true" />
-                <span>{locale === "en" ? "EN" : "VI"}</span>
-              </button>
+              <>
+                <NotificationBell />
+                <button
+                  type="button"
+                  disabled={!localeReady}
+                  aria-label={locale === "en" ? copy.switchToVietnamese : copy.switchToEnglish}
+                  onClick={() => setLocale(locale === "en" ? "vn" : "en")}
+                  className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border border-warm-border bg-paper-white px-2.5 py-2 text-xs font-semibold text-charcoal-83 transition-colors hover:bg-surface-container hover:text-charcoal-text disabled:opacity-60"
+                >
+                  <GlobeIcon size={16} aria-hidden="true" />
+                  <span>{locale === "en" ? "EN" : "VI"}</span>
+                </button>
+              </>
             )}
 
             <div className="flex items-center gap-2">
