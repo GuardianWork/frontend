@@ -141,10 +141,10 @@ for (const action of ["deactivation", "deletion"] as const) {
     await expect(page.getByRole("status")).toContainText(
       action === "deactivation" ? "tạm ngừng" : "đang chờ xử lý",
     );
-    expect(await page.evaluate(() => sessionStorage.getItem("guardianwork_auth_session"))).toBe(
+    expect(await page.evaluate(() => localStorage.getItem("guardianwork_auth_session"))).toBe(
       null,
     );
-    await page.getByRole("link", { name: "Kích hoạt lại hoặc hủy yêu cầu xóa tài khoản" }).click();
+    await page.goto("/account-recovery");
     await page
       .getByLabel("Bạn muốn thực hiện thao tác nào?")
       .selectOption(action === "deactivation" ? "REACTIVATE" : "CANCEL_DELETION");
@@ -163,7 +163,7 @@ for (const action of ["deactivation", "deletion"] as const) {
       .click();
     await expect(page).toHaveURL(/\/login/);
     await expect(page.getByRole("status")).toContainText("đăng nhập bình thường");
-    expect(await page.evaluate(() => sessionStorage.getItem("guardianwork_auth_session"))).toBe(
+    expect(await page.evaluate(() => localStorage.getItem("guardianwork_auth_session"))).toBe(
       null,
     );
   });
@@ -184,7 +184,7 @@ test("password change clears both tokens and requires sign-in without refresh", 
   await page.getByRole("button", { name: "Đổi mật khẩu", exact: true }).click();
   await expect(page).toHaveURL(/\/login/);
   await expect(page.getByRole("status")).toContainText("Đã đổi mật khẩu");
-  expect(await page.evaluate(() => sessionStorage.getItem("guardianwork_auth_session"))).toBe(null);
+  expect(await page.evaluate(() => localStorage.getItem("guardianwork_auth_session"))).toBe(null);
   expect(refreshes).toBe(0);
 });
 
@@ -287,7 +287,7 @@ test("closure delivery rejection, Retry-After, expired proof and changed eligibi
   await expect(dialog.locator("#closure-code")).toBeDisabled();
   await expect(dialog.getByRole("status").filter({ hasText: "hết hạn" })).toBeVisible();
   await dialog.getByRole("button", { name: "Hủy", exact: true }).click();
-  expect(await page.evaluate(() => sessionStorage.getItem("guardianwork_auth_session"))).not.toBe(
+  expect(await page.evaluate(() => localStorage.getItem("guardianwork_auth_session"))).not.toBe(
     null,
   );
 });
@@ -413,7 +413,7 @@ test("a Company membership arriving after code delivery blocks confirmation and 
   ).toBeDisabled();
   await dialog.getByRole("button", { name: "Hủy", exact: true }).click();
   await expect(page.locator(".account-blockers")).toBeVisible();
-  expect(await page.evaluate(() => sessionStorage.getItem("guardianwork_auth_session"))).not.toBe(
+  expect(await page.evaluate(() => localStorage.getItem("guardianwork_auth_session"))).not.toBe(
     null,
   );
 });
