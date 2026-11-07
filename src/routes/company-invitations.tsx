@@ -1,6 +1,6 @@
 import "./company-invitations.css";
 import { ShieldCheck, Mail } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { loadCurrentUser } from "@/services/auth";
@@ -31,6 +31,7 @@ function InvitationPage() {
   const [ready, setReady] = useState(false);
   const [preview, setPreview] = useState<RecipientInvitationPreview | null>(null);
   const [busy, setBusy] = useState(false);
+  const inspecting = useRef(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState("");
   const [accepted, setAccepted] = useState(false);
@@ -43,23 +44,7 @@ function InvitationPage() {
     setPreview(null);
     setConfirmed(false);
   }, [user?.id]);
-  useEffect(() => {
-    if (ready && secret && user?.id) void inspect();
-  }, [ready, secret, user?.id]);
-  async function inspect() {
-    if (!secret || busy) return;
-    setBusy(true);
-    setError("");
-    try {
-      await loadCurrentUser();
-      setPreview(await previewCompanyInvitation(secret));
-    } catch (cause) {
-      showError(cause);
-    } finally {
-      setBusy(false);
-    }
-  }
-  function showError(cause: unknown) {
+  const showError = useCallback((cause: unknown) => {
     setError(
       cause instanceof ApiError && cause.status === 404
         ? "Lời mời không khả dụng hoặc không dành cho tài khoản này. Kiểm tra email đăng nhập hoặc yêu cầu lời mời mới."
@@ -69,7 +54,25 @@ function InvitationPage() {
             ? cause.message
             : "Không thể xử lý lời mời. Vui lòng thử lại.",
     );
-  }
+  }, []);
+  const inspect = useCallback(async () => {
+    if (!secret || inspecting.current) return;
+    inspecting.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      await loadCurrentUser();
+      setPreview(await previewCompanyInvitation(secret));
+    } catch (cause) {
+      showError(cause);
+    } finally {
+      inspecting.current = false;
+      setBusy(false);
+    }
+  }, [secret, showError]);
+  useEffect(() => {
+    if (ready && secret && user?.id) void inspect();
+  }, [ready, secret, user?.id, inspect]);
   async function decide(accept: boolean) {
     if (!preview || busy || (accept && !confirmed)) return;
     setBusy(true);

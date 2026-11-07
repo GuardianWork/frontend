@@ -141,9 +141,7 @@ for (const action of ["deactivation", "deletion"] as const) {
     await expect(page.getByRole("status")).toContainText(
       action === "deactivation" ? "tạm ngừng" : "đang chờ xử lý",
     );
-    expect(await page.evaluate(() => localStorage.getItem("guardianwork_auth_session"))).toBe(
-      null,
-    );
+    expect(await page.evaluate(() => localStorage.getItem("guardianwork_auth_session"))).toBe(null);
     await page.goto("/account-recovery");
     await page
       .getByLabel("Bạn muốn thực hiện thao tác nào?")
@@ -163,9 +161,7 @@ for (const action of ["deactivation", "deletion"] as const) {
       .click();
     await expect(page).toHaveURL(/\/login/);
     await expect(page.getByRole("status")).toContainText("đăng nhập bình thường");
-    expect(await page.evaluate(() => localStorage.getItem("guardianwork_auth_session"))).toBe(
-      null,
-    );
+    expect(await page.evaluate(() => localStorage.getItem("guardianwork_auth_session"))).toBe(null);
   });
 }
 
