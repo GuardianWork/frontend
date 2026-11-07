@@ -1,3 +1,4 @@
+import { ValidationSummary } from "@/components/ui/validation-summary";
 import { useState } from "react";
 import { JobDescriptionEditor } from "./JobDescriptionEditor";
 import { CircleAlert, Plus, Trash2 } from "lucide-react";
@@ -60,21 +61,18 @@ export function JobContentEditor({
     document.querySelector<HTMLElement>(`[data-job-field="${CSS.escape(field)}"]`)?.focus();
   };
   const validationSummary = () => (
-    <div className="jp-validation-summary" aria-live="polite" hidden={!visibleErrors.length}>
-      <CircleAlert size={30} className="jp-validation-icon" aria-hidden="true" />
-      <div>
-        <p className="jp-validation-heading">Vui lòng bổ sung các thông tin sau để tiếp tục.</p>
-        <ul>
-          {visibleErrors.map((field) => (
-            <li key={field}>
-              <button type="button" onClick={() => focusField(field)}>
-                {labels[field]}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
+    <ValidationSummary
+      heading="Vui lòng bổ sung các thông tin sau để tiếp tục."
+      hidden={!visibleErrors.length}
+    >
+      {visibleErrors.map((field) => (
+        <li key={field}>
+          <button type="button" onClick={() => focusField(field)}>
+            {labels[field]}
+          </button>
+        </li>
+      ))}
+    </ValidationSummary>
   );
   const update = (patch: Partial<JobContent>) => onChange({ ...content, ...patch });
   const compensation = content.compensation;

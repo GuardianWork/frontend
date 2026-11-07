@@ -1,8 +1,11 @@
+import "./company-invitations.css";
+import { ShieldCheck, Mail } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { loadCurrentUser } from "@/services/auth";
 import { ApiError } from "@/services/api";
+import { ValidationSummary } from "@/components/ui/validation-summary";
 import { captureInvitationLink, clearInvitationLink } from "@/services/invitationLink";
 import {
   previewCompanyInvitation,
@@ -40,6 +43,9 @@ function InvitationPage() {
     setPreview(null);
     setConfirmed(false);
   }, [user?.id]);
+  useEffect(() => {
+    if (ready && secret && user?.id) void inspect();
+  }, [ready, secret, user?.id]);
   async function inspect() {
     if (!secret || busy) return;
     setBusy(true);
@@ -85,121 +91,148 @@ function InvitationPage() {
     }
   }
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 py-10 sm:py-16">
-      <Link to="/vn" className="guardian-logo text-lg font-semibold text-primary">
-        GuardianWork
-      </Link>
-      <h1 className="mb-3 mt-8 text-2xl font-bold">Lời mời tham gia công ty</h1>
-      <p className="mb-6 text-sm leading-6 text-charcoal-83">
-        Đăng nhập bằng email nhận lời mời, kiểm tra thông tin công ty rồi xác nhận tham gia với vai
-        trò nhà tuyển dụng.
-      </p>
-      {error && (
-        <p
-          role="alert"
-          className="mb-5 rounded-lg border border-red-200 bg-red-50 p-4 text-sm leading-6 text-red-800"
-        >
-          {error}
+    <div className="invitation-page">
+      <header className="invitation-header">
+        <Link to="/vn" className="guardian-logo invitation-brand">
+          <ShieldCheck size={29} /> GuardianWork
+        </Link>
+        <Link to="/vn" className="invitation-home">
+          Về trang chủ
+        </Link>
+      </header>
+      <main className="invitation-panel">
+        <div className="invitation-symbol">
+          <Mail size={26} />
+        </div>
+        <h1 className="mb-3 text-2xl font-bold">
+          {ready && !secret && !result ? "Mở lời mời từ email của bạn" : "Lời mời tham gia công ty"}
+        </h1>
+        <p className="invitation-intro text-sm leading-6 text-charcoal-83">
+          {ready && !secret && !result
+            ? "Trang này cần liên kết lời mời để hiển thị thông tin công ty."
+            : "Đăng nhập bằng email nhận lời mời, kiểm tra thông tin công ty rồi xác nhận tham gia với vai trò nhà tuyển dụng."}
         </p>
-      )}
-      {result ? (
-        <section>
-          <p role="status" className="mb-4 text-lg font-semibold">
-            {result}
-          </p>
-          <Link
-            to={accepted ? "/rec" : "/can/jobs"}
-            className="recruiter-primary inline-flex min-h-11 items-center"
+        {error && (
+          <ValidationSummary
+            role="alert"
+            className="mb-5"
+            heading="Không thể xử lý lời mời. Vui lòng kiểm tra thông tin sau."
           >
-            {accepted ? "Vào không gian tuyển dụng" : "Tiếp tục tìm việc"}
-          </Link>
-        </section>
-      ) : !ready ? (
-        <p role="status">Đang đọc lời mời…</p>
-      ) : !secret ? (
-        <p role="status" className="text-sm leading-6">
-          Không tìm thấy lời mời. Hãy mở lại liên kết trong email. Vì bảo mật, lời mời không được
-          lưu khi tải lại trang.
-        </p>
-      ) : !user ? (
-        <div className="space-y-4">
-          <p className="text-sm leading-6">
-            Lời mời chỉ được giữ trong trang này. Vui lòng giữ trang mở khi đăng nhập hoặc đăng ký.
-          </p>
-          <div className="flex flex-wrap gap-3">
+            <li>{error}</li>
+          </ValidationSummary>
+        )}
+        {result ? (
+          <section>
+            <p role="status" className="mb-4 text-lg font-semibold">
+              {result}
+            </p>
             <Link
-              to="/login"
-              search={{ role: "recruiter" }}
+              to={accepted ? "/rec" : "/can/jobs"}
               className="recruiter-primary inline-flex min-h-11 items-center"
             >
-              Đăng nhập
+              {accepted ? "Vào không gian tuyển dụng" : "Tiếp tục tìm việc"}
             </Link>
-            <Link
-              to="/register"
-              search={{ role: "recruiter" }}
-              className="inline-flex min-h-11 items-center px-3 font-semibold text-primary"
-            >
-              Tạo tài khoản
+          </section>
+        ) : !ready ? (
+          <p role="status">Đang đọc lời mời…</p>
+        ) : !secret ? (
+          <section className="invitation-empty">
+            <h2 className="text-base font-semibold">Kiểm tra hộp thư nhận lời mời</h2>
+            <p className="mt-2 text-sm leading-6 text-charcoal-83">
+              Mở email mời tham gia công ty và chọn liên kết trong email để tiếp tục. Nếu không tìm
+              thấy email, hãy kiểm tra thư rác hoặc liên hệ người mời.
+            </p>
+            <p className="mt-4 text-sm leading-6 text-charcoal-83">
+              Vì bảo mật, lời mời không được lưu khi tải lại trang. Bạn có thể mở lại liên kết gốc
+              trong email.
+            </p>
+            <Link to="/vn" className="recruiter-primary mt-6 inline-flex items-center">
+              Về trang chủ
             </Link>
-          </div>
-        </div>
-      ) : (
-        <section>
-          <p className="mb-4 break-words text-sm">Tài khoản: {user.email}</p>
-          {!user.recruitingEmailEligible && <EmailVerificationPanel />}
-          <button
-            disabled={busy}
-            onClick={() => void inspect()}
-            className="min-h-11 rounded-lg border border-warm-border px-4 text-sm font-semibold disabled:opacity-60"
-          >
-            {busy ? "Đang xử lý…" : "Kiểm tra lời mời"}
-          </button>
-          {preview && (
-            <div className="mt-6 space-y-4 border-t border-warm-border pt-5">
-              <h2 className="break-words text-xl font-semibold">{preview.companyName}</h2>
-              <p className="text-sm leading-6">
-                Vai trò: Nhà tuyển dụng. Hết hạn:{" "}
-                {new Date(preview.expiresAt).toLocaleString("vi-VN")}.
-              </p>
-              <label className="flex min-h-11 items-start gap-3 text-sm leading-6">
-                <input
-                  type="checkbox"
-                  checked={confirmed}
-                  disabled={busy}
-                  onChange={(event) => setConfirmed(event.target.checked)}
-                  className="mt-1 h-4 w-4 shrink-0 accent-primary"
-                />
-                Tôi xác nhận muốn tham gia công ty này.
-              </label>
-              {!user.recruitingEmailEligible && (
-                <p id="invitation-email-required" className="text-sm leading-6 text-charcoal-83">
-                  Bạn cần xác minh email để tham gia công ty. Nếu bạn vừa xác minh trong tab khác,
-                  chọn “Cập nhật trạng thái xác minh” để cập nhật trạng thái.
-                </p>
-              )}
-              <div className="flex flex-wrap gap-3">
-                <button
-                  aria-describedby={
-                    !user.recruitingEmailEligible ? "invitation-email-required" : undefined
-                  }
-                  disabled={busy || !confirmed}
-                  onClick={() => void decide(true)}
-                  className="recruiter-primary min-h-11 disabled:opacity-60"
-                >
-                  Chấp nhận lời mời
-                </button>
-                <button
-                  disabled={busy}
-                  onClick={() => void decide(false)}
-                  className="min-h-11 rounded-lg border border-warm-border px-4 text-sm font-semibold disabled:opacity-60"
-                >
-                  Từ chối lời mời
-                </button>
-              </div>
+          </section>
+        ) : !user ? (
+          <div className="invitation-entry space-y-4">
+            <p className="text-sm leading-6">
+              Lời mời chỉ được giữ trong trang này. Vui lòng giữ trang mở khi đăng nhập hoặc đăng
+              ký.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                to="/login"
+                search={{ role: "recruiter" }}
+                className="recruiter-primary inline-flex min-h-11 items-center"
+              >
+                Đăng nhập
+              </Link>
+              <Link
+                to="/register"
+                search={{ role: "recruiter" }}
+                className="invitation-secondary inline-flex min-h-11 items-center px-3 font-semibold text-primary"
+              >
+                Tạo tài khoản
+              </Link>
             </div>
-          )}
-        </section>
-      )}
-    </main>
+          </div>
+        ) : (
+          <section>
+            <p className="invitation-account mb-4 break-words text-sm">Tài khoản: {user.email}</p>
+            {!user.recruitingEmailEligible && <EmailVerificationPanel />}
+            {!preview && (
+              <button
+                disabled={busy}
+                onClick={() => void inspect()}
+                className="min-h-11 rounded-lg border border-warm-border px-4 text-sm font-semibold disabled:opacity-60"
+              >
+                {busy ? "Đang đọc lời mời…" : "Thử lại"}
+              </button>
+            )}
+            {preview && (
+              <div className="invitation-details mt-6 space-y-4 border-t border-warm-border pt-5">
+                <h2 className="break-words text-xl font-semibold">{preview.companyName}</h2>
+                <p className="text-sm leading-6">
+                  Vai trò: Nhà tuyển dụng. Hết hạn:{" "}
+                  {new Date(preview.expiresAt).toLocaleString("vi-VN")}.
+                </p>
+                <label className="flex min-h-11 items-start gap-3 text-sm leading-6">
+                  <input
+                    type="checkbox"
+                    checked={confirmed}
+                    disabled={busy}
+                    onChange={(event) => setConfirmed(event.target.checked)}
+                    className="mt-1 h-4 w-4 shrink-0 accent-primary"
+                  />
+                  Tôi xác nhận muốn tham gia công ty này.
+                </label>
+                {!user.recruitingEmailEligible && (
+                  <p id="invitation-email-required" className="text-sm leading-6 text-charcoal-83">
+                    Bạn cần xác minh email để tham gia công ty. Nếu bạn vừa xác minh trong tab khác,
+                    chọn “Cập nhật trạng thái xác minh” để cập nhật trạng thái.
+                  </p>
+                )}
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    aria-describedby={
+                      !user.recruitingEmailEligible ? "invitation-email-required" : undefined
+                    }
+                    disabled={busy || !confirmed}
+                    onClick={() => void decide(true)}
+                    className="recruiter-primary min-h-11 disabled:opacity-60"
+                  >
+                    Chấp nhận lời mời
+                  </button>
+                  <button
+                    disabled={busy}
+                    onClick={() => void decide(false)}
+                    className="min-h-11 rounded-lg border border-warm-border px-4 text-sm font-semibold disabled:opacity-60"
+                  >
+                    Từ chối lời mời
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+        )}
+      </main>
+    </div>
   );
 }

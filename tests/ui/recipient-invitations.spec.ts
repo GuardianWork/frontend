@@ -77,7 +77,6 @@ test("invitation survives login and accepts only after preview and explicit conf
   await page.locator("#login-password").fill("Guardian123!");
   await page.getByRole("button", { name: "Đăng nhập", exact: true }).click();
   await expect(page).toHaveURL(/\/company-invitations$/);
-  await page.getByRole("button", { name: "Kiểm tra lời mời", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Công ty Ánh Dương" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Chấp nhận lời mời" })).toBeDisabled();
   expect(acceptCalls).toBe(0);
@@ -149,7 +148,6 @@ test("recipient can check consent before email proof and refresh proof without l
   await page.locator("#login-identifier").fill("recruiter_demo");
   await page.locator("#login-password").fill("Guardian123!");
   await page.getByRole("button", { name: "Đăng nhập", exact: true }).click();
-  await page.getByRole("button", { name: "Kiểm tra lời mời", exact: true }).click();
   const consent = page.getByRole("checkbox", { name: "Tôi xác nhận muốn tham gia công ty này." });
   await expect(consent).toBeEnabled();
   await page.getByText("Tôi xác nhận muốn tham gia công ty này.", { exact: true }).click();
@@ -157,7 +155,8 @@ test("recipient can check consent before email proof and refresh proof without l
   const accept = page.getByRole("button", { name: "Chấp nhận lời mời" });
   await expect(accept).toBeEnabled();
   await accept.click();
-  await expect(page.getByRole("alert")).toContainText("Xác minh email");
+  await expect(page.getByRole("alert").getByRole("listitem")).toContainText("Xác minh email");
+  await page.getByRole("alert").screenshot({ path: "/tmp/invitation-error-panel.png" });
   expect(attempts).toBe(1);
   await expect(consent).toBeChecked();
   verified = true;
