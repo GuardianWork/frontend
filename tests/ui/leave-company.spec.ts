@@ -92,7 +92,7 @@ test("recruiter confirms leaving through the API and loses cached company member
   await expect(page).toHaveURL(/\/vn$/);
   expect(requests).toBe(1);
   const user = await page.evaluate(
-    () => JSON.parse(sessionStorage.getItem("guardianwork_auth_session")!).user,
+    () => JSON.parse(localStorage.getItem("guardianwork_auth_session")!).user,
   );
   expect(user.activeMembership).toBeNull();
 });

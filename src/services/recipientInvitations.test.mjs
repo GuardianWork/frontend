@@ -4,7 +4,7 @@ import { previewInvitation, acceptInvitation } from "./recipientInvitations.ts";
 import { AUTH_SESSION_KEY } from "./auth.ts";
 test("recipient preview and acceptance use the authenticated secret with explicit confirmation", async () => {
   const originalFetch = globalThis.fetch;
-  globalThis.sessionStorage = {
+  globalThis.localStorage = {
     getItem: (key) =>
       key === AUTH_SESSION_KEY
         ? JSON.stringify({
@@ -40,6 +40,6 @@ test("recipient preview and acceptance use the authenticated secret with explici
     await acceptInvitation("private-invite");
   } finally {
     globalThis.fetch = originalFetch;
-    delete globalThis.sessionStorage;
+    delete globalThis.localStorage;
   }
 });

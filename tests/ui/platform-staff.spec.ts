@@ -85,13 +85,13 @@ test("legacy admin URLs redirect to the API-backed staff review queue", async ({
 
 test("staff routes reject a signed-in candidate", async ({ page }) => {
   await login(page, "candidate_demo");
-  const session = await page.evaluate(() => sessionStorage.getItem("guardianwork_auth_session"));
+  const session = await page.evaluate(() => localStorage.getItem("guardianwork_auth_session"));
   expect(session).not.toBeNull();
   await page.goto(`${process.env.STAFF_UI_BASE_URL || "http://localhost:5138"}/login`, {
     waitUntil: "domcontentloaded",
   });
   await page.evaluate((savedSession) => {
-    sessionStorage.setItem("guardianwork_auth_session", savedSession!);
+    localStorage.setItem("guardianwork_auth_session", savedSession!);
   }, session);
   await page.goto(`${process.env.STAFF_UI_BASE_URL || "http://localhost:5138"}/staff/jobs`, {
     waitUntil: "domcontentloaded",

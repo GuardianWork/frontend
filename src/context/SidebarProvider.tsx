@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarState, SIDEBAR_PREFERENCE_KEY } from "./sidebar-state";
 
-/** Only a display preference is stored; credentials retain the sessionStorage strategy. */
+/** Persist the sidebar display preference across visits. */
 export function SidebarProvider({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [desktop, setDesktop] = useState(false);

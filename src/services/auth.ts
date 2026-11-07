@@ -79,7 +79,7 @@ function isAuthSession(value: unknown): value is AuthSession {
 }
 function readSession(): StoredSession | null {
   try {
-    return JSON.parse(sessionStorage.getItem(AUTH_SESSION_KEY) || "null");
+    return JSON.parse(localStorage.getItem(AUTH_SESSION_KEY) || "null");
   } catch {
     return null;
   }
@@ -89,7 +89,7 @@ function emitSessionChange() {
 }
 function storeSession(session: StoredSession) {
   try {
-    sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+    localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
   } catch {
     throw new Error(
       "Không thể lưu phiên đăng nhập. Vui lòng cho phép trình duyệt lưu dữ liệu và thử lại.",
@@ -101,7 +101,7 @@ export function saveAuthSession(session: AuthSession): void {
   storeSession({ ...session, expiresAt: Date.now() + session.expiresIn * 1000 });
 }
 export function clearAuthSession() {
-  sessionStorage.removeItem(AUTH_SESSION_KEY);
+  localStorage.removeItem(AUTH_SESSION_KEY);
   emitSessionChange();
 }
 export function hasAuthSession() {

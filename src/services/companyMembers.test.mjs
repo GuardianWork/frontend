@@ -44,7 +44,7 @@ function storage() {
 }
 function login(user) {
   const company = getStoredVerificationRecord();
-  sessionStorage.setItem(
+  localStorage.setItem(
     AUTH_SESSION_KEY,
     JSON.stringify({ user, accessToken: "token", expiresAt: Date.now() + 60000 }),
   );
@@ -78,7 +78,6 @@ function invite(user) {
 beforeEach(() => {
   globalThis.window = { dispatchEvent() {} };
   globalThis.localStorage = storage();
-  globalThis.sessionStorage = storage();
   globalThis.fetch = async (url, init) => {
     if (url.endsWith("/verification-request")) {
       return Response.json(
@@ -104,7 +103,6 @@ afterEach(() => {
   globalThis.fetch = originalFetch;
   delete globalThis.window;
   delete globalThis.localStorage;
-  delete globalThis.sessionStorage;
 });
 test("only the recorded submitter becomes Owner after approval, independent of company contact email", async () => {
   await submitVerification({
@@ -230,7 +228,7 @@ test("legacy verified records never assign ownership to the current visitor", as
 });
 test("expired sessions and changed companies cannot reuse membership", async () => {
   await verifiedCompany();
-  sessionStorage.setItem(
+  localStorage.setItem(
     AUTH_SESSION_KEY,
     JSON.stringify({ user: owner, accessToken: "token", expiresAt: 0 }),
   );
@@ -256,7 +254,7 @@ test("failed persistence throws rather than claiming success", async () => {
 });
 
 test("expired or missing identities cannot submit ownerless verification requests", async () => {
-  sessionStorage.removeItem(AUTH_SESSION_KEY);
+  localStorage.removeItem(AUTH_SESSION_KEY);
   await assert.rejects(
     submitVerification({
       name: "Company",
@@ -273,7 +271,7 @@ test("expired or missing identities cannot submit ownerless verification request
     /đăng nhập/,
   );
   assert.equal(getStoredVerificationRecord().verificationStatus, "REGISTERED");
-  sessionStorage.setItem(
+  localStorage.setItem(
     AUTH_SESSION_KEY,
     JSON.stringify({ user: owner, accessToken: "token", expiresAt: 0 }),
   );

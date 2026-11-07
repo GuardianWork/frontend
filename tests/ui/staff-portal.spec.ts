@@ -38,7 +38,7 @@ test("wrong credentials retain entered values and allow retry", async ({ page })
   await expect(page.locator("#login-identifier")).toHaveValue("admin_demo");
   await expect(page.locator("#login-password")).toHaveValue("wrong-password");
   await expect(page.getByRole("button", { name: "Đăng nhập", exact: true })).toBeEnabled();
-  expect(await page.evaluate(() => sessionStorage.getItem("guardianwork_auth_session"))).toBeNull();
+  expect(await page.evaluate(() => localStorage.getItem("guardianwork_auth_session"))).toBeNull();
 });
 
 test("non-staff accounts are rejected and their temporary session is cleared", async ({ page }) => {
@@ -46,7 +46,7 @@ test("non-staff accounts are rejected and their temporary session is cleared", a
   await enterCredentials(page, "candidate_demo");
   await expect(page.getByRole("alert")).toContainText("không có quyền truy cập Platform staff");
   await expect(page).toHaveURL(`${staffOrigin}/login`);
-  expect(await page.evaluate(() => sessionStorage.getItem("guardianwork_auth_session"))).toBeNull();
+  expect(await page.evaluate(() => localStorage.getItem("guardianwork_auth_session"))).toBeNull();
   await expect(
     page.getByRole("heading", { name: "Tổng quan Platform staff", exact: true }),
   ).toHaveCount(0);
@@ -63,7 +63,7 @@ test("staff login restores identity on reload and logout protects private pages"
   ).toBeVisible();
   expect(
     await page.evaluate(
-      () => JSON.parse(sessionStorage.getItem("guardianwork_auth_session") || "null")?.user?.role,
+      () => JSON.parse(localStorage.getItem("guardianwork_auth_session") || "null")?.user?.role,
     ),
   ).toBe("STAFF");
   await page.reload();
@@ -72,7 +72,7 @@ test("staff login restores identity on reload and logout protects private pages"
   );
   await page.getByRole("button", { name: "Đăng xuất", exact: true }).click();
   await expect(page).toHaveURL(`${staffOrigin}/login`);
-  expect(await page.evaluate(() => sessionStorage.getItem("guardianwork_auth_session"))).toBeNull();
+  expect(await page.evaluate(() => localStorage.getItem("guardianwork_auth_session"))).toBeNull();
   await page.goto(`${staffOrigin}/staff/jobs`);
   await expect(page).toHaveURL(`${staffOrigin}/login`);
 });
@@ -90,7 +90,7 @@ test("public and staff origins isolate sessions and public staff links redirect 
     page.getByRole("heading", { name: "Đăng nhập GuardianWork", exact: true }),
   ).toBeVisible();
   await expect(page.getByRole("link", { name: "Đăng ký ngay", exact: true })).toBeVisible();
-  expect(await page.evaluate(() => sessionStorage.getItem("guardianwork_auth_session"))).toBeNull();
+  expect(await page.evaluate(() => localStorage.getItem("guardianwork_auth_session"))).toBeNull();
   await page.goto(`${publicOrigin}/staff/jobs`);
   await expect(page).toHaveURL(`${staffOrigin}/staff/jobs`);
   await expect(
