@@ -1,0 +1,276 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { ApiError } from "./api.ts";
+import {
+  categoryForKind,
+  countUnread,
+  markAllNotificationsRead,
+  markNotificationRead,
+  parseNotification,
+  parseNotificationPage,
+  sortNewestFirst,
+} from "./notifications.ts";
+
+const ISO = "2026-11-06T09:00:00.000Z";
+
+function minimal(id, overrides = {}) {
+  return { id, title: `Title ${id}`, body: `Body ${id}`, createdAt: ISO, ...overrides };
+}
+
+test("parses a legacy mock row into the canonical model", () => {
+  const result = parseNotification({
+    id: "1",
+    title: "  Story Hub  ",
+    message: "Share your story",
+    createdAt: ISO,
+    read: false,
+    category: "reward",
+  });
+
+  assert.equal(result.id, "1");
+  assert.equal(result.kind, "");
+  assert.equal(result.category, "reward");
+  assert.equal(result.title, "Story Hub");
+  assert.equal(result.body, "Share your story");
+  assert.equal(result.createdAt, ISO);
+  assert.equal(result.read, false);
+  assert.equal(result.readAt, null);
+  assert.equal(result.priority, "normal");
+  assert.equal(result.action, null);
+  assert.equal(result.actor, null);
+  assert.deepEqual(result.references, {});
+  assert.deepEqual(result.data, {});
+});
+
+test("adapts the GuardianWork notification response", () => {
+  const result = parseNotification({
+    id: 42,
+    eventType: "APPLICATION_STATUS_CHANGED",
+    companyId: 7,
+    companyName: "Alpha",
+    createdAt: ISO,
+    readAt: null,
+    jobId: 3,
+    revisionId: null,
+    applicationId: "9f6c7f2e-application",
+    candidateFeedback: "We would like to schedule an interview.",
+  });
+
+  assert.equal(result.id, "42");
+  assert.equal(result.kind, "APPLICATION_STATUS_CHANGED");
+  assert.equal(result.category, "application");
+  assert.equal(result.title, "Trạng thái đơn ứng tuyển đã thay đổi");
+  assert.equal(result.body, "We would like to schedule an interview.");
+  assert.equal(result.read, false);
+  assert.equal(result.readAt, null);
+  assert.deepEqual(result.references, {
+    company: "7",
+    job: "3",
+    application: "9f6c7f2e-application",
+  });
+  assert.deepEqual(result.data, {
+    companyName: "Alpha",
+    candidateFeedback: "We would like to schedule an interview.",
+  });
+});
+
+test("derives title and body when the server omits them (microsecond timestamps)", () => {
+  const result = parseNotification({
+    id: 2,
+    eventType: "APPLICATION_REJECTED",
+    companyId: 1,
+    companyName: "Công ty TNHH GuardWork Demo",
+    createdAt: "2026-11-05T05:32:23.009889Z",
+    readAt: "2026-11-07T04:35:18.666758Z",
+    jobId: 11,
+    revisionId: 13,
+    applicationId: "daaa4ed1-feb0-40a2-be89-4577d0c6005d",
+    candidateFeedback: "Cảm ơn bạn đã ứng tuyển và mong gặp lại ở cơ hội sau.",
+  });
+
+  assert.equal(result.id, "2");
+  assert.equal(result.kind, "APPLICATION_REJECTED");
+  assert.equal(result.category, "application");
+  assert.equal(result.title, "Đơn ứng tuyển bị từ chối");
+  assert.equal(result.body, "Cảm ơn bạn đã ứng tuyển và mong gặp lại ở cơ hội sau.");
+  assert.equal(result.createdAt, "2026-11-05T05:32:23.009889Z");
+  assert.equal(result.read, true);
+  assert.equal(result.readAt, "2026-11-07T04:35:18.666758Z");
+  assert.deepEqual(result.references, {
+    company: "1",
+    job: "11",
+    revision: "13",
+    application: "daaa4ed1-feb0-40a2-be89-4577d0c6005d",
+  });
+  assert.deepEqual(result.data, {
+    companyName: "Công ty TNHH GuardWork Demo",
+    candidateFeedback: "Cảm ơn bạn đã ứng tuyển và mong gặp lại ở cơ hội sau.",
+  });
+});
+
+test("normalizes aliases, derived read state, action, actor, and references", () => {
+  const result = parseNotification({
+    id: "n-1",
+    type: "JOB_REVISION_APPROVED",
+    title: "Revision approved",
+    content: "Your job revision is live.",
+    created_at: ISO,
+    read_at: "2026-11-06T10:00:00.000Z",
+    priority: "urgent",
+    action: { href: "/rec/notifications/n-1", label: "View" },
+    sender: { id: 9, name: "Recruiter", avatar: "https://cdn/avatar.png" },
+    references: { job: 12 },
+    metadata: { revisionNumber: 4 },
+    target: { type: "JOB", id: 12 },
+  });
+
+  assert.equal(result.kind, "JOB_REVISION_APPROVED");
+  assert.equal(result.category, "job");
+  assert.equal(result.body, "Your job revision is live.");
+  assert.equal(result.createdAt, ISO);
+  assert.equal(result.read, true);
+  assert.equal(result.readAt, "2026-11-06T10:00:00.000Z");
+  assert.equal(result.priority, "high");
+  assert.deepEqual(result.action, {
+    label: "View",
+    href: "/rec/notifications/n-1",
+    external: false,
+  });
+  assert.deepEqual(result.actor, {
+    id: "9",
+    name: "Recruiter",
+    avatarUrl: "https://cdn/avatar.png",
+  });
+  assert.deepEqual(result.references, { job: "12" });
+  assert.deepEqual(result.data, { revisionNumber: 4 });
+});
+
+test("falls back to a safe category and keeps the derived read flag consistent", () => {
+  const unknown = parseNotification({
+    id: "1",
+    kind: "SOMETHING_NEW",
+    category: "not-a-category",
+    createdAt: ISO,
+  });
+  assert.equal(unknown.category, "system");
+
+  const explicit = parseNotification({
+    id: "2",
+    category: "JOB",
+    createdAt: ISO,
+  });
+  assert.equal(explicit.category, "job");
+
+  const readWithoutTimestamp = parseNotification({
+    id: "3",
+    createdAt: ISO,
+    read: true,
+  });
+  assert.equal(readWithoutTimestamp.read, true);
+  assert.equal(readWithoutTimestamp.readAt, null);
+
+  const missingDate = parseNotification({ id: "4" });
+  assert.equal(missingDate.createdAt, "");
+});
+
+test("rejects a notification without an id", () => {
+  assert.throws(() => parseNotification(null), ApiError);
+  assert.throws(() => parseNotification({ title: "No id" }), ApiError);
+});
+
+test("maps event keys to categories", () => {
+  assert.equal(categoryForKind("APPLICATION_REJECTED"), "application");
+  assert.equal(categoryForKind("job_closed"), "job");
+  assert.equal(categoryForKind("COMPANY_VERIFIED"), "company");
+  assert.equal(categoryForKind("MEMBERSHIP_REMOVED"), "company");
+  assert.equal(categoryForKind("ACCOUNT_LOCKED"), "account");
+  assert.equal(categoryForKind("VERIFICATION_APPROVED"), "verification");
+  assert.equal(categoryForKind(""), "system");
+  assert.equal(categoryForKind("UNKNOWN"), "system");
+});
+
+test("parses a PageResponse envelope and preserves the server unread count", () => {
+  const page = parseNotificationPage({
+    content: [minimal("2", { read: false }), minimal("1", { read: true, readAt: ISO })],
+    pageNumber: 0,
+    pageSize: 20,
+    totalElements: 2,
+    totalPages: 1,
+    first: true,
+    last: true,
+    unreadCount: 1,
+  });
+
+  assert.equal(page.items.length, 2);
+  assert.equal(page.items[0].id, "2");
+  assert.equal(page.pageNumber, 0);
+  assert.equal(page.pageSize, 20);
+  assert.equal(page.totalElements, 2);
+  assert.equal(page.totalPages, 1);
+  assert.equal(page.unreadCount, 1);
+});
+
+test("parses a bare array and an outer data envelope", () => {
+  const bare = parseNotificationPage([minimal("1"), minimal("2")]);
+  assert.equal(bare.items.length, 2);
+  assert.equal(bare.totalElements, 2);
+  assert.equal(bare.unreadCount, null);
+
+  const wrapped = parseNotificationPage({
+    status: 200,
+    data: { items: [minimal("3")], total: 1, size: 10 },
+  });
+  assert.equal(wrapped.items.length, 1);
+  assert.equal(wrapped.totalElements, 1);
+  assert.equal(wrapped.pageSize, 10);
+});
+
+test("rejects an invalid page envelope", () => {
+  assert.throws(() => parseNotificationPage({ content: "nope" }), ApiError);
+  assert.throws(() => parseNotificationPage(null), ApiError);
+});
+
+test("counts unread items and sorts without mutating the input", () => {
+  const older = parseNotification(minimal("1", { createdAt: "2026-11-01T00:00:00.000Z" }));
+  const newer = parseNotification(minimal("2", { createdAt: "2026-11-06T00:00:00.000Z" }));
+  const unknownDate = parseNotification(minimal("3", { createdAt: "" }));
+  const items = [older, unknownDate, newer];
+
+  assert.equal(countUnread(items), 3);
+  const sorted = sortNewestFirst(items);
+  assert.deepEqual(
+    sorted.map((item) => item.id),
+    ["2", "1", "3"],
+  );
+  assert.deepEqual(
+    items.map((item) => item.id),
+    ["1", "3", "2"],
+  );
+});
+
+test("marks one notification read and preserves an existing timestamp", () => {
+  const unread = parseNotification(minimal("1", { read: false }));
+  const alreadyRead = parseNotification(
+    minimal("2", { read: true, readAt: "2026-11-05T00:00:00.000Z" }),
+  );
+  const marked = markNotificationRead([unread, alreadyRead], "1", "2026-11-06T12:00:00.000Z");
+  const untouched = markNotificationRead(marked, "2", "2026-11-06T13:00:00.000Z");
+
+  assert.equal(marked[0].read, true);
+  assert.equal(marked[0].readAt, "2026-11-06T12:00:00.000Z");
+  assert.equal(untouched[1].readAt, "2026-11-05T00:00:00.000Z");
+  assert.equal(countUnread(marked), 0);
+});
+
+test("marks all notifications read", () => {
+  const items = [
+    parseNotification(minimal("1", { read: false })),
+    parseNotification(minimal("2", { read: true, readAt: ISO })),
+  ];
+  const marked = markAllNotificationsRead(items, "2026-11-06T12:00:00.000Z");
+
+  assert.equal(countUnread(marked), 0);
+  assert.equal(marked[0].readAt, "2026-11-06T12:00:00.000Z");
+  assert.equal(marked[1].readAt, ISO);
+  assert.equal(items[0].read, false);
+});
