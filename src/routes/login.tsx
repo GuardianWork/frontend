@@ -200,22 +200,6 @@ function LoginPage() {
           )}
         </button>
       </form>
-      <p className="mt-6 text-center text-sm">
-        <Link
-          to="/account-recovery"
-          className="font-semibold text-primary underline-offset-4 hover:underline"
-        >
-          Kích hoạt lại hoặc hủy yêu cầu xóa tài khoản
-        </Link>
-      </p>
-      <p className="mt-6 text-center text-sm">
-        <a
-          href={staffPortalHref()}
-          className="font-semibold text-primary underline-offset-4 hover:underline"
-        >
-          Đăng nhập Platform staff
-        </a>
-      </p>
       <p className="mt-6 text-center text-sm text-charcoal-83">
         Bạn chưa có tài khoản?{" "}
         <Link

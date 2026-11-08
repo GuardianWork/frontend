@@ -1,3 +1,4 @@
+import "./list-search-action.css";
 import { SearchIcon, CloseIcon } from "@/components/icons";
 
 export function ListSearch({
@@ -9,6 +10,8 @@ export function ListSearch({
   invalid,
   searchAction = false,
   placeholder,
+  submitLabel = "Tìm kiếm ứng viên",
+  maxLength,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -18,6 +21,8 @@ export function ListSearch({
   invalid?: boolean;
   searchAction?: boolean;
   placeholder?: string;
+  submitLabel?: string;
+  maxLength?: number;
 }) {
   return (
     <div className="list-search-row">
@@ -28,6 +33,7 @@ export function ListSearch({
             <input
               className="application-search-input"
               type="search"
+              maxLength={maxLength}
               aria-describedby={describedBy}
               aria-invalid={invalid || undefined}
               value={value}
@@ -35,11 +41,7 @@ export function ListSearch({
               placeholder={placeholder || label}
             />
           </label>
-          <button
-            className="application-search-submit"
-            type="submit"
-            aria-label="Tìm kiếm ứng viên"
-          >
+          <button className="application-search-submit" type="submit" aria-label={submitLabel}>
             <SearchIcon size={18} aria-hidden="true" />
           </button>
         </div>

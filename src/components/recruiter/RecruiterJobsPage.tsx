@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import {
@@ -9,7 +9,9 @@ import {
   Plus,
   RotateCw,
   Users,
+  FileUser,
 } from "lucide-react";
+import { ListSearch } from "@/components/ListSearch";
 import { AdminShell } from "@/components/AdminShell";
 import { AdminPagination } from "@/components/admin/AdminPagination";
 import { useAuthUser } from "@/hooks/useAuthUser";
@@ -33,15 +35,21 @@ export function RecruiterJobsPage() {
   const scope = `${user?.id}:${membership?.companyId}:${membership?.companyRole}:${membership?.joinedAt}`;
   const owner = membership?.companyRole === "OWNER";
   const allowed = membership && ["OWNER", "RECRUITER"].includes(membership.companyRole);
-  const { create, jobId } = Route.useSearch();
+  const search = Route.useSearch();
+  const { create, jobId, keyword = "", status = "", page = 0 } = search;
+  const needsReassignment = owner && Boolean(search.needsReassignment);
   const navigate = Route.useNavigate();
-  const [status, setStatus] = useState("");
-  const [needsReassignment, setNeedsReassignment] = useState(false);
-  const [page, setPage] = useState(0);
+  const [query, setQuery] = useState(keyword);
+  useEffect(() => setQuery(keyword), [keyword]);
+  const filtered = Boolean(keyword || status || needsReassignment);
+  const resetFilters = () => {
+    setQuery("");
+    void navigate({ search: {} });
+  };
   const [reload, setReload] = useState(0);
   const list = useQuery({
-    queryKey: ["publishing-jobs", scope, page, status, needsReassignment],
-    queryFn: () => listJobs(page, status, needsReassignment),
+    queryKey: ["publishing-jobs", scope, page, status, needsReassignment, keyword],
+    queryFn: () => listJobs(page, status, needsReassignment, keyword),
     enabled: Boolean(allowed && !create && !jobId),
     retry: false,
     refetchOnWindowFocus: false,
@@ -56,7 +64,7 @@ export function RecruiterJobsPage() {
     gcTime: 0,
   });
   const back = () => {
-    void navigate({ search: {} });
+    void navigate({ search: { ...search, create: undefined, jobId: undefined } });
   };
   return (
     <AdminShell title="Tin tuyển dụng" role="recruiter">
@@ -78,7 +86,10 @@ export function RecruiterJobsPage() {
             owner={owner}
             onBack={back}
             onCreated={(job) => {
-              void navigate({ search: { jobId: job.id }, replace: true });
+              void navigate({
+                search: { ...search, create: undefined, jobId: job.id },
+                replace: true,
+              });
             }}
           />
         ) : jobId ? (
@@ -125,20 +136,49 @@ export function RecruiterJobsPage() {
                     : "Soạn nội dung và theo dõi các tin được phân công cho bạn."}
                 </p>
               </div>
-              <Link className="jp-button jp-primary" to="/rec/jobs" search={{ create: true }}>
+              <Link
+                className="jp-button jp-primary"
+                to="/rec/jobs"
+                search={{ ...search, create: true }}
+              >
                 <Plus size={18} aria-hidden="true" />
                 Đăng tin tuyển dụng
               </Link>
             </header>
             <div className="jp-list-panel">
+              <form
+                className="jp-search"
+                role="search"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void navigate({
+                    search: { ...search, keyword: query.trim() || undefined, page: undefined },
+                  });
+                }}
+              >
+                <ListSearch
+                  value={query}
+                  onChange={setQuery}
+                  label="Tìm theo tiêu đề tin"
+                  placeholder="Nhập tiêu đề tin tuyển dụng"
+                  searchAction
+                  submitLabel="Tìm kiếm"
+                  maxLength={200}
+                />
+              </form>
               <div className="jp-filters">
                 <label>
                   Trạng thái xuất bản
                   <select
                     value={status}
                     onChange={(e) => {
-                      setStatus(e.target.value);
-                      setPage(0);
+                      void navigate({
+                        search: {
+                          ...search,
+                          status: (e.target.value || undefined) as typeof search.status,
+                          page: undefined,
+                        },
+                      });
                     }}
                   >
                     <option value="">Tất cả trạng thái</option>
@@ -155,12 +195,22 @@ export function RecruiterJobsPage() {
                       type="checkbox"
                       checked={needsReassignment}
                       onChange={(e) => {
-                        setNeedsReassignment(e.target.checked);
-                        setPage(0);
+                        void navigate({
+                          search: {
+                            ...search,
+                            needsReassignment: e.target.checked || undefined,
+                            page: undefined,
+                          },
+                        });
                       }}
                     />
                     Cần phân công lại
                   </label>
+                )}
+                {filtered && (
+                  <button className="jp-button jp-quiet" onClick={resetFilters}>
+                    Xóa bộ lọc
+                  </button>
                 )}
                 <button
                   className="jp-button jp-quiet jp-refresh"
@@ -177,6 +227,14 @@ export function RecruiterJobsPage() {
                 Trạng thái xuất bản và trạng thái bản sửa được theo dõi riêng. Tin chỉ công khai sau
                 khi được duyệt.
               </p>
+              {!list.isError && list.data && (
+                <p className="jp-search-results" role="status">
+                  {list.isFetching
+                    ? "Đang cập nhật kết quả…"
+                    : `${list.data.totalElements.toLocaleString("vi-VN")} tin tuyển dụng${filtered ? " phù hợp" : ""}`}
+                  {keyword && <> cho “{keyword}”</>}
+                </p>
+              )}
               {list.isPending ? (
                 <p className="jp-loading" role="status">
                   Đang tải danh sách…
@@ -198,45 +256,56 @@ export function RecruiterJobsPage() {
                 <div className="jp-empty">
                   <BriefcaseBusiness size={32} aria-hidden="true" />
                   <h3>
-                    {status || needsReassignment || page
+                    {filtered || page
                       ? "Không có tin phù hợp"
-                      : "Bắt đầu với tin tuyển dụng đầu tiên"}
+                      : owner
+                        ? "Bắt đầu với tin tuyển dụng đầu tiên"
+                        : "Chưa có tin được phân công"}
                   </h3>
                   <p>
-                    {status || needsReassignment || page
-                      ? "Thay đổi bộ lọc hoặc quay về trang đầu để xem các tin khác."
-                      : "Lưu bản nháp, xem trước nội dung và gửi duyệt khi đã sẵn sàng."}
+                    {filtered || page
+                      ? "Thử tiêu đề khác hoặc xóa bộ lọc để xem các tin còn lại."
+                      : owner
+                        ? "Lưu bản nháp, xem trước nội dung và gửi duyệt khi đã sẵn sàng."
+                        : "Tin được chủ sở hữu phân công cho bạn sẽ xuất hiện tại đây. Bạn cũng có thể tạo tin mới."}
                   </p>
-                  {status || needsReassignment || page ? (
-                    <button
-                      className="jp-button"
-                      onClick={() => {
-                        setStatus("");
-                        setNeedsReassignment(false);
-                        setPage(0);
-                      }}
-                    >
+                  {filtered || page ? (
+                    <button className="jp-button" onClick={resetFilters}>
                       Xem tất cả tin
                     </button>
                   ) : (
-                    <Link className="jp-button jp-primary" to="/rec/jobs" search={{ create: true }}>
+                    <Link
+                      className="jp-button jp-primary"
+                      to="/rec/jobs"
+                      search={{ ...search, create: true }}
+                    >
                       Đăng tin tuyển dụng
                     </Link>
                   )}
                 </div>
               ) : (
-                <ul className="jp-job-list">
-                  {list.data.content.map((job) => (
-                    <JobRow key={job.id} job={job} scope={scope} />
-                  ))}
-                </ul>
+                <>
+                  <div className="jp-job-columns" aria-hidden="true">
+                    <span>Tin tuyển dụng</span>
+                    <span>Ứng viên</span>
+                    <span>Phụ trách · Hạn ứng tuyển</span>
+                    <span>Thao tác</span>
+                  </div>
+                  <ul className="jp-job-list">
+                    {list.data.content.map((job) => (
+                      <JobRow key={job.id} job={job} scope={scope} />
+                    ))}
+                  </ul>
+                </>
               )}
               {list.data && !list.isError && (
                 <AdminPagination
                   page={page}
                   totalItems={list.data.totalElements}
                   pageSize={20}
-                  onPageChange={setPage}
+                  onPageChange={(nextPage) => {
+                    void navigate({ search: { ...search, page: nextPage || undefined } });
+                  }}
                   itemLabel="tin tuyển dụng"
                 />
               )}
@@ -248,6 +317,7 @@ export function RecruiterJobsPage() {
   );
 }
 function JobRow({ job, scope }: { job: Job; scope: string }) {
+  const search = Route.useSearch();
   const latest = useQuery({
     queryKey: ["job-latest-revision", scope, job.id, job.version],
     queryFn: () => latestJobRevision(job.id),
@@ -259,7 +329,7 @@ function JobRow({ job, scope }: { job: Job; scope: string }) {
   return (
     <li className="jp-job-row">
       <div className="jp-job-main">
-        <Link className="jp-job-title" to="/rec/jobs" search={{ jobId: job.id }}>
+        <Link className="jp-job-title" to="/rec/jobs" search={{ ...search, jobId: job.id }}>
           {content?.title || `Tin tuyển dụng #${job.id}`}
         </Link>
         <div className="jp-badges">
@@ -284,6 +354,34 @@ function JobRow({ job, scope }: { job: Job; scope: string }) {
           <p className="jp-hint">Chưa tải được tiêu đề bản gần nhất. Mở tin để tải lại.</p>
         )}
       </div>
+      <div className="jp-job-candidates">
+        {job.status === "SUSPENDED" ? (
+          <span
+            className="jp-candidate-unavailable"
+            aria-label="Không thể xem ứng viên khi tin bị ẩn"
+          >
+            —
+          </span>
+        ) : job.applicationCount == null ? (
+          <Link className="jp-candidate-fallback" to="/rec/applications" search={{ jobId: job.id }}>
+            <FileUser size={18} aria-hidden="true" />
+            Xem ứng viên
+          </Link>
+        ) : (
+          <Link
+            className="jp-candidate-count"
+            to="/rec/applications"
+            search={{ jobId: job.id }}
+            aria-label={`${job.applicationCount} ứng viên cho ${content?.title || `tin #${job.id}`}`}
+          >
+            <span>
+              <FileUser size={20} aria-hidden="true" />
+              <strong>{job.applicationCount.toLocaleString("vi-VN")}</strong>
+            </span>
+            <span>ứng viên</span>
+          </Link>
+        )}
+      </div>
       <div className="jp-job-responsibility">
         <Users size={17} aria-hidden="true" />
         <span>
@@ -295,19 +393,10 @@ function JobRow({ job, scope }: { job: Job; scope: string }) {
         <small>Hạn đã duyệt: {formatJobDate(job.approvedDeadline)}</small>
       </div>
       <div className="jp-job-actions">
-        {job.status !== "SUSPENDED" && (
-          <Link
-            className="jp-button jp-job-applications"
-            to="/rec/applications"
-            search={{ jobId: job.id }}
-          >
-            Xem đơn ứng tuyển
-          </Link>
-        )}
         <Link
           className="jp-button jp-quiet"
           to="/rec/jobs"
-          search={{ jobId: job.id }}
+          search={{ ...search, jobId: job.id }}
           aria-label={`Quản lý ${content?.title || `tin #${job.id}`}`}
         >
           Quản lý

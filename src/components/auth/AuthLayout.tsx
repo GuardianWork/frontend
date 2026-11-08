@@ -50,7 +50,13 @@ export function AuthLayout({
             Về trang chủ
           </Link>
           <p className="auth-intro-title max-w-lg text-3xl font-bold leading-tight tracking-tight sm:text-4xl lg:text-[46px]">
-            {purpose === "recruiter" ? (
+            {registering ? (
+              <>
+                Một tài khoản.
+                <br />
+                <span className="text-charcoal-40">Nhiều cơ hội kết nối.</span>
+              </>
+            ) : purpose === "recruiter" ? (
               <>
                 Tuyển dụng có căn cứ.
                 <br />
@@ -65,27 +71,35 @@ export function AuthLayout({
             )}
           </p>
           <p className="mt-5 max-w-md text-sm leading-7 text-charcoal-83">
-            {purpose === "recruiter"
-              ? "Xây dựng hồ sơ doanh nghiệp, đăng tin tuyển dụng và kết nối với những ứng viên phù hợp trên GuardianWork."
-              : "Khám phá công việc phù hợp, xây dựng hồ sơ nổi bật và chủ động kết nối với nhà tuyển dụng trên GuardianWork."}
+            {registering
+              ? "Tìm việc, quản lý hồ sơ và tham gia không gian tuyển dụng với cùng một tài khoản GuardianWork."
+              : purpose === "recruiter"
+                ? "Xây dựng hồ sơ doanh nghiệp, đăng tin tuyển dụng và kết nối với những ứng viên phù hợp trên GuardianWork."
+                : "Khám phá công việc phù hợp, xây dựng hồ sơ nổi bật và chủ động kết nối với nhà tuyển dụng trên GuardianWork."}
           </p>
           <GuardianIllustration
-            name={purpose === "recruiter" ? "onboarding" : "discovery"}
+            name={registering ? "onboarding" : purpose === "recruiter" ? "onboarding" : "discovery"}
             className="guardian-art--auth"
             desktopOnly
           />
           <div className="mt-6 hidden space-y-4 lg:block">
-            {(purpose === "recruiter"
+            {(registering
               ? [
-                  "Quản lý tin tuyển dụng trong một không gian",
-                  "Theo dõi ứng viên và tiến độ tuyển dụng",
-                  "Xác thực thông tin, xây dựng uy tín công ty",
+                  "Tạo hồ sơ và khám phá công việc",
+                  "Tham gia công ty qua lời mời",
+                  "Chuyển giữa tìm việc và tuyển dụng",
                 ]
-              : [
-                  "Tìm công việc phù hợp với kỹ năng của bạn",
-                  "Quản lý hồ sơ và các vị trí đã ứng tuyển",
-                  "Kết nối với doanh nghiệp có thông tin rõ ràng",
-                ]
+              : purpose === "recruiter"
+                ? [
+                    "Quản lý tin tuyển dụng trong một không gian",
+                    "Theo dõi ứng viên và tiến độ tuyển dụng",
+                    "Xác thực thông tin, xây dựng uy tín công ty",
+                  ]
+                : [
+                    "Tìm công việc phù hợp với kỹ năng của bạn",
+                    "Quản lý hồ sơ và các vị trí đã ứng tuyển",
+                    "Kết nối với doanh nghiệp có thông tin rõ ràng",
+                  ]
             ).map((text) => (
               <p key={text} className="flex items-center gap-3 text-sm">
                 <span className="rounded-full border border-warm-border bg-paper-white p-1">

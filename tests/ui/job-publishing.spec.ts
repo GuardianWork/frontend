@@ -14,6 +14,7 @@ const completeContent: JobContent = {
 const stamp = "2026-10-27T01:00:00Z";
 function makeJob(content: JobContent = completeContent): Job {
   return {
+    applicationCount: 12,
     id: 83,
     companyId: 101,
     creatorUserId: 3,
@@ -428,6 +429,7 @@ test("assignment preserves typed content and stale edits never report success", 
   const mock = await mockJobs(page);
   await login(page, "owner_demo", true);
   await page.goto("/rec/jobs?jobId=83");
+  await page.getByRole("button", { name: "Soạn tin", exact: true }).click();
   await page.getByLabel("Chức danh công việc", { exact: true }).fill("Bản sửa chưa lưu");
   await page.getByLabel("Tôi chịu trách nhiệm với tư cách trưởng ban tuyển dụng").click();
   await expect(
@@ -561,6 +563,8 @@ test("rejection reasons remain readable and a replacement draft starts from the 
   mock.getJobs()[0].availableActions = ["CREATE_DRAFT"];
   await login(page, "owner_demo", true);
   await page.goto("/rec/jobs?jobId=83");
+  await expect(page.locator(".jp-content-view")).toContainText(completeContent.title!);
+  await page.getByRole("button", { name: "Lịch sử xét duyệt", exact: true }).click();
   await expect(page.getByText(rejected.rejectionReason, { exact: false })).toBeVisible();
   await page.getByRole("button", { name: "Bản v1 · Chuyên viên kinh doanh", exact: true }).click();
   await expect(page.locator(".jp-history-content")).toContainText(completeContent.description!);
@@ -571,7 +575,7 @@ test("rejection reasons remain readable and a replacement draft starts from the 
   await expect(page.getByText("Bản nháp · v2", { exact: true })).toBeVisible();
 });
 
-test("expired jobs with unfinished revisions open in readable history without an editor", async ({
+test("expired jobs with unfinished revisions open in readable preview without an editor", async ({
   page,
 }) => {
   const job = makeJob();
@@ -580,7 +584,7 @@ test("expired jobs with unfinished revisions open in readable history without an
   await mockJobs(page, [job]);
   await login(page, "owner_demo", true);
   await page.goto("/rec/jobs?jobId=83");
-  await expect(page.getByRole("heading", { name: "Lịch sử xét duyệt", exact: true })).toBeVisible();
+  await expect(page.locator(".jp-content-view")).toBeVisible();
   await expect(page.getByText("Tin đã kết thúc.", { exact: false })).toBeVisible();
   await expect(page.getByLabel("Chức danh công việc", { exact: true })).toHaveCount(0);
 });
@@ -591,6 +595,7 @@ test("remote jobs keep multiline descriptions and optional values can be added t
   const mock = await mockJobs(page);
   await login(page, "owner_demo", true);
   await page.goto("/rec/jobs?jobId=83");
+  await page.getByRole("button", { name: "Soạn tin", exact: true }).click();
   await page
     .getByRole("combobox", { name: "Hình thức làm việc", exact: true })
     .selectOption("REMOTE");
@@ -635,6 +640,7 @@ test("description formatting survives save, refresh and review without interpret
   const mock = await mockJobs(page);
   await login(page, "owner_demo", true);
   await page.goto("/recruiter/jobs?jobId=83");
+  await page.getByRole("button", { name: "Soạn tin", exact: true }).click();
   const editor = page.getByRole("textbox", { name: "Mô tả công việc", exact: true });
   await editor.fill("Công việc mới");
   await editor.press("ControlOrMeta+a");
@@ -648,6 +654,7 @@ test("description formatting survives save, refresh and review without interpret
   await expect(page.locator(".jp-content-view .job-description li")).toHaveCount(1);
   expect(mock.getJobs()[0].workingRevision!.content.description).toContain("guardwork:markdown:v1");
   await page.reload();
+  await page.getByRole("button", { name: "Soạn tin", exact: true }).click();
   await expect(editor.locator(":is(strong em, em strong)")).toHaveText("Công việc mới");
   await page.setViewportSize({ width: 390, height: 844 });
   await noOverflow(page);
@@ -688,4 +695,134 @@ test("public descriptions render saved formatting and ignore executable markup",
   await expect(page.locator(".job-description em")).toHaveText("quyền lợi");
   await expect(page.locator(".job-description li")).toHaveText("Đào tạo");
   await expect(page.locator(".job-description script, .job-description img")).toHaveCount(0);
+});
+
+test("job title search submits with filters and survives reload and job navigation", async ({
+  page,
+}) => {
+  await mockJobs(page);
+  let fail = false;
+  await page.route("**/api/companies/me/jobs?**", async (route) => {
+    const params = new URL(route.request().url()).searchParams;
+    if (fail) return route.fulfill({ status: 503, json: { status: 503, message: "Unavailable" } });
+    const content = params.get("keyword") === "Không có" ? [] : [makeJob()];
+    await route.fulfill({ json: { status: 200, data: paged(content) } });
+  });
+  await login(page, "owner_demo", true);
+  await page.goto("/rec/jobs?page=2&status=DRAFT");
+  const input = page.getByLabel("Tìm theo tiêu đề tin");
+  await input.fill("kinh doanh");
+  expect(new URL(page.url()).searchParams.has("keyword")).toBe(false);
+  const request = page.waitForRequest(
+    (request) =>
+      new URL(request.url()).pathname === "/api/companies/me/jobs" &&
+      new URL(request.url()).searchParams.get("keyword") === "kinh doanh",
+  );
+  await input.press("Enter");
+  const params = new URL((await request).url()).searchParams;
+  expect(params.get("page")).toBe("0");
+  expect(params.get("status")).toBe("DRAFT");
+  await expect(page.locator(".jp-search-results")).toContainText("1 tin tuyển dụng phù hợp");
+  await page.reload();
+  await expect(input).toHaveValue("kinh doanh");
+  await page.screenshot({ path: "/tmp/recruiter-job-search.png", fullPage: true });
+  await noOverflow(page);
+  await page.getByRole("link", { name: /^Quản lý Chuyên viên/ }).click();
+  await page.goBack();
+  await expect(input).toHaveValue("kinh doanh");
+  await input.fill("Không có");
+  await page.getByRole("button", { name: "Tìm kiếm", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Không có tin phù hợp" })).toBeVisible();
+  fail = true;
+  await input.fill("Kế toán");
+  await input.press("Enter");
+  await expect(page.getByRole("heading", { name: "Chưa tải được danh sách" })).toBeVisible();
+  await expect(input).toHaveValue("Kế toán");
+  fail = false;
+  await page.getByRole("button", { name: "Thử lại", exact: true }).click();
+  await expect(page.locator(".jp-job-list > li")).toHaveCount(1);
+  await page.getByRole("button", { name: "Xóa bộ lọc", exact: true }).click();
+  await expect(input).toHaveValue("");
+  await expect(page.getByLabel("Trạng thái xuất bản")).toHaveValue("");
+});
+
+test("job rows show application totals with scoped links, zero and unavailable states", async ({
+  page,
+}) => {
+  await mockJobs(page, [
+    makeJob(),
+    { ...makeJob(), id: 84, applicationCount: 0 },
+    { ...makeJob(), id: 85, status: "SUSPENDED", applicationCount: null },
+  ]);
+  await login(page, "owner_demo", true);
+  await page.goto("/rec/jobs");
+  const count = page.getByRole("link", {
+    name: "12 ứng viên cho Chuyên viên kinh doanh",
+    exact: true,
+  });
+  await expect(count).toHaveAttribute("href", /jobId=83/);
+  await expect(
+    page.getByRole("link", { name: "0 ứng viên cho Chuyên viên kinh doanh", exact: true }),
+  ).toBeVisible();
+  await expect(page.locator(".jp-job-row").last().locator(".jp-job-candidates a")).toHaveCount(0);
+  await noOverflow(page);
+  await page.screenshot({ path: "/tmp/recruiter-job-candidates.png", fullPage: true });
+  await count.click();
+  await expect(page).toHaveURL(/rec\/applications\?jobId=83/);
+});
+
+for (const state of ["DRAFT", "PENDING_REVIEW", "APPROVED", "REJECTED"] as const) {
+  test(`opening a ${state} job shows the newest JD automatically`, async ({ page }) => {
+    const job = makeJob();
+    job.workingRevision!.revisionNumber = 2;
+    job.workingRevision!.state = state;
+    const mock = await mockJobs(page, [job]);
+    if (state === "APPROVED" || state === "REJECTED") {
+      mock.getJobs()[0].workingRevision = null;
+      mock.getJobs()[0].availableActions = ["CREATE_DRAFT"];
+    }
+    await login(page, "owner_demo", true);
+    await page.goto("/rec/jobs?jobId=83");
+    await expect(page.getByRole("button", { name: "Bản mới nhất", exact: true })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    await expect(page.locator(".jp-content-view")).toContainText(completeContent.description!);
+    await expect(page.getByLabel("Chức danh công việc", { exact: true })).toHaveCount(0);
+    expect(mock.writes).toEqual([]);
+    await noOverflow(page);
+    if (state === "DRAFT") {
+      await page.screenshot({ path: "/tmp/job-detail-preview-after.png", fullPage: true });
+      await page.getByRole("button", { name: "Soạn tin", exact: true }).click();
+      await expect(page.getByLabel("Chức danh công việc", { exact: true })).toHaveValue(
+        completeContent.title!,
+      );
+    }
+  });
+}
+
+test("latest JD loading failure offers retry without changing the job", async ({ page }) => {
+  const mock = await mockJobs(page);
+  mock.getJobs()[0].workingRevision = null;
+  mock.getJobs()[0].availableActions = ["CREATE_DRAFT"];
+  await login(page, "owner_demo", true);
+  let unavailable = true;
+  await page.route("**/api/companies/me/jobs/83/revisions?**", async (route) => {
+    if (unavailable) {
+      await route.fulfill({
+        status: 503,
+        json: { status: 503, message: "Unavailable", data: null },
+      });
+    } else {
+      await route.fallback();
+    }
+  });
+  await page.goto("/rec/jobs?jobId=83");
+  await expect(
+    page.getByRole("heading", { name: "Chưa tải được nội dung JD", exact: true }),
+  ).toBeVisible();
+  unavailable = false;
+  await page.getByRole("button", { name: "Thử lại", exact: true }).click();
+  await expect(page.locator(".jp-content-view")).toContainText(completeContent.description!);
+  expect(mock.writes).toEqual([]);
 });

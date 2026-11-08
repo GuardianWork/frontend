@@ -71,7 +71,7 @@ function readProgress(scope: string, id?: number) {
     return null;
   }
 }
-type View = "edit" | "preview" | "published" | "history";
+type View = "latest" | "edit" | "preview" | "published" | "history";
 const fieldLabels: Record<string, string> = {
   title: "Chức danh",
   location: "Địa điểm",
@@ -151,9 +151,7 @@ export function JobWorkspace({
   const dirty = JSON.stringify(content) !== savedContent.current;
   const dirtyRef = useRef(dirty);
   dirtyRef.current = dirty;
-  const [view, setView] = useState<View>(
-    !initialJob || initialJob.availableActions.includes("SAVE_DRAFT") ? "edit" : "history",
-  );
+  const [view, setView] = useState<View>(!initialJob || guided ? "edit" : "latest");
   const [editSection, setEditSection] = useState<number | null>(null);
   const editTrigger = useRef<HTMLElement | null>(null);
   const [editFocusField, setEditFocusField] = useState<string | undefined>();
@@ -178,6 +176,7 @@ export function JobWorkspace({
     withResolver: true,
   });
   const editable = !job || job.availableActions.includes("SAVE_DRAFT");
+  const newestRevision = job?.workingRevision ?? latest.data;
   const can = (action: string) => job?.availableActions.includes(action);
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ["publishing-jobs", scope] });
@@ -365,21 +364,6 @@ export function JobWorkspace({
           )}
         </div>
       </header>
-      {job && !guided && (
-        <div className="jp-status-strip">
-          <span className={`jp-badge jp-status-${job.status.toLowerCase()}`}>
-            {jobStatusLabels[job.status]}
-          </span>
-          {job.workingRevision && (
-            <span className={`jp-badge jp-revision-${job.workingRevision.state.toLowerCase()}`}>
-              {revisionLabels[job.workingRevision.state]} · v{job.workingRevision.revisionNumber}
-            </span>
-          )}
-          {job.publishedRevisionId && (
-            <span className="jp-hint">Bản đã duyệt và bản sửa được lưu riêng.</span>
-          )}
-        </div>
-      )}
       {error && !confirmation && (
         <div id="job-workspace-error" className="jp-feedback jp-error" role="alert">
           <strong>Chưa hoàn tất thao tác</strong>
@@ -431,6 +415,15 @@ export function JobWorkspace({
       >
         <div className="jp-workspace-main">
           <nav hidden={guided} className="jp-tabs" aria-label="Nội dung tin tuyển dụng">
+            {job && (
+              <button
+                aria-current={view === "latest" ? "page" : undefined}
+                onClick={() => changeView("latest")}
+              >
+                <Eye size={17} aria-hidden="true" />
+                Bản mới nhất
+              </button>
+            )}
             {editable && (
               <button
                 aria-current={view === "edit" ? "page" : undefined}
@@ -468,6 +461,30 @@ export function JobWorkspace({
               </button>
             )}
           </nav>
+          {view === "latest" && job && (
+            <div className="jp-preview">
+              {newestRevision ? (
+                <JobContentView content={newestRevision.content} />
+              ) : latest.isPending ? (
+                <p className="jp-empty" role="status">
+                  Đang tải nội dung JD mới nhất…
+                </p>
+              ) : (
+                <div className="jp-empty">
+                  <h3>{latest.isError ? "Chưa tải được nội dung JD" : "Chưa có nội dung JD"}</h3>
+                  <p role={latest.isError ? "alert" : undefined}>
+                    {latest.isError
+                      ? jobError(latest.error)
+                      : "Tin này chưa có phiên bản nội dung được lưu."}
+                  </p>
+                  <button className="jp-button" onClick={() => void latest.refetch()}>
+                    <RotateCw size={16} aria-hidden="true" />
+                    Thử lại
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
           {view === "edit" && editable && (
             <form
               onSubmit={(event) => {
@@ -639,6 +656,21 @@ export function JobWorkspace({
           {!guided && (
             <section className="jp-side-section">
               <h3>Xuất bản và cập nhật</h3>
+              {job && (
+                <div className="jp-badges" aria-label="Trạng thái tin tuyển dụng">
+                  <span className={`jp-badge jp-status-${job.status.toLowerCase()}`}>
+                    {jobStatusLabels[job.status]}
+                  </span>
+                  {job.workingRevision && (
+                    <span
+                      className={`jp-badge jp-revision-${job.workingRevision.state.toLowerCase()}`}
+                    >
+                      {revisionLabels[job.workingRevision.state]} · v
+                      {job.workingRevision.revisionNumber}
+                    </span>
+                  )}
+                </div>
+              )}
               <p>Thay đổi nội dung cần được xét duyệt trước khi xuất bản.</p>
               {job?.approvedDeadline && (
                 <p>
@@ -874,12 +906,6 @@ function JobReviewHistory({ job, scope }: { job: Job; scope: string }) {
   });
   return (
     <section className="jp-history">
-      <div className="jp-preview-heading">
-        <h3>Lịch sử xét duyệt</h3>
-        <p>
-          Các phiên bản được lưu theo thứ tự tạo. Chọn một bản để đọc nội dung và kết quả xét duyệt.
-        </p>
-      </div>
       {history.isPending ? (
         <p className="jp-loading" role="status">
           Đang tải lịch sử…

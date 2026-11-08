@@ -4,7 +4,7 @@ import { AUTH_SESSION_KEY } from "./auth.ts";
 import { listBackendCompanyMembers, removeBackendCompanyMember } from "./backendCompanyMembers.ts";
 const originalFetch = globalThis.fetch;
 beforeEach(() => {
-  globalThis.sessionStorage = {
+  globalThis.localStorage = {
     getItem: (key) =>
       key === AUTH_SESSION_KEY
         ? JSON.stringify({
@@ -12,20 +12,16 @@ beforeEach(() => {
             refreshToken: "refresh",
             expiresAt: Date.now() + 60000,
           })
-        : null,
-  };
-  globalThis.localStorage = {
-    getItem() {
-      throw new Error("Must not read local members");
-    },
+        : (() => {
+            throw new Error("Must not read local members");
+          })(),
   };
 });
 afterEach(() => {
   globalThis.fetch = originalFetch;
-  delete globalThis.sessionStorage;
   delete globalThis.localStorage;
 });
-test("member list uses authenticated server pagination without reading localStorage", async () => {
+test("member list uses authenticated server pagination without reading locally stored members", async () => {
   const data = {
     content: [
       {

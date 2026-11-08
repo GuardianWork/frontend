@@ -107,7 +107,7 @@ test("recruiter welcome and genuine empty jobs keep create action and filter dis
   // Confirm company through the mock's real versioned decision flow before entering its workspace.
   await login(page, "admin_demo");
   const status = await page.evaluate(async () => {
-    const session = JSON.parse(sessionStorage.getItem("guardianwork_auth_session")!);
+    const session = JSON.parse(localStorage.getItem("guardianwork_auth_session")!);
     return (
       await fetch("/api/staff/companies/101/verify", {
         method: "PUT",

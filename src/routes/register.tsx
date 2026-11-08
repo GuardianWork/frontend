@@ -1,9 +1,9 @@
+import { getInvitationEmail } from "@/services/invitationLink";
 import { isLegacyRegistrationLink } from "@/lib/member-email-secret";
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, CheckCircle2, LoaderCircle } from "lucide-react";
 import { AuthLayout } from "@/components/auth/AuthLayout";
-import { AccountPurposeChoice } from "@/components/auth/AccountPurposeChoice";
 import { PasswordInput, authInputClass } from "@/components/auth/PasswordInput";
 import { ApiError } from "@/services/api";
 import { parseAccountPurpose, registerAccount } from "@/services/auth";
@@ -26,7 +26,6 @@ export const Route = createFileRoute("/register")({
 
 function RegisterPage() {
   const { role = "candidate", next } = Route.useSearch();
-  const navigate = Route.useNavigate();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
@@ -36,6 +35,7 @@ function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [ready, setReady] = useState(false);
   useEffect(() => {
+    setEmail(getInvitationEmail());
     setReady(true);
   }, []);
   const [error, setError] = useState("");
@@ -94,10 +94,8 @@ function RegisterPage() {
           <CheckCircle2 size={46} className="mx-auto mb-5" />
           <h1 className="text-2xl font-bold">Tạo tài khoản thành công!</h1>
           <p className="mt-3 text-sm leading-7 text-charcoal-83">
-            Chào {firstName.trim()}, tài khoản của bạn đã được tạo.{" "}
-            {role === "recruiter"
-              ? "Đăng nhập với lựa chọn Nhà tuyển dụng để thiết lập hồ sơ công ty hoặc chấp nhận lời mời thành viên."
-              : "Đăng nhập để tạo hồ sơ và khám phá những công việc phù hợp."}
+            Chào {firstName.trim()}, tài khoản của bạn đã được tạo. Đăng nhập để tiếp tục tìm việc,
+            tuyển dụng hoặc chấp nhận lời mời tham gia công ty.
           </p>
           <Link
             to="/login"
@@ -112,8 +110,7 @@ function RegisterPage() {
         <>
           <h1 className="text-2xl font-bold tracking-tight">Tạo tài khoản của bạn</h1>
           <p className="mb-7 mt-2 text-sm leading-6 text-charcoal-83">
-            Một tài khoản cho cả tìm việc và tuyển dụng. Lựa chọn bên dưới chỉ chọn không gian sau
-            khi đăng nhập.
+            Một tài khoản cho cả tìm việc và tuyển dụng. Hoàn tất thông tin bên dưới để bắt đầu.
           </p>
           {legacy && (
             <p
@@ -129,23 +126,6 @@ function RegisterPage() {
                 đăng nhập nếu đã có tài khoản
               </Link>
               .
-            </p>
-          )}
-          <AccountPurposeChoice
-            value={role}
-            disabled={loading || !ready}
-            onChange={(choice) => {
-              setError("");
-              void navigate({
-                search: (previous) => ({ ...previous, role: choice }),
-                replace: true,
-              });
-            }}
-          />
-          {role === "recruiter" && (
-            <p className="mb-5 rounded-lg border border-warm-border bg-surface-container-low p-3 text-sm leading-6 text-charcoal-83">
-              Tạo tài khoản trước. Sau khi đăng nhập, bạn có thể thiết lập hồ sơ công ty hoặc chấp
-              nhận lời mời tham gia công ty.
             </p>
           )}
           <form onSubmit={handleSubmit} className="space-y-5" aria-busy={loading}>
@@ -263,7 +243,7 @@ function RegisterPage() {
                   </>
                 ) : (
                   <>
-                    Đăng ký {role === "recruiter" ? "tuyển dụng" : "tìm việc"}
+                    Tạo tài khoản
                     <ArrowRight size={17} />
                   </>
                 )}

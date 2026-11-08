@@ -24,7 +24,11 @@ export function AuthGate({ children }: { children: ReactNode }) {
       if (!hasAuthSession()) reload();
     };
     window.addEventListener(AUTH_SESSION_EVENT, sessionChanged);
-    return () => window.removeEventListener(AUTH_SESSION_EVENT, sessionChanged);
+    window.addEventListener("storage", sessionChanged);
+    return () => {
+      window.removeEventListener(AUTH_SESSION_EVENT, sessionChanged);
+      window.removeEventListener("storage", sessionChanged);
+    };
   }, [reload]);
   useEffect(() => {
     if (

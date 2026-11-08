@@ -1,0 +1,52 @@
+.jp-validation-summary {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-items: start;
+  gap: 20px;
+  padding: 24px;
+  border-radius: 24px;
+  background: var(--error-container);
+  color: var(--color-ink);
+  font-size: 16px;
+  line-height: 1.5;
+}
+.jp-validation-summary[hidden] {
+  display: none;
+}
+.jp-validation-summary .jp-validation-heading {
+  margin: 2px 0 8px;
+  color: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+.jp-validation-summary ul {
+  margin: 0;
+  padding-left: 23px;
+  list-style: disc;
+}
+.jp-validation-summary li + li {
+  margin-top: 4px;
+}
+.jp-validation-summary button {
+  color: inherit;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+.jp-validation-summary button:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.jp-validation-summary button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+.jp-validation-icon {
+  fill: var(--error);
+  stroke: var(--color-paper);
+  flex: none;
+}

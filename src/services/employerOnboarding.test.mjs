@@ -15,12 +15,12 @@ const user = {
 };
 beforeEach(() => {
   const values = new Map();
-  globalThis.sessionStorage = {
+  globalThis.localStorage = {
     getItem: (key) => values.get(key) ?? null,
     setItem: (key, value) => values.set(key, value),
     removeItem: (key) => values.delete(key),
   };
-  sessionStorage.setItem(
+  localStorage.setItem(
     AUTH_SESSION_KEY,
     JSON.stringify({
       accessToken: "access",
@@ -29,15 +29,9 @@ beforeEach(() => {
       user,
     }),
   );
-  globalThis.localStorage = {
-    getItem: () => null,
-    setItem() {},
-    removeItem() {},
-  };
 });
 afterEach(() => {
   globalThis.fetch = originalFetch;
-  delete globalThis.sessionStorage;
   delete globalThis.localStorage;
 });
 
@@ -49,14 +43,14 @@ test("a shared account without a Company membership is directed to Company setup
 });
 
 test("Company verification status controls recruiter access for an existing owner", async () => {
-  const session = JSON.parse(sessionStorage.getItem(AUTH_SESSION_KEY));
+  const session = JSON.parse(localStorage.getItem(AUTH_SESSION_KEY));
   session.user.activeMembership = {
     companyId: 12,
     companyName: "Alpha",
     companyRole: "OWNER",
     joinedAt: "2026-10-19T00:00:00Z",
   };
-  sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+  localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
   for (const [status, stage] of [
     ["PENDING", "PENDING"],
     ["REJECTED", "REJECTED"],
@@ -81,14 +75,14 @@ test("Company verification status controls recruiter access for an existing owne
 });
 
 test("a company lookup failure is retryable and does not unlock recruiter features", async () => {
-  const session = JSON.parse(sessionStorage.getItem(AUTH_SESSION_KEY));
+  const session = JSON.parse(localStorage.getItem(AUTH_SESSION_KEY));
   session.user.activeMembership = {
     companyId: 12,
     companyName: "Alpha",
     companyRole: "OWNER",
     joinedAt: "2026-10-19T00:00:00Z",
   };
-  sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+  localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
   globalThis.fetch = async (url) => {
     assert.equal(url, "/api/companies/me/verification");
     return Response.json({ status: 503, message: "Company service unavailable" }, { status: 503 });
@@ -97,14 +91,14 @@ test("a company lookup failure is retryable and does not unlock recruiter featur
 });
 
 test("a recruiter checks current membership without requesting owner-only company details", async () => {
-  const session = JSON.parse(sessionStorage.getItem(AUTH_SESSION_KEY));
+  const session = JSON.parse(localStorage.getItem(AUTH_SESSION_KEY));
   session.user.activeMembership = {
     companyId: 12,
     companyName: "Alpha",
     companyRole: "RECRUITER",
     joinedAt: "2026-10-19T00:00:00Z",
   };
-  sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+  localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
   globalThis.fetch = async (url) => {
     assert.equal(url, "/api/companies/me");
     return Response.json({ status: 200, data: session.user.activeMembership });
@@ -120,14 +114,14 @@ test("a recruiter checks current membership without requesting owner-only compan
 });
 
 test("a suspended owner's company remains identifiable without granting recruiting access", async () => {
-  const session = JSON.parse(sessionStorage.getItem(AUTH_SESSION_KEY));
+  const session = JSON.parse(localStorage.getItem(AUTH_SESSION_KEY));
   session.user.activeMembership = {
     companyId: 12,
     companyName: "Alpha",
     companyRole: "OWNER",
     joinedAt: "2026-10-19T00:00:00Z",
   };
-  sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+  localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
   globalThis.fetch = async () =>
     Response.json({
       status: 200,

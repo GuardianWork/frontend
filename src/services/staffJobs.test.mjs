@@ -24,7 +24,7 @@ const review = {
   validationIssues: [],
 };
 beforeEach(() => {
-  globalThis.sessionStorage = {
+  globalThis.localStorage = {
     getItem: (key) =>
       key === AUTH_SESSION_KEY
         ? JSON.stringify({
@@ -37,7 +37,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   globalThis.fetch = originalFetch;
-  delete globalThis.sessionStorage;
+  delete globalThis.localStorage;
 });
 test("staff queue, inspection and history use authenticated paginated backend contracts", async () => {
   const paths = [];

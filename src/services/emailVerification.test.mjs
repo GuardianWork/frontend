@@ -4,7 +4,7 @@ import { AUTH_SESSION_KEY } from "./auth.ts";
 import { requestEmailVerification, confirmEmailVerification } from "./emailVerification.ts";
 const originalFetch = globalThis.fetch;
 beforeEach(() => {
-  globalThis.sessionStorage = {
+  globalThis.localStorage = {
     getItem: (key) =>
       key === AUTH_SESSION_KEY
         ? JSON.stringify({
@@ -17,7 +17,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   globalThis.fetch = originalFetch;
-  delete globalThis.sessionStorage;
+  delete globalThis.localStorage;
 });
 test("request uses the current account without sending a destination address", async () => {
   globalThis.fetch = async (url, init) => {

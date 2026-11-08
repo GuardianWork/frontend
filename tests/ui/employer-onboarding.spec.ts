@@ -46,7 +46,7 @@ test("recruiter registration uses shared account registration before Company set
     email: "an@example.test",
     password: "Guardian123!",
   });
-  expect(await page.evaluate(() => sessionStorage.getItem("guardianwork_auth_session"))).toBeNull();
+  expect(await page.evaluate(() => localStorage.getItem("guardianwork_auth_session"))).toBeNull();
 });
 
 test("a shared account without membership can open Company setup and never calls retired onboarding", async ({
@@ -226,7 +226,7 @@ test("candidate phone is read from the shared profile API and can be cleared", a
         await (
           await fetch("/api/candidates/profile", {
             headers: {
-              Authorization: `Bearer ${JSON.parse(sessionStorage.getItem("guardianwork_auth_session")!).accessToken}`,
+              Authorization: `Bearer ${JSON.parse(localStorage.getItem("guardianwork_auth_session")!).accessToken}`,
             },
           })
         ).json()

@@ -38,7 +38,7 @@ const sampleApplication = {
 };
 
 test("listApplications uses the authenticated candidate endpoint and normalizes the response", async () => {
-  globalThis.sessionStorage = session();
+  globalThis.localStorage = session();
   try {
     globalThis.fetch = async (url, init) => {
       assert.equal(url, "/api/candidate/applications");
@@ -57,23 +57,23 @@ test("listApplications uses the authenticated candidate endpoint and normalizes 
     assert.equal(applications[1].cvFileName, "resume.pdf");
   } finally {
     globalThis.fetch = originalFetch;
-    delete globalThis.sessionStorage;
+    delete globalThis.localStorage;
   }
 });
 
 test("listApplications tolerates a non-array response", async () => {
-  globalThis.sessionStorage = session();
+  globalThis.localStorage = session();
   try {
     globalThis.fetch = async () => Response.json({ status: 200, data: { applications: [] } });
     assert.deepEqual(await listApplications(), []);
   } finally {
     globalThis.fetch = originalFetch;
-    delete globalThis.sessionStorage;
+    delete globalThis.localStorage;
   }
 });
 
 test("submitApplication posts a trimmed application payload and returns the parsed result", async () => {
-  globalThis.sessionStorage = session();
+  globalThis.localStorage = session();
   try {
     const payload = {
       jobId: 7,
@@ -113,12 +113,12 @@ test("submitApplication posts a trimmed application payload and returns the pars
     assert.equal(application.cvFileName, "an-cv.pdf");
   } finally {
     globalThis.fetch = originalFetch;
-    delete globalThis.sessionStorage;
+    delete globalThis.localStorage;
   }
 });
 
 test("submitApplication omits an empty cover letter", async () => {
-  globalThis.sessionStorage = session();
+  globalThis.localStorage = session();
   try {
     globalThis.fetch = async (_url, init) => {
       assert.deepEqual(JSON.parse(init.body), {
@@ -144,12 +144,12 @@ test("submitApplication omits an empty cover letter", async () => {
     });
   } finally {
     globalThis.fetch = originalFetch;
-    delete globalThis.sessionStorage;
+    delete globalThis.localStorage;
   }
 });
 
 test("invalid application responses are rejected instead of being treated as success", async () => {
-  globalThis.sessionStorage = session();
+  globalThis.localStorage = session();
   try {
     for (const data of [null, {}, { jobId: 1 }, { id: 123 }]) {
       globalThis.fetch = async () => Response.json({ status: 200, data });
@@ -173,7 +173,7 @@ test("invalid application responses are rejected instead of being treated as suc
     );
   } finally {
     globalThis.fetch = originalFetch;
-    delete globalThis.sessionStorage;
+    delete globalThis.localStorage;
   }
 });
 
@@ -231,7 +231,7 @@ test("parseSubmittedApplication reads the optional job snapshot without inventin
 });
 
 test("listApplications unwraps the paginated candidate response", async () => {
-  globalThis.sessionStorage = session();
+  globalThis.localStorage = session();
   try {
     globalThis.fetch = async () =>
       Response.json({
@@ -249,12 +249,12 @@ test("listApplications unwraps the paginated candidate response", async () => {
     assert.equal(applications[0].id, "application-1");
   } finally {
     globalThis.fetch = originalFetch;
-    delete globalThis.sessionStorage;
+    delete globalThis.localStorage;
   }
 });
 
 test("listApplicationPage sends search, status and paging to the candidate endpoint", async () => {
-  globalThis.sessionStorage = session();
+  globalThis.localStorage = session();
   try {
     globalThis.fetch = async (url) => {
       const parsed = new URL(String(url), "http://localhost");
@@ -286,12 +286,12 @@ test("listApplicationPage sends search, status and paging to the candidate endpo
     assert.equal(page.totalPages, 3);
   } finally {
     globalThis.fetch = originalFetch;
-    delete globalThis.sessionStorage;
+    delete globalThis.localStorage;
   }
 });
 
 test("listApplicationCounts returns one exact total per status from size-one reads", async () => {
-  globalThis.sessionStorage = session();
+  globalThis.localStorage = session();
   try {
     const totals = {
       "": 11,
@@ -338,7 +338,7 @@ test("listApplicationCounts returns one exact total per status from size-one rea
     );
   } finally {
     globalThis.fetch = originalFetch;
-    delete globalThis.sessionStorage;
+    delete globalThis.localStorage;
   }
 });
 

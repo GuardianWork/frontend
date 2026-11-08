@@ -39,7 +39,7 @@ test("verified recruiter workspace covers operational collections and company fo
   test.setTimeout(120000);
   await login(page, "admin_demo");
   await page.evaluate(async () => {
-    const session = JSON.parse(sessionStorage.getItem("guardianwork_auth_session")!);
+    const session = JSON.parse(localStorage.getItem("guardianwork_auth_session")!);
     const response = await fetch("/api/staff/companies/101/verify", {
       method: "PUT",
       headers: {
