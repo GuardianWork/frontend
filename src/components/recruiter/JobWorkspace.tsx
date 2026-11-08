@@ -178,6 +178,7 @@ export function JobWorkspace({
   });
   const editable =
     !job || (job.status !== "SUSPENDED" && job.availableActions.includes("SAVE_DRAFT"));
+  const newestRevision = job?.workingRevision ?? latest.data;
   const can = (action: string) =>
     job?.status !== "SUSPENDED" && job?.availableActions.includes(action);
   const invalidate = () => {

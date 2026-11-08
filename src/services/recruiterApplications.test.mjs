@@ -16,7 +16,7 @@ afterEach(() => {
   delete globalThis.localStorage;
 });
 function mock(handler, jobStatus = "PUBLISHED") {
-  globalThis.sessionStorage = {
+  globalThis.localStorage = {
     removeItem: () => {},
     getItem: (key) =>
       key === AUTH_SESSION_KEY
