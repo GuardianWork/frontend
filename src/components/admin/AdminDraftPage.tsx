@@ -14,6 +14,9 @@ import { ListSearch } from "@/components/ListSearch";
 import { AdminPagination } from "./AdminPagination";
 import { StaffStatusBadge, type StaffStatusTone } from "./StaffStatusBadge";
 import { useListPagination } from "@/hooks/useListPagination";
+import { useTableSort } from "@/hooks/useTableSort";
+import { sortDate } from "@/lib/table-sort";
+import { SortableHeader } from "./SortableHeader";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 export type DraftAdminArea = "reports" | "jobs" | "accounts" | "monitoring" | "tasks";
@@ -346,7 +349,27 @@ export function AdminDraftPage({ area }: { area: DraftAdminArea }) {
     });
   }, [query, sampleRows, statusFilter]);
 
-  const pagination = useListPagination(rows, JSON.stringify([area, query, statusFilter]));
+  const dateColumn = spec.columns.findIndex((column) =>
+    /Ngày|Thời điểm|Lần chạy gần nhất/.test(column),
+  );
+  const tableSort = useTableSort(
+    rows,
+    Object.fromEntries(
+      spec.columns.map((column, index) => [
+        `column${index}`,
+        (row: SampleRow) =>
+          /Ngày|Thời điểm|Lần chạy gần nhất/.test(column)
+            ? sortDate(row.cells[index])
+            : row.cells[index],
+      ]),
+    ),
+    { key: `column${Math.max(0, dateColumn)}`, direction: "desc" },
+    `${area}:${query}:${statusFilter}`,
+  );
+  const pagination = useListPagination(
+    tableSort.rows,
+    JSON.stringify([area, query, statusFilter, tableSort.sort]),
+  );
 
   function openDetails(row: SampleRow) {
     setSelectedRow(row);
@@ -530,8 +553,14 @@ export function AdminDraftPage({ area }: { area: DraftAdminArea }) {
               <caption className="sr-only">{spec.listTitle}</caption>
               <thead>
                 <tr>
-                  {spec.columns.map((column) => (
-                    <th key={column}>{column}</th>
+                  {spec.columns.map((column, index) => (
+                    <SortableHeader
+                      key={column}
+                      label={column}
+                      column={`column${index}`}
+                      {...tableSort}
+                      scope="all"
+                    />
                   ))}
                   <th>Thao tác</th>
                 </tr>
@@ -542,7 +571,9 @@ export function AdminDraftPage({ area }: { area: DraftAdminArea }) {
                     {row.cells.map((cell, index) => (
                       <td key={`${row.searchable}-${index}`}>
                         {index === (row.statusIndex ?? row.cells.length - 1) && row.status ? (
-                          <StaffStatusBadge tone={statusTone(row.status)}>{cell}</StaffStatusBadge>
+                          <StaffStatusBadge tone={statusTone(row.status)} icon>
+                            {cell}
+                          </StaffStatusBadge>
                         ) : area === "monitoring" && index === 1 ? (
                           (row.periodValues?.[period] ?? cell)
                         ) : (
@@ -623,7 +654,10 @@ export function AdminDraftPage({ area }: { area: DraftAdminArea }) {
                 )}
                 <dl className="admin-sample-detail-fields">
                   {spec.columns.map((column, index) => (
-                    <div key={column}>
+                    <div
+                      key={column}
+                      className={area === "reports" && index === 1 ? "staff-detail-key" : undefined}
+                    >
                       <dt>{column}</dt>
                       <dd>
                         {area === "monitoring" && index === 1
@@ -691,8 +725,8 @@ export function AdminDraftPage({ area }: { area: DraftAdminArea }) {
                 </div>
                 {area === "reports" && (
                   <p className="admin-sample-readonly-note">
-                    Phạm vi màn hình này là xem báo cáo. Không có thao tác xử lý hoặc áp dụng hình
-                    phạt.
+                    Bạn có thể xem nội dung và bằng chứng trong báo cáo này. Màn hình hiện chưa hỗ
+                    trợ xử lý báo cáo hoặc áp dụng hình phạt.
                   </p>
                 )}
               </>

@@ -1,3 +1,7 @@
+import {
+  COMPANY_VERIFICATION_LABELS as LABELS,
+  COMPANY_VERIFICATION_TONES as STATUS_TONES,
+} from "@/lib/company-verification-presentation";
 import { toast } from "sonner";
 import { ErrorIcon, ArrowLeftIcon, ArrowRightIcon, RefreshIcon } from "@/components/icons";
 import { GuardianIllustration } from "@/components/GuardianIllustration";
@@ -7,6 +11,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Database } from "lucide-react";
 import "@/components/admin/verification-detail.css";
+import { StaffDetailNotice } from "@/components/admin/StaffDetailNotice";
 import { StaffStatusBadge } from "@/components/admin/StaffStatusBadge";
 import { AdminShell } from "@/components/AdminShell";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -14,6 +19,9 @@ import { ListSearch } from "@/components/ListSearch";
 import { AdminPagination } from "@/components/admin/AdminPagination";
 import { useListPagination } from "@/hooks/useListPagination";
 import { matchesSearch } from "@/lib/list-search";
+import { useTableSort } from "@/hooks/useTableSort";
+import { sortDate } from "@/lib/table-sort";
+import { SortableHeader } from "@/components/admin/SortableHeader";
 import {
   AdminApiError,
   VERIFICATION_PAGE_SIZE,
@@ -44,18 +52,6 @@ export const Route = createFileRoute("/staff/verifications")({
   }),
   component: AdminVerificationsPage,
 });
-const STATUS_TONES = {
-  REGISTERED: "neutral",
-  PENDING: "pending",
-  VERIFIED: "verified",
-  REJECTED: "rejected",
-} as const;
-const LABELS = {
-  REGISTERED: "Chưa gửi",
-  PENDING: "Chờ duyệt",
-  VERIFIED: "Đã xác minh",
-  REJECTED: "Đã từ chối",
-} as const;
 const STATUS_OPTIONS: { id: VerificationFilter; label: string }[] = [
   { id: "PENDING", label: "Chờ duyệt" },
   { id: "VERIFIED", label: "Đã xác minh" },
@@ -173,8 +169,23 @@ function AdminVerificationsPage() {
       sourceRows.filter((item) => matchesSearch(query, item.name, item.taxCode, item.email ?? "")),
     [query, sourceRows],
   );
-  const mockPagination = useListPagination(visibleRows, JSON.stringify([query, search.status]));
-  const displayedRows = mockMode ? mockPagination.items : visibleRows;
+  const tableSort = useTableSort(
+    visibleRows,
+    {
+      name: (row) => row.name,
+      taxCode: (row) => row.taxCode,
+      email: (row) => row.email,
+      createdAt: (row) => sortDate(row.createdAt),
+      status: (row) => LABELS[row.verificationStatus],
+    },
+    { key: "createdAt", direction: "desc" },
+    `${query}:${search.status}`,
+  );
+  const mockPagination = useListPagination(
+    tableSort.rows,
+    JSON.stringify([query, search.status, tableSort.sort]),
+  );
+  const displayedRows = mockMode ? mockPagination.items : tableSort.rows;
   const updateSearch = (values: Partial<typeof search>) =>
     void navigate({ search: (previous) => ({ ...previous, ...values }) });
   const retry = () => setReload((value) => value + 1);
@@ -313,11 +324,36 @@ function AdminVerificationsPage() {
                 <caption className="sr-only">Danh sách hồ sơ xác minh công ty</caption>
                 <thead>
                   <tr>
-                    <th>Tên công ty</th>
-                    <th>Mã số thuế</th>
-                    <th>Email</th>
-                    <th>Thời điểm gửi</th>
-                    <th>Trạng thái</th>
+                    <SortableHeader
+                      label="Tên công ty"
+                      column="name"
+                      {...tableSort}
+                      scope={mockMode ? "all" : "page"}
+                    />
+                    <SortableHeader
+                      label="Mã số thuế"
+                      column="taxCode"
+                      {...tableSort}
+                      scope={mockMode ? "all" : "page"}
+                    />
+                    <SortableHeader
+                      label="Email"
+                      column="email"
+                      {...tableSort}
+                      scope={mockMode ? "all" : "page"}
+                    />
+                    <SortableHeader
+                      label="Thời điểm gửi"
+                      column="createdAt"
+                      {...tableSort}
+                      scope={mockMode ? "all" : "page"}
+                    />
+                    <SortableHeader
+                      label="Trạng thái"
+                      column="status"
+                      {...tableSort}
+                      scope={mockMode ? "all" : "page"}
+                    />
                     <th>
                       <span className="sr-only">Thao tác</span>
                     </th>
@@ -339,7 +375,7 @@ function AdminVerificationsPage() {
                       <td>{item.email || "Chưa cung cấp"}</td>
                       <td>{date(item.createdAt)}</td>
                       <td>
-                        <StaffStatusBadge tone={STATUS_TONES[item.verificationStatus]}>
+                        <StaffStatusBadge tone={STATUS_TONES[item.verificationStatus]} icon>
                           {LABELS[item.verificationStatus]}
                         </StaffStatusBadge>
                       </td>
@@ -443,78 +479,94 @@ function AdminVerificationsPage() {
               </div>
             </div>
           )}
-          <section className="admin-panel admin-company-detail" aria-labelledby="company-info">
-            <div className="admin-panel-heading">
-              <h2 id="company-info">Thông tin hồ sơ</h2>
-            </div>
-            <dl className="admin-company-fields">
-              <div>
-                <dt>Tên công ty</dt>
-                <dd>{selected.name}</dd>
+
+          <div className="staff-verification-layout">
+            <section className="admin-panel admin-company-detail" aria-labelledby="company-info">
+              <div className="admin-panel-heading">
+                <h2 id="company-info">Thông tin hồ sơ</h2>
               </div>
-              <div>
-                <dt>Mã số thuế</dt>
-                <dd>{selected.taxCode}</dd>
-              </div>
-              <div>
-                <dt>Email</dt>
-                <dd>{selected.email || "Chưa cung cấp"}</dd>
-              </div>
-              <div>
-                <dt>Thời điểm gửi</dt>
-                <dd>{date(selected.createdAt)}</dd>
-              </div>
-              <div>
-                <dt>Thời điểm xét duyệt</dt>
-                <dd>{date(selected.verifiedAt)}</dd>
-              </div>
-              <div>
-                <dt>Người duyệt</dt>
-                <dd>
-                  {selected.verifiedBy == null
-                    ? "Chưa có thông tin"
-                    : `Mã người duyệt: ${selected.verifiedBy}`}
-                </dd>
-              </div>
-              <div className="admin-company-fields-wide">
-                <dt>Giấy đăng ký công ty</dt>
-                <dd>
-                  <LegacyEvidence value={selected.registrationCertificateUrl} />
-                </dd>
-              </div>
-              {selected.verificationStatus === "REJECTED" && (
-                <div className="admin-company-fields-wide verification-rejection">
-                  <dt>Lý do từ chối</dt>
-                  <dd>{selected.rejectionReason || "Không có lý do trong hồ sơ."}</dd>
+              <dl className="admin-company-fields">
+                <div className="staff-detail-key">
+                  <dt>Tên công ty</dt>
+                  <dd>{selected.name}</dd>
                 </div>
-              )}
-            </dl>
-          </section>
+                <div className="staff-detail-key">
+                  <dt>Mã số thuế</dt>
+                  <dd>{selected.taxCode}</dd>
+                </div>
+                <div className={selected.email ? "staff-detail-key" : undefined}>
+                  <dt>Email</dt>
+                  <dd>{selected.email || "Chưa cung cấp"}</dd>
+                </div>
+                <div>
+                  <dt>Thời điểm gửi</dt>
+                  <dd>{date(selected.createdAt)}</dd>
+                </div>
+                <div>
+                  <dt>Thời điểm xét duyệt</dt>
+                  <dd>{date(selected.verifiedAt)}</dd>
+                </div>
+                <div>
+                  <dt>Người duyệt</dt>
+                  <dd>
+                    {selected.verifiedBy == null
+                      ? "Chưa có thông tin"
+                      : `Mã người duyệt: ${selected.verifiedBy}`}
+                  </dd>
+                </div>
+              </dl>
+            </section>
+            <aside aria-label="Tài liệu và xét duyệt">
+              <section aria-labelledby="verification-documents">
+                <div className="admin-panel-heading">
+                  <h2 id="verification-documents">Tài liệu đã gửi</h2>
+                </div>
+                <LegacyEvidence key={selected.id} value={selected.registrationCertificateUrl} />
+              </section>
+              <StaffDetailNotice
+                title={
+                  selected.verificationStatus === "PENDING"
+                    ? "Hồ sơ đang chờ duyệt"
+                    : selected.verificationStatus === "REJECTED"
+                      ? "Lý do từ chối hồ sơ"
+                      : "Hồ sơ đã được xác minh"
+                }
+                tone={selected.verificationStatus === "REJECTED" ? "danger" : "neutral"}
+              >
+                <p>
+                  {selected.verificationStatus === "PENDING"
+                    ? "Đối chiếu thông tin công ty với giấy đăng ký trước khi quyết định."
+                    : selected.verificationStatus === "REJECTED"
+                      ? selected.rejectionReason || "Không có lý do trong hồ sơ."
+                      : `Thời điểm xét duyệt: ${date(selected.verifiedAt)}`}
+                </p>
+                {selected.verificationStatus === "PENDING" && !mockMode && (
+                  <div className="admin-decision-actions">
+                    <div>
+                      <button
+                        type="button"
+                        className="admin-secondary-action"
+                        disabled={saving || decisionError?.conflict}
+                        onClick={() => openDecision("REJECTED")}
+                      >
+                        Từ chối hồ sơ
+                      </button>
+                      <button
+                        type="button"
+                        className="admin-primary-action"
+                        disabled={saving || decisionError?.conflict}
+                        onClick={() => openDecision("VERIFIED")}
+                      >
+                        Phê duyệt <ArrowRightIcon size={16} />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </StaffDetailNotice>
+            </aside>
+          </div>
           {!mockMode && (
             <DossierHistory key={selected.id} companyId={selected.id} revision={reload} />
-          )}
-          {selected.verificationStatus === "PENDING" && !mockMode && (
-            <div className="admin-decision-actions">
-              <p>Chỉ hồ sơ đang chờ duyệt mới có thể được quyết định.</p>
-              <div>
-                <button
-                  type="button"
-                  className="admin-secondary-action"
-                  disabled={saving || decisionError?.conflict}
-                  onClick={() => openDecision("REJECTED")}
-                >
-                  Từ chối hồ sơ
-                </button>
-                <button
-                  type="button"
-                  className="admin-primary-action"
-                  disabled={saving || decisionError?.conflict}
-                  onClick={() => openDecision("VERIFIED")}
-                >
-                  Phê duyệt <ArrowRightIcon size={16} />
-                </button>
-              </div>
-            </div>
           )}
           {dialogOpen && (
             <Dialog

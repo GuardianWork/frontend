@@ -1,0 +1,230 @@
+/* Detail hierarchy: identity first, decision evidence second, supporting prose last.
+   Desktop canvas: available width = flexible record column + 24px gap + 360px actions. */
+@media (min-width: 1024px) {
+  body[data-portal="staff"] .staff-detail-notice {
+    --detail-signal: var(--status-info-ink);
+    margin: 12px 0 16px;
+    padding: 16px;
+    border: 0;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--status-info-ground) 48%, var(--color-paper));
+    color: var(--color-ink);
+    box-shadow: none; /* taste-skill-ignore: removes a shadow; no resting elevation. */
+  }
+  body[data-portal="staff"] .staff-detail-notice[data-tone="warning"] {
+    --detail-signal: var(--status-warning-ink);
+    background: color-mix(in srgb, var(--status-warning-ground) 48%, var(--color-paper));
+  }
+  body[data-portal="staff"] .staff-detail-notice[data-tone="danger"] {
+    --detail-signal: var(--status-danger-ink);
+    background: color-mix(in srgb, var(--status-danger-ground) 65%, var(--color-paper));
+  }
+  body[data-portal="staff"] .staff-detail-notice-heading {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    color: var(--detail-signal);
+  }
+  body[data-portal="staff"] .staff-detail-notice-heading > svg {
+    flex: none;
+    margin-top: 3px;
+  }
+  body[data-portal="staff"] .staff-detail-notice-heading > h2 {
+    margin: 0;
+    color: inherit;
+    font-size: 15px;
+    line-height: 24px;
+    font-weight: 550;
+  }
+  body[data-portal="staff"] .staff-detail-notice-content > p {
+    margin: 6px 0 0;
+    color: var(--color-ink);
+    font-size: 14px;
+    line-height: 22px;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+  }
+  body[data-portal="staff"] .staff-detail-notice-content > p + p {
+    color: var(--color-ink-2);
+    font-size: 13px;
+  }
+  body[data-portal="staff"] main .staff-detail-key dd {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--status-info-ink);
+    overflow-wrap: anywhere;
+  }
+  body[data-portal="staff"] main .staff-detail-key dt {
+    color: var(--color-ink-2);
+  }
+  body[data-portal="staff"] .staff-detail-notice .admin-decision-actions {
+    margin: 12px 0 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    border-radius: 0;
+  }
+  body[data-portal="staff"] .staff-verification-detail .admin-company-fields {
+    padding-top: 8px;
+  }
+  body[data-portal="staff"] .staff-verification-detail .staff-detail-evidence {
+    padding: 12px;
+    background: var(--color-paper-2);
+    border-radius: 6px;
+  }
+  body[data-portal="staff"] .staff-account-detail-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 24px;
+    align-items: start;
+  }
+  body[data-portal="staff"] .staff-account-detail-grid .admin-company-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 24px;
+    padding-top: 8px;
+  }
+  body[data-portal="staff"] .staff-account-detail-grid .accounts-enforcement {
+    margin-top: 0;
+    padding: 0 0 0 20px;
+    border-left: 1px solid var(--color-rule); /* taste-skill-ignore: quiet app-panel separation permitted by app-screens. */
+  }
+  body[data-portal="staff"] .staff-account-detail-grid .accounts-enforcement .admin-company-fields {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  body[data-portal="staff"] .staff-account-detail-grid .accounts-actions {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    padding: 12px 0;
+  }
+  body[data-portal="staff"] .staff-account-detail-grid .accounts-note {
+    padding: 12px 0;
+    font-size: 14px;
+    line-height: 22px;
+  }
+  body[data-portal="staff"] .staff-detail-object-heading h1 {
+    font-size: 24px;
+    line-height: 32px;
+  }
+  body[data-portal="staff"] .staff-detail-object-heading .admin-record-status {
+    flex: none;
+  }
+  body[data-portal="staff"] .staff-detail-warning {
+    margin-top: 12px;
+    padding: 12px;
+    background: color-mix(in srgb, var(--status-warning-ground) 48%, var(--color-paper));
+    border-radius: 6px;
+  }
+  body[data-portal="staff"] .staff-detail-warning > h3 {
+    margin: 0 0 6px;
+    color: var(--status-warning-ink);
+    font-size: 14px;
+    line-height: 22px;
+    font-weight: 550;
+  }
+  body[data-portal="staff"] .staff-detail-warning > ul {
+    padding-left: 18px;
+    margin: 0;
+    color: var(--status-warning-ink);
+    font-size: 14px;
+    line-height: 22px;
+  }
+  body[data-portal="staff"] main .staff-detail-warning li {
+    color: var(--status-warning-ink);
+  }
+  body[data-portal="staff"] .staff-job-legal-findings blockquote {
+    margin: 8px 0;
+    padding: 10px 12px;
+    border: 0;
+    background: color-mix(in srgb, var(--status-warning-ground) 48%, var(--color-paper));
+    color: var(--status-warning-ink);
+    font-size: 14px;
+    line-height: 23px;
+  }
+  body[data-portal="staff"] .admin-sample-detail-fields .staff-detail-key {
+    grid-column: 1 / -1;
+    padding: 12px;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--status-info-ground) 60%, var(--color-paper));
+  }
+  body[data-portal="staff"] .admin-sample-detail-fields .staff-detail-key dd {
+    margin-top: 6px;
+    font-size: 16px;
+    line-height: 25px;
+  }
+}
+
+@media (min-width: 1024px) {
+  body[data-portal="staff"]
+    .staff-verification-detail
+    > .staff-detail-notice:has(.admin-decision-actions) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 24px;
+  }
+  body[data-portal="staff"]
+    .staff-verification-detail
+    > .staff-detail-notice
+    .staff-detail-notice-heading {
+    grid-column: 1;
+  }
+  body[data-portal="staff"]
+    .staff-verification-detail
+    > .staff-detail-notice
+    .staff-detail-notice-content {
+    display: contents;
+  }
+  body[data-portal="staff"]
+    .staff-verification-detail
+    > .staff-detail-notice
+    .staff-detail-notice-content
+    > p {
+    grid-column: 1;
+  }
+  body[data-portal="staff"]
+    .staff-verification-detail
+    > .staff-detail-notice
+    .admin-decision-actions {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    align-self: center;
+    margin: 0;
+  }
+}
+
+@media (min-width: 1024px) {
+  body[data-portal="staff"]
+    :is(
+      .staff-job-detail,
+      .staff-detail-object-heading,
+      .staff-verification-detail > .admin-page-heading
+    )
+    .admin-record-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 28px;
+    padding: 3px 9px;
+    border: 1px solid color-mix(in srgb, currentColor 18%, transparent); /* taste-skill-ignore: semantic app status tag, consistent with staff tables. */
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  body[data-portal="staff"]
+    .staff-detail-notice:is([data-tone="warning"], [data-tone="danger"])
+    .staff-detail-notice-content
+    > p:first-child {
+    color: var(--detail-signal);
+  }
+  body[data-portal="staff"] main .accounts-enforcement .staff-detail-key dd {
+    color: var(--status-danger-ink);
+  }
+  body[data-portal="staff"] .admin-sample-detail-fields .staff-detail-key dd {
+    color: var(--status-info-ink);
+    font-weight: 500;
+  }
+}

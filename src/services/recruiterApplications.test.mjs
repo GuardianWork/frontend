@@ -15,8 +15,8 @@ afterEach(() => {
   globalThis.fetch = originalFetch;
   delete globalThis.localStorage;
 });
-function mock(handler) {
-  globalThis.localStorage = {
+function mock(handler, jobStatus = "PUBLISHED") {
+  globalThis.sessionStorage = {
     removeItem: () => {},
     getItem: (key) =>
       key === AUTH_SESSION_KEY
@@ -30,6 +30,8 @@ function mock(handler) {
   globalThis.fetch = (url, init) => {
     assert.equal(init.headers.Authorization, "Bearer access");
     assert.equal(init.cache, "no-store");
+    const match = url.match(/\/companies\/me\/jobs\/(\d+)$/);
+    if (match) return Promise.resolve(response({ id: Number(match[1]), status: jobStatus }));
     return handler(url, init);
   };
 }
@@ -237,4 +239,55 @@ test("application history preserves actor display names and rejects malformed na
   }
   mock(() => response({ ...detail, history: [{ ...event, actorName: 123 }] }));
   await assert.rejects(getRecruiterApplication(42, "a1"), ApiError);
+});
+
+test("suspension blocks every job-scoped application read, mutation and CV request before evidence is fetched", async () => {
+  let calls = 0;
+  mock(() => {
+    calls++;
+    throw new Error("Restricted endpoint must not be called");
+  }, "SUSPENDED");
+  for (const operation of [
+    () => listRecruiterApplications(42, "", 0),
+    () => listRecruiterApplicationInbox(42, "", 0),
+    () => getRecruiterApplication(42, "a1"),
+    () => changeApplicationStatus(42, "a1", { status: "UNDER_REVIEW", version: 0 }),
+    () => getApplicationPdf(42, "a1"),
+  ])
+    await assert.rejects(operation, /đã bị đình chỉ/);
+  assert.equal(calls, 0);
+});
+
+test("inbox omits suspended-job applicants and refuses CV bytes when suspension occurs in flight", async () => {
+  mock(() =>
+    response({
+      content: [
+        { ...detail, jobId: 42 },
+        { ...detail, id: "a2", jobId: 77 },
+      ],
+      pageNumber: 0,
+      pageSize: 20,
+      totalElements: 2,
+      totalPages: 1,
+      first: true,
+      last: true,
+    }),
+  );
+  const original = globalThis.fetch;
+  globalThis.fetch = (url, init) =>
+    url.endsWith("/jobs/42")
+      ? Promise.resolve(response({ id: 42, status: "SUSPENDED" }))
+      : original(url, init);
+  assert.deepEqual(
+    (await listRecruiterApplicationInbox(undefined, "", 0)).content.map((row) => row.id),
+    ["a2"],
+  );
+  let checks = 0;
+  globalThis.fetch = async (url) => {
+    if (url.endsWith("/jobs/42"))
+      return response({ id: 42, status: ++checks === 1 ? "PUBLISHED" : "SUSPENDED" });
+    return new Response("%PDF-1.7", { headers: { "Content-Type": "application/pdf" } });
+  };
+  await assert.rejects(getApplicationPdf(42, "a1"), /đã bị đình chỉ/);
+  assert.equal(checks, 2);
 });

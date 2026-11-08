@@ -1,0 +1,346 @@
+/* Desktop staff workspaces prioritize records over introductory chrome.
+   At 1440px: 80px rail + 2 × 24px gutters + 10px scrollbar + 1302px canvas. */
+@media (min-width: 1024px) {
+  body[data-portal="staff"] {
+    --staff-canvas-pad: 24px;
+    --staff-control-height: 36px;
+    --staff-data-gap: 12px;
+  }
+
+  body[data-portal="staff"] .admin-workspace.workspace-shell .workspace-content > header {
+    height: 60px;
+    min-height: 60px;
+    padding-inline: var(--staff-canvas-pad);
+  }
+  body[data-portal="staff"] .admin-workspace.workspace-shell .workspace-sidebar > .workspace-brand {
+    min-height: 60px;
+    height: 60px;
+  }
+  body[data-portal="staff"] .admin-workspace.workspace-shell .workspace-content > main {
+    padding: 24px var(--staff-canvas-pad) 32px;
+  }
+  body[data-portal="staff"] .admin-workspace.workspace-shell .workspace-page {
+    width: 100%;
+    max-width: none;
+    font-size: 14px;
+  }
+
+  body[data-portal="staff"] main .admin-page-heading {
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+  }
+  body[data-portal="staff"] .admin-workspace .workspace-page .admin-page-heading h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 650;
+    line-height: 32px;
+    letter-spacing: -0.02em;
+  }
+  body[data-portal="staff"] main .admin-page-heading p {
+    max-width: none;
+    margin: 4px 0 0;
+    font-size: 13px;
+    line-height: 20px;
+  }
+  body[data-portal="staff"] main .admin-panel-heading {
+    gap: var(--staff-data-gap);
+    padding: 12px 0;
+  }
+  body[data-portal="staff"] main .admin-panel-heading :is(h2, h3) {
+    margin: 0;
+    font-size: 16px;
+    line-height: 24px;
+  }
+  body[data-portal="staff"] main .admin-panel-heading p {
+    margin: 2px 0 0;
+    font-size: 12px;
+    line-height: 18px;
+  }
+  body[data-portal="staff"] main :is(.admin-sample-banner, .admin-dashboard-source) {
+    gap: 8px;
+    margin-bottom: var(--staff-data-gap);
+    font-size: 12px;
+    line-height: 18px;
+  }
+  body[data-portal="staff"] main :is(.admin-sample-banner, .admin-dashboard-source) p {
+    margin: 0;
+    font-size: inherit;
+    line-height: inherit;
+  }
+
+  body[data-portal="staff"]
+    main
+    :is(.admin-sample-toolbar, .admin-list-toolbar, .admin-search-row) {
+    gap: var(--staff-data-gap);
+    margin-bottom: 0;
+    padding: 10px 0;
+  }
+  body[data-portal="staff"] main :is(.admin-sample-filter, .list-search-row) {
+    gap: 4px;
+  }
+  body[data-portal="staff"] main :is(.admin-sample-filter, .list-search-row > label) {
+    font-size: 12px;
+    line-height: 18px;
+  }
+  body[data-portal="staff"]
+    main
+    :is(
+      .admin-sample-filter select,
+      .list-status-select,
+      .audit-filters input,
+      .audit-filters select
+    ) {
+    height: var(--staff-control-height);
+    min-height: var(--staff-control-height);
+    padding-block: 6px;
+    font-size: 13px;
+  }
+  body[data-portal="staff"] main .list-search-field {
+    min-height: var(--staff-control-height);
+  }
+  body[data-portal="staff"] main .list-search-field input {
+    height: var(--staff-control-height);
+    min-height: var(--staff-control-height);
+    padding-block: 6px;
+    font-size: 13px;
+  }
+  body[data-portal="staff"]
+    main
+    :is(
+      .admin-primary-action,
+      .admin-secondary-action,
+      .admin-text-link,
+      .admin-sample-detail-button
+    ) {
+    min-height: 32px;
+    padding-block: 6px;
+    font-size: 13px;
+  }
+
+  body[data-portal="staff"]
+    main
+    :is(.admin-record-table, .staff-jobs-table, .compliance-table, .audit-table)
+    th {
+    padding: 10px 12px;
+    font-size: 12px;
+    line-height: 18px;
+  }
+  body[data-portal="staff"]
+    main
+    :is(.admin-record-table, .staff-jobs-table, .compliance-table, .audit-table)
+    td {
+    padding: 10px 12px;
+    font-size: 14px;
+    line-height: 20px;
+    vertical-align: middle;
+  }
+  body[data-portal="staff"] main table :is(.admin-record-name, .compliance-job > button) {
+    min-height: 0;
+    padding-block: 0;
+    line-height: 22px;
+  }
+  body[data-portal="staff"]
+    main
+    table
+    :is(.accounts-secondary, .admin-record-meta, .compliance-job > span, td > small) {
+    margin-top: 2px;
+    font-size: 12px;
+    line-height: 18px;
+  }
+  body[data-portal="staff"] main :is(.admin-list-pagination, .activity-pagination) {
+    gap: var(--staff-data-gap);
+    padding: 10px 0;
+  }
+  body[data-portal="staff"] main .admin-list-pagination.is-standalone {
+    margin-top: 8px;
+    border-inline: 0;
+    border-bottom: 0;
+  }
+  body[data-portal="staff"] main .admin-pagination-controls button {
+    min-width: 32px;
+    min-height: 32px;
+    padding: 4px 8px;
+  }
+
+  body[data-portal="staff"] main .accounts-tabs {
+    gap: 24px;
+    margin-bottom: var(--staff-data-gap);
+  }
+  body[data-portal="staff"] main .accounts-tabs button {
+    min-height: 36px;
+    padding: 6px 0;
+    font-size: 13px;
+  }
+  body[data-portal="staff"] main .accounts-search {
+    grid-template-columns: minmax(0, 520px) auto;
+    gap: 4px 12px;
+    max-width: none;
+    margin-bottom: var(--staff-data-gap);
+  }
+  body[data-portal="staff"] main .accounts-search label {
+    grid-column: 1;
+    font-size: 12px;
+  }
+  body[data-portal="staff"] main .accounts-search > div {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  body[data-portal="staff"] main .accounts-search input {
+    min-height: var(--staff-control-height);
+    font-size: 13px;
+  }
+  body[data-portal="staff"] main .accounts-search > span {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: center;
+    font-size: 12px;
+  }
+
+  body[data-portal="staff"] main .admin-dashboard-metrics {
+    margin-bottom: 16px;
+  }
+  body[data-portal="staff"] main .staff-dashboard-metrics .admin-dashboard-metric {
+    min-height: 0;
+    gap: 6px;
+    padding: 14px 16px;
+  }
+  body[data-portal="staff"] main .admin-dashboard-metric > strong {
+    font-size: 28px;
+  }
+  body[data-portal="staff"] main .admin-dashboard-metric > :is(span, small) {
+    min-height: 0;
+    font-size: 12px;
+    line-height: 18px;
+  }
+  body[data-portal="staff"] main .admin-dashboard-job-tools {
+    gap: 24px;
+    padding: 16px 0;
+  }
+  body[data-portal="staff"] main .admin-dashboard-job-tools p {
+    margin: 4px 0 0;
+    font-size: 13px;
+  }
+  body[data-portal="staff"] main .admin-dashboard-job-tools a {
+    min-height: 36px;
+  }
+  body[data-portal="staff"] main .staff-account-summary {
+    gap: 12px;
+    padding: 16px 0;
+    margin-bottom: 0;
+  }
+  body[data-portal="staff"] main .staff-account-summary .staff-account-fields {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+  }
+  body[data-portal="staff"] main .staff-account-summary .staff-account-fields > div {
+    display: block;
+    padding: 8px 0;
+    border: 0;
+  }
+  body[data-portal="staff"] main .staff-account-summary .staff-account-fields dt {
+    margin-bottom: 4px;
+    font-size: 12px;
+  }
+  body[data-portal="staff"] main .staff-account-summary .staff-account-fields dd {
+    font-size: 14px;
+  }
+
+  body[data-portal="staff"] main :is(.compliance-back, .accounts-back, .admin-detail-back) {
+    min-height: 32px;
+    margin-bottom: 8px;
+  }
+  body[data-portal="staff"] main .staff-job-detail .job-detail-title {
+    font-size: 22px;
+    line-height: 28px;
+  }
+  body[data-portal="staff"] main .admin-company-fields {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px 24px;
+    padding: 16px 0;
+  }
+  body[data-portal="staff"] main .admin-company-fields > div {
+    padding: 10px 12px;
+  }
+  body[data-portal="staff"] main .admin-company-fields .admin-company-fields-wide {
+    grid-column: 1 / -1;
+  }
+  body[data-portal="staff"] main .admin-company-fields dt {
+    margin-bottom: 4px;
+    font-size: 12px;
+    line-height: 18px;
+  }
+  body[data-portal="staff"] main .admin-company-fields dd {
+    font-size: 14px;
+    line-height: 22px;
+  }
+  body[data-portal="staff"] main .verification-history-toolbar {
+    padding: 10px 0;
+  }
+  body[data-portal="staff"] main .verification-history-summary {
+    padding: 12px 0;
+  }
+  body[data-portal="staff"] main .staff-review-conditions li {
+    padding-block: 8px;
+  }
+  body[data-portal="staff"] main .staff-job-legal-body {
+    padding-block: 12px;
+    font-size: 13px;
+    line-height: 20px;
+  }
+  body[data-portal="staff"] main .staff-job-legal-body p {
+    margin-block: 8px;
+  }
+  body[data-portal="staff"] main .staff-job-legal-body :is(h3, h4) {
+    margin-block: 12px 8px;
+  }
+  body[data-portal="staff"] main .staff-legal-method {
+    margin-top: 12px;
+  }
+  body[data-portal="staff"] main .staff-legal-method summary {
+    padding-block: 6px;
+    color: var(--color-ink-2);
+    font-weight: 600;
+    cursor: pointer;
+  }
+  body[data-portal="staff"] main .staff-legal-method summary:focus-visible {
+    outline: 2px solid var(--color-discovery-accent);
+    outline-offset: 3px;
+  }
+  body[data-portal="staff"] main .staff-jobs.compliance-list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 16px;
+  }
+  body[data-portal="staff"] main .staff-jobs.compliance-list > .admin-panel-heading {
+    grid-column: 1;
+    grid-row: 1;
+    border-bottom: 0;
+  }
+  body[data-portal="staff"] main .staff-jobs.compliance-list > .admin-sample-toolbar {
+    grid-column: 2;
+    grid-row: 1;
+    border-bottom: 0;
+  }
+  body[data-portal="staff"]
+    main
+    .staff-jobs.compliance-list
+    > :not(.admin-panel-heading):not(.admin-sample-toolbar) {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 1280px) {
+  body[data-portal="staff"] main .audit-filters {
+    grid-template-columns:
+      132px 132px minmax(145px, 1.2fr) minmax(155px, 1.3fr) minmax(110px, 0.9fr)
+      minmax(96px, 0.8fr) auto;
+    gap: 12px;
+  }
+  body[data-portal="staff"] main .audit-filters > button {
+    grid-column: auto;
+    min-height: 36px;
+    white-space: nowrap;
+  }
+}

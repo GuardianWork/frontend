@@ -13,6 +13,7 @@ import {
   type ApplicationStatus,
 } from "@/services/recruiterApplications";
 import { ApplicationReview } from "@/components/recruiter/ApplicationReview";
+import { RecruiterJobGate } from "@/components/recruiter/RecruiterJobGate";
 import "@/components/recruiter/job-publishing.css";
 import "@/components/recruiter/applications.css";
 
@@ -36,6 +37,13 @@ function ApplicationsPage() {
   const user = useAuthUser();
   const member = user?.activeMembership;
   const scope = `${user?.id}:${member?.companyId}:${member?.companyRole}:${member?.joinedAt}`;
+  const allowed = Boolean(member && ["OWNER", "RECRUITER"].includes(member.companyRole));
+  if (jobId && allowed)
+    return (
+      <RecruiterJobGate key={`${scope}:${jobId}`} jobId={jobId} scope={scope}>
+        <Applications jobId={jobId} scope={scope} allowed={allowed} />
+      </RecruiterJobGate>
+    );
   return (
     <Applications
       key={`${scope}:${jobId}`}
@@ -85,6 +93,7 @@ function Applications({
     staleTime: 0,
     refetchOnWindowFocus: "always",
     refetchOnReconnect: "always",
+    refetchInterval: 10000,
   });
   const title = useQuery({
     queryKey: ["application-job-title", scope, jobId],

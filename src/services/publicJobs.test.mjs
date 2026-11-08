@@ -1,7 +1,28 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { searchPublicJobs, toSalaryRange } from "./publicJobs.ts";
+import { getPublicJobDetail, searchPublicJobs, toSalaryRange } from "./publicJobs.ts";
 import { AUTH_SESSION_KEY } from "./auth.ts";
+
+test("public detail rejects suspended content even if an API incorrectly returns it", async () => {
+  const originalFetch = globalThis.fetch;
+  try {
+    globalThis.fetch = async (url, init) => {
+      assert.equal(url, "/api/jobs/42");
+      assert.equal(init.cache, "no-store");
+      return Response.json({
+        data: { id: 42, publicationStatus: "SUSPENDED", content: { title: "Restricted" } },
+      });
+    };
+    await assert.rejects(getPublicJobDetail(42), { status: 404 });
+    globalThis.fetch = async () =>
+      Response.json({
+        data: { id: 42, publicationStatus: "PUBLISHED", content: { title: "Visible" } },
+      });
+    assert.equal((await getPublicJobDetail(42)).content.title, "Visible");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
 
 test("searchPublicJobs builds the canonical backend query", async () => {
   const originalFetch = globalThis.fetch;

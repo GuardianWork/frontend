@@ -1,0 +1,332 @@
+/* One object header, a readable revision, and a decision rail. */
+@media (min-width: 1024px) {
+  body[data-portal="staff"] main .staff-publication-controls {
+    margin: 0;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--color-rule);
+  }
+  body[data-portal="staff"] main .staff-publication-controls h2 {
+    margin: 0 0 8px;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 600;
+  }
+  body[data-portal="staff"] main .staff-publication-controls p {
+    margin: 8px 0;
+    color: var(--color-ink-2);
+    font-size: 13px;
+    line-height: 21px;
+  }
+  body[data-portal="staff"] main .staff-publication-controls > button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    justify-content: center;
+    margin-top: 4px;
+  }
+  body[data-portal="staff"] main .staff-publication-controls .staff-publication-receipt {
+    padding: 12px;
+    border-radius: 6px;
+    color: var(--status-danger-ink);
+    background: var(--status-danger-ground);
+  }
+  body[data-portal="staff"] .staff-suspend-target {
+    padding: 12px 16px;
+    color: var(--status-info-ink);
+    background: var(--status-info-ground);
+    border-radius: 6px;
+    font-size: 16px;
+    line-height: 24px;
+  }
+  body[data-portal="staff"] .staff-suspend-dialog form {
+    display: grid;
+    gap: 12px;
+  }
+  body[data-portal="staff"] .staff-suspend-dialog textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--color-rule-2);
+    border-radius: 6px;
+  }
+  body[data-portal="staff"] [role="dialog"].staff-suspend-dialog .staff-suspend-confirm {
+    background: var(--status-danger-ink);
+    color: var(--color-paper);
+    border-color: var(--status-danger-ink);
+  }
+  body[data-portal="staff"]
+    [role="dialog"].staff-suspend-dialog
+    .staff-suspend-confirm:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--status-danger-ink) 88%, black);
+  }
+  body[data-portal="staff"] main .staff-job-review-content {
+    min-width: 0;
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-jobs-history {
+    margin-top: 12px;
+    border-top: 1px solid var(--color-rule);
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-jobs-history > .admin-panel-heading {
+    padding-top: 16px;
+  }
+  body[data-portal="staff"] main .staff-revision-table-scroll {
+    overflow-x: auto;
+  }
+  body[data-portal="staff"] main .staff-revision-table {
+    min-width: 660px;
+  }
+  body[data-portal="staff"] main .staff-revision-table td {
+    vertical-align: top;
+  }
+  body[data-portal="staff"] main .staff-revision-table td:first-child {
+    min-width: 110px;
+  }
+  body[data-portal="staff"] main .staff-revision-table tr[aria-current="true"] td {
+    background: var(--color-discovery-subtle);
+  }
+  body[data-portal="staff"] main .staff-revision-table :is(time, td > span) {
+    font-size: 13px;
+    line-height: 20px;
+  }
+  body[data-portal="staff"] main .staff-revision-table small {
+    display: block;
+    margin-top: 2px;
+    color: var(--color-ink-3);
+    font-size: 12px;
+  }
+  body[data-portal="staff"] main .staff-revision-table .staff-revision-reason-row td {
+    padding-block: 8px 12px;
+    white-space: normal;
+  }
+  body[data-portal="staff"] main .staff-revision-reason-row strong {
+    color: var(--status-danger-ink);
+    font-size: 12px;
+    font-weight: 500;
+  }
+  body[data-portal="staff"] main .staff-revision-reason-row p {
+    color: var(--status-danger-ink);
+    margin: 4px 0 0;
+    white-space: pre-wrap;
+    font-size: 13px;
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-job-object-heading {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-job-object-heading h1 {
+    font-size: 24px;
+    line-height: 32px;
+  }
+  body[data-portal="staff"] main .staff-job-detail .compliance-detail-layout {
+    margin-top: 16px;
+    gap: 24px;
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-job-review-layout {
+    grid-template-columns: minmax(0, 1fr) 360px;
+  }
+  body[data-portal="staff"] main .staff-job-detail .compliance-jd > .admin-panel-heading {
+    align-items: center;
+    padding: 0 0 12px;
+    background: var(--color-paper);
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-jobs-content {
+    padding: 16px 0;
+  }
+  body[data-portal="staff"] main .staff-job-detail .jp-content-view {
+    padding: 0;
+  }
+  body[data-portal="staff"] main .staff-job-detail .jp-job-facts {
+    gap: 8px 16px;
+    margin: 0;
+    font-size: 13px;
+    line-height: 20px;
+  }
+  body[data-portal="staff"] main .staff-job-detail .jp-content-view .jp-salary {
+    margin: 12px 0 20px;
+    font-size: 18px;
+    line-height: 28px;
+    font-weight: 600;
+  }
+  body[data-portal="staff"] main .staff-job-detail .jp-content-view > section {
+    max-width: 80ch;
+    margin-block: 20px;
+  }
+  body[data-portal="staff"] main .staff-job-detail .jp-content-view > section > h4 {
+    margin: 0 0 8px;
+    font-size: 14px;
+    line-height: 22px;
+    font-weight: 600;
+  }
+  body[data-portal="staff"] main .staff-job-detail .jp-content-view section :is(p, li) {
+    font-size: 14px;
+    line-height: 1.65;
+  }
+  body[data-portal="staff"] main .staff-job-detail .compliance-inspector {
+    gap: 16px;
+    padding-left: 20px;
+    border-left: 1px solid var(--color-rule);
+  }
+  body[data-portal="staff"]
+    main
+    .staff-job-detail
+    :is(.staff-jobs-eligibility, .compliance-handling) {
+    margin: 0;
+    padding: 0 0 16px;
+    border-bottom: 1px solid var(--color-rule);
+    background: var(--color-paper);
+  }
+  body[data-portal="staff"]
+    main
+    .staff-job-detail
+    :is(.staff-jobs-eligibility, .compliance-handling)
+    > h2 {
+    margin: 0 0 8px;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 600;
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-review-conditions {
+    margin: 0;
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-review-conditions li {
+    padding-block: 6px;
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-review-conditions li > span:first-child {
+    font-size: 12px;
+  }
+  body[data-portal="staff"] main .staff-job-detail .compliance-inspector .admin-record-status {
+    padding: 3px 9px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  body[data-portal="staff"] main .staff-job-detail .compliance-handling > p {
+    margin: 6px 0;
+    color: var(--color-ink-2);
+    font-size: 13px;
+    line-height: 20px;
+  }
+  body[data-portal="staff"] main .staff-job-detail .compliance-handling > div {
+    gap: 8px;
+    margin-top: 12px;
+  }
+  body[data-portal="staff"] main .staff-job-detail .compliance-handling button {
+    min-height: 38px;
+    padding: 8px 12px;
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-detail-legal-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 32px;
+    color: var(--color-discovery-deep);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-job-legal-review {
+    margin-top: 12px;
+    margin-bottom: 0;
+    border-top: 1px solid var(--color-rule);
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-job-legal-review .admin-panel-heading {
+    padding-top: 16px;
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-job-legal-body {
+    max-width: 88ch;
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-event-list .staff-event-entry {
+    grid-template-columns: 160px minmax(0, 1fr);
+    gap: 16px;
+    padding: 12px 0;
+    background: var(--color-paper);
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-event-body p {
+    margin: 4px 0;
+    font-size: 13px;
+    line-height: 20px;
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-revision-entry {
+    padding: 12px 0;
+    background: var(--color-paper);
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-revision-heading {
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-revision-heading > button {
+    min-height: 32px;
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-revision-entry > p {
+    margin: 4px 0;
+    line-height: 20px;
+  }
+  body[data-portal="staff"]
+    main
+    .staff-job-detail
+    :is(.staff-posting-history, .staff-jobs-history)
+    > .admin-panel-heading {
+    background: var(--color-paper);
+  }
+  body[data-portal="staff"]
+    main
+    .staff-job-detail
+    :is(.staff-posting-history, .staff-jobs-history)
+    > nav {
+    padding: 10px 0;
+  }
+}
+
+/* Action controls share the right edge of their own section. */
+@media (min-width: 1024px) {
+  body[data-portal="staff"] #staff-reviews .staff-jobs.compliance-list {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    column-gap: 16px;
+  }
+  body[data-portal="staff"] #staff-reviews .staff-jobs.compliance-list > .admin-panel-heading {
+    display: contents;
+  }
+  body[data-portal="staff"]
+    #staff-reviews
+    .staff-jobs.compliance-list
+    > .admin-panel-heading
+    > div {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+  }
+  body[data-portal="staff"]
+    #staff-reviews
+    .staff-jobs.compliance-list
+    > .admin-panel-heading
+    > button {
+    grid-column: 3;
+    grid-row: 1;
+    align-self: end;
+    justify-self: end;
+    margin-bottom: 10px;
+  }
+  body[data-portal="staff"] #staff-reviews .staff-jobs.compliance-list > .admin-sample-toolbar {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  body[data-portal="staff"] #staff-reviews .staff-jobs-message:has(> button) {
+    display: grid;
+    gap: 0;
+  }
+  body[data-portal="staff"] #staff-reviews .staff-jobs-message > button {
+    justify-self: end;
+  }
+  body[data-portal="staff"] #staff-reviews .staff-job-review-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+  }
+  body[data-portal="staff"] #staff-reviews .staff-job-review-actions button {
+    width: auto;
+  }
+  body[data-portal="staff"] #staff-reviews .staff-job-object-heading > button {
+    margin-left: auto;
+  }
+}

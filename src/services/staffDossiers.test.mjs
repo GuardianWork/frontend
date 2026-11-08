@@ -37,9 +37,9 @@ test("queue and history use Staff endpoints and accept empty legacy history", as
   globalThis.fetch = async (url, init) => {
     assert.equal(init.headers.Authorization, "Bearer access");
     if (url.endsWith("verification-history")) return Response.json({ data: [] });
-    assert.equal(url, "/api/staff/companies/verifications?status=PENDING&page=2&size=20");
+    assert.equal(url, "/api/staff/companies/verifications?status=PENDING&page=0&size=20");
     return Response.json({
-      data: { content: [company], pageNumber: 2, pageSize: 20, totalElements: 41, totalPages: 3 },
+      data: { content: [company], pageNumber: 0, pageSize: 20, totalElements: 41, totalPages: 3 },
     });
   };
   assert.equal((await getAdminVerifications("PENDING", 2)).content[0].version, 4);

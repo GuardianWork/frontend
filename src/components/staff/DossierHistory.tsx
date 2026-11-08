@@ -25,6 +25,8 @@ import { AdminPagination } from "@/components/admin/AdminPagination";
 import { useListPagination } from "@/hooks/useListPagination";
 import { matchesSearch } from "@/lib/list-search";
 
+import { StaffEvidencePreview, ExternalEvidencePreview } from "./StaffEvidencePreview";
+
 import { dossierDate } from "@/lib/dossier-date";
 
 export function EvidenceDownload({ documentId }: { documentId: string }) {
@@ -32,7 +34,8 @@ export function EvidenceDownload({ documentId }: { documentId: string }) {
   const [error, setError] = useState("");
   const [unavailable, setUnavailable] = useState(false);
   return (
-    <div>
+    <div className="staff-media-card">
+      <StaffEvidencePreview documentId={documentId} />
       <button
         type="button"
         className="admin-text-link"
@@ -67,9 +70,12 @@ export function LegacyEvidence({ value }: { value: string | null }) {
     return <EvidenceDownload key={target.documentId} documentId={target.documentId} />;
   if (target.href)
     return (
-      <a className="admin-text-link" href={target.href} target="_blank" rel="noreferrer">
-        <ExternalLinkIcon size={16} /> Mở đường dẫn giấy đăng ký
-      </a>
+      <div className="staff-media-card">
+        <ExternalEvidencePreview href={target.href} />
+        <a className="admin-text-link" href={target.href} target="_blank" rel="noreferrer">
+          <ExternalLinkIcon size={16} /> Mở đường dẫn giấy đăng ký
+        </a>
+      </div>
     );
   return <>Chưa có đường dẫn tài liệu trong hồ sơ.</>;
 }
@@ -79,6 +85,7 @@ export function DossierHistory({ companyId, revision }: { companyId: number; rev
   const [error, setError] = useState("");
   const [retry, setRetry] = useState(0);
   const [query, setQuery] = useState("");
+  const [openAttempts, setOpenAttempts] = useState<Set<string>>(new Set());
   const sortedAttempts = useMemo(
     () => [...attempts].sort((a, b) => Date.parse(b.submittedAt) - Date.parse(a.submittedAt)),
     [attempts],
@@ -157,7 +164,17 @@ export function DossierHistory({ companyId, revision }: { companyId: number; rev
           <ol className="verification-history-list">
             {pagination.items.map((attempt) => (
               <li key={attempt.attemptId} className="verification-history-attempt">
-                <details>
+                <details
+                  onToggle={(event) => {
+                    const open = event.currentTarget.open;
+                    setOpenAttempts((previous) => {
+                      const next = new Set(previous);
+                      if (open) next.add(attempt.attemptId);
+                      else next.delete(attempt.attemptId);
+                      return next;
+                    });
+                  }}
+                >
                   <summary className="verification-history-summary">
                     <ChevronDownIcon
                       size={18}
@@ -191,91 +208,93 @@ export function DossierHistory({ companyId, revision }: { companyId: number; rev
                           : "Chờ duyệt"}
                     </StaffStatusBadge>
                   </summary>
-                  <dl className="admin-company-fields">
-                    <div>
-                      <dt>Tên công ty</dt>
-                      <dd>{attempt.companyName}</dd>
-                    </div>
-                    <div>
-                      <dt>Mã số thuế</dt>
-                      <dd>{attempt.taxCode}</dd>
-                    </div>
-                    <div>
-                      <dt>Địa chỉ làm việc</dt>
-                      <dd>{attempt.workAddress}</dd>
-                    </div>
-                    <div>
-                      <dt>Chức vụ người nộp</dt>
-                      <dd>{attempt.submitterPosition}</dd>
-                    </div>
-                    <div>
-                      <dt>Tư cách đại diện</dt>
-                      <dd>
-                        {attempt.representation === "LEGAL_REPRESENTATIVE"
-                          ? "Người đại diện pháp luật"
-                          : "Người đại diện được ủy quyền"}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>Phiên bản cam kết</dt>
-                      <dd>{attempt.declarationVersion}</dd>
-                    </div>
-                    <div className="admin-company-fields-wide">
-                      <dt>Nội dung cam kết</dt>
-                      <dd className="whitespace-pre-wrap">{attempt.declarationText}</dd>
-                    </div>
-                    <div>
-                      <dt>Tài liệu chứng minh</dt>
-                      <dd>
-                        <EvidenceDownload documentId={attempt.documentId} />
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>Kết quả</dt>
-                      <dd>
-                        <StaffStatusBadge
-                          tone={
-                            attempt.outcome === "VERIFIED"
-                              ? "verified"
-                              : attempt.outcome === "REJECTED"
-                                ? "rejected"
-                                : "pending"
-                          }
-                        >
-                          {attempt.outcome === "VERIFIED" ? (
-                            <CompanyIcon size={16} />
-                          ) : attempt.outcome === "REJECTED" ? (
-                            <RejectedIcon size={16} />
-                          ) : (
-                            <PendingIcon size={16} />
-                          )}
-                          {attempt.outcome === "VERIFIED"
-                            ? "Đã xác minh"
-                            : attempt.outcome === "REJECTED"
-                              ? "Đã từ chối"
-                              : "Chờ duyệt"}
-                        </StaffStatusBadge>
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>Người duyệt</dt>
-                      <dd>
-                        {attempt.reviewerId == null
-                          ? "Chưa có thông tin"
-                          : `Mã người duyệt: ${attempt.reviewerId}`}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>Thời điểm xét duyệt</dt>
-                      <dd>{dossierDate(attempt.reviewedAt)}</dd>
-                    </div>
-                    {attempt.rejectionReason && (
-                      <div className="admin-company-fields-wide verification-rejection">
-                        <dt>Lý do từ chối</dt>
-                        <dd>{attempt.rejectionReason}</dd>
+                  <div className="verification-history-content">
+                    <dl className="admin-company-fields">
+                      <div>
+                        <dt>Tên công ty</dt>
+                        <dd>{attempt.companyName}</dd>
                       </div>
-                    )}
-                  </dl>
+                      <div className="staff-detail-key">
+                        <dt>Mã số thuế</dt>
+                        <dd>{attempt.taxCode}</dd>
+                      </div>
+                      <div>
+                        <dt>Địa chỉ làm việc</dt>
+                        <dd>{attempt.workAddress}</dd>
+                      </div>
+                      <div>
+                        <dt>Chức vụ người nộp</dt>
+                        <dd>{attempt.submitterPosition}</dd>
+                      </div>
+                      <div>
+                        <dt>Tư cách đại diện</dt>
+                        <dd>
+                          {attempt.representation === "LEGAL_REPRESENTATIVE"
+                            ? "Người đại diện pháp luật"
+                            : "Người đại diện được ủy quyền"}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Phiên bản cam kết</dt>
+                        <dd>{attempt.declarationVersion}</dd>
+                      </div>
+                      <div className="admin-company-fields-wide">
+                        <dt>Nội dung cam kết</dt>
+                        <dd className="whitespace-pre-wrap">{attempt.declarationText}</dd>
+                      </div>
+                      <div>
+                        <dt>Kết quả</dt>
+                        <dd>
+                          <StaffStatusBadge
+                            tone={
+                              attempt.outcome === "VERIFIED"
+                                ? "verified"
+                                : attempt.outcome === "REJECTED"
+                                  ? "rejected"
+                                  : "pending"
+                            }
+                          >
+                            {attempt.outcome === "VERIFIED" ? (
+                              <CompanyIcon size={16} />
+                            ) : attempt.outcome === "REJECTED" ? (
+                              <RejectedIcon size={16} />
+                            ) : (
+                              <PendingIcon size={16} />
+                            )}
+                            {attempt.outcome === "VERIFIED"
+                              ? "Đã xác minh"
+                              : attempt.outcome === "REJECTED"
+                                ? "Đã từ chối"
+                                : "Chờ duyệt"}
+                          </StaffStatusBadge>
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Người duyệt</dt>
+                        <dd>
+                          {attempt.reviewerId == null
+                            ? "Chưa có thông tin"
+                            : `Mã người duyệt: ${attempt.reviewerId}`}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Thời điểm xét duyệt</dt>
+                        <dd>{dossierDate(attempt.reviewedAt)}</dd>
+                      </div>
+                      {attempt.rejectionReason && (
+                        <div className="admin-company-fields-wide verification-rejection">
+                          <dt>Lý do từ chối</dt>
+                          <dd>{attempt.rejectionReason}</dd>
+                        </div>
+                      )}
+                    </dl>
+                    <aside aria-label="Tài liệu của lần gửi">
+                      <h3>Tài liệu chứng minh</h3>
+                      {openAttempts.has(attempt.attemptId) && (
+                        <EvidenceDownload documentId={attempt.documentId} />
+                      )}
+                    </aside>
+                  </div>
                 </details>
               </li>
             ))}

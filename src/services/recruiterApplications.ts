@@ -1,5 +1,6 @@
 import { ApiError, parseApiResponse } from "./api.ts";
 import { authenticatedFetch, authenticatedRequest } from "./auth.ts";
+import { assertRecruiterJobAvailable, SuspendedJobError } from "./recruiterJobAccess.ts";
 
 export const APPLICATION_STATUSES = [
   "SUBMITTED",
@@ -131,6 +132,7 @@ export async function listRecruiterApplications(
   signal?: AbortSignal,
   status?: ApplicationStatus,
 ): Promise<ApplicationPage> {
+  await assertRecruiterJobAvailable(jobId, signal);
   const query = new URLSearchParams({ page: String(page), size: "20" });
   if (search.trim()) query.set("search", search.trim());
   if (status) query.set("status", status);
@@ -138,6 +140,7 @@ export async function listRecruiterApplications(
     signal,
     cache: "no-store",
   })) as ApplicationPage;
+  await assertRecruiterJobAvailable(jobId, signal);
   return parseApplicationPage(data);
 }
 function parseApplicationPage(value: unknown): ApplicationPage {
@@ -165,6 +168,7 @@ export async function listRecruiterApplicationInbox(
   signal?: AbortSignal,
   status?: ApplicationStatus,
 ): Promise<Omit<ApplicationPage, "content"> & { content: InboxApplication[] }> {
+  if (jobId !== undefined) await assertRecruiterJobAvailable(jobId, signal);
   const query = new URLSearchParams({ page: String(page), size: "20" });
   if (jobId !== undefined) query.set("jobId", String(jobId));
   if (search.trim()) query.set("search", search.trim());
@@ -183,7 +187,24 @@ export async function listRecruiterApplicationInbox(
     })
   )
     invalidResponse();
-  return result as Omit<ApplicationPage, "content"> & { content: InboxApplication[] };
+  const inbox = result as Omit<ApplicationPage, "content"> & { content: InboxApplication[] };
+  if (jobId === undefined) {
+    const availability = new Map<number, boolean>();
+    await Promise.all(
+      [...new Set(inbox.content.map((row) => row.jobId))].map(async (id) => {
+        try {
+          await assertRecruiterJobAvailable(id, signal);
+          availability.set(id, true);
+        } catch (error) {
+          if (!(error instanceof SuspendedJobError)) throw error;
+          availability.set(id, false);
+        }
+      }),
+    );
+    return { ...inbox, content: inbox.content.filter((row) => availability.get(row.jobId)) };
+  }
+  await assertRecruiterJobAvailable(jobId, signal);
+  return inbox;
 }
 function applicationPath(jobId: number, id: string) {
   return `/companies/me/jobs/${jobId}/applications/${encodeURIComponent(id)}`;
@@ -193,9 +214,13 @@ export async function getRecruiterApplication(
   id: string,
   signal?: AbortSignal,
 ): Promise<ApplicationDetail> {
-  return parseDetail(
-    await authenticatedRequest(applicationPath(jobId, id), { signal, cache: "no-store" }),
-  );
+  await assertRecruiterJobAvailable(jobId, signal);
+  const data = await authenticatedRequest(applicationPath(jobId, id), {
+    signal,
+    cache: "no-store",
+  });
+  await assertRecruiterJobAvailable(jobId, signal);
+  return parseDetail(data);
 }
 export type StatusChange =
   | { status: Exclude<ReviewStatus, "REJECTED">; version: number }
@@ -211,6 +236,7 @@ export async function changeApplicationStatus(
   id: string,
   change: StatusChange,
 ): Promise<ApplicationDetail> {
+  await assertRecruiterJobAvailable(jobId);
   return parseDetail(
     await authenticatedRequest(`${applicationPath(jobId, id)}/status`, {
       method: "PATCH",
@@ -224,6 +250,7 @@ export async function getApplicationPdf(
   id: string,
   signal?: AbortSignal,
 ): Promise<Blob> {
+  await assertRecruiterJobAvailable(jobId, signal);
   const response = await authenticatedFetch(`${applicationPath(jobId, id)}/cv`, {
     signal,
     cache: "no-store",
@@ -241,5 +268,6 @@ export async function getApplicationPdf(
     invalidResponse();
   const blob = await response.blob();
   if (blob.size === 0 || blob.size > 10 * 1024 * 1024) invalidResponse();
+  await assertRecruiterJobAvailable(jobId, signal);
   return blob;
 }

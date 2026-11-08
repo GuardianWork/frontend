@@ -1,0 +1,127 @@
+.staff-media-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-rule);
+  border-radius: 12px;
+  background: var(--color-paper);
+}
+.staff-media-image-link {
+  display: block;
+  background: var(--color-paper-2);
+}
+.staff-media-image-link img {
+  display: block;
+  width: 100%;
+  max-height: 360px;
+  object-fit: contain;
+}
+.staff-media-image-link:focus-visible {
+  outline: 2px solid var(--color-discovery-accent);
+  outline-offset: -3px;
+}
+.staff-media-pdf {
+  display: block;
+  width: 100%;
+  height: 360px;
+  border: 0;
+  background: var(--color-paper-2);
+}
+.staff-media-message {
+  margin: 0;
+  padding: 16px;
+  font-size: 13px;
+  line-height: 21px;
+  color: var(--color-ink-2);
+}
+.staff-media-message p {
+  margin: 0 0 8px;
+}
+.staff-media-filename {
+  padding: 10px 14px 0;
+  margin: 0;
+  color: var(--color-ink-2);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.staff-media-card > .admin-text-link {
+  margin: 8px 14px 12px;
+}
+.staff-media-card > p[role="alert"] {
+  padding: 0 14px 12px;
+  font-size: 13px;
+  color: var(--error);
+}
+@media (min-width: 1024px) {
+  body[data-portal="staff"] .staff-verification-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 380px;
+    gap: 32px;
+    align-items: start;
+  }
+  body[data-portal="staff"] .staff-verification-layout > * {
+    min-width: 0;
+  }
+  body[data-portal="staff"] .staff-verification-layout .admin-company-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+    padding-top: 16px;
+  }
+  body[data-portal="staff"] .staff-verification-layout .admin-company-fields > div {
+    padding: 0;
+  }
+  body[data-portal="staff"] .staff-verification-layout .admin-company-fields dt {
+    font-weight: 400;
+    color: var(--color-ink-2);
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+  body[data-portal="staff"] .staff-verification-layout .admin-company-fields dd {
+    font-weight: 500;
+    color: var(--color-ink);
+    font-size: 15px;
+    line-height: 24px;
+  }
+  body[data-portal="staff"] .staff-verification-layout .admin-company-fields .staff-detail-key dd {
+    color: var(--status-info-ink);
+  }
+  body[data-portal="staff"] .staff-verification-layout .admin-panel-heading {
+    padding: 12px 0;
+    border: 0;
+  }
+  body[data-portal="staff"] .staff-verification-layout .admin-panel-heading h2 {
+    font-size: 16px;
+    font-weight: 600;
+  }
+  body[data-portal="staff"] .staff-verification-layout .staff-detail-notice {
+    margin: 16px 0 0;
+    padding: 16px;
+    border-radius: 8px;
+  }
+  body[data-portal="staff"]
+    .staff-verification-layout
+    .staff-detail-notice
+    .admin-decision-actions {
+    margin-top: 16px;
+  }
+  body[data-portal="staff"] .staff-verification-layout .admin-decision-actions > div {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  body[data-portal="staff"] .verification-history-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 24px;
+    padding-block: 16px;
+    align-items: start;
+  }
+  body[data-portal="staff"] .verification-history-content > dl.admin-company-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 0;
+  }
+  body[data-portal="staff"] .verification-history-content > aside > h3 {
+    font-size: 14px;
+    margin: 0 0 12px;
+    font-weight: 600;
+  }
+}

@@ -2,8 +2,13 @@ import type { StaffJobReview } from "@/services/staffJobs";
 import { LABOR_CODE_URL, reviewJobContent } from "@/lib/job-legal-review";
 import { StaffStatusBadge } from "./StaffStatusBadge";
 
-export function JobLegalReview({ review }: { review: StaffJobReview }) {
-  const findings = reviewJobContent(review.content);
+export function JobLegalReview({
+  review,
+  findings,
+}: {
+  review: StaffJobReview;
+  findings: ReturnType<typeof reviewJobContent>;
+}) {
   return (
     <section
       className="admin-panel staff-job-legal-review"
@@ -20,10 +25,7 @@ export function JobLegalReview({ review }: { review: StaffJobReview }) {
       </div>
       <div className="staff-job-legal-body">
         <StaffStatusBadge tone="neutral">Chưa có kết quả AI</StaffStatusBadge>
-        <p>
-          Dịch vụ AI chưa được kết nối. Kiểm tra sơ bộ dưới đây dùng quy tắc từ khóa trên nội dung
-          của bản tin này, không phải kết quả AI.
-        </p>
+        <p>Dịch vụ AI chưa được kết nối.</p>
         <h3>Kiểm tra sơ bộ nội dung</h3>
         <StaffStatusBadge tone={findings.length ? "pending" : "info"}>
           {findings.length
@@ -53,10 +55,17 @@ export function JobLegalReview({ review }: { review: StaffJobReview }) {
             phù hợp pháp luật.
           </p>
         )}
-        <p>
-          Đọc toàn bộ nội dung, ngữ cảnh và căn cứ pháp luật trước khi phê duyệt hoặc từ chối. Quy
-          tắc có thể bỏ sót nội dung hoặc khớp cả câu phủ định.
-        </p>
+        <details className="staff-legal-method">
+          <summary>Cách kiểm tra và giới hạn</summary>
+          <p>
+            Kiểm tra sơ bộ dùng quy tắc từ khóa trên nội dung của bản tin này, không phải kết quả
+            AI.
+          </p>
+          <p>
+            Đọc toàn bộ nội dung, ngữ cảnh và căn cứ pháp luật trước khi phê duyệt hoặc từ chối. Quy
+            tắc có thể bỏ sót nội dung hoặc khớp cả câu phủ định.
+          </p>
+        </details>
       </div>
     </section>
   );

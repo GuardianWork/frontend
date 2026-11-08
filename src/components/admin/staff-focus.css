@@ -1,0 +1,103 @@
+/* Staff focus uses text/background feedback rather than an extra border or ring. */
+body[data-portal="staff"] :is(:focus, :focus-visible, :focus-within) {
+  outline: none !important;
+}
+body[data-portal="staff"] :is(button, a, input, select, textarea, [role="tab"]):focus {
+  box-shadow: none !important;
+}
+body[data-portal="staff"] :is(.list-search-field, .accounts-search > div):focus-within {
+  border-color: var(--color-rule-2);
+  box-shadow: none !important;
+}
+body[data-portal="staff"] :is(input, select, textarea):focus:not([aria-invalid="true"]) {
+  border-color: var(--color-rule-2);
+  background-color: var(--color-discovery-subtle);
+}
+body[data-portal="staff"] :is(button, a, [role="tab"]):focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Search and filters keep their paper/ink colors in every interaction state.
+   Keyboard location is shown by an outline; selection is shown by an underline. */
+body[data-portal="staff"] main :is(.list-search-field, .accounts-search > div) {
+  background: var(--color-paper);
+  border-color: var(--color-rule);
+}
+body[data-portal="staff"] main :is(.list-search-field, .accounts-search > div):focus-within {
+  background: var(--color-paper);
+  border-color: var(--color-rule);
+}
+body[data-portal="staff"] main :is(.list-search-field, .accounts-search > div) input,
+body[data-portal="staff"] main :is(.list-search-field, .accounts-search > div) input:focus {
+  color: var(--color-ink);
+  background: transparent;
+  caret-color: var(--color-ink);
+}
+body[data-portal="staff"]
+  main
+  :is(.list-search-field, .accounts-search > div):has(input:focus-visible) {
+  outline: 2px solid var(--color-ink) !important;
+  outline-offset: 2px;
+}
+body[data-portal="staff"]
+  main
+  :is(
+    .admin-sample-filter select,
+    .list-status-select,
+    .audit-filters input,
+    .report-activity-toolbar input
+  ),
+body[data-portal="staff"]
+  main
+  :is(
+    .admin-sample-filter select,
+    .list-status-select,
+    .audit-filters input,
+    .report-activity-toolbar input
+  ):focus {
+  color: var(--color-ink);
+  background-color: var(--color-paper);
+  border-color: var(--color-rule);
+  caret-color: var(--color-ink);
+}
+body[data-portal="staff"]
+  main
+  :is(
+    .admin-sample-filter select,
+    .list-status-select,
+    .audit-filters input,
+    .report-activity-toolbar input
+  ):focus-visible {
+  outline: 2px solid var(--color-ink) !important;
+  outline-offset: 2px;
+}
+body[data-portal="staff"] main :is(.approval-filters, .accounts-tabs) button,
+body[data-portal="staff"]
+  main
+  :is(.approval-filters, .accounts-tabs)
+  button:is(:hover, :focus, :active, [aria-pressed="true"], [aria-selected="true"]) {
+  color: var(--color-ink-2);
+  background-color: transparent;
+}
+body[data-portal="staff"]
+  main
+  :is(.approval-filters, .accounts-tabs)
+  button:is([aria-pressed="true"], [aria-selected="true"]) {
+  border-bottom-color: currentColor;
+  text-decoration: none;
+}
+body[data-portal="staff"] main :is(.approval-filters, .accounts-tabs) button:focus-visible {
+  outline: 2px solid var(--color-ink) !important;
+  outline-offset: -2px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* ListSearch already supplies an accessible clear action; suppress the duplicate native one. */
+body[data-portal="staff"]
+  :is(.list-search-field, .accounts-search)
+  input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}

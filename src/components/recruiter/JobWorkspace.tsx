@@ -48,6 +48,7 @@ import { JobContentView } from "./JobContentView";
 import { JobReviewSectionDialog } from "./JobReviewSectionDialog";
 import { formatJobDate, textSections } from "@/lib/job-content";
 import { JobResponsibility } from "./JobResponsibility";
+import { SuspendedJobDetails } from "./SuspendedJobDetails";
 
 const creationSteps = [
   "Thông tin vị trí",
@@ -164,7 +165,7 @@ export function JobWorkspace({
   const latest = useQuery({
     queryKey: ["job-latest-revision", scope, job?.id, job?.version],
     queryFn: () => latestJobRevision(job!.id),
-    enabled: Boolean(job && !job.workingRevision),
+    enabled: Boolean(job && job.status !== "SUSPENDED" && !job.workingRevision),
     retry: false,
   });
   const busyRef = useRef(false);
@@ -175,9 +176,10 @@ export function JobWorkspace({
     enableBeforeUnload: () => busyRef.current || dirtyRef.current || editDirtyRef.current,
     withResolver: true,
   });
-  const editable = !job || job.availableActions.includes("SAVE_DRAFT");
-  const newestRevision = job?.workingRevision ?? latest.data;
-  const can = (action: string) => job?.availableActions.includes(action);
+  const editable =
+    !job || (job.status !== "SUSPENDED" && job.availableActions.includes("SAVE_DRAFT"));
+  const can = (action: string) =>
+    job?.status !== "SUSPENDED" && job?.availableActions.includes(action);
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ["publishing-jobs", scope] });
     void queryClient.invalidateQueries({ queryKey: ["job-latest-revision", scope] });
@@ -331,6 +333,7 @@ export function JobWorkspace({
     setView(next);
     headingRef.current?.focus();
   };
+  if (job?.status === "SUSPENDED") return <SuspendedJobDetails job={job} scope={scope} />;
   return (
     <>
       <button className="jp-back" onClick={onBack}>
@@ -347,7 +350,7 @@ export function JobWorkspace({
           {!job && <p>Soạn nội dung, xem trước và gửi tin để xét duyệt.</p>}
         </div>
         <div className="jp-actions">
-          {job && job.status !== "SUSPENDED" && (
+          {job && (
             <Link className="jp-button" to="/rec/applications" search={{ jobId: job.id }}>
               Xem đơn ứng tuyển
             </Link>

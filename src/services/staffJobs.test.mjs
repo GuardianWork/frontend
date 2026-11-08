@@ -4,6 +4,7 @@ import { AUTH_SESSION_KEY } from "./auth.ts";
 import {
   decideStaffJobReview,
   getStaffJobReview,
+  getStaffJobPublication,
   listStaffJobReviews,
   staffJobHistory,
 } from "./staffJobs.ts";
@@ -39,6 +40,24 @@ afterEach(() => {
   globalThis.fetch = originalFetch;
   delete globalThis.localStorage;
 });
+test("live publication inspection validates identity and keeps unavailable private states unknown", async () => {
+  globalThis.fetch = async (url, init) => {
+    assert.equal(url, "/api/jobs/83");
+    assert.equal(init.cache, "no-store");
+    assert.equal(init.headers.Authorization, "Bearer staff-access");
+    return Response.json({
+      data: { id: 83, content: { title: "Bản công khai" }, publicationStatus: "PUBLISHED" },
+    });
+  };
+  assert.equal((await getStaffJobPublication(83)).publicationStatus, "PUBLISHED");
+  globalThis.fetch = async () => Response.json({ message: "Not found" }, { status: 404 });
+  assert.equal(await getStaffJobPublication(83), null);
+  globalThis.fetch = async () =>
+    Response.json({ data: { id: 84, content: {}, publicationStatus: "PUBLISHED" } });
+  await assert.rejects(getStaffJobPublication(83), /không hợp lệ/);
+  globalThis.fetch = async () => Response.json({ message: "Unavailable" }, { status: 503 });
+  await assert.rejects(getStaffJobPublication(83), { status: 503 });
+});
 test("staff queue, inspection and history use authenticated paginated backend contracts", async () => {
   const paths = [];
   globalThis.fetch = async (url, init) => {
@@ -48,16 +67,22 @@ test("staff queue, inspection and history use authenticated paginated backend co
     return Response.json({
       data: url.endsWith("/91")
         ? review
-        : { content: [review], pageNumber: 1, pageSize: 20, totalElements: 21, totalPages: 2 },
+        : {
+            content: Array.from({ length: 20 }, (_, index) => ({ ...review, id: 71 + index })),
+            pageNumber: 0,
+            pageSize: 20,
+            totalElements: 21,
+            totalPages: 2,
+          },
     });
   };
   assert.equal((await listStaffJobReviews("REJECTED", 1)).totalElements, 21);
   assert.equal((await getStaffJobReview(91)).id, 91);
   await staffJobHistory(83, 1);
   assert.deepEqual(paths, [
-    "/api/staff/job-revisions?status=REJECTED&page=1&size=20",
+    "/api/staff/job-revisions?status=REJECTED&page=0&size=20",
     "/api/staff/job-revisions/91",
-    "/api/staff/jobs/83/revisions?page=1&size=20",
+    "/api/staff/jobs/83/revisions?page=0&size=20",
   ]);
 });
 test("decision sends inspected versions and trimmed rejection reason and validates receipt", async () => {

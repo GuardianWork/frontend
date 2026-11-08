@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { ApplicationReview } from "@/components/recruiter/ApplicationReview";
+import { RecruiterJobGate } from "@/components/recruiter/RecruiterJobGate";
 import "@/components/recruiter/job-publishing.css";
 import "@/components/recruiter/applications.css";
 
@@ -41,12 +42,14 @@ function ApplicationPage() {
           </h1>
         </div>
       ) : (
-        <ApplicationReview
-          key={`${scope}:${jobId}:${applicationId}`}
-          jobId={Number(jobId)}
-          id={applicationId}
-          scope={scope}
-        />
+        <RecruiterJobGate jobId={Number(jobId)} scope={scope}>
+          <ApplicationReview
+            key={`${scope}:${jobId}:${applicationId}`}
+            jobId={Number(jobId)}
+            id={applicationId}
+            scope={scope}
+          />
+        </RecruiterJobGate>
       )}
     </div>
   );

@@ -1,3 +1,4 @@
+import { getPublicJobDetail } from "@/services/publicJobs";
 import { JobDescription } from "@/components/recruiter/JobDescription";
 /* Hallmark · page: public job discovery · genre: modern-minimal
  * macrostructure: Workbench · tone: utilitarian · theme: GuardianWork (DESIGN.md locked)
@@ -28,7 +29,7 @@ import { useMemo } from "react";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useQuery } from "@tanstack/react-query";
-import { ApiError, apiRequest } from "@/services/api";
+import { ApiError } from "@/services/api";
 import { Header } from "./Header";
 import { AdminShell } from "@/components/AdminShell";
 import { Footer } from "./Footer";
@@ -191,6 +192,9 @@ export function PublicJobsView({
         page: search.page ?? 0,
         size: PAGE_SIZE,
       }),
+    refetchInterval: 10000,
+    refetchOnWindowFocus: "always",
+    refetchOnReconnect: "always",
     placeholderData: {
       content: [],
       pageNumber: 0,
@@ -202,7 +206,8 @@ export function PublicJobsView({
     },
   });
   const publicApiJobs =
-    publicJobSearch.data?.content
+    (publicJobSearch.isError ? [] : publicJobSearch.data?.content)
+      ?.filter((job) => job.publicationStatus !== "SUSPENDED")
       .map(toPublicJobItem)
       .filter((job): job is JobItem => Boolean(job)) ?? [];
   // UC-CAN-07: guest and candidate job search use the same backend postings.
@@ -219,14 +224,14 @@ export function PublicJobsView({
   const selectedBackendJobId = search.job && /^[1-9]\d*$/.test(search.job) ? search.job : undefined;
   const backendDetail = useQuery({
     queryKey: ["public-job", selectedBackendJobId ?? ""],
-    queryFn: () =>
-      apiRequest(`/jobs/${selectedBackendJobId}`, {
-        cache: "no-store",
-      }) as Promise<{ content: JobContent }>,
+    queryFn: ({ signal }) => getPublicJobDetail(selectedBackendJobId!, signal),
     enabled: Boolean(selectedBackendJobId),
     retry: false,
     staleTime: 0,
     gcTime: 0,
+    refetchInterval: 10000,
+    refetchOnWindowFocus: "always",
+    refetchOnReconnect: "always",
   });
 
   const backendJobItem = useMemo(() => {

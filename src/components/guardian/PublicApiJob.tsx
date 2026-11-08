@@ -1,17 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
-import { ApiError, apiRequest } from "@/services/api";
-import type { JobContent } from "@/services/jobs";
+import { ApiError } from "@/services/api";
+import { getPublicJobDetail } from "@/services/publicJobs";
 import { JobContentView } from "@/components/recruiter/JobContentView";
 
 /** Never render retained query data after a public retrieval failure. */
 export function PublicApiJob({ id }: { id: string }) {
   const detail = useQuery({
     queryKey: ["public-job", id],
-    queryFn: () =>
-      apiRequest(`/jobs/${id}`, { cache: "no-store" }) as Promise<{ content: JobContent }>,
+    queryFn: ({ signal }) => getPublicJobDetail(id, signal),
     retry: false,
     staleTime: 0,
     gcTime: 0,
+    refetchInterval: 10000,
+    refetchOnWindowFocus: "always",
+    refetchOnReconnect: "always",
   });
   return (
     <section className="career-container career-detail">

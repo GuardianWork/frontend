@@ -1,0 +1,89 @@
+.report-activity-source {
+  margin: 4px 0 16px;
+  font-size: 13px;
+  line-height: 21px;
+  color: var(--color-ink-2);
+}
+.report-activity-toolbar {
+  display: flex;
+  align-items: end;
+  gap: 16px;
+}
+.report-activity-toolbar .list-search-row {
+  flex: 1;
+  min-width: 240px;
+}
+.report-activity-toolbar input[type="date"] {
+  height: 36px;
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid var(--color-rule);
+  border-radius: 6px;
+  font-size: 13px;
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+.report-activity-table {
+  width: 100%;
+}
+.report-activity-table th:first-child {
+  width: 18%;
+}
+.report-activity-table th:nth-child(2) {
+  width: 22%;
+}
+.report-activity-table th:nth-child(3) {
+  width: 32%;
+}
+.report-activity-table td {
+  vertical-align: middle;
+}
+.report-activity-table td:first-child {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.report-activity-table td:nth-child(3) > :is(strong, span, small) {
+  display: block;
+  font-size: 13px;
+  line-height: 21px;
+}
+.report-activity-table td:nth-child(3) > strong {
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.report-activity-table td:nth-child(3) > small {
+  color: var(--color-ink-2);
+}
+.report-activity-action,
+.report-activity-transition {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.report-activity-action svg,
+.report-activity-transition svg {
+  flex: none;
+}
+.staff-activity-sources {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--color-rule);
+}
+.staff-activity-sources button {
+  min-height: 40px;
+  padding: 8px 0;
+  border-bottom: 2px solid transparent;
+  font-size: 14px;
+  color: var(--color-ink);
+  background: transparent;
+}
+.staff-activity-sources button[aria-pressed="true"] {
+  border-bottom-color: currentColor;
+  font-weight: 600;
+}
+body[data-portal="staff"] .staff-activity-sources button:focus-visible {
+  outline: 2px solid var(--color-ink) !important;
+  outline-offset: 2px;
+}
