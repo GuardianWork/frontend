@@ -14,6 +14,11 @@ test("legacy dossier remains reviewable and rejection refreshes queue and detail
   await expect(page.getByText(/Không có lịch sử nộp hồ sơ được lưu giữ/)).toBeVisible();
   await page.getByRole("button", { name: "Từ chối hồ sơ", exact: true }).click();
   const dialog = page.getByRole("dialog");
+  await page.mouse.click(100, 100);
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("button", { name: "Đóng", exact: true }).click();
+  await expect(dialog).not.toBeVisible();
+  await page.getByRole("button", { name: "Từ chối hồ sơ", exact: true }).click();
   await dialog.locator("textarea").fill("short");
   await expect(dialog.getByRole("button", { name: "Xác nhận từ chối" })).toBeDisabled();
   await dialog.locator("textarea").fill("  Thông tin giấy phép không khớp hồ sơ.  ");

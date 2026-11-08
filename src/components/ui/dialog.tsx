@@ -5,6 +5,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { CloseIcon } from "@/components/icons";
 
 import { cn } from "@/lib/utils";
+import { IS_STAFF_PORTAL } from "@/lib/portal";
 
 const Dialog = DialogPrimitive.Root;
 
@@ -32,7 +33,7 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & { hideClose?: boolean }
->(({ className, children, hideClose = false, ...props }, ref) => (
+>(({ className, children, hideClose = false, onPointerDownOutside, ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay />
     <DialogPrimitive.Content
@@ -42,6 +43,10 @@ const DialogContent = React.forwardRef<
         className,
       )}
       {...props}
+      onPointerDownOutside={(event) => {
+        onPointerDownOutside?.(event);
+        if (IS_STAFF_PORTAL) event.preventDefault();
+      }}
     >
       {children}
       {hideClose ? null : (

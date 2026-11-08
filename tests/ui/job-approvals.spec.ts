@@ -25,12 +25,12 @@ test("real queue paginates on server and rejection persists after reload", async
   await page.screenshot({ path: info.outputPath("staff-job-queue-desktop.png") });
   await page.getByRole("button", { name: "Xem chi tiết Chuyên viên kế toán", exact: true }).click();
   await expect(page.getByText("Kinh nghiệm kế toán của bạn?", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Từ chối đăng tin", exact: true }).click();
+  await page.getByRole("button", { name: "Từ chối phiên bản", exact: true }).click();
   const dialog = page.getByRole("dialog");
   await dialog.getByRole("textbox").fill("short");
-  await expect(dialog.getByRole("button", { name: "Xác nhận từ chối đăng tin" })).toBeDisabled();
+  await expect(dialog.getByRole("button", { name: "Xác nhận từ chối" })).toBeDisabled();
   await dialog.getByRole("textbox").fill("  Cần làm rõ quyền lợi và thời gian làm việc.  ");
-  await dialog.getByRole("button", { name: "Xác nhận từ chối đăng tin" }).click();
+  await dialog.getByRole("button", { name: "Xác nhận từ chối" }).click();
   await expect(page.getByText("Đã từ chối phiên bản và lưu lý do.", { exact: true })).toBeVisible();
   await expect(page.locator(".staff-jobs-history")).toContainText(
     "Cần làm rõ quyền lợi và thời gian làm việc.",
@@ -50,10 +50,10 @@ test("approval uses exact versions and does not claim a paused job is public", a
   const api = await staffJobApi(page);
   await login(page, "admin_demo");
   await openReview(page);
-  await page.getByRole("button", { name: "Đồng ý đăng tin", exact: true }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "Xác nhận đồng ý đăng tin" }).click();
+  await page.getByRole("button", { name: "Phê duyệt phiên bản", exact: true }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Xác nhận phê duyệt" }).click();
   await expect(
-    page.getByText("Đã duyệt phiên bản. Trạng thái tin: Tạm dừng.", { exact: true }),
+    page.getByText("Đã duyệt phiên bản. Trạng thái tin: Đã tạm dừng tuyển.", { exact: true }),
   ).toBeVisible();
   await expect(page.getByRole("dialog")).not.toBeVisible();
   await expect(page.locator(".compliance-jd .admin-record-status")).toHaveText("Đã duyệt");
@@ -80,24 +80,24 @@ test("conflict retains reason and requires fresh inspection before another decis
   api.conflict = true;
   await login(page, "admin_demo");
   await openReview(page);
-  await page.getByRole("button", { name: "Từ chối đăng tin", exact: true }).click();
+  await page.getByRole("button", { name: "Từ chối phiên bản", exact: true }).click();
   const dialog = page.getByRole("dialog");
   await dialog.getByRole("textbox").fill("Cần làm rõ quyền lợi và thời gian làm việc.");
-  await dialog.getByRole("button", { name: "Xác nhận từ chối đăng tin" }).click();
+  await dialog.getByRole("button", { name: "Xác nhận từ chối" }).click();
   await expect(dialog.getByRole("alert")).toContainText("đã thay đổi");
   await expect(dialog.getByRole("textbox")).toHaveValue(
     "Cần làm rõ quyền lợi và thời gian làm việc.",
   );
-  await expect(dialog.getByRole("button", { name: "Xác nhận từ chối đăng tin" })).toHaveCount(0);
+  await expect(dialog.getByRole("button", { name: "Xác nhận từ chối" })).toHaveCount(0);
   api.review.jobVersion = 9;
   api.conflict = false;
   await dialog.getByRole("button", { name: "Tải lại bản tin" }).click();
   await expect(dialog).not.toBeVisible();
-  await page.getByRole("button", { name: "Từ chối đăng tin", exact: true }).click();
+  await page.getByRole("button", { name: "Từ chối phiên bản", exact: true }).click();
   await expect(dialog.getByRole("textbox")).toHaveValue(
     "Cần làm rõ quyền lợi và thời gian làm việc.",
   );
-  await dialog.getByRole("button", { name: "Xác nhận từ chối đăng tin" }).click();
+  await dialog.getByRole("button", { name: "Xác nhận từ chối" }).click();
   await expect(page.getByText("Đã từ chối phiên bản và lưu lý do.", { exact: true })).toBeVisible();
 });
 test("queue failure, empty results and history retry stay separate from review eligibility", async ({
@@ -124,44 +124,88 @@ test("queue failure, empty results and history retry stay separate from review e
     false,
   );
   await page.getByRole("button", { name: "Xem chi tiết Chuyên viên kế toán", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Đồng ý đăng tin", exact: true })).toBeDisabled();
-  await expect(page.getByRole("button", { name: "Từ chối đăng tin", exact: true })).toBeEnabled();
+  await expect(
+    page.getByRole("button", { name: "Phê duyệt phiên bản", exact: true }),
+  ).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Từ chối phiên bản", exact: true })).toBeEnabled();
   api.failHistory = false;
-  await page.getByRole("tab", { name: "Lịch sử phiên bản", exact: true }).click();
   await page.getByRole("button", { name: "Thử tải lại", exact: true }).click();
   await expect(page.locator(".staff-jobs-history")).toContainText("Người gửi: 22");
 });
 
-test("detail tabs show one section and give histories full width", async ({ page }, info) => {
-  await staffJobApi(page);
+test("revision history is sortable and selectable in the main job review without tabs", async ({
+  page,
+}, info) => {
+  const api = await staffJobApi(page);
+  const older = {
+    ...api.review,
+    id: 90,
+    revisionNumber: 1,
+    state: "REJECTED",
+    approvalEligible: false,
+    content: {
+      ...api.review.content,
+      title: "Chuyên viên kế toán (bản trước)",
+      description: "Nội dung riêng của phiên bản đã gửi trước đó.",
+    },
+    submittedAt: "2026-10-28T08:00:00Z",
+    decidedAt: "2026-10-28T09:00:00Z",
+    reviewerUserId: 4,
+  };
+  await page.route("**/api/staff/jobs/83/revisions?**", (route) =>
+    route.fulfill({
+      json: {
+        status: 200,
+        data: {
+          content: [older, api.review],
+          pageNumber: 0,
+          pageSize: 20,
+          totalElements: 2,
+          totalPages: 1,
+          first: true,
+          last: true,
+        },
+      },
+    }),
+  );
+  await page.route("**/api/staff/job-revisions/90", (route) =>
+    route.fulfill({ json: { status: 200, data: older } }),
+  );
   await login(page, "admin_demo");
   await openReview(page);
-  const content = page.getByRole("tab", { name: "Nội dung và điều kiện", exact: true });
-  await expect(content).toHaveAttribute("aria-selected", "true");
-  await expect(page.getByRole("tabpanel")).toHaveCount(1);
-  await expect(
-    page.getByRole("heading", { name: "Điều kiện xét duyệt", exact: true }),
-  ).toBeVisible();
+  await expect(page.getByRole("tab")).toHaveCount(0);
+  await expect(page.locator(".staff-posting-history")).toHaveCount(0);
+  const history = page.getByRole("region", { name: "Lịch sử phiên bản của tin #83", exact: true });
+  await expect(history).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Nội dung gửi duyệt", exact: true }),
   ).toBeVisible();
-  await expect(page.getByRole("tab")).toHaveCount(3);
-  await page.screenshot({ path: info.outputPath("content-conditions-tab.png") });
-  await content.focus();
-  await page.keyboard.press("ArrowRight");
   await expect(
-    page.getByRole("tab", { name: "Hoạt động và trạng thái", exact: true }),
-  ).toHaveAttribute("aria-selected", "true");
-  await expect(
-    page.getByRole("heading", { name: "Nội dung gửi duyệt", exact: true }),
-  ).not.toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Đồng ý đăng tin", exact: true }),
-  ).not.toBeVisible();
-  await page.getByRole("tab", { name: "Lịch sử phiên bản", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Lịch sử phiên bản của tin #83" })).toBeVisible();
-  await expect(page.getByRole("tabpanel")).toHaveCount(1);
-  await page.screenshot({ path: info.outputPath("detail-tabs.png") });
+    page.getByRole("button", { name: "Phê duyệt phiên bản", exact: true }),
+  ).toBeVisible();
+  await expect(history.getByRole("columnheader", { name: /Phiên bản/ })).toHaveAttribute(
+    "aria-sort",
+    "descending",
+  );
+  await expect(history.locator("tbody tr").first()).toContainText("Phiên bản 2");
+  await history
+    .getByRole("button", { name: "Sắp xếp theo phiên bản trong trang hiện tại", exact: true })
+    .click();
+  await expect(history.getByRole("columnheader", { name: /Phiên bản/ })).toHaveAttribute(
+    "aria-sort",
+    "ascending",
+  );
+  await expect(history.locator("tbody tr").first()).toContainText("Phiên bản 1");
+  await page.screenshot({ path: info.outputPath("inline-revision-history.png") });
+  await history.getByRole("button", { name: "Xem phiên bản 1", exact: true }).click();
+  await expect(page.getByRole("heading", { name: older.content.title, exact: true })).toBeFocused();
+  await expect(page.getByText(older.content.description, { exact: true })).toBeVisible();
+  await expect(page.locator("#workspace-main")).toHaveJSProperty("scrollTop", 0);
+  await expect(page.locator(".staff-job-object-heading")).toContainText("Phiên bản 1");
+  await expect(page.getByRole("button", { name: "Phê duyệt phiên bản", exact: true })).toHaveCount(
+    0,
+  );
+  await expect(history.locator('tr[aria-current="true"]')).toContainText("Phiên bản 1");
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(
     false,
   );

@@ -1,0 +1,190 @@
+.staff-reports-source {
+  margin: 0 0 20px;
+  color: var(--color-ink-2);
+  font-size: 13px;
+  line-height: 21px;
+}
+.staff-reports-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.staff-reports-title h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+.staff-reports-title > span {
+  color: var(--color-ink-2);
+  font-size: 13px;
+}
+.staff-reports-tabs {
+  display: flex;
+  gap: 24px;
+  margin-top: 12px;
+  border-bottom: 1px solid var(--color-rule);
+}
+.staff-reports-tabs button {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 2px solid transparent;
+  color: var(--color-ink);
+  background: transparent;
+  font-size: 14px;
+}
+.staff-reports-tabs button[aria-pressed="true"] {
+  border-bottom-color: currentColor;
+  font-weight: 600;
+}
+.staff-reports-tabs button span {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink-2);
+}
+body[data-portal="staff"] .staff-reports-tabs button:focus-visible {
+  outline: 2px solid var(--color-ink) !important;
+  outline-offset: 2px;
+}
+.staff-reports-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+.staff-reports-toolbar .list-search-row {
+  flex: 1;
+}
+.staff-reports-toolbar .admin-sample-filter {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+}
+.staff-reports-table {
+  width: 100%;
+}
+.staff-reports-table th:first-child {
+  width: 27%;
+}
+.staff-reports-table th:nth-child(2) {
+  width: 30%;
+}
+.staff-reports-table td {
+  vertical-align: middle;
+}
+body[data-portal="staff"] .staff-reports-table tr[data-unread="true"] td {
+  background: var(--color-discovery-subtle);
+}
+.staff-reports-table td strong {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 22px;
+}
+.staff-reports-table tr[data-unread="true"] td:nth-child(-n + 2),
+.staff-reports-table tr[data-unread="true"] td strong {
+  font-weight: 650;
+}
+.staff-report-read-state {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-ink-2);
+}
+.staff-report-unread-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-discovery-accent);
+}
+.staff-report-date {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.staff-reports-table .admin-text-link {
+  white-space: nowrap;
+}
+.staff-report-dialog-heading {
+  display: grid;
+  gap: 6px;
+}
+.staff-report-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 32px;
+}
+.staff-report-detail-grid section {
+  min-width: 0;
+}
+.staff-report-detail-grid h2 {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+}
+.staff-report-detail-grid p {
+  font-size: 14px;
+  line-height: 23px;
+}
+.staff-report-detail-grid .staff-report-concern {
+  margin: 0 0 28px;
+  padding: 12px 16px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--status-info-ground) 60%, var(--color-paper));
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 28px;
+  color: var(--status-info-ink);
+}
+.staff-report-detail-grid dl {
+  margin: 24px 0 0;
+}
+.staff-report-detail-grid dt {
+  color: var(--color-ink-2);
+  font-size: 13px;
+}
+.staff-report-detail-grid dd {
+  margin: 6px 0 0;
+  font-size: 14px;
+}
+.staff-report-processing {
+  background: var(--color-paper-2);
+  padding: 20px;
+  border-radius: 8px;
+}
+.staff-report-processing > p {
+  margin: 16px 0;
+}
+.staff-report-status-actions {
+  display: grid;
+  gap: 12px;
+}
+.staff-report-status-actions button {
+  width: 100%;
+  justify-content: center;
+}
+.staff-report-processing .staff-report-processing-note {
+  margin-bottom: 0;
+  color: var(--color-ink-2);
+  font-size: 12px;
+  line-height: 20px;
+}
+.staff-report-dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-rule);
+}
+.staff-report-notice {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: 14px;
+  line-height: 22px;
+}

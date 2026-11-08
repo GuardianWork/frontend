@@ -984,57 +984,46 @@
   margin: 0;
 }
 
-.jp-search {
-  padding: 24px 24px 0;
+.jp-suspended-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 24px;
+  border-radius: 8px;
+  color: var(--status-danger-ink);
+  background: var(--status-danger-ground);
 }
-.jp-search-results {
-  padding: 18px 24px 0;
-  font-size: 14px;
-  font-weight: 600;
-  overflow-wrap: anywhere;
+.jp-suspended-notice > svg {
+  flex: none;
+  margin-top: 4px;
+}
+.jp-suspended-notice :is(h1, h2) {
+  margin: 0 0 8px;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 550;
+  color: inherit;
+}
+.jp-suspended-notice p {
+  margin: 0;
+  max-width: 80ch;
+  font-size: 15px;
+  line-height: 24px;
+  color: inherit;
 }
 
-.jp-job-columns {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 120px minmax(180px, 210px) 140px;
-  gap: 24px;
-  padding: 14px 24px;
-  margin-top: 18px;
-  border-block: 1px solid var(--jp-rule);
-  background: var(--color-paper-2);
-  color: var(--color-ink-2);
-  font-size: 13px;
-  font-weight: 600;
+.jp-suspended-notice h2 {
+  font-size: 18px;
+  line-height: 26px;
 }
-.jp-candidate-count {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 3px;
-  color: var(--jp-blue);
-  font-size: 13px;
+.jp-suspended-details .jp-suspended-notice {
+  margin-bottom: 24px;
 }
-.jp-candidate-count > span:first-child {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.recruiter-workspace .jp-suspended-details .jp-page-header h1 {
+  font-size: 28px;
+  line-height: 36px;
+  font-weight: 650;
 }
-.jp-candidate-count strong {
-  font-size: 22px;
-  font-variant-numeric: tabular-nums;
-}
-.jp-candidate-count:hover,
-.jp-candidate-fallback:hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-.jp-candidate-fallback {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--jp-blue);
-  font-size: 14px;
-}
-.jp-candidate-unavailable {
-  color: var(--color-ink-3);
+.jp-suspended-details .jp-content-view {
+  padding: 16px 0;
 }

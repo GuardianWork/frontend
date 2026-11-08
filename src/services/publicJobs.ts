@@ -1,5 +1,20 @@
-import { apiRequest } from "./api.ts";
+import { ApiError, apiRequest } from "./api.ts";
+import type { JobContent } from "./jobs.ts";
 import { authenticatedRequest, hasAuthSession } from "./auth.ts";
+
+export async function getPublicJobDetail(id: string | number, signal?: AbortSignal) {
+  const data = (await apiRequest(`/jobs/${id}`, { signal, cache: "no-store" })) as {
+    id: number;
+    content: JobContent;
+    publicationStatus?: string;
+    company?: { id: number; name: string };
+  };
+  if (data?.publicationStatus === "SUSPENDED")
+    throw new ApiError("Tin tuyển dụng không còn khả dụng", 404);
+  if (!data?.content || typeof data.content !== "object" || Array.isArray(data.content))
+    throw new ApiError("Không thể tải nội dung tin tuyển dụng.");
+  return data;
+}
 
 export interface CompensationDetail {
   disclosed: boolean;

@@ -56,6 +56,16 @@ async function setup(page: Page, inbox = false) {
   let forbidden = false;
   let pdfReads = 0;
   const filters: string[] = [];
+  await page.route(/\/api\/companies\/me\/jobs\/(42|77)$/, (route) =>
+    route.fulfill({
+      json: {
+        data: {
+          id: Number(new URL(route.request().url()).pathname.split("/").at(-1)),
+          status: "PUBLISHED",
+        },
+      },
+    }),
+  );
   await page.route("**/api/companies/me/verification", (route) =>
     route.fulfill({
       json: {

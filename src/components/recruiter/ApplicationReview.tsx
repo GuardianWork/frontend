@@ -1,6 +1,8 @@
 import { STATUS_LABELS, REJECTION_LABELS, applicationDate } from "./application-labels";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { SuspendedJobError } from "@/services/recruiterJobAccess";
+import { SuspendedJobNotice } from "./RecruiterJobGate";
 import { Link } from "@tanstack/react-router";
 import { Bell, ChevronDown } from "lucide-react";
 import { ApplicationStatusIcon } from "@/components/icons/ApplicationStatusIcon";
@@ -327,6 +329,8 @@ export function ApplicationReview({
       </DropdownMenuContent>
     </DropdownMenu>
   ) : null;
+  if (query.error instanceof SuspendedJobError || error instanceof SuspendedJobError)
+    return <SuspendedJobNotice />;
   return (
     <>
       {mode === "menu" ? (

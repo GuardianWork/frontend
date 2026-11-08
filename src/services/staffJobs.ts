@@ -1,6 +1,7 @@
 import { ApiError } from "./api.ts";
 import { authenticatedRequest } from "./auth.ts";
 import type { ApiPage, JobContent, JobStatus, RevisionState } from "./jobs.ts";
+import { newestStaffPage } from "./staffPaging.ts";
 
 export type ReviewState = Exclude<RevisionState, "DRAFT">;
 export type ReviewFilter = ReviewState | "ALL";
@@ -83,8 +84,12 @@ async function requestPage(path: string): Promise<ApiPage<StaffJobReview>> {
   return { ...page, content: page.content.map(parseReview) };
 }
 export const listStaffJobReviews = (status: ReviewFilter, page = 0) =>
-  requestPage(
-    `${root}?${new URLSearchParams({ status, page: String(page), size: String(REVIEW_PAGE_SIZE) })}`,
+  newestStaffPage(
+    (sourcePage) =>
+      requestPage(
+        `${root}?${new URLSearchParams({ status, page: String(sourcePage), size: String(REVIEW_PAGE_SIZE) })}`,
+      ),
+    page,
   );
 export async function getStaffJobReview(id: number) {
   const review = parseReview(await authenticatedRequest(`${root}/${id}`, { cache: "no-store" }));
@@ -92,7 +97,11 @@ export async function getStaffJobReview(id: number) {
   return review;
 }
 export const staffJobHistory = (jobId: number, page = 0) =>
-  requestPage(`/staff/jobs/${jobId}/revisions?page=${page}&size=${REVIEW_PAGE_SIZE}`);
+  newestStaffPage(
+    (sourcePage) =>
+      requestPage(`/staff/jobs/${jobId}/revisions?page=${sourcePage}&size=${REVIEW_PAGE_SIZE}`),
+    page,
+  );
 export async function decideStaffJobReview(
   review: StaffJobReview,
   outcome: StaffDecisionReceipt["outcome"],
@@ -129,6 +138,7 @@ export async function decideStaffJobReview(
 }
 export function staffJobError(error: unknown) {
   if (error instanceof ApiError) {
+    if (error.message.startsWith("Danh sách đã thay đổi")) return error.message;
     if (error.status === 401) return "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
     if (error.status === 403)
       return "Bạn không có quyền xử lý tin này hoặc công ty đã bị đình chỉ. Hãy tải lại dữ liệu.";
@@ -202,6 +212,37 @@ export async function hideStaffJob(review: StaffJobReview, reason: string) {
   )
     throw invalidResponse();
   return result;
+}
+
+export interface StaffJobPublication {
+  id: number;
+  content: JobContent;
+  publicationStatus: JobStatus;
+}
+
+/** Revision responses do not include live publication state on the current backend.
+ * Inspect the public posting itself; a 404 does not identify its private state. */
+export async function getStaffJobPublication(jobId: number): Promise<StaffJobPublication | null> {
+  try {
+    const data = (await authenticatedRequest(`/jobs/${jobId}`, {
+      cache: "no-store",
+    })) as StaffJobPublication | null;
+    if (
+      !data ||
+      data.id !== jobId ||
+      !data.content ||
+      typeof data.content !== "object" ||
+      Array.isArray(data.content) ||
+      !["DRAFT", "PUBLISHED", "PAUSED", "SUSPENDED", "CLOSED", "EXPIRED"].includes(
+        data.publicationStatus,
+      )
+    )
+      throw invalidResponse();
+    return data;
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return null;
+    throw error;
+  }
 }
 export function postingError(error: unknown): string {
   if (error instanceof ApiError) {

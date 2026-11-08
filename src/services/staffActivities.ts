@@ -8,13 +8,13 @@ export const ACTIVITY_CATEGORIES = {
 } as const;
 export type ActivityCategory = keyof typeof ACTIVITY_CATEGORIES;
 export const ACTIVITY_ACTIONS = {
-  BAN_ACCOUNT: "Cấm tài khoản",
-  UNBAN_ACCOUNT: "Gỡ cấm tài khoản",
-  APPROVE_JOB_REVISION: "Duyệt phiên bản tin tuyển dụng",
-  REJECT_JOB_REVISION: "Từ chối phiên bản tin tuyển dụng",
-  APPROVE_COMPANY: "Duyệt xác minh doanh nghiệp",
-  REJECT_COMPANY: "Từ chối xác minh doanh nghiệp",
-  REVIEW_COMPANY: "Xét duyệt doanh nghiệp (thiếu kết quả lịch sử)",
+  BAN_ACCOUNT: "Đã khóa tài khoản",
+  UNBAN_ACCOUNT: "Đã mở khóa tài khoản",
+  APPROVE_JOB_REVISION: "Đã duyệt phiên bản tin",
+  REJECT_JOB_REVISION: "Đã từ chối phiên bản tin",
+  APPROVE_COMPANY: "Đã xác minh công ty",
+  REJECT_COMPANY: "Đã từ chối xác minh công ty",
+  REVIEW_COMPANY: "Đã xét duyệt công ty (chưa rõ kết quả)",
 } as const;
 export type ActivityAction = keyof typeof ACTIVITY_ACTIONS;
 export const ACTIONS_BY_CATEGORY: Record<ActivityCategory, ActivityAction[]> = {

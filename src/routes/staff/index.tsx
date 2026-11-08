@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, CircleAlert, RefreshCw } from "lucide-react";
+import { ArrowRight, RefreshCw } from "lucide-react";
 import { AdminShell } from "@/components/AdminShell";
 import { StaffAccount } from "@/components/admin/StaffAccount";
 import { JOB_SAMPLE_RECORDS } from "@/lib/staff-jobs";
 import { AREAS } from "@/components/admin/AdminDraftPage";
-import { getAdminVerifications } from "@/services/adminCompanies";
+import { dossierDate } from "@/lib/dossier-date";
+import "@/components/admin/staff-overview.css";
+import { getAdminVerifications, type VerificationPage } from "@/services/adminCompanies";
 
 export const Route = createFileRoute("/staff/")({
   head: () => ({
@@ -22,7 +24,8 @@ export const Route = createFileRoute("/staff/")({
 });
 
 function AdminDashboard() {
-  const [pendingVerifications, setPendingVerifications] = useState<number | null>(null);
+  const [verifications, setVerifications] = useState<VerificationPage | null>(null);
+  const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
   const [verificationError, setVerificationError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [reload, setReload] = useState(0);
@@ -44,10 +47,12 @@ function AdminDashboard() {
     setVerificationError(false);
     try {
       const result = await getAdminVerifications("PENDING", 0, signal);
-      if (!signal.aborted) setPendingVerifications(result.totalElements);
+      if (!signal.aborted) {
+        setVerifications(result);
+        setUpdatedAt(new Date());
+      }
     } catch {
       if (!signal.aborted) {
-        setPendingVerifications(null);
         setVerificationError(true);
       }
     } finally {
@@ -63,75 +68,161 @@ function AdminDashboard() {
 
   return (
     <AdminShell title="Tổng quan" role="admin">
-      <div className="admin-page-heading admin-dashboard-heading">
-        <div>
-          <h1>Tổng quan Platform staff</h1>
-          <p>Theo dõi hồ sơ xác minh, báo cáo vi phạm, tin tuyển dụng và tài khoản.</p>
-        </div>
-        <span className="admin-dashboard-date">Một phần là dữ liệu mẫu</span>
-      </div>
-
-      <div className="admin-dashboard-source" role="note">
-        <CircleAlert size={16} aria-hidden="true" />
-        <p>
-          <strong>Nguồn dữ liệu:</strong> số hồ sơ xác minh lấy từ dịch vụ thật; các chỉ số còn lại
-          là dữ liệu minh họa.
-        </p>
-      </div>
-
-      <section
-        className="admin-dashboard-metrics staff-dashboard-metrics"
-        aria-label="Chỉ số hàng đợi"
-      >
-        <Link
-          to="/staff/verifications"
-          search={{ status: "PENDING", page: 0 }}
-          className="admin-dashboard-metric"
-          data-kind="verification"
-          aria-busy={loading}
-        >
-          <span>Hồ sơ chờ xác minh</span>
-          <strong>{loading ? "…" : (pendingVerifications ?? "—")}</strong>
-          <small>{verificationError ? "Không tải được dữ liệu" : "Dữ liệu từ API xác minh"}</small>
-        </Link>
-        <Link to="/staff/reports" className="admin-dashboard-metric" data-kind="report">
-          <span>Báo cáo cần xem</span>
-          <strong>{reportsNeedingAttention}</strong>
-          <small>Trong {reportRows.length} báo cáo mẫu</small>
-        </Link>
-        <Link to="/staff/jobs" className="admin-dashboard-metric" data-kind="jobs">
-          <span>Tin cần chú ý</span>
-          <strong>{jobsNeedingAttention}</strong>
-          <small>Trong {jobRows.length} tin mẫu</small>
-        </Link>
-        <Link to="/staff/accounts" className="admin-dashboard-metric" data-kind="accounts">
-          <span>Tài khoản cần chú ý</span>
-          <strong>{accountsNeedingAttention}</strong>
-          <small>Trong {accountRows.length} tài khoản mẫu</small>
-        </Link>
-      </section>
-
-      {verificationError && (
-        <div className="admin-dashboard-fetch-error" role="alert">
-          <span>Chưa lấy được số hồ sơ xác minh từ API.</span>
-          <button type="button" onClick={() => setReload((value) => value + 1)}>
-            <RefreshCw size={14} aria-hidden="true" /> Thử lại
-          </button>
-        </div>
-      )}
-
-      <section className="admin-dashboard-job-tools" aria-labelledby="job-tools-title">
-        <div>
-          <h2 id="job-tools-title">Quản lý tin tuyển dụng</h2>
-          <p>Duyệt tin chờ đăng, quản lý tin đã công khai và kiểm tra các JD được AI gắn cờ.</p>
-        </div>
-        <div>
-          <Link to="/staff/jobs">
-            Kiểm soát tin <ArrowRight size={15} />
+      <div className="staff-overview">
+        <div className="admin-page-heading">
+          <div>
+            <h1>Tổng quan kiểm duyệt</h1>
+            <p aria-live="polite">
+              {loading
+                ? "Đang kiểm tra hồ sơ cần xử lý…"
+                : verificationError
+                  ? "Chưa cập nhật được hàng đợi. Kiểm tra lại trước khi xử lý."
+                  : verifications?.totalElements
+                    ? `Có ${verifications.totalElements.toLocaleString("vi-VN")} hồ sơ công ty đang chờ bạn kiểm tra.`
+                    : "Không có hồ sơ công ty đang chờ xác minh."}
+            </p>
+          </div>
+          <Link to="/staff/audit-logs" className="admin-text-link">
+            Lịch sử hoạt động của tôi <ArrowRight size={15} aria-hidden="true" />
           </Link>
         </div>
-      </section>
-      <StaffAccount summary />
+
+        <div className="staff-overview-grid">
+          <section className="staff-overview-queue" aria-labelledby="overview-verifications">
+            <div className="staff-overview-section-heading">
+              <h2 id="overview-verifications">Xác minh công ty</h2>
+              <button
+                type="button"
+                className="admin-text-link"
+                disabled={loading}
+                onClick={() => setReload((value) => value + 1)}
+              >
+                <RefreshCw size={14} aria-hidden="true" />
+                {loading ? "Đang tải…" : "Tải lại hồ sơ"}
+              </button>
+            </div>
+            <div className="staff-overview-queue-summary" aria-busy={loading}>
+              <div>
+                <span>Hồ sơ chờ xác minh</span>
+                <strong>
+                  {verifications ? verifications.totalElements.toLocaleString("vi-VN") : "—"}
+                </strong>
+                <p>
+                  {loading
+                    ? "Đang tải hồ sơ…"
+                    : updatedAt
+                      ? `Cập nhật ${updatedAt.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}`
+                      : "Chưa có dữ liệu"}
+                </p>
+              </div>
+              <Link
+                to="/staff/verifications"
+                search={{ status: "PENDING", page: 0 }}
+                className="admin-primary-action"
+              >
+                Xem hồ sơ chờ xác minh <ArrowRight size={16} aria-hidden="true" />
+              </Link>
+            </div>
+            {verificationError && (
+              <div className="staff-overview-error" role="alert">
+                <p>
+                  Không tải được hồ sơ.
+                  {verifications ? " Đang hiển thị dữ liệu lần tải trước." : " Vui lòng thử lại."}
+                </p>
+                <button
+                  type="button"
+                  className="admin-text-link"
+                  onClick={() => setReload((value) => value + 1)}
+                >
+                  Thử lại
+                </button>
+              </div>
+            )}
+            <div className="staff-overview-recent" aria-busy={loading}>
+              <h3>Hồ sơ mới gửi</h3>
+              {verifications?.content.length ? (
+                <ul>
+                  {verifications.content.slice(0, 3).map((company) => (
+                    <li key={company.id}>
+                      <div>
+                        <strong>{company.name}</strong>
+                        <span>Mã số thuế {company.taxCode}</span>
+                      </div>
+                      <time>{dossierDate(company.createdAt)}</time>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="staff-overview-empty" role="status">
+                  {loading
+                    ? "Đang tải danh sách công ty…"
+                    : verificationError
+                      ? "Danh sách hồ sơ chưa khả dụng."
+                      : "Không có hồ sơ chờ xác minh."}
+                </p>
+              )}
+            </div>
+          </section>
+
+          <section className="staff-overview-tools" aria-labelledby="overview-tools">
+            <div className="staff-overview-section-heading">
+              <h2 id="overview-tools">Không gian làm việc</h2>
+            </div>
+            <Link to="/staff/jobs" className="staff-overview-tool">
+              <div>
+                <strong>Tin tuyển dụng</strong>
+                <span>Duyệt tin chờ đăng, xem JD và kết quả rà soát AI.</span>
+              </div>
+              <ArrowRight size={17} aria-hidden="true" />
+            </Link>
+            <Link to="/staff/reports" className="staff-overview-tool">
+              <div>
+                <strong>Báo cáo vi phạm</strong>
+                <span>Đối chiếu nội dung phản ánh và bằng chứng.</span>
+              </div>
+              <ArrowRight size={17} aria-hidden="true" />
+            </Link>
+            <Link to="/staff/accounts" className="staff-overview-tool">
+              <div>
+                <strong>Tài khoản</strong>
+                <span>Kiểm tra người dùng, công ty và quyền truy cập.</span>
+              </div>
+              <ArrowRight size={17} aria-hidden="true" />
+            </Link>
+          </section>
+        </div>
+
+        <section className="staff-overview-samples" aria-labelledby="overview-samples">
+          <div>
+            <h2 id="overview-samples">Chỉ số minh họa</h2>
+            <p>Các số liệu dưới đây là dữ liệu mẫu, không phản ánh hàng đợi thực tế.</p>
+          </div>
+          <dl>
+            <div>
+              <dt>Báo cáo cần xem</dt>
+              <dd>
+                {reportsNeedingAttention}
+                <small> / {reportRows.length} báo cáo mẫu</small>
+              </dd>
+            </div>
+            <div>
+              <dt>Tin cần chú ý</dt>
+              <dd>
+                {jobsNeedingAttention}
+                <small> / {jobRows.length} tin mẫu</small>
+              </dd>
+            </div>
+            <div>
+              <dt>Tài khoản cần chú ý</dt>
+              <dd>
+                {accountsNeedingAttention}
+                <small> / {accountRows.length} tài khoản mẫu</small>
+              </dd>
+            </div>
+          </dl>
+        </section>
+        <StaffAccount summary />
+      </div>
     </AdminShell>
   );
 }

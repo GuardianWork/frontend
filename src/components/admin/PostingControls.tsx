@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { ApiError } from "@/services/api";
-import { jobStatusLabels } from "@/services/jobs";
+import { staffJobStatusLabels, staffPostingEventLabels } from "@/lib/staff-job-copy";
 import {
   getPostingHistory,
   getStaffJobReview,
@@ -94,7 +94,9 @@ export function PostingControls({ review, scope }: { review: StaffJobReview; sco
   const count = Array.from(reason.trim()).length;
   const data = history.data;
   const statusLabel = (status: string | null) =>
-    status ? (jobStatusLabels[status as keyof typeof jobStatusLabels] ?? status) : "—";
+    status
+      ? (staffJobStatusLabels[status as keyof typeof staffJobStatusLabels] ?? "Chưa rõ trạng thái")
+      : "Chưa ghi nhận";
   return (
     <section className="admin-panel staff-posting-history" aria-labelledby="posting-history-title">
       <div className="admin-panel-heading">
@@ -102,7 +104,9 @@ export function PostingControls({ review, scope }: { review: StaffJobReview; sco
           <h2 id="posting-history-title">Lịch sử hoạt động của tin #{review.jobId}</h2>
           <p>
             Trạng thái tin:{" "}
-            {hidden ? jobStatusLabels.SUSPENDED : statusLabel(current.publicationStatus ?? null)}
+            {hidden
+              ? staffJobStatusLabels.SUSPENDED
+              : statusLabel(current.publicationStatus ?? null)}
           </p>
         </div>
         {eligible && (
@@ -142,9 +146,7 @@ export function PostingControls({ review, scope }: { review: StaffJobReview; sco
               <div className="staff-event-body">
                 <p>
                   <strong>
-                    {event.eventType === "JOB_SUSPENDED"
-                      ? "Đã ẩn tin tuyển dụng · JOB_SUSPENDED"
-                      : event.eventType}
+                    {staffPostingEventLabels[event.eventType] ?? "Đã ghi nhận thay đổi của tin"}
                   </strong>
                 </p>
                 <p>
@@ -223,7 +225,7 @@ export function PostingControls({ review, scope }: { review: StaffJobReview; sco
               onChange={(e) => setReason(e.target.value)}
             />
             <p id="posting-hide-count" aria-live="polite">
-              {count}/1.000 ký tự sau khi bỏ khoảng trắng đầu và cuối
+              {count}/1.000 ký tự · Vui lòng ghi rõ lý do ẩn tin.
             </p>
             {Boolean(error) && (
               <p role="alert" className="compliance-action-error">
@@ -255,7 +257,11 @@ export function PostingControls({ review, scope }: { review: StaffJobReview; sco
                   className="admin-primary-action"
                   disabled={busy || !confirmedReview || !eligible || count < 1 || count > 1000}
                 >
-                  {busy ? "Đang xử lý…" : "Xác nhận ẩn tin"}
+                  {busy
+                    ? confirmedReview
+                      ? "Đang ẩn tin…"
+                      : "Đang kiểm tra tin…"
+                    : "Xác nhận ẩn tin"}
                 </button>
               )}
             </div>

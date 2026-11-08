@@ -1,4 +1,8 @@
 import { toast } from "sonner";
+import { LockKeyhole } from "lucide-react";
+import { useTableSort } from "@/hooks/useTableSort";
+import { sortDate } from "@/lib/table-sort";
+import { SortableHeader } from "./SortableHeader";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowLeftIcon as ArrowLeft,
@@ -8,6 +12,7 @@ import {
 } from "@/components/icons";
 import { AdminShell } from "@/components/AdminShell";
 import { AdminPagination } from "./AdminPagination";
+import { StaffDetailNotice } from "./StaffDetailNotice";
 import { StaffStatusBadge, type StaffStatusTone } from "./StaffStatusBadge";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
@@ -30,6 +35,10 @@ const labels: Record<string, string> = {
   ACTIVE: "Đang hoạt động",
   INACTIVE: "Không hoạt động",
   BANNED: "Đã khóa",
+  SUSPENDED: "Đang bị đình chỉ",
+  DEACTIVATED: "Đã vô hiệu hóa",
+  DELETION_PENDING: "Đang chờ xóa",
+  DELETED: "Đã xóa",
   STAFF: "Nhân viên nền tảng",
   USER: "Người dùng",
   ADMIN: "Quản trị viên",
@@ -44,12 +53,21 @@ const verificationTones: Record<string, StaffStatusTone> = {
   PENDING: "pending",
   REJECTED: "rejected",
 };
-const label = (value?: string) => (value ? labels[value] || value : "Chưa có thông tin");
-function Status({ item, type }: { item: StaffAccount; type: AccountType }) {
+const label = (value?: string) => (value ? labels[value] || "Chưa xác định" : "Chưa có thông tin");
+function Status({
+  item,
+  type,
+  icon = false,
+}: {
+  item: StaffAccount;
+  type: AccountType;
+  icon?: boolean;
+}) {
   const banned =
     type === "companies" ? item.isBanned : item.status === "BANNED" || !!item.activeBan;
   return (
     <StaffStatusBadge
+      icon={icon ? (banned ? LockKeyhole : true) : undefined}
       tone={
         banned
           ? "rejected"
@@ -68,6 +86,23 @@ export function StaffAccountsPage() {
   const [filter, setFilter] = useState({ q: "", page: 0 });
   const [revision, setRevision] = useState(0);
   const [data, setData] = useState<AccountPage | null>(null);
+  const tableSort = useTableSort(
+    data?.content ?? [],
+    {
+      name,
+      contact: (row) => (type === "users" ? row.email : row.taxCode),
+      role: (row) => label(type === "users" ? row.role : row.verificationStatus),
+      status: (row) =>
+        (type === "companies" ? row.isBanned : row.status === "BANNED" || !!row.activeBan)
+          ? "Đã khóa"
+          : type === "companies"
+            ? "Không bị khóa"
+            : label(row.status),
+      createdAt: (row) => sortDate(row.createdAt),
+    },
+    { key: "createdAt", direction: "desc" },
+    `${type}:${filter.q}`,
+  );
   const [loading, setLoading] = useState(true);
   const [listError, setListError] = useState("");
   const [id, setId] = useState<number | null>(null);
@@ -241,13 +276,15 @@ export function StaffAccountsPage() {
   return (
     <AdminShell title="Quản lý tài khoản">
       <div className="staff-accounts">
-        <div className="admin-page-heading">
-          <div>
-            <h1>Quản lý tài khoản</h1>
-            <p>Tra cứu người dùng, công ty và quản lý quyền truy cập nền tảng.</p>
+        {id === null && (
+          <div className="admin-page-heading">
+            <div>
+              <h1>Quản lý tài khoản</h1>
+              <p>Tra cứu người dùng, công ty và quản lý quyền truy cập nền tảng.</p>
+            </div>
+            <LockIcon size={28} aria-hidden="true" className="accounts-heading-icon" />
           </div>
-          <LockIcon size={28} aria-hidden="true" className="accounts-heading-icon" />
-        </div>
+        )}
         {id === null ? (
           <>
             <div className="accounts-tabs" role="tablist" aria-label="Loại tài khoản">
@@ -355,18 +392,30 @@ export function StaffAccountsPage() {
                       </caption>
                       <thead>
                         <tr>
-                          <th>{type === "users" ? "Người dùng" : "Công ty"}</th>
-                          <th>{type === "users" ? "Email" : "Mã số thuế"}</th>
-                          <th>{type === "users" ? "Vai trò nền tảng" : "Xác minh"}</th>
-                          <th>Trạng thái</th>
-                          <th>Ngày tạo</th>
+                          <SortableHeader
+                            label={type === "users" ? "Người dùng" : "Công ty"}
+                            column="name"
+                            {...tableSort}
+                          />
+                          <SortableHeader
+                            label={type === "users" ? "Email" : "Mã số thuế"}
+                            column="contact"
+                            {...tableSort}
+                          />
+                          <SortableHeader
+                            label={type === "users" ? "Vai trò nền tảng" : "Xác minh"}
+                            column="role"
+                            {...tableSort}
+                          />
+                          <SortableHeader label="Trạng thái" column="status" {...tableSort} />
+                          <SortableHeader label="Ngày tạo" column="createdAt" {...tableSort} />
                           <th>
                             <span className="sr-only">Chi tiết</span>
                           </th>
                         </tr>
                       </thead>
                       <tbody>
-                        {data.content.map((item) => (
+                        {tableSort.rows.map((item) => (
                           <tr key={item.id}>
                             <td>
                               <button
@@ -392,6 +441,7 @@ export function StaffAccountsPage() {
                                 label(item.role)
                               ) : (
                                 <StaffStatusBadge
+                                  icon
                                   tone={
                                     verificationTones[item.verificationStatus ?? ""] ?? "neutral"
                                   }
@@ -401,7 +451,7 @@ export function StaffAccountsPage() {
                               )}
                             </td>
                             <td>
-                              <Status item={item} type={type} />
+                              <Status item={item} type={type} icon />
                             </td>
                             <td>{date(item.createdAt)}</td>
                             <td>
@@ -446,116 +496,137 @@ export function StaffAccountsPage() {
             {detailLoading && <p role="status">Đang tải chi tiết mới nhất…</p>}
             {detail && (
               <>
-                <section className="admin-panel">
-                  <div className="admin-panel-heading">
-                    <h2 ref={detailHeading} tabIndex={-1}>
+                <div className="admin-page-heading staff-detail-object-heading">
+                  <div>
+                    <h1 ref={detailHeading} tabIndex={-1}>
                       {name(detail)}
-                    </h2>
-                    <Status item={detail} type={type} />
-                  </div>
-                  <dl className="admin-company-fields">
-                    {(type === "users"
-                      ? [
-                          ["Tên đăng nhập", detail.username],
-                          ["Họ", detail.firstName],
-                          ["Tên", detail.lastName],
-                          ["Email", detail.email],
-                          ["Vai trò nền tảng", label(detail.role)],
-                          [
-                            "Xác minh email",
-                            detail.emailVerified ? "Đã xác minh" : "Chưa xác minh",
-                          ],
-                          ["Trạng thái tài khoản", label(detail.status)],
-                        ]
-                      : [
-                          ["Tên công ty", detail.name],
-                          ["Mã số thuế", detail.taxCode],
-                          ["Trạng thái xác minh", label(detail.verificationStatus)],
-                          ["Khóa tài khoản", detail.isBanned ? "Đã khóa" : "Không bị khóa"],
-                        ]
-                    )
-                      .concat([
-                        ["Ngày tạo", date(detail.createdAt)],
-                        ["Cập nhật lần cuối", date(detail.updatedAt)],
-                      ])
-                      .map(([key, value]) => (
-                        <div key={key}>
-                          <dt>{key}</dt>
-                          <dd>{value || "Chưa có thông tin"}</dd>
-                        </div>
-                      ))}
-                  </dl>
-                </section>
-                <section className="admin-panel accounts-enforcement">
-                  <div className="admin-panel-heading">
-                    <h2>Quyền truy cập</h2>
-                    <span>Giờ Việt Nam (UTC+7)</span>
-                  </div>
-                  {detail.activeBan ? (
-                    <dl className="admin-company-fields">
-                      <div className="admin-company-fields-wide">
-                        <dt>Lý do khóa</dt>
-                        <dd>{detail.activeBan.reason}</dd>
-                      </div>
-                      <div>
-                        <dt>Bắt đầu</dt>
-                        <dd>{date(detail.activeBan.startedAt)}</dd>
-                      </div>
-                      <div>
-                        <dt>Hết hạn</dt>
-                        <dd>
-                          {detail.activeBan.expiresAt === null
-                            ? "Vĩnh viễn"
-                            : date(detail.activeBan.expiresAt)}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt>Người thực hiện</dt>
-                        <dd>#{detail.activeBan.createdBy}</dd>
-                      </div>
-                    </dl>
-                  ) : (
-                    <p className="accounts-note">Không có lệnh khóa đang có hiệu lực.</p>
-                  )}
-                  {!detail.canBan && !detail.canUnban && (
-                    <p className="accounts-note">
-                      Tài khoản hiện không cho phép khóa hoặc mở khóa.
+                    </h1>
+                    <p>
+                      {type === "users" ? "Tài khoản người dùng" : "Tài khoản công ty"} · #
+                      {detail.id}
                     </p>
-                  )}
-                  <div className="accounts-actions">
-                    <button
-                      className="admin-secondary-action"
-                      disabled={saving || detailLoading}
-                      onClick={() => void refreshDetail()}
-                    >
-                      Tải lại chi tiết
-                    </button>
-                    {detail.canBan && (
-                      <button
-                        className="admin-secondary-action accounts-danger"
-                        disabled={saving || detailLoading || needsReload}
-                        onClick={(event) => {
-                          actionTrigger.current = event.currentTarget;
-                          void openAction("ban");
-                        }}
-                      >
-                        Khóa tài khoản
-                      </button>
-                    )}
-                    {detail.canUnban && (
-                      <button
-                        className="admin-primary-action"
-                        disabled={saving || detailLoading || needsReload}
-                        onClick={(event) => {
-                          actionTrigger.current = event.currentTarget;
-                          void openAction("unban");
-                        }}
-                      >
-                        Mở khóa tài khoản
-                      </button>
-                    )}
                   </div>
-                </section>
+                  <Status item={detail} type={type} />
+                </div>
+                <div className="staff-account-detail-grid">
+                  <section className="admin-panel">
+                    <div className="admin-panel-heading">
+                      <h2>Thông tin tài khoản</h2>
+                    </div>
+                    <dl className="admin-company-fields">
+                      {(type === "users"
+                        ? [
+                            ["Tên đăng nhập", detail.username],
+                            ["Họ", detail.firstName],
+                            ["Tên", detail.lastName],
+                            ["Email", detail.email],
+                            ["Vai trò nền tảng", label(detail.role)],
+                            [
+                              "Xác minh email",
+                              detail.emailVerified ? "Đã xác minh" : "Chưa xác minh",
+                            ],
+                            ["Trạng thái tài khoản", label(detail.status)],
+                          ]
+                        : [
+                            ["Tên công ty", detail.name],
+                            ["Mã số thuế", detail.taxCode],
+                            ["Trạng thái xác minh", label(detail.verificationStatus)],
+                            ["Khóa tài khoản", detail.isBanned ? "Đã khóa" : "Không bị khóa"],
+                          ]
+                      )
+                        .concat([
+                          ["Ngày tạo", date(detail.createdAt)],
+                          ["Cập nhật lần cuối", date(detail.updatedAt)],
+                        ])
+                        .map(([key, value]) => (
+                          <div
+                            key={key}
+                            className={
+                              ["Tên đăng nhập", "Tên công ty", "Mã số thuế", "Email"].includes(
+                                key ?? "",
+                              )
+                                ? "staff-detail-key"
+                                : undefined
+                            }
+                          >
+                            <dt>{key}</dt>
+                            <dd>{value || "Chưa có thông tin"}</dd>
+                          </div>
+                        ))}
+                    </dl>
+                  </section>
+                  <section className="admin-panel accounts-enforcement">
+                    <div className="admin-panel-heading">
+                      <h2>Quyền truy cập</h2>
+                      <span>Giờ Việt Nam (UTC+7)</span>
+                    </div>
+                    {detail.activeBan ? (
+                      <>
+                        <StaffDetailNotice title="Tài khoản đang bị khóa" tone="danger">
+                          <p>{detail.activeBan.reason}</p>
+                        </StaffDetailNotice>
+                        <dl className="admin-company-fields">
+                          <div>
+                            <dt>Bắt đầu</dt>
+                            <dd>{date(detail.activeBan.startedAt)}</dd>
+                          </div>
+                          <div className="staff-detail-key">
+                            <dt>Hết hạn</dt>
+                            <dd>
+                              {detail.activeBan.expiresAt === null
+                                ? "Vĩnh viễn"
+                                : date(detail.activeBan.expiresAt)}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt>Người thực hiện</dt>
+                            <dd>#{detail.activeBan.createdBy}</dd>
+                          </div>
+                        </dl>
+                      </>
+                    ) : (
+                      <p className="accounts-note">Tài khoản hiện không bị khóa.</p>
+                    )}
+                    {!detail.canBan && !detail.canUnban && (
+                      <p className="accounts-note">
+                        Bạn hiện không thể khóa hoặc mở khóa tài khoản này.
+                      </p>
+                    )}
+                    <div className="accounts-actions">
+                      <button
+                        className="admin-secondary-action"
+                        disabled={saving || detailLoading}
+                        onClick={() => void refreshDetail()}
+                      >
+                        Tải lại chi tiết
+                      </button>
+                      {detail.canBan && (
+                        <button
+                          className="admin-secondary-action accounts-danger"
+                          disabled={saving || detailLoading || needsReload}
+                          onClick={(event) => {
+                            actionTrigger.current = event.currentTarget;
+                            void openAction("ban");
+                          }}
+                        >
+                          Khóa tài khoản
+                        </button>
+                      )}
+                      {detail.canUnban && (
+                        <button
+                          className="admin-primary-action"
+                          disabled={saving || detailLoading || needsReload}
+                          onClick={(event) => {
+                            actionTrigger.current = event.currentTarget;
+                            void openAction("unban");
+                          }}
+                        >
+                          Mở khóa tài khoản
+                        </button>
+                      )}
+                    </div>
+                  </section>
+                </div>
               </>
             )}
             {!detail && !detailLoading && (
@@ -613,7 +684,7 @@ export function StaffAccountsPage() {
                 aria-describedby="reason-hint"
               />
               <p id="reason-hint" className="admin-form-hint">
-                {reason.trim().length} / 2.000 ký tự · Bắt buộc, không chỉ gồm khoảng trắng
+                {reason.trim().length} / 2.000 ký tự · Vui lòng ghi rõ lý do.
               </p>
               {action === "ban" && (
                 <>

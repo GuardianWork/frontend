@@ -27,6 +27,7 @@ import {
 } from "@/services/jobs";
 import { formatJobDate } from "@/lib/job-content";
 import { JobWorkspace } from "./JobWorkspace";
+import { SuspendedJobDetails } from "./SuspendedJobDetails";
 import "./job-publishing.css";
 
 export function RecruiterJobsPage() {
@@ -59,8 +60,9 @@ export function RecruiterJobsPage() {
     queryFn: () => getJob(jobId!),
     enabled: Boolean(allowed && jobId && !create),
     retry: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
+    refetchOnWindowFocus: "always",
+    refetchOnReconnect: "always",
+    refetchInterval: 10000,
     gcTime: 0,
   });
   const back = () => {
@@ -115,6 +117,13 @@ export function RecruiterJobsPage() {
                 </button>
               </div>
             </div>
+          ) : detail.data?.status === "SUSPENDED" ? (
+            <>
+              <button className="jp-back" onClick={back}>
+                Quay lại danh sách
+              </button>
+              <SuspendedJobDetails job={detail.data} scope={scope} />
+            </>
           ) : (
             <JobWorkspace
               key={`${scope}:${jobId}:${reload}`}
@@ -321,7 +330,7 @@ function JobRow({ job, scope }: { job: Job; scope: string }) {
   const latest = useQuery({
     queryKey: ["job-latest-revision", scope, job.id, job.version],
     queryFn: () => latestJobRevision(job.id),
-    enabled: !job.workingRevision,
+    enabled: job.status !== "SUSPENDED" && !job.workingRevision,
     retry: false,
   });
   const revision = job.workingRevision ?? latest.data;

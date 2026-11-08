@@ -1,3 +1,4 @@
+import { getPublicJobDetail } from "@/services/publicJobs";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import {
@@ -20,7 +21,6 @@ import {
 } from "@/context/CandidateContext";
 import { loadCandidateProfile, toLocalPhone } from "@/services/candidateProfile";
 import { toSalaryRange } from "@/services/publicJobs";
-import { apiRequest } from "@/services/api";
 import {
   listCandidateCvs,
   requestCvUploadUrl,
@@ -231,25 +231,13 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
   useEffect(() => {
     if (localJob || !jobId) return;
     let mounted = true;
-    (async () => {
+    let sequence = 0;
+    setBackendJob(null);
+    const load = async () => {
+      const current = ++sequence;
       try {
-        const detail = (await apiRequest(`/jobs/${jobId}`)) as {
-          id: number;
-          company?: { name?: string };
-          content?: {
-            title?: string;
-            location?: string;
-            description?: string;
-            compensation?: {
-              disclosed?: boolean;
-              minimum?: number;
-              maximum?: number;
-              currency?: "VND" | "USD";
-              payPeriod?: "HOUR" | "DAY" | "MONTH" | "YEAR";
-            };
-          };
-        };
-        if (!mounted) return;
+        const detail = await getPublicJobDetail(jobId);
+        if (!mounted || current !== sequence) return;
         setBackendJob({
           id: String(detail.id ?? jobId),
           title: detail.content?.title || "Công việc",
@@ -271,11 +259,18 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
           suggestedRevision: "",
         });
       } catch {
-        // Keep the not-found state when the backend job cannot be loaded.
+        if (mounted && current === sequence) setBackendJob(null);
       }
-    })();
+    };
+    void load();
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") void load();
+    }, 10000);
+    window.addEventListener("focus", load);
     return () => {
       mounted = false;
+      window.clearInterval(timer);
+      window.removeEventListener("focus", load);
     };
   }, [jobId, localJob]);
 

@@ -1,0 +1,31 @@
+/* Staff desktop dialogs: 960px for records, 760px for focused decisions.
+   Leave 32px clear around the viewport and scroll long content within the dialog. */
+@media (min-width: 1024px) {
+  body[data-portal="staff"] [role="dialog"] {
+    width: min(960px, calc(100vw - 64px));
+    max-width: min(960px, calc(100vw - 64px));
+    max-height: calc(100dvh - 64px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 32px;
+    gap: 24px;
+  }
+  body[data-portal="staff"]
+    :is(
+      .admin-decision-dialog,
+      .compliance-action-dialog,
+      .approval-visibility-dialog
+    )[role="dialog"] {
+    width: min(760px, calc(100vw - 64px));
+    max-width: min(760px, calc(100vw - 64px));
+  }
+  body[data-portal="staff"] [role="dialog"] textarea {
+    min-height: 160px;
+  }
+  body[data-portal="staff"]
+    [role="dialog"]
+    :is(.admin-dialog-actions, .compliance-dialog-actions, .admin-sample-dialog-actions) {
+    gap: 12px;
+    padding-top: 16px;
+  }
+}

@@ -13,10 +13,12 @@ export function JobContentView({
   content,
   onEdit,
   editDisabled = false,
+  showTitle = true,
 }: {
   content: JobContent;
   onEdit?: (step: number, field?: string) => void;
   editDisabled?: boolean;
+  showTitle?: boolean;
 }) {
   if (onEdit)
     return (
@@ -27,7 +29,7 @@ export function JobContentView({
   const pay = content.compensation;
   return (
     <article className="jp-content-view">
-      <h3>{content.title || "Chưa có chức danh"}</h3>
+      {showTitle && <h3>{content.title || "Chưa có chức danh"}</h3>}
       <div className="jp-job-facts">
         <span>
           {content.workArrangement === "REMOTE" ? "Khu vực làm việc từ xa: " : ""}

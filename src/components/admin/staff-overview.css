@@ -1,0 +1,197 @@
+/* Queue first: 2fr + 24px gap + 1fr fills the existing desktop canvas. */
+.staff-overview {
+  color: var(--color-ink);
+}
+.staff-overview h2,
+.staff-overview h3 {
+  margin: 0;
+  font-weight: 600;
+}
+.staff-overview h2 {
+  font-size: 16px;
+  line-height: 24px;
+}
+.staff-overview h3 {
+  font-size: 14px;
+  line-height: 22px;
+}
+.staff-overview-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.staff-overview-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.staff-overview-queue,
+.staff-overview-tools {
+  min-width: 0;
+  padding: 20px;
+  border-radius: 8px;
+  background: var(--color-paper-2);
+}
+.staff-overview-queue-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.staff-overview-queue-summary span {
+  display: block;
+  font-size: 14px;
+}
+.staff-overview-queue-summary strong {
+  display: block;
+  font-size: 32px;
+  font-weight: 500;
+  line-height: 44px;
+  font-variant-numeric: tabular-nums;
+}
+.staff-overview-queue-summary p {
+  margin: 4px 0 0;
+  color: var(--color-ink-2);
+  font-size: 12px;
+}
+.staff-overview-recent {
+  margin-top: 24px;
+}
+.staff-overview-recent ul {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+}
+.staff-overview-recent li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--color-rule);
+}
+.staff-overview-recent li:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.staff-overview-recent li strong,
+.staff-overview-tool strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 550;
+  line-height: 22px;
+}
+.staff-overview-recent li span,
+.staff-overview-recent time {
+  display: block;
+  color: var(--color-ink-2);
+  font-size: 12px;
+  line-height: 20px;
+}
+.staff-overview-recent time {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+.staff-overview-tool {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--color-rule);
+  color: var(--color-ink);
+}
+.staff-overview-tool:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.staff-overview-tool:first-of-type {
+  padding-top: 0;
+}
+.staff-overview-tool span {
+  display: block;
+  margin-top: 4px;
+  color: var(--color-ink-2);
+  font-size: 13px;
+  line-height: 20px;
+}
+.staff-overview-tool > svg {
+  flex: none;
+}
+.staff-overview a:focus-visible,
+.staff-overview button:focus-visible {
+  outline: 2px solid var(--color-discovery-accent);
+  outline-offset: 4px;
+}
+.staff-overview-tool:hover strong {
+  text-decoration: underline;
+}
+.staff-overview-samples {
+  margin: 24px 0;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--color-rule);
+}
+.staff-overview-samples p {
+  margin: 4px 0 16px;
+  color: var(--color-ink-2);
+  font-size: 13px;
+  line-height: 20px;
+}
+.staff-overview-samples dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  margin: 0;
+}
+.staff-overview-samples dt {
+  color: var(--color-ink-2);
+  font-size: 13px;
+}
+.staff-overview-samples dd {
+  margin: 6px 0 0;
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+}
+.staff-overview-samples small {
+  color: var(--color-ink-2);
+  font-size: 12px;
+}
+.staff-overview-empty {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--color-ink-2);
+}
+.staff-overview-error {
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 6px;
+  background: var(--error-container);
+  color: var(--on-error-container);
+  font-size: 14px;
+}
+.staff-overview-error p {
+  margin: 0;
+}
+
+/* Only the live queue carries the brand hue; demonstration figures stay secondary. */
+.staff-overview .staff-overview-queue-summary strong {
+  color: var(--color-discovery-accent);
+  font-size: 36px;
+  line-height: 48px;
+  font-weight: 600;
+}
+.staff-overview .staff-overview-queue-summary .admin-primary-action {
+  background: var(--color-ink);
+  border-color: var(--color-ink);
+  color: var(--color-paper);
+}
+.staff-overview .staff-overview-queue-summary .admin-primary-action:hover {
+  background: var(--color-primary-deep);
+}
+.staff-overview-recent li strong {
+  font-weight: 600;
+}

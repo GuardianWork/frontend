@@ -24,6 +24,10 @@ import { StaffAccount } from "./admin/StaffAccount";
 import { publicPortalHref } from "@/lib/portal";
 import "./admin/sidebar.css";
 import "./admin/staff-colors.css";
+import "./admin/staff-density.css";
+import "./admin/staff-detail.css";
+import "./admin/staff-focus.css";
+import "./admin/staff-modals.css";
 import { WorkspaceBrand, WorkspaceNavigationToggle } from "./WorkspaceChrome";
 
 const NAVIGATION = [

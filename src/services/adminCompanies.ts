@@ -1,5 +1,6 @@
 import { authenticatedRequest, getCurrentUser, isStaffUser } from "./auth.ts";
 import { ApiError } from "./api.ts";
+import { newestStaffPage } from "./staffPaging.ts";
 export const VERIFICATION_PAGE_SIZE = 20;
 
 export type VerificationStatus = "REGISTERED" | "PENDING" | "VERIFIED" | "REJECTED";
@@ -98,6 +99,13 @@ function isCompany(value: unknown): value is AdminCompany {
   );
 }
 export async function getAdminVerifications(
+  status: VerificationFilter,
+  page: number,
+  signal?: AbortSignal,
+): Promise<VerificationPage> {
+  return newestStaffPage((sourcePage) => getVerificationPage(status, sourcePage, signal), page);
+}
+async function getVerificationPage(
   status: VerificationFilter,
   page: number,
   signal?: AbortSignal,

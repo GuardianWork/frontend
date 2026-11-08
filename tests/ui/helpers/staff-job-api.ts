@@ -116,10 +116,10 @@ export async function staffJobApi(page: Page) {
         currentPage === 0
           ? Array.from({ length: 20 }, (_, i) => ({
               ...review,
-              id: 91 + i,
-              content: { ...review.content, title: i ? `Tin kế toán ${i}` : review.content.title },
+              id: 71 + i,
+              content: { ...review.content, title: `Tin kế toán ${i + 1}` },
             }))
-          : [{ ...review, id: 112 }],
+          : [review],
         21,
       );
     }

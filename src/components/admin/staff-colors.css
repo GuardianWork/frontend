@@ -4,6 +4,49 @@ body[data-portal="staff"] {
   --staff-panel-rule: #dededa;
   --staff-table-heading: #ffffff;
 }
+/* Shared staff-table tags follow the audit ledger's semantic tokens and dimensions. */
+body[data-portal="staff"] table .admin-record-status:not(.activity-action) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex: none;
+  gap: 6px;
+  min-height: 28px;
+  max-width: none;
+  padding: 3px 9px;
+  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 20px;
+  font-weight: 600;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+body[data-portal="staff"] table .admin-record-status > svg {
+  flex: none;
+}
+body[data-portal="staff"] table .staff-sort-header > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+body[data-portal="staff"] table .staff-sort-header > button > svg {
+  flex: none;
+}
+body[data-portal="staff"] table .staff-sort-header[aria-sort="none"] > button > svg {
+  color: var(--color-ink-3);
+}
+body[data-portal="staff"] table .staff-sort-header > button:hover {
+  color: var(--color-discovery-accent);
+}
 body[data-portal="staff"] .admin-workspace .workspace-content > main {
   background: var(--color-paper);
 }
@@ -331,34 +374,6 @@ body[data-portal="staff"] .staff-legal-reference:focus-visible {
   outline-offset: 4px;
 }
 body[data-portal="staff"] .staff-detail-tabs > [role="tabpanel"] > .admin-sample-banner {
-  margin-block: 24px;
-}
-
-body[data-portal="staff"] .staff-jobs-section-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 24px;
-  margin-bottom: 24px;
-}
-body[data-portal="staff"] .staff-jobs-section-links a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  color: var(--color-discovery-accent);
-  font-size: 14px;
-  font-weight: 650;
-  text-decoration: underline;
-  text-underline-offset: 4px;
-}
-body[data-portal="staff"] .staff-jobs-page-section {
-  scroll-margin-top: 100px;
-  min-width: 0;
-}
-body[data-portal="staff"] #staff-legal-ai {
-  margin-top: 48px;
-  border-top: 1px solid var(--staff-panel-rule);
-}
-body[data-portal="staff"] #staff-legal-ai > .admin-sample-banner {
   margin-block: 24px;
 }
 
