@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { ApiError } from "./api.ts";
 import {
-  categoryForKind,
+  categoryForType,
   countUnread,
   markAllNotificationsRead,
   markNotificationRead,
@@ -28,18 +28,16 @@ test("parses a legacy mock row into the canonical model", () => {
   });
 
   assert.equal(result.id, "1");
-  assert.equal(result.kind, "");
+  assert.equal(result.type, "");
   assert.equal(result.category, "reward");
   assert.equal(result.title, "Story Hub");
   assert.equal(result.body, "Share your story");
   assert.equal(result.createdAt, ISO);
   assert.equal(result.read, false);
   assert.equal(result.readAt, null);
-  assert.equal(result.priority, "normal");
   assert.equal(result.action, null);
   assert.equal(result.actor, null);
   assert.deepEqual(result.references, {});
-  assert.deepEqual(result.data, {});
 });
 
 test("adapts the GuardianWork notification response", () => {
@@ -57,9 +55,9 @@ test("adapts the GuardianWork notification response", () => {
   });
 
   assert.equal(result.id, "42");
-  assert.equal(result.kind, "APPLICATION_STATUS_CHANGED");
+  assert.equal(result.type, "APPLICATION_STATUS_CHANGED");
   assert.equal(result.category, "application");
-  assert.equal(result.title, "Trạng thái đơn ứng tuyển đã thay đổi");
+  assert.equal(result.title, "");
   assert.equal(result.body, "We would like to schedule an interview.");
   assert.equal(result.read, false);
   assert.equal(result.readAt, null);
@@ -68,13 +66,9 @@ test("adapts the GuardianWork notification response", () => {
     job: "3",
     application: "9f6c7f2e-application",
   });
-  assert.deepEqual(result.data, {
-    companyName: "Alpha",
-    candidateFeedback: "We would like to schedule an interview.",
-  });
 });
 
-test("derives title and body when the server omits them (microsecond timestamps)", () => {
+test("uses body from candidateFeedback when the server omits the body (microsecond timestamps)", () => {
   const result = parseNotification({
     id: 2,
     eventType: "APPLICATION_REJECTED",
@@ -89,9 +83,9 @@ test("derives title and body when the server omits them (microsecond timestamps)
   });
 
   assert.equal(result.id, "2");
-  assert.equal(result.kind, "APPLICATION_REJECTED");
+  assert.equal(result.type, "APPLICATION_REJECTED");
   assert.equal(result.category, "application");
-  assert.equal(result.title, "Đơn ứng tuyển bị từ chối");
+  assert.equal(result.title, "");
   assert.equal(result.body, "Cảm ơn bạn đã ứng tuyển và mong gặp lại ở cơ hội sau.");
   assert.equal(result.createdAt, "2026-11-05T05:32:23.009889Z");
   assert.equal(result.read, true);
@@ -101,10 +95,6 @@ test("derives title and body when the server omits them (microsecond timestamps)
     job: "11",
     revision: "13",
     application: "daaa4ed1-feb0-40a2-be89-4577d0c6005d",
-  });
-  assert.deepEqual(result.data, {
-    companyName: "Công ty TNHH GuardWork Demo",
-    candidateFeedback: "Cảm ơn bạn đã ứng tuyển và mong gặp lại ở cơ hội sau.",
   });
 });
 
@@ -124,13 +114,12 @@ test("normalizes aliases, derived read state, action, actor, and references", ()
     target: { type: "JOB", id: 12 },
   });
 
-  assert.equal(result.kind, "JOB_REVISION_APPROVED");
+  assert.equal(result.type, "JOB_REVISION_APPROVED");
   assert.equal(result.category, "job");
   assert.equal(result.body, "Your job revision is live.");
   assert.equal(result.createdAt, ISO);
   assert.equal(result.read, true);
   assert.equal(result.readAt, "2026-11-06T10:00:00.000Z");
-  assert.equal(result.priority, "high");
   assert.deepEqual(result.action, {
     label: "View",
     href: "/rec/notifications/n-1",
@@ -142,7 +131,6 @@ test("normalizes aliases, derived read state, action, actor, and references", ()
     avatarUrl: "https://cdn/avatar.png",
   });
   assert.deepEqual(result.references, { job: "12" });
-  assert.deepEqual(result.data, { revisionNumber: 4 });
 });
 
 test("falls back to a safe category and keeps the derived read flag consistent", () => {
@@ -179,14 +167,14 @@ test("rejects a notification without an id", () => {
 });
 
 test("maps event keys to categories", () => {
-  assert.equal(categoryForKind("APPLICATION_REJECTED"), "application");
-  assert.equal(categoryForKind("job_closed"), "job");
-  assert.equal(categoryForKind("COMPANY_VERIFIED"), "company");
-  assert.equal(categoryForKind("MEMBERSHIP_REMOVED"), "company");
-  assert.equal(categoryForKind("ACCOUNT_LOCKED"), "account");
-  assert.equal(categoryForKind("VERIFICATION_APPROVED"), "verification");
-  assert.equal(categoryForKind(""), "system");
-  assert.equal(categoryForKind("UNKNOWN"), "system");
+  assert.equal(categoryForType("APPLICATION_REJECTED"), "application");
+  assert.equal(categoryForType("job_closed"), "job");
+  assert.equal(categoryForType("COMPANY_VERIFIED"), "company");
+  assert.equal(categoryForType("MEMBERSHIP_REMOVED"), "company");
+  assert.equal(categoryForType("ACCOUNT_LOCKED"), "account");
+  assert.equal(categoryForType("VERIFICATION_APPROVED"), "verification");
+  assert.equal(categoryForType(""), "system");
+  assert.equal(categoryForType("UNKNOWN"), "system");
 });
 
 test("parses a PageResponse envelope and preserves the server unread count", () => {

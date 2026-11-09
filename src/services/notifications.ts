@@ -11,8 +11,7 @@ import { authenticatedRequest } from "./auth.ts";
  *
  * The parsers below accept both the GuardianWork `NotificationResponse` shape
  * (`eventType`, `companyId`, `applicationId`, `readAt`, ...) and the older
- * mock/UI shape (`title`, `message`, `read`, `category`). Event-specific values
- * that do not fit the envelope are kept in `data`, while entity ids are
+ * mock/UI shape (`title`, `message`, `read`, `category`). Entity ids are
  * normalized into `references`.
  */
 
@@ -30,9 +29,6 @@ export const NOTIFICATION_CATEGORIES = [
 ] as const;
 
 export type NotificationCategory = (typeof NOTIFICATION_CATEGORIES)[number];
-
-export const NOTIFICATION_PRIORITIES = ["low", "normal", "high"] as const;
-export type NotificationPriority = (typeof NOTIFICATION_PRIORITIES)[number];
 
 /**
  * Entity ids the notification is about, keyed by entity type.
@@ -56,8 +52,8 @@ export interface NotificationActor {
 
 export interface Notification {
   id: string;
-  /** Stable event key, e.g. `APPLICATION_STATUS_CHANGED`. Empty when absent. */
-  kind: string;
+  /** Backend event key, e.g. `APPLICATION_STATUS_CHANGED`. Empty when absent. */
+  type: string;
   category: NotificationCategory;
   title: string;
   body: string;
@@ -65,12 +61,9 @@ export interface Notification {
   createdAt: string;
   read: boolean;
   readAt: string | null;
-  priority: NotificationPriority;
   action: NotificationAction | null;
   actor: NotificationActor | null;
   references: NotificationReferences;
-  /** Event-specific payload for renderers, analytics, or future DTO fields. */
-  data: Record<string, unknown>;
 }
 
 export interface NotificationPage {
@@ -97,20 +90,6 @@ const EVENT_CATEGORIES: Record<string, NotificationCategory> = {
   APPLICATION_STATUS_CHANGED: "application",
   APPLICATION_REJECTED: "application",
   APPLICATION_WITHDRAWN: "application",
-};
-
-/** Display titles for event types when the server omits `title`. */
-const EVENT_DISPLAY_TITLES: Record<string, string> = {
-  RECRUITER_ACCEPTED: "Công ty đã chấp nhận thành viên",
-  MEMBERSHIP_REMOVED: "Bạn đã bị xóa khỏi công ty",
-  JOB_ASSIGNED: "Công việc được giao cho bạn",
-  JOB_UNASSIGNED: "Công việc bị hủy giao",
-  JOB_NEEDS_REASSIGNMENT: "Công việc cần phân công lại",
-  JOB_REVISION_APPROVED: "Bản sửa đổi công việc đã được phê duyệt",
-  JOB_REVISION_REJECTED: "Bản sửa đổi công việc bị từ chối",
-  APPLICATION_STATUS_CHANGED: "Trạng thái đơn ứng tuyển đã thay đổi",
-  APPLICATION_REJECTED: "Đơn ứng tuyển bị từ chối",
-  APPLICATION_WITHDRAWN: "Hồ sơ ứng tuyển đã rút",
 };
 
 function asRecord(value: unknown): RawRecord | null {
@@ -142,12 +121,12 @@ function isNotificationCategory(value: string): value is NotificationCategory {
 }
 
 /**
- * Resolve a category from an event key when the payload has no explicit
+ * Resolve a category from a backend event key when the payload has no explicit
  * category. Exact GuardianWork events are listed above; the prefixes keep
  * future events (e.g. `JOB_CLOSED`) working without a client release.
  */
-export function categoryForKind(kind: string): NotificationCategory {
-  const normalized = kind.trim().toUpperCase();
+export function categoryForType(type: string): NotificationCategory {
+  const normalized = type.trim().toUpperCase();
   if (!normalized) return "system";
   const exact = EVENT_CATEGORIES[normalized];
   if (exact) return exact;
@@ -161,13 +140,6 @@ export function categoryForKind(kind: string): NotificationCategory {
   if (normalized.startsWith("PROMOTION_")) return "promotion";
   if (normalized.startsWith("ANNOUNCEMENT_")) return "announcement";
   return "system";
-}
-
-function parsePriority(value: unknown): NotificationPriority {
-  const normalized = textValue(value).toLowerCase();
-  if (normalized === "low" || normalized === "high") return normalized;
-  if (normalized === "urgent" || normalized === "critical") return "high";
-  return "normal";
 }
 
 function isExternalHref(href: string): boolean {
@@ -235,16 +207,6 @@ function parseReferences(raw: RawRecord): NotificationReferences {
   return references;
 }
 
-function parseData(raw: RawRecord): Record<string, unknown> {
-  const provided = asRecord(raw.data) ?? asRecord(raw.metadata);
-  const data: Record<string, unknown> = provided ? { ...provided } : {};
-  if (raw.companyName !== undefined && data.companyName === undefined)
-    data.companyName = raw.companyName;
-  if (raw.candidateFeedback !== undefined && data.candidateFeedback === undefined)
-    data.candidateFeedback = raw.candidateFeedback;
-  return data;
-}
-
 /** Normalize one notification from an API or legacy fixture. */
 export function parseNotification(value: unknown): Notification {
   const raw = asRecord(value);
@@ -253,27 +215,25 @@ export function parseNotification(value: unknown): Notification {
     throw new ApiError("Phản hồi thông báo không hợp lệ. Vui lòng thử lại.", 500);
   }
 
-  const kind = textValue(raw.kind ?? raw.eventType ?? raw.event_type ?? raw.type);
+  const type = textValue(raw.type ?? raw.kind ?? raw.eventType ?? raw.event_type);
   const explicitCategory = textValue(raw.category).toLowerCase();
   const category = isNotificationCategory(explicitCategory)
     ? explicitCategory
-    : categoryForKind(kind);
+    : categoryForType(type);
   const readAt = dateValue(raw.readAt ?? raw.read_at) || null;
 
   return {
     id,
-    kind,
+    type,
     category,
-    title: textValue(raw.title) || EVENT_DISPLAY_TITLES[kind] || "",
+    title: textValue(raw.title),
     body: textValue(raw.body ?? raw.message ?? raw.content ?? raw.candidateFeedback) || "",
     createdAt: dateValue(raw.createdAt ?? raw.created_at ?? raw.occurredAt ?? raw.timestamp),
     read: booleanValue(raw.read ?? raw.isRead ?? raw.is_read) || readAt !== null,
     readAt,
-    priority: parsePriority(raw.priority),
     action: parseAction(raw),
     actor: parseActor(raw),
     references: parseReferences(raw),
-    data: parseData(raw),
   };
 }
 
