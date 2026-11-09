@@ -130,7 +130,6 @@ export function NotificationPage() {
                 Chưa đọc
               </span>
             )}
-            {n.priority === "high" && <span className="notif-priority">Ưu tiên</span>}
           </span>
           <span className="notif-title">{n.title}</span>
           <span className="notif-desc">{n.body}</span>
