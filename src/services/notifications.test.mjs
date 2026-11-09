@@ -6,8 +6,11 @@ import {
   countUnread,
   markAllNotificationsRead,
   markNotificationRead,
+  parseMarkAllReadResponse,
   parseNotification,
   parseNotificationPage,
+  parseUnreadCount,
+  resolveNotificationPath,
   sortNewestFirst,
 } from "./notifications.ts";
 
@@ -44,6 +47,7 @@ test("adapts the GuardianWork notification response", () => {
   const result = parseNotification({
     id: 42,
     eventType: "APPLICATION_STATUS_CHANGED",
+    audience: "CANDIDATE",
     companyId: 7,
     companyName: "Alpha",
     createdAt: ISO,
@@ -56,6 +60,7 @@ test("adapts the GuardianWork notification response", () => {
 
   assert.equal(result.id, "42");
   assert.equal(result.type, "APPLICATION_STATUS_CHANGED");
+  assert.equal(result.audience, "CANDIDATE");
   assert.equal(result.category, "application");
   assert.equal(result.title, "");
   assert.equal(result.body, "We would like to schedule an interview.");
@@ -141,6 +146,18 @@ test("falls back to a safe category and keeps the derived read flag consistent",
     createdAt: ISO,
   });
   assert.equal(unknown.category, "system");
+
+  // Legacy rows without an audience derive it from the event kind:
+  // status/rejected are candidate-facing, everything else (incl. withdrawn)
+  // is recruiter-facing.
+  assert.equal(
+    parseNotification({ id: "a", eventType: "APPLICATION_REJECTED", createdAt: ISO }).audience,
+    "CANDIDATE",
+  );
+  assert.equal(
+    parseNotification({ id: "b", eventType: "APPLICATION_WITHDRAWN", createdAt: ISO }).audience,
+    "",
+  );
 
   const explicit = parseNotification({
     id: "2",
@@ -261,4 +278,83 @@ test("marks all notifications read", () => {
   assert.equal(marked[0].readAt, "2026-11-06T12:00:00.000Z");
   assert.equal(marked[1].readAt, ISO);
   assert.equal(items[0].read, false);
+});
+
+test("parses unread-count and mark-all envelopes", () => {
+  assert.deepEqual(parseUnreadCount({ unreadCount: 3 }), { unreadCount: 3 });
+  assert.deepEqual(parseUnreadCount({ data: { unreadCount: "7" } }), { unreadCount: 7 });
+  assert.throws(() => parseUnreadCount({ unreadCount: -1 }), ApiError);
+  assert.throws(() => parseUnreadCount(null), ApiError);
+
+  assert.deepEqual(parseMarkAllReadResponse({ updatedCount: 2, readAt: ISO }), {
+    updatedCount: 2,
+    readAt: ISO,
+  });
+  assert.deepEqual(parseMarkAllReadResponse({ data: { updatedCount: 0, readAt: ISO } }), {
+    updatedCount: 0,
+    readAt: ISO,
+  });
+  assert.throws(() => parseMarkAllReadResponse({ updatedCount: 1, readAt: "bad" }), ApiError);
+});
+
+test("resolves backend action hrefs to portal routes", () => {
+  const job = parseNotification({
+    id: "1",
+    type: "JOB_ASSIGNED",
+    category: "job",
+    createdAt: ISO,
+    action: { href: "/jobs/12" },
+  });
+  assert.deepEqual(resolveNotificationPath(job, "can"), { to: "/jobs", search: { job: "12" } });
+  assert.deepEqual(resolveNotificationPath(job, "rec"), { to: "/rec/jobs", search: { jobId: 12 } });
+  assert.equal(resolveNotificationPath(job, "staff"), null);
+
+  const application = parseNotification({
+    id: "2",
+    type: "APPLICATION_REJECTED",
+    category: "application",
+    createdAt: ISO,
+    action: { href: "/applications/app-9" },
+    references: { job: "5", application: "app-9" },
+  });
+  assert.deepEqual(resolveNotificationPath(application, "can"), { to: "/can/applied" });
+  assert.deepEqual(resolveNotificationPath(application, "rec"), {
+    to: "/rec/applications/$jobId/$applicationId",
+    params: { jobId: "5", applicationId: "app-9" },
+  });
+  assert.equal(resolveNotificationPath(application, "staff"), null);
+
+  const listed = parseNotification({
+    id: "3",
+    type: "APPLICATION_STATUS_CHANGED",
+    category: "application",
+    createdAt: ISO,
+    action: { href: "/applications/app-9" },
+  });
+  assert.deepEqual(resolveNotificationPath(listed, "rec"), { to: "/rec/applications" });
+
+  const company = parseNotification({
+    id: "4",
+    type: "RECRUITER_ACCEPTED",
+    category: "company",
+    createdAt: ISO,
+    action: { href: "/companies/7" },
+  });
+  assert.deepEqual(resolveNotificationPath(company, "rec"), { to: "/rec/members" });
+  assert.equal(resolveNotificationPath(company, "can"), null);
+
+  const none = parseNotification({
+    id: "5",
+    type: "JOB_UNASSIGNED",
+    category: "job",
+    createdAt: ISO,
+  });
+  assert.equal(resolveNotificationPath(none, "can"), null);
+  const external = parseNotification({
+    id: "6",
+    category: "system",
+    createdAt: ISO,
+    action: { href: "https://example.test/x" },
+  });
+  assert.equal(resolveNotificationPath(external, "can"), null);
 });

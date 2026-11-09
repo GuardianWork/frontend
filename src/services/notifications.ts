@@ -50,10 +50,15 @@ export interface NotificationActor {
   avatarUrl: string | null;
 }
 
+/** Role context the notification was recorded under (backend `audience`). One account can be both a Candidate and a Recruiter, so each portal requests its own audience. Empty string when absent; parsers derive a fallback from the event key. */
+export type NotificationAudience = "CANDIDATE" | "RECRUITER" | "";
+
 export interface Notification {
   id: string;
   /** Backend event key, e.g. `APPLICATION_STATUS_CHANGED`. Empty when absent. */
   type: string;
+  /** Role context the notification belongs to; `CANDIDATE` vs `RECRUITER`. */
+  audience: NotificationAudience;
   category: NotificationCategory;
   title: string;
   body: string;
@@ -216,6 +221,16 @@ export function parseNotification(value: unknown): Notification {
   }
 
   const type = textValue(raw.type ?? raw.kind ?? raw.eventType ?? raw.event_type);
+  const audienceRaw = textValue(raw.audience).toUpperCase();
+  // Backend always sends audience now; legacy rows fall back by event kind
+  // (status/rejected are candidate-facing, everything else incl. withdrawn is recruiter-facing).
+  const audience: NotificationAudience =
+    audienceRaw === "CANDIDATE" || audienceRaw === "RECRUITER"
+      ? audienceRaw
+      : "APPLICATION_STATUS_CHANGED" === type.trim().toUpperCase() ||
+          "APPLICATION_REJECTED" === type.trim().toUpperCase()
+        ? "CANDIDATE"
+        : "";
   const explicitCategory = textValue(raw.category).toLowerCase();
   const category = isNotificationCategory(explicitCategory)
     ? explicitCategory
@@ -225,6 +240,7 @@ export function parseNotification(value: unknown): Notification {
   return {
     id,
     type,
+    audience,
     category,
     title: textValue(raw.title),
     body: textValue(raw.body ?? raw.message ?? raw.content ?? raw.candidateFeedback) || "",
@@ -327,16 +343,41 @@ export function markAllNotificationsRead(
 }
 
 const NOTIFICATION_PAGE_SIZE = 20;
-const MAX_NOTIFICATION_PAGE_SIZE = 100;
+/** Backend bounds page size to 20 (PaginationUtils.MAX_PAGE_SIZE); larger values clamp to 20. */
+const MAX_NOTIFICATION_PAGE_SIZE = 20;
 
 export interface NotificationQuery {
   page?: number;
   size?: number;
+  /** `false` = unread only, `true` = read only, omitted = all (server filter). */
+  read?: boolean;
+  /** Wire category, e.g. `job` or `application` (server filter). */
+  category?: NotificationCategory | string;
+  /** Backend event key, e.g. `APPLICATION_REJECTED` (server filter). */
+  eventType?: string;
+  /** Role context, e.g. `CANDIDATE` or `RECRUITER` (server filter). */
+  audience?: NotificationAudience | string;
+  /** Numeric inbox id; return only rows with `id > sinceId` (polling). */
+  sinceId?: number | string;
   signal?: AbortSignal;
 }
 
 export interface NotificationReadResponse {
+  /**
+   * Inbox id as a string, normalized from the backend number to match
+   * {@link Notification.id}.
+   */
   id: string;
+  readAt: string;
+}
+
+export interface NotificationUnreadCountResponse {
+  unreadCount: number;
+}
+
+export interface NotificationMarkAllReadResponse {
+  /** Number of previously-unread rows changed by the batch. */
+  updatedCount: number;
   readAt: string;
 }
 
@@ -352,23 +393,170 @@ export async function listNotifications(query: NotificationQuery = {}): Promise<
   const params = new URLSearchParams();
   params.set("page", String(page));
   params.set("size", String(size));
+  if (query.read !== undefined) params.set("read", query.read ? "true" : "false");
+  const category = textValue(query.category);
+  if (category) params.set("category", category);
+  const eventType = textValue(query.eventType);
+  if (eventType) params.set("eventType", eventType);
+  const audience = textValue(query.audience);
+  if (audience) params.set("audience", audience);
+  const sinceId = idValue(query.sinceId);
+  if (sinceId) params.set("sinceId", sinceId);
   const data = await authenticatedRequest(`/me/notifications?${params.toString()}`, {
     signal: query.signal,
   });
   return parseNotificationPage(data);
 }
 
+/** Parse the GET /api/me/notifications/unread-count envelope (`{ data: { unreadCount } }`). */
+export function parseUnreadCount(value: unknown): NotificationUnreadCountResponse {
+  const record = value && typeof value === "object" ? (value as RawRecord) : null;
+  const raw = record?.data ?? record;
+  const count = Number((raw as RawRecord | null)?.unreadCount);
+  if (!record || !Number.isFinite(count) || count < 0) {
+    throw new ApiError("Phản hồi số lượng chưa đọc không hợp lệ. Vui lòng thử lại.", 500);
+  }
+  return { unreadCount: Math.trunc(count) };
+}
+
+/** Fetch the authoritative unread total for badge and tab counts. */
+export async function getUnreadCount(
+  audience?: NotificationAudience | string,
+): Promise<NotificationUnreadCountResponse> {
+  const normalized = textValue(audience);
+  const query = normalized ? `?audience=${encodeURIComponent(normalized)}` : "";
+  const data = await authenticatedRequest(`/me/notifications/unread-count${query}`);
+  return parseUnreadCount(data);
+}
+
+/** Fetch one recipient-owned notification (detail view / deep-link check). */
+export async function getNotification(
+  id: string,
+  audience?: NotificationAudience | string,
+): Promise<Notification> {
+  const normalized = idValue(id);
+  if (!normalized) {
+    throw new ApiError("Phản hồi thông báo không hợp lệ. Vui lòng thử lại.", 500);
+  }
+  const aud = textValue(audience);
+  const query = aud ? `?audience=${encodeURIComponent(aud)}` : "";
+  const data = await authenticatedRequest(
+    `/me/notifications/${encodeURIComponent(normalized)}${query}`,
+  );
+  const record = data && typeof data === "object" ? (data as RawRecord) : null;
+  // `authenticatedRequest` unwraps `data`, but tolerate a double-wrapped envelope.
+  const payload =
+    record && "data" in record && asRecord((record as RawRecord).data)
+      ? (record as RawRecord).data
+      : data;
+  return parseNotification(payload);
+}
+
 /** Mark a single notification read via PATCH /api/me/notifications/{id}/read. */
-export async function markNotificationReadApi(id: string): Promise<NotificationReadResponse> {
-  const data = await authenticatedRequest(`/me/notifications/${encodeURIComponent(id)}/read`, {
-    method: "PATCH",
-  });
+export async function markNotificationReadApi(
+  id: string,
+  audience?: NotificationAudience | string,
+): Promise<NotificationReadResponse> {
+  const aud = textValue(audience);
+  const query = aud ? `?audience=${encodeURIComponent(aud)}` : "";
+  const data = await authenticatedRequest(
+    `/me/notifications/${encodeURIComponent(id)}/read${query}`,
+    {
+      method: "PATCH",
+    },
+  );
   if (!data || typeof data !== "object") {
     throw new ApiError("Phản hồi đánh dấu đã đọc không hợp lệ. Vui lòng thử lại.", 500);
   }
   const record = data as { id?: unknown; readAt?: unknown };
-  if (typeof record.id !== "string" || typeof record.readAt !== "string") {
+  const normalizedId = idValue(record.id);
+  if (!normalizedId || typeof record.readAt !== "string") {
     throw new ApiError("Phản hồi đánh dấu đã đọc không hợp lệ. Vui lòng thử lại.", 500);
   }
-  return { id: record.id, readAt: record.readAt };
+  return { id: normalizedId, readAt: record.readAt };
+}
+
+/** Parse the PATCH /api/me/notifications/read envelope (`{ data: { updatedCount, readAt } }`). */
+export function parseMarkAllReadResponse(value: unknown): NotificationMarkAllReadResponse {
+  const record = value && typeof value === "object" ? (value as RawRecord) : null;
+  const raw = record?.data ?? record;
+  const updated = Number((raw as RawRecord | null)?.updatedCount);
+  const readAt = dateValue((raw as RawRecord | null)?.readAt);
+  if (!record || !Number.isFinite(updated) || updated < 0 || !readAt) {
+    throw new ApiError("Phản hồi đánh dấu tất cả đã đọc không hợp lệ. Vui lòng thử lại.", 500);
+  }
+  return { updatedCount: Math.trunc(updated), readAt };
+}
+
+/** Mark every unread notification read in one request (replaces per-item fan-out). */
+export async function markAllNotificationsReadApi(
+  audience?: NotificationAudience | string,
+): Promise<NotificationMarkAllReadResponse> {
+  const normalized = textValue(audience);
+  const query = normalized ? `?audience=${encodeURIComponent(normalized)}` : "";
+  const data = await authenticatedRequest(`/me/notifications/read${query}`, { method: "PATCH" });
+  return parseMarkAllReadResponse(data);
+}
+
+/** Portal a notification belongs to; drives {@link resolveNotificationPath}. */
+export type NotificationPortal = "can" | "rec" | "staff";
+
+/**
+ * In-app destination for a notification, resolved from backend `action.href` to a
+ * registered frontend route. Backend hrefs (`/jobs/{id}`, `/applications/{uuid}`,
+ * `/companies/{id}`) are portal-agnostic and do not match TanStack routes, so each
+ * portal maps them to its own list/detail screen. Returns `null` when there is no
+ * known screen (informational-only, or a portal without one) — callers stay put.
+ */
+export type NotificationPath =
+  | { to: "/jobs"; search: { job: string } }
+  | { to: "/rec/jobs"; search: { jobId: number } }
+  | { to: "/can/applied" }
+  | { to: "/rec/applications" }
+  | {
+      to: "/rec/applications/$jobId/$applicationId";
+      params: { jobId: string; applicationId: string };
+    }
+  | { to: "/rec/members" };
+
+export function resolveNotificationPath(
+  notification: Notification,
+  portal: NotificationPortal,
+): NotificationPath | null {
+  const href = notification.action?.href?.trim() ?? "";
+  if (!href || notification.action?.external) return null;
+  const jobMatch = href.match(/^\/jobs\/(\d+)\/?$/);
+  const applicationMatch = href.match(/^\/applications\/([^/?#]+)\/?$/);
+  const companyMatch = href.match(/^\/companies\/(\d+)\/?$/);
+
+  if (jobMatch) {
+    const jobId = Number(jobMatch[1]);
+    if (!Number.isSafeInteger(jobId) || jobId <= 0) return null;
+    if (portal === "rec") return { to: "/rec/jobs", search: { jobId } };
+    if (portal === "staff") return null;
+    return { to: "/jobs", search: { job: String(jobId) } };
+  }
+
+  if (applicationMatch) {
+    const applicationId = decodeURIComponent(applicationMatch[1]);
+    if (portal === "rec") {
+      const jobId = notification.references.job;
+      if (jobId && /^\d+$/.test(jobId)) {
+        return {
+          to: "/rec/applications/$jobId/$applicationId",
+          params: { jobId, applicationId },
+        };
+      }
+      return { to: "/rec/applications" };
+    }
+    if (portal === "staff") return null;
+    return { to: "/can/applied" };
+  }
+
+  if (companyMatch) {
+    // No portal-owned company route; recruiter membership lands on the members page.
+    return portal === "rec" ? { to: "/rec/members" } : null;
+  }
+
+  return null;
 }
