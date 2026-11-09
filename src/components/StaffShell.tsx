@@ -18,7 +18,8 @@ import {
 } from "@/components/icons";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ShieldCheck } from "lucide-react";
+import { Bell, ShieldCheck } from "lucide-react";
+import { NotificationBell } from "./notifications/NotificationBell";
 import { LogoutButton } from "./LogoutButton";
 import { StaffAccount } from "./admin/StaffAccount";
 import { publicPortalHref } from "@/lib/portal";
@@ -37,6 +38,7 @@ const NAVIGATION = [
   { to: "/staff/reports", label: "Báo cáo vi phạm", icon: ViolationReportIcon },
   { to: "/staff/accounts", label: "Quản lý tài khoản", icon: CandidateProfileIcon },
   { to: "/staff/audit-logs", label: "Lịch sử hoạt động của tôi", icon: SubmissionHistoryIcon },
+  { to: "/staff/notifications", label: "Thông báo", icon: Bell },
 ];
 
 export function StaffShell({
@@ -179,6 +181,7 @@ export function StaffShell({
           </div>
           <div className="flex items-center gap-3">
             {topNavExtras}
+            <NotificationBell viewAllTo="/staff/notifications" />
             <StaffAccount />
             <LogoutButton />
           </div>

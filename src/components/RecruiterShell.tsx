@@ -23,11 +23,12 @@ import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
 import { useWorkspaceLayout } from "@/context/WorkspaceLayoutContext";
 import { WorkspaceFooter } from "./WorkspaceFooter";
 import { WorkspaceBrand } from "./WorkspaceChrome";
+import { NotificationBell } from "./notifications/NotificationBell";
 import { LogoutButton } from "./LogoutButton";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useContext, useEffect, useState, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ShieldCheck } from "lucide-react";
+import { Bell, ShieldCheck } from "lucide-react";
 
 const navigation = [
   { to: "/rec", label: "Tổng quan", icon: RecruitmentOverviewIcon },
@@ -36,6 +37,7 @@ const navigation = [
   { to: "/rec/applications", label: "Đơn ứng tuyển", icon: ApplicationIcon },
   { to: "/rec/members", label: "Thành viên công ty", icon: CompanyMembersIcon },
   { to: "/rec/verification", label: "Hồ sơ công ty", icon: VerificationDossierIcon },
+  { to: "/rec/notifications", label: "Thông báo", icon: Bell },
 ];
 
 export function RecruiterShell(props: {
@@ -142,6 +144,7 @@ function RecruiterShellFrame({
                     "/rec",
                     "/rec/verification",
                     "/rec/account",
+                    "/rec/notifications",
                     ...(stage === "COMPANY_ACTION_REQUIRED" ? ["/rec/members"] : []),
                   ].includes(to);
                 if (locked)
@@ -240,6 +243,7 @@ function RecruiterShellFrame({
                 <span className="hidden sm:inline">Đăng tin tuyển dụng</span>
               </Link>
             )}
+            <NotificationBell viewAllTo="/rec/notifications" />
             <LogoutButton />
           </div>
         </header>
