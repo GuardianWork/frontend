@@ -20,7 +20,6 @@ import { Route as ComplianceRouteImport } from './routes/compliance'
 import { Route as CopilotRouteImport } from './routes/copilot'
 import { Route as JobsRouteImport } from './routes/jobs'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RecRouteImport } from './routes/rec'
 import { Route as RecruitRouteImport } from './routes/recruit'
@@ -54,6 +53,7 @@ import { Route as RecApplicationsRouteImport } from './routes/rec/applications'
 import { Route as RecHubRouteImport } from './routes/rec/hub'
 import { Route as RecJobsRouteImport } from './routes/rec/jobs'
 import { Route as RecMembersRouteImport } from './routes/rec/members'
+import { Route as RecNotificationsRouteImport } from './routes/rec/notifications'
 import { Route as RecProfileRouteImport } from './routes/rec/profile'
 import { Route as RecTalentRouteImport } from './routes/rec/talent'
 import { Route as RecVerificationRouteImport } from './routes/rec/verification'
@@ -65,6 +65,7 @@ import { Route as StaffCandidatesRouteImport } from './routes/staff/candidates'
 import { Route as StaffComplianceRouteImport } from './routes/staff/compliance'
 import { Route as StaffJobsRouteImport } from './routes/staff/jobs'
 import { Route as StaffMonitoringRouteImport } from './routes/staff/monitoring'
+import { Route as StaffNotificationsRouteImport } from './routes/staff/notifications'
 import { Route as StaffReportsRouteImport } from './routes/staff/reports'
 import { Route as StaffTasksRouteImport } from './routes/staff/tasks'
 import { Route as StaffVerificationsRouteImport } from './routes/staff/verifications'
@@ -124,11 +125,6 @@ const JobsRoute = JobsRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const NotificationsRoute = NotificationsRouteImport.update({
-  id: '/notifications',
-  path: '/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -296,6 +292,11 @@ const RecMembersRoute = RecMembersRouteImport.update({
   path: '/members',
   getParentRoute: () => RecRoute,
 } as any)
+const RecNotificationsRoute = RecNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => RecRoute,
+} as any)
 const RecProfileRoute = RecProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -351,6 +352,11 @@ const StaffMonitoringRoute = StaffMonitoringRouteImport.update({
   path: '/staff/monitoring',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StaffNotificationsRoute = StaffNotificationsRouteImport.update({
+  id: '/staff/notifications',
+  path: '/staff/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StaffReportsRoute = StaffReportsRouteImport.update({
   id: '/staff/reports',
   path: '/staff/reports',
@@ -390,7 +396,6 @@ export interface FileRoutesByFullPath {
   '/copilot': typeof CopilotRoute
   '/jobs': typeof JobsRoute
   '/login': typeof LoginRoute
-  '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/rec': typeof RecRouteWithChildren
   '/recruit': typeof RecruitRoute
@@ -421,6 +426,7 @@ export interface FileRoutesByFullPath {
   '/rec/hub': typeof RecHubRoute
   '/rec/jobs': typeof RecJobsRoute
   '/rec/members': typeof RecMembersRoute
+  '/rec/notifications': typeof RecNotificationsRoute
   '/rec/profile': typeof RecProfileRoute
   '/rec/talent': typeof RecTalentRoute
   '/rec/verification': typeof RecVerificationRoute
@@ -431,6 +437,7 @@ export interface FileRoutesByFullPath {
   '/staff/compliance': typeof StaffComplianceRoute
   '/staff/jobs': typeof StaffJobsRoute
   '/staff/monitoring': typeof StaffMonitoringRoute
+  '/staff/notifications': typeof StaffNotificationsRoute
   '/staff/reports': typeof StaffReportsRoute
   '/staff/tasks': typeof StaffTasksRoute
   '/staff/verifications': typeof StaffVerificationsRoute
@@ -452,7 +459,6 @@ export interface FileRoutesByTo {
   '/copilot': typeof CopilotRoute
   '/jobs': typeof JobsRoute
   '/login': typeof LoginRoute
-  '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/recruit': typeof RecruitRoute
   '/register': typeof RegisterRoute
@@ -482,6 +488,7 @@ export interface FileRoutesByTo {
   '/rec/hub': typeof RecHubRoute
   '/rec/jobs': typeof RecJobsRoute
   '/rec/members': typeof RecMembersRoute
+  '/rec/notifications': typeof RecNotificationsRoute
   '/rec/profile': typeof RecProfileRoute
   '/rec/talent': typeof RecTalentRoute
   '/rec/verification': typeof RecVerificationRoute
@@ -492,6 +499,7 @@ export interface FileRoutesByTo {
   '/staff/compliance': typeof StaffComplianceRoute
   '/staff/jobs': typeof StaffJobsRoute
   '/staff/monitoring': typeof StaffMonitoringRoute
+  '/staff/notifications': typeof StaffNotificationsRoute
   '/staff/reports': typeof StaffReportsRoute
   '/staff/tasks': typeof StaffTasksRoute
   '/staff/verifications': typeof StaffVerificationsRoute
@@ -515,7 +523,6 @@ export interface FileRoutesById {
   '/copilot': typeof CopilotRoute
   '/jobs': typeof JobsRoute
   '/login': typeof LoginRoute
-  '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/rec': typeof RecRouteWithChildren
   '/recruit': typeof RecruitRoute
@@ -546,6 +553,7 @@ export interface FileRoutesById {
   '/rec/hub': typeof RecHubRoute
   '/rec/jobs': typeof RecJobsRoute
   '/rec/members': typeof RecMembersRoute
+  '/rec/notifications': typeof RecNotificationsRoute
   '/rec/profile': typeof RecProfileRoute
   '/rec/talent': typeof RecTalentRoute
   '/rec/verification': typeof RecVerificationRoute
@@ -556,6 +564,7 @@ export interface FileRoutesById {
   '/staff/compliance': typeof StaffComplianceRoute
   '/staff/jobs': typeof StaffJobsRoute
   '/staff/monitoring': typeof StaffMonitoringRoute
+  '/staff/notifications': typeof StaffNotificationsRoute
   '/staff/reports': typeof StaffReportsRoute
   '/staff/tasks': typeof StaffTasksRoute
   '/staff/verifications': typeof StaffVerificationsRoute
@@ -580,7 +589,6 @@ export interface FileRouteTypes {
     | '/copilot'
     | '/jobs'
     | '/login'
-    | '/notifications'
     | '/profile'
     | '/rec'
     | '/recruit'
@@ -611,6 +619,7 @@ export interface FileRouteTypes {
     | '/rec/hub'
     | '/rec/jobs'
     | '/rec/members'
+    | '/rec/notifications'
     | '/rec/profile'
     | '/rec/talent'
     | '/rec/verification'
@@ -621,6 +630,7 @@ export interface FileRouteTypes {
     | '/staff/compliance'
     | '/staff/jobs'
     | '/staff/monitoring'
+    | '/staff/notifications'
     | '/staff/reports'
     | '/staff/tasks'
     | '/staff/verifications'
@@ -642,7 +652,6 @@ export interface FileRouteTypes {
     | '/copilot'
     | '/jobs'
     | '/login'
-    | '/notifications'
     | '/profile'
     | '/recruit'
     | '/register'
@@ -672,6 +681,7 @@ export interface FileRouteTypes {
     | '/rec/hub'
     | '/rec/jobs'
     | '/rec/members'
+    | '/rec/notifications'
     | '/rec/profile'
     | '/rec/talent'
     | '/rec/verification'
@@ -682,6 +692,7 @@ export interface FileRouteTypes {
     | '/staff/compliance'
     | '/staff/jobs'
     | '/staff/monitoring'
+    | '/staff/notifications'
     | '/staff/reports'
     | '/staff/tasks'
     | '/staff/verifications'
@@ -704,7 +715,6 @@ export interface FileRouteTypes {
     | '/copilot'
     | '/jobs'
     | '/login'
-    | '/notifications'
     | '/profile'
     | '/rec'
     | '/recruit'
@@ -735,6 +745,7 @@ export interface FileRouteTypes {
     | '/rec/hub'
     | '/rec/jobs'
     | '/rec/members'
+    | '/rec/notifications'
     | '/rec/profile'
     | '/rec/talent'
     | '/rec/verification'
@@ -745,6 +756,7 @@ export interface FileRouteTypes {
     | '/staff/compliance'
     | '/staff/jobs'
     | '/staff/monitoring'
+    | '/staff/notifications'
     | '/staff/reports'
     | '/staff/tasks'
     | '/staff/verifications'
@@ -768,7 +780,6 @@ export interface RootRouteChildren {
   CopilotRoute: typeof CopilotRoute
   JobsRoute: typeof JobsRoute
   LoginRoute: typeof LoginRoute
-  NotificationsRoute: typeof NotificationsRoute
   ProfileRoute: typeof ProfileRoute
   RecRoute: typeof RecRouteWithChildren
   RecruitRoute: typeof RecruitRoute
@@ -793,6 +804,7 @@ export interface RootRouteChildren {
   StaffComplianceRoute: typeof StaffComplianceRoute
   StaffJobsRoute: typeof StaffJobsRoute
   StaffMonitoringRoute: typeof StaffMonitoringRoute
+  StaffNotificationsRoute: typeof StaffNotificationsRoute
   StaffReportsRoute: typeof StaffReportsRoute
   StaffTasksRoute: typeof StaffTasksRoute
   StaffVerificationsRoute: typeof StaffVerificationsRoute
@@ -877,13 +889,6 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/notifications': {
-      id: '/notifications'
-      path: '/notifications'
-      fullPath: '/notifications'
-      preLoaderRoute: typeof NotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -1117,6 +1122,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RecMembersRouteImport
       parentRoute: typeof RecRoute
     }
+    '/rec/notifications': {
+      id: '/rec/notifications'
+      path: '/notifications'
+      fullPath: '/rec/notifications'
+      preLoaderRoute: typeof RecNotificationsRouteImport
+      parentRoute: typeof RecRoute
+    }
     '/rec/profile': {
       id: '/rec/profile'
       path: '/profile'
@@ -1194,6 +1206,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StaffMonitoringRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/staff/notifications': {
+      id: '/staff/notifications'
+      path: '/staff/notifications'
+      fullPath: '/staff/notifications'
+      preLoaderRoute: typeof StaffNotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/staff/reports': {
       id: '/staff/reports'
       path: '/staff/reports'
@@ -1266,6 +1285,7 @@ interface RecRouteChildren {
   RecHubRoute: typeof RecHubRoute
   RecJobsRoute: typeof RecJobsRoute
   RecMembersRoute: typeof RecMembersRoute
+  RecNotificationsRoute: typeof RecNotificationsRoute
   RecProfileRoute: typeof RecProfileRoute
   RecTalentRoute: typeof RecTalentRoute
   RecVerificationRoute: typeof RecVerificationRoute
@@ -1279,6 +1299,7 @@ const RecRouteChildren: RecRouteChildren = {
   RecHubRoute: RecHubRoute,
   RecJobsRoute: RecJobsRoute,
   RecMembersRoute: RecMembersRoute,
+  RecNotificationsRoute: RecNotificationsRoute,
   RecProfileRoute: RecProfileRoute,
   RecTalentRoute: RecTalentRoute,
   RecVerificationRoute: RecVerificationRoute,
@@ -1301,7 +1322,6 @@ const rootRouteChildren: RootRouteChildren = {
   CopilotRoute: CopilotRoute,
   JobsRoute: JobsRoute,
   LoginRoute: LoginRoute,
-  NotificationsRoute: NotificationsRoute,
   ProfileRoute: ProfileRoute,
   RecRoute: RecRouteWithChildren,
   RecruitRoute: RecruitRoute,
@@ -1326,6 +1346,7 @@ const rootRouteChildren: RootRouteChildren = {
   StaffComplianceRoute: StaffComplianceRoute,
   StaffJobsRoute: StaffJobsRoute,
   StaffMonitoringRoute: StaffMonitoringRoute,
+  StaffNotificationsRoute: StaffNotificationsRoute,
   StaffReportsRoute: StaffReportsRoute,
   StaffTasksRoute: StaffTasksRoute,
   StaffVerificationsRoute: StaffVerificationsRoute,
