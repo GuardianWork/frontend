@@ -214,6 +214,46 @@ export async function hideStaffJob(review: StaffJobReview, reason: string) {
   return result;
 }
 
+export async function restoreStaffJob(review: StaffJobReview, reason: string) {
+  const trimmed = reason.trim();
+  if (Array.from(trimmed).length < 1 || Array.from(trimmed).length > 1000)
+    throw new ApiError("Lý do cần từ 1 đến 1.000 ký tự.", 400);
+  const result = (await authenticatedRequest(`/staff/jobs/${review.jobId}/restore`, {
+    method: "PUT",
+    cache: "no-store",
+    body: JSON.stringify({ expectedJobVersion: review.jobVersion, reason: trimmed }),
+  })) as { jobId: number; publicationStatus: JobStatus; jobVersion: number } | null;
+  if (
+    !result ||
+    result.jobId !== review.jobId ||
+    result.publicationStatus !== "PUBLISHED" ||
+    !version(result.jobVersion)
+  )
+    throw invalidResponse();
+  return result;
+}
+
+/** Public 404s are ambiguous. Only Staff history can identify a suspended posting.
+ * History is advisory; the version-checked restore endpoint enforces eligibility. */
+export async function inspectStaffJobPublication(
+  jobId: number,
+): Promise<StaffJobPublication | null> {
+  const publication = await getStaffJobPublication(jobId);
+  if (publication) return publication;
+  for (let page = 0; ; page++) {
+    const history = await getPostingHistory(jobId, page);
+    const latest = history.content.find((event) => event.status != null);
+    if (latest) {
+      // A historical PUBLISHED event cannot override today's public 404.
+      const status = latest.status;
+      return status && ["DRAFT", "PAUSED", "SUSPENDED", "CLOSED", "EXPIRED"].includes(status)
+        ? { id: jobId, content: {}, publicationStatus: status }
+        : null;
+    }
+    if (history.last || page + 1 >= history.totalPages) return null;
+  }
+}
+
 export interface StaffJobPublication {
   id: number;
   content: JobContent;
@@ -249,6 +289,8 @@ export function postingError(error: unknown): string {
     if (error.status === 400) return "Thông tin chưa hợp lệ. Nhập lý do từ 1 đến 1.000 ký tự.";
     if (error.status === 401) return "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
     if (error.status === 403) return "Bạn không có quyền thực hiện thao tác này.";
+    if (error.status === 409 && error.message.includes("40978"))
+      return "Tin không đủ điều kiện thực hiện. Kiểm tra trạng thái tin, hạn ứng tuyển đã duyệt và trạng thái công ty trước khi thử lại.";
     if (error.status === 409)
       return "Tin đã thay đổi. Lý do được giữ lại. Kiểm tra trạng thái mới và xác nhận lại.";
   }

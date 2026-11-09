@@ -184,3 +184,64 @@ test("posting history remains separate from revisions and retains server paginat
   assert.equal(result.last, true);
   assert.equal(result.content[0].actorUserId, null);
 });
+
+test("restore sends the inspected version and validates the publication receipt", async () => {
+  const { restoreStaffJob } = await import("./staffJobs.ts");
+  let data = { jobId: 83, publicationStatus: "PUBLISHED", jobVersion: 6 };
+  globalThis.fetch = async (url, init) => {
+    assert.equal(url, "/api/staff/jobs/83/restore");
+    assert.equal(init.method, "PUT");
+    assert.equal(init.headers.Authorization, "Bearer staff-access");
+    assert.deepEqual(JSON.parse(init.body), { expectedJobVersion: 5, reason: "😀".repeat(1000) });
+    return Response.json({ data });
+  };
+  const reason = `  ${"😀".repeat(1000)}  `;
+  assert.equal((await restoreStaffJob(review, reason)).publicationStatus, "PUBLISHED");
+  for (const invalid of [
+    null,
+    {},
+    { ...data, jobId: 84 },
+    { ...data, publicationStatus: "SUSPENDED" },
+    { ...data, jobVersion: -1 },
+  ]) {
+    data = invalid;
+    await assert.rejects(restoreStaffJob(review, reason), /không hợp lệ/);
+  }
+  globalThis.fetch = async () => {
+    throw new Error("must not send invalid reason");
+  };
+  await assert.rejects(restoreStaffJob(review, "  "), { status: 400 });
+  await assert.rejects(restoreStaffJob(review, "😀".repeat(1001)), { status: 400 });
+});
+
+test("private posting inspection skips non-status events and never treats a 404 alone as suspension", async () => {
+  const { inspectStaffJobPublication } = await import("./staffJobs.ts");
+  let eventStatus = "SUSPENDED";
+  globalThis.fetch = async (url) => {
+    if (url === "/api/jobs/83") return Response.json({ message: "Not found" }, { status: 404 });
+    const page = new URL(url, "http://localhost").searchParams.get("page");
+    return Response.json({
+      data: {
+        content: [
+          {
+            createdAt: "2026-11-01T00:00:00Z",
+            actorUserId: 4,
+            eventType: page === "0" ? "REVISION_REJECTED" : "JOB_SUSPENDED",
+            status: page === "0" ? null : eventStatus,
+          },
+        ],
+        pageNumber: Number(page),
+        pageSize: 20,
+        totalElements: 21,
+        totalPages: 2,
+        first: page === "0",
+        last: page === "1",
+      },
+    });
+  };
+  assert.equal((await inspectStaffJobPublication(83)).publicationStatus, "SUSPENDED");
+  eventStatus = "PAUSED";
+  assert.equal((await inspectStaffJobPublication(83)).publicationStatus, "PAUSED");
+  eventStatus = "PUBLISHED";
+  assert.equal(await inspectStaffJobPublication(83), null);
+});

@@ -99,6 +99,17 @@ export async function staffJobApi(page: Page) {
       state.detailLoads++;
       return json(review);
     }
+    if (url.pathname === "/api/staff/jobs/83/history") {
+      return json({
+        content: [],
+        pageNumber: 0,
+        pageSize: 20,
+        totalElements: 0,
+        totalPages: 0,
+        first: true,
+        last: true,
+      });
+    }
     if (url.pathname === "/api/staff/jobs/83/revisions") {
       state.historyLoads++;
       if (state.failHistory)

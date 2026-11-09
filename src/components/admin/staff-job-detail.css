@@ -330,3 +330,21 @@
     margin-left: auto;
   }
 }
+
+@media (min-width: 1024px) {
+  body[data-portal="staff"] main .staff-job-heading-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    color: var(--color-ink-2);
+    font-size: 13px;
+  }
+  body[data-portal="staff"] main .staff-job-detail > .staff-detail-notice {
+    margin-block: 12px 20px;
+  }
+  body[data-portal="staff"] main .staff-publication-receipt[data-status="PUBLISHED"] {
+    color: var(--status-success-ink);
+    background: var(--status-success-ground);
+  }
+}
