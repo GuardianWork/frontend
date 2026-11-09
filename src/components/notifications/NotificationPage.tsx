@@ -1,15 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { ArrowDownWideNarrow, Bell, Check, CheckCheck } from "lucide-react";
 import { useNotifications } from "@/context/NotificationContext";
 import {
+  resolveNotificationPath,
   sortNewestFirst,
   type Notification,
   type NotificationCategory,
+  type NotificationPortal,
 } from "@/services/notifications";
 import { NotificationCategoryIcon } from "./NotificationCategoryIcon";
+import { navigateToPath } from "./notification-navigation";
 import "./notification.css";
 
-type TabKey = "all" | "unread" | "read";
+function portalFromPathname(pathname: string): NotificationPortal {
+  if (pathname.startsWith("/rec")) return "rec";
+  if (pathname.startsWith("/staff")) return "staff";
+  return "can";
+}
 
 const CATEGORY_LABELS: Record<NotificationCategory, string> = {
   job: "Việc làm",
@@ -69,36 +77,47 @@ function groupItems(items: Notification[]): Array<{ label: GroupLabel; items: No
 }
 
 export function NotificationPage() {
-  const { notifications, unreadCount, isLoading, error, markRead, markAllRead, retry } =
-    useNotifications();
-  const [activeTab, setActiveTab] = useState<TabKey>("all");
+  const {
+    notifications,
+    unreadCount,
+    allCount,
+    readCount,
+    isLoading,
+    error,
+    markAllRead,
+    openNotification,
+    activeTab,
+    setActiveTab,
+    hasMore,
+    loadMore,
+    retry,
+  } = useNotifications();
+  const navigate = useNavigate();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const portal = portalFromPathname(pathname);
   const [focusTarget, setFocusTarget] = useState<string | null>(null);
 
-  // A notification feed reads newest-first; keep the provider order untouched.
+  // The provider already returns the server-filtered view for the active tab;
+  // only newest-first ordering is applied here. Keep provider order untouched
+  // by sorting a copy.
   const sorted = sortNewestFirst(notifications);
-  const filtered =
-    activeTab === "all"
-      ? sorted
-      : activeTab === "unread"
-        ? sorted.filter((n) => !n.read)
-        : sorted.filter((n) => n.read);
+  const filtered = sorted;
 
   const groups = useMemo(() => groupItems(filtered), [filtered]);
 
-  const readCount = notifications.filter((n) => n.read).length;
   const hasUnread = unreadCount > 0;
 
-  const tabLabel: Record<TabKey, string> = {
+  const tabLabel: Record<typeof activeTab, string> = {
     all: "Tất cả",
     unread: "Chưa xem",
     read: "Đã xem",
   };
-  const tabCount: Record<TabKey, number> = {
-    all: notifications.length,
+  const tabCount: Record<typeof activeTab, number> = {
+    all: allCount,
     unread: unreadCount,
     read: readCount,
   };
-  const tabs: TabKey[] = ["all", "unread", "read"];
+  const tabs = ["all", "unread", "read"] as const;
 
   // Read rows are static, so hand keyboard focus to the next unread row (or the
   // active tab when the list empties) instead of dropping it on <body>.
@@ -108,11 +127,17 @@ export function NotificationPage() {
     setFocusTarget(null);
   }, [focusTarget]);
 
-  function handleMarkRead(id: string) {
-    const index = filtered.findIndex((n) => n.id === id);
+  async function handleOpen(item: Notification) {
+    const index = filtered.findIndex((entry) => entry.id === item.id);
     const next = [...filtered.slice(index + 1), ...filtered.slice(0, index)].find((n) => !n.read);
-    markRead(id);
     setFocusTarget(next ? `notif-item-${next.id}` : `notif-tab-${activeTab}`);
+    try {
+      const detail = await openNotification(item.id);
+      const path = resolveNotificationPath(detail, portal);
+      if (path) navigateToPath(path, navigate);
+    } catch {
+      // The provider records the error; stay on the inbox so the user can retry.
+    }
   }
 
   function renderItem(n: Notification) {
@@ -148,19 +173,26 @@ export function NotificationPage() {
       </>
     );
 
+    // Unread rows open their detail (mark + navigate). Read rows stay static
+    // unless they have a resolvable destination, in which case they open it
+    // without re-marking.
+    const path = resolveNotificationPath(n, portal);
+    const clickable = !n.read || path !== null;
     return (
       <li key={n.id}>
-        {n.read ? (
-          <div className="notif-item">{content}</div>
-        ) : (
+        {clickable ? (
           <button
             type="button"
             id={`notif-item-${n.id}`}
-            className="notif-item notif-item--unread"
-            onClick={() => handleMarkRead(n.id)}
+            className={`notif-item${n.read ? "" : " notif-item--unread"}`}
+            onClick={() => {
+              void handleOpen(n);
+            }}
           >
             {content}
           </button>
+        ) : (
+          <div className="notif-item">{content}</div>
         )}
       </li>
     );
@@ -290,6 +322,19 @@ export function NotificationPage() {
                       </section>
                     ))}
                   </div>
+                  {hasMore && (
+                    <div className="notif-load-more">
+                      <button
+                        type="button"
+                        className="workspace-header-action"
+                        onClick={() => {
+                          void loadMore();
+                        }}
+                      >
+                        Xem thêm
+                      </button>
+                    </div>
+                  )}
                 </>
               ) : (
                 <div className="notif-empty" role="status" aria-live="polite">

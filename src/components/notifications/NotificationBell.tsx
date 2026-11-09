@@ -1,9 +1,15 @@
-import { useState, useRef, useEffect } from "react";
-import { Link } from "@tanstack/react-router";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { ArrowRight, Bell } from "lucide-react";
 import { useNotifications } from "@/context/NotificationContext";
-import { sortNewestFirst } from "@/services/notifications";
+import {
+  listNotifications,
+  resolveNotificationPath,
+  type Notification,
+  type NotificationPortal,
+} from "@/services/notifications";
 import { NotificationCategoryIcon } from "./NotificationCategoryIcon";
+import { navigateToPath } from "./notification-navigation";
 import "./notification.css";
 
 function relativeTime(iso: string): string {
@@ -19,9 +25,27 @@ function relativeTime(iso: string): string {
   return `${months} tháng trước`;
 }
 
-export function NotificationBell() {
-  const { notifications, unreadCount, markRead, markAllRead } = useNotifications();
+function portalFromPathname(pathname: string): NotificationPortal {
+  if (pathname.startsWith("/rec")) return "rec";
+  if (pathname.startsWith("/staff")) return "staff";
+  return "can";
+}
+
+export type NotificationInboxPath =
+  "/can/notifications" | "/rec/notifications" | "/staff/notifications";
+
+export function NotificationBell({
+  viewAllTo = "/can/notifications",
+}: {
+  viewAllTo?: NotificationInboxPath;
+}) {
+  const { unreadCount, allCount, openNotification, audience } = useNotifications();
+  const navigate = useNavigate();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const portal = portalFromPathname(pathname);
   const [open, setOpen] = useState(false);
+  const [preview, setPreview] = useState<Notification[]>([]);
+  const [previewLoading, setPreviewLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Close on outside click / Escape
@@ -43,7 +67,42 @@ export function NotificationBell() {
     };
   }, [open]);
 
-  const preview = sortNewestFirst(notifications).slice(0, 5);
+  // The bell preview is the newest unfiltered page for the current portal's
+  // audience, fetched on open so it stays correct regardless of which tab
+  // filter the inbox page last used.
+  const fetchPreview = useCallback(async () => {
+    setPreviewLoading(true);
+    try {
+      const page = await listNotifications({ page: 0, size: 5, audience });
+      setPreview(page.items);
+    } catch {
+      // Keep the previous preview; the badge still reflects unread-count.
+    } finally {
+      setPreviewLoading(false);
+    }
+  }, [audience]);
+
+  useEffect(() => {
+    if (open) void fetchPreview();
+  }, [open, fetchPreview]);
+
+  async function handleOpen(item: Notification) {
+    try {
+      const detail = await openNotification(item.id);
+      setPreview((prev) => prev.map((entry) => (entry.id === detail.id ? detail : entry)));
+      const path = resolveNotificationPath(detail, portal);
+      if (path) {
+        navigateToPath(path, navigate);
+        setOpen(false);
+      } else {
+        // Informational-only: mark read and confirm the new preview state.
+        setPreview((prev) => prev.map((entry) => (entry.id === detail.id ? detail : entry)));
+        setOpen(false);
+      }
+    } catch {
+      // Stay in the dropdown so the user can retry.
+    }
+  }
 
   return (
     <div className="notif-bell" ref={containerRef}>
@@ -79,7 +138,7 @@ export function NotificationBell() {
               {unreadCount > 0 && <span className="notif-dropdown__count">{unreadCount}</span>}
             </h2>
             <Link
-              to="/can/notifications"
+              to={viewAllTo}
               className="notif-dropdown__view-all"
               onClick={() => setOpen(false)}
             >
@@ -88,7 +147,9 @@ export function NotificationBell() {
           </div>
 
           {/* List */}
-          {preview.length > 0 ? (
+          {previewLoading && preview.length === 0 ? (
+            <p className="notif-dropdown__empty">Đang tải…</p>
+          ) : preview.length > 0 ? (
             <ul className="notif-dropdown__list" role="list">
               {preview.map((n) => (
                 <li key={n.id}>
@@ -96,8 +157,7 @@ export function NotificationBell() {
                     type="button"
                     className={`notif-dropdown__item${n.read ? "" : " notif-dropdown__item--unread"}`}
                     onClick={() => {
-                      markRead(n.id);
-                      setOpen(false);
+                      void handleOpen(n);
                     }}
                   >
                     <span className="notif-dropdown__icon">
@@ -117,14 +177,14 @@ export function NotificationBell() {
           )}
 
           {/* Footer */}
-          {notifications.length > 0 && (
+          {allCount > 0 && (
             <div className="notif-dropdown__footer">
               <Link
-                to="/can/notifications"
+                to={viewAllTo}
                 className="notif-dropdown__footer-link"
                 onClick={() => setOpen(false)}
               >
-                Xem tất cả {notifications.length} thông báo
+                Xem tất cả {allCount} thông báo
                 <ArrowRight size={14} aria-hidden="true" />
               </Link>
             </div>

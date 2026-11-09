@@ -1,4 +1,4 @@
-/* Notification page — GuardianWork candidate workspace.
+/* Notification page — shared GuardianWork workspace.
    Blue stays scoped to workspace main content: unread rows reuse the shared blue wash
    instead of introducing a second semantic hue, and category glyphs come from the
    app's icon family rather than emoji. */
@@ -392,6 +392,13 @@
   color: var(--color-ink-2);
   font-size: 14px;
   line-height: 1.6;
+}
+
+/* ─── Load more ─── */
+.notif-load-more {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0 16px;
 }
 
 @media (max-width: 640px) {

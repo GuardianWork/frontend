@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { NotificationPage } from "@/components/candidate/NotificationPage";
+import { NotificationPage } from "@/components/notifications/NotificationPage";
 
 export const Route = createFileRoute("/can/notifications")({
   head: () => ({

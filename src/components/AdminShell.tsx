@@ -19,7 +19,7 @@ import {
 } from "@/components/icons";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { BriefcaseBusiness, ChevronDown, X, ShieldCheck, Bell as BellIcon } from "lucide-react";
-import { NotificationBell } from "./candidate/NotificationBell";
+import { NotificationBell } from "./notifications/NotificationBell";
 import { useContext, useEffect, useState, type ReactNode } from "react";
 import { useNotifications } from "@/context/NotificationContext";
 import { StaffShell } from "./StaffShell";
