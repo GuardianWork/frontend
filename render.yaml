@@ -1,6 +1,5 @@
 # Render Blueprint for GuardianWork frontend portals.
 # Creates two Node web services: public portal and staff portal.
-# Creates two Node web services: public portal and staff portal.
 # Each service builds its own TanStack Start/Nitro output and runs the Node server.
 
 services:
@@ -17,8 +16,10 @@ services:
         value: "22"
       - key: NITRO_PRESET
         value: node-server
+      # Set in Render Dashboard to your backend URL (e.g. https://api.example.com).
+      # Leave unset to use same-origin /api (requires a reverse proxy to the backend).
       - key: VITE_API_BASE_URL
-        value: /api
+        sync: false
       - key: VITE_PUBLIC_PORTAL_URL
         sync: false
       - key: VITE_STAFF_PORTAL_URL
@@ -38,7 +39,7 @@ services:
       - key: NITRO_PRESET
         value: node-server
       - key: VITE_API_BASE_URL
-        value: /api
+        sync: false
       - key: VITE_PUBLIC_PORTAL_URL
         sync: false
       - key: VITE_STAFF_PORTAL_URL
