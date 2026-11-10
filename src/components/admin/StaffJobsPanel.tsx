@@ -12,6 +12,8 @@ import { reviewJobContent } from "@/lib/job-legal-review";
 import { useTableSort } from "@/hooks/useTableSort";
 import { StaffDetailNotice } from "./StaffDetailNotice";
 import { StaffJobPublicationControls } from "./StaffJobPublicationControls";
+import { StaffJobPostingStatus, StaffJobPostingStatusBadge } from "./StaffJobPostingStatus";
+import { useStaffJobPublication } from "@/hooks/useStaffJobPublication";
 import { sortDate } from "@/lib/table-sort";
 import { SortableHeader } from "./SortableHeader";
 import {
@@ -128,7 +130,10 @@ export function StaffJobsPanel() {
           <button
             className="admin-secondary-action"
             disabled={list.isFetching}
-            onClick={() => void list.refetch()}
+            onClick={() => {
+              void list.refetch();
+              void cache.invalidateQueries({ queryKey: ["staff-job-publication", scope] });
+            }}
           >
             <RotateCw size={16} aria-hidden="true" /> Tải lại
           </button>
@@ -174,7 +179,8 @@ export function StaffJobsPanel() {
               <thead>
                 <tr>
                   <SortableHeader label="Tin tuyển dụng" column="title" {...queueSort} />
-                  <SortableHeader label="Trạng thái" column="state" {...queueSort} />
+                  <th scope="col">Trạng thái đăng tin</th>
+                  <SortableHeader label="Xét duyệt phiên bản" column="state" {...queueSort} />
                   <SortableHeader label="Điều kiện duyệt" column="eligibility" {...queueSort} />
                   <SortableHeader label="Ngày gửi" column="submittedAt" {...queueSort} />
                   <th scope="col">
@@ -193,6 +199,9 @@ export function StaffJobsPanel() {
                         Công ty #{review.companyId} · Tin #{review.jobId} · Phiên bản{" "}
                         {review.revisionNumber} · #{review.id}
                       </span>
+                    </td>
+                    <td>
+                      <StaffJobPostingStatus scope={scope} jobId={review.jobId} />
                     </td>
                     <td>
                       <StaffStatusBadge tone={tone(review.state)} icon>
@@ -270,6 +279,7 @@ function StaffJobDetail({
     gcTime: 0,
   });
   const review = detail.data;
+  const publication = useStaffJobPublication(scope, review?.jobId);
   const legalFindings = review ? reviewJobContent(review.content) : [];
   const history = useQuery({
     queryKey: ["staff-job-history", scope, review?.jobId, historyPage],
@@ -298,6 +308,7 @@ function StaffJobDetail({
       setOutcome(null);
     }
     void history.refetch();
+    void publication.refetch();
     void cache.invalidateQueries({ queryKey: ["staff-job-reviews", scope] });
   }
   async function decide() {
@@ -316,6 +327,7 @@ function StaffJobDetail({
       if (refreshed.isSuccess) setMustReload(false);
       await cache.invalidateQueries({ queryKey: ["staff-job-history", scope, review.jobId] });
       await cache.invalidateQueries({ queryKey: ["staff-job-reviews", scope] });
+      await cache.invalidateQueries({ queryKey: ["staff-job-publication", scope, review.jobId] });
     } catch (caught) {
       setError(caught);
       setMustReload(true);
@@ -364,10 +376,11 @@ function StaffJobDetail({
                 <p>
                   Tin #{review.jobId} · Công ty #{review.companyId} · Phiên bản{" "}
                   {review.revisionNumber}
-                  {review.publicationStatus && (
-                    <> · {staffJobStatusLabels[review.publicationStatus]}</>
-                  )}
                 </p>
+                <div className="staff-job-heading-status">
+                  <span>Trạng thái đăng tin</span>
+                  <StaffJobPostingStatusBadge publication={publication} />
+                </div>
               </div>
               <button
                 className="admin-secondary-action"
@@ -377,6 +390,16 @@ function StaffJobDetail({
                 <RotateCw size={16} aria-hidden="true" /> Tải lại bản tin
               </button>
             </div>
+            {!publication.isError &&
+              !publication.isFetching &&
+              publication.data?.publicationStatus === "SUSPENDED" && (
+                <StaffDetailNotice title="Tin tuyển dụng đã bị đình chỉ" tone="danger">
+                  <p>
+                    Tin không hiển thị cho ứng viên. Kết quả xét duyệt phiên bản được giữ nguyên;
+                    chỉ thao tác khôi phục tin đủ điều kiện mới đăng lại tin công khai.
+                  </p>
+                </StaffDetailNotice>
+              )}
             <div className="compliance-detail-layout staff-job-review-layout">
               <div className="staff-job-review-content">
                 <section
@@ -597,7 +620,7 @@ function StaffJobDetail({
                       </StaffStatusBadge>
                     </li>
                     <li>
-                      <span>Trạng thái đình chỉ</span>
+                      <span>Đình chỉ công ty</span>
                       <StaffStatusBadge tone={review.companySuspended ? "rejected" : "verified"}>
                         {review.companySuspended ? "Đang bị đình chỉ" : "Không bị đình chỉ"}
                       </StaffStatusBadge>

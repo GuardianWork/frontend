@@ -1,17 +1,18 @@
 import { useRef, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ShieldOff } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useStaffJobPublication } from "@/hooks/useStaffJobPublication";
+import { ShieldCheck, ShieldOff } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
-import { staffJobStatusLabels } from "@/lib/staff-job-copy";
 import {
-  getStaffJobPublication,
+  inspectStaffJobPublication,
+  restoreStaffJob,
   getStaffJobReview,
   hideStaffJob,
   postingError,
   type StaffJobPublication,
   type StaffJobReview,
 } from "@/services/staffJobs";
-import { StaffStatusBadge } from "./StaffStatusBadge";
+import { StaffJobPostingStatusBadge } from "./StaffJobPostingStatus";
 
 export function StaffJobPublicationControls({
   review,
@@ -26,14 +27,7 @@ export function StaffJobPublicationControls({
 }) {
   const cache = useQueryClient();
   const key = ["staff-job-publication", scope, review.jobId];
-  const publication = useQuery({
-    queryKey: key,
-    queryFn: () => getStaffJobPublication(review.jobId),
-    retry: false,
-    staleTime: 0,
-    gcTime: 0,
-    refetchOnWindowFocus: false,
-  });
+  const publication = useStaffJobPublication(scope, review.jobId);
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
@@ -41,11 +35,15 @@ export function StaffJobPublicationControls({
   const [error, setError] = useState<unknown>(null);
   const [confirmed, setConfirmed] = useState<StaffJobReview | null>(null);
   const [live, setLive] = useState<StaffJobPublication | null>(null);
-  const [suspended, setSuspended] = useState(false);
+  const [receipt, setReceipt] = useState<"SUSPENDED" | "PUBLISHED" | null>(null);
+  const [restoring, setRestoring] = useState(false);
+  const actionLabel = restoring ? "Khôi phục tin tuyển dụng" : "Đình chỉ tin tuyển dụng";
+  const reasonLabel = restoring ? "Lý do khôi phục" : "Lý do đình chỉ";
+  const confirmLabel = restoring ? "Xác nhận khôi phục" : "Xác nhận đình chỉ";
   const count = Array.from(reason.trim()).length;
   const eligible =
     confirmed &&
-    live?.publicationStatus === "PUBLISHED" &&
+    live?.publicationStatus === (restoring ? "SUSPENDED" : "PUBLISHED") &&
     confirmed.companyVerified &&
     !confirmed.companySuspended;
 
@@ -54,8 +52,10 @@ export function StaffJobPublicationControls({
     setBusy(value);
     onBusyChange(value);
   }
-  async function inspect() {
+  async function inspect(restore = restoring) {
     if (pending.current || disabled) return;
+    setReceipt(null);
+    setRestoring(restore);
     working(true);
     setOpen(true);
     setError(null);
@@ -64,7 +64,7 @@ export function StaffJobPublicationControls({
     try {
       const [fresh, current] = await Promise.all([
         getStaffJobReview(review.id),
-        getStaffJobPublication(review.jobId),
+        inspectStaffJobPublication(review.jobId),
       ]);
       setConfirmed(fresh);
       setLive(current);
@@ -76,12 +76,12 @@ export function StaffJobPublicationControls({
       working(false);
     }
   }
-  async function suspend() {
+  async function changePublication() {
     if (pending.current || disabled || !confirmed || !eligible || count < 1 || count > 1000) return;
     working(true);
     setError(null);
     try {
-      const result = await hideStaffJob(confirmed, reason);
+      const result = await (restoring ? restoreStaffJob : hideStaffJob)(confirmed, reason);
       cache.setQueriesData<StaffJobReview>({ queryKey: ["staff-job-review", scope] }, (existing) =>
         existing?.jobId === review.jobId
           ? {
@@ -98,7 +98,8 @@ export function StaffJobPublicationControls({
             String(q.queryKey[0]),
           ),
       });
-      setSuspended(true);
+      setReceipt(restoring ? "PUBLISHED" : "SUSPENDED");
+      void cache.invalidateQueries({ queryKey: key });
       setOpen(false);
       setReason("");
       void cache.invalidateQueries({ queryKey: ["staff-job-reviews", scope] });
@@ -117,9 +118,11 @@ export function StaffJobPublicationControls({
   return (
     <section className="staff-publication-controls" aria-labelledby="staff-publication-title">
       <h2 id="staff-publication-title">Trạng thái đăng tin</h2>
-      {suspended && (
-        <p role="status" className="staff-publication-receipt">
-          Đã đình chỉ tin tuyển dụng. Tin không còn hiển thị công khai.
+      {receipt && (
+        <p role="status" className="staff-publication-receipt" data-status={receipt}>
+          {receipt === "PUBLISHED"
+            ? "Đã khôi phục tin tuyển dụng. Tin đã hiển thị công khai trở lại."
+            : "Đã đình chỉ tin tuyển dụng. Tin không còn hiển thị công khai."}
         </p>
       )}
       {publication.isFetching ? (
@@ -137,25 +140,14 @@ export function StaffJobPublicationControls({
         </div>
       ) : (
         <>
-          <StaffStatusBadge
-            tone={
-              status === "PUBLISHED" ? "verified" : status === "SUSPENDED" ? "rejected" : "neutral"
-            }
-            icon
-          >
-            {status === "PUBLISHED"
-              ? "Đang công khai"
-              : status === "SUSPENDED"
-                ? "Đã đình chỉ"
-                : status
-                  ? staffJobStatusLabels[status]
-                  : "Không có tin công khai"}
-          </StaffStatusBadge>
+          <StaffJobPostingStatusBadge publication={publication} />
+          {!status && <p>Không có tin công khai. Chưa xác định được trạng thái đăng tin.</p>}
           {status === "PUBLISHED" && (
             <>
-              {publication.data?.content.title !== review.content.title && (
-                <p>Tin đang công khai: {publication.data?.content.title}</p>
-              )}
+              {publication.data?.content.title &&
+                publication.data.content.title !== review.content.title && (
+                  <p>Tin đang công khai: {publication.data?.content.title}</p>
+                )}
               <p>
                 Đình chỉ sẽ dừng hiển thị công khai của tin #{review.jobId}, không thay đổi kết quả
                 xét duyệt phiên bản.
@@ -163,9 +155,24 @@ export function StaffJobPublicationControls({
               <button
                 className="admin-secondary-action job-reject-action"
                 disabled={disabled || busy}
-                onClick={() => void inspect()}
+                onClick={() => void inspect(false)}
               >
                 <ShieldOff size={16} aria-hidden="true" /> Đình chỉ tin tuyển dụng
+              </button>
+            </>
+          )}
+          {status === "SUSPENDED" && (
+            <>
+              <p>
+                Khôi phục sẽ đăng lại bản tin đã duyệt nếu hạn ứng tuyển còn hiệu lực và công ty đủ
+                điều kiện. Các hạn chế độc lập vẫn được hệ thống kiểm tra.
+              </p>
+              <button
+                className="admin-secondary-action"
+                disabled={disabled || busy}
+                onClick={() => void inspect(true)}
+              >
+                <ShieldCheck size={16} aria-hidden="true" /> Khôi phục tin tuyển dụng
               </button>
             </>
           )}
@@ -184,18 +191,20 @@ export function StaffJobPublicationControls({
             if (busy) event.preventDefault();
           }}
         >
-          <DialogTitle>Đình chỉ tin tuyển dụng</DialogTitle>
+          <DialogTitle>{actionLabel}</DialogTitle>
           <DialogDescription>
-            Tin #{review.jobId} sẽ không còn hiển thị công khai. Ghi rõ lý do trước khi xác nhận.
+            {restoring
+              ? `Tin #${review.jobId} sẽ hiển thị công khai trở lại nếu đủ điều kiện. Xác nhận vấn đề gây đình chỉ đã được giải quyết bằng lý do khôi phục.`
+              : `Tin #${review.jobId} sẽ không còn hiển thị công khai. Ghi rõ lý do trước khi xác nhận.`}
           </DialogDescription>
           {live?.content.title && <p className="staff-suspend-target">{live.content.title}</p>}
           <form
             onSubmit={(event) => {
               event.preventDefault();
-              void suspend();
+              void changePublication();
             }}
           >
-            <label htmlFor="staff-suspend-reason">Lý do đình chỉ</label>
+            <label htmlFor="staff-suspend-reason">{reasonLabel}</label>
             <textarea
               id="staff-suspend-reason"
               rows={4}
@@ -210,7 +219,11 @@ export function StaffJobPublicationControls({
             </p>
             {busy && (
               <p role="status">
-                {confirmed ? "Đang đình chỉ tin…" : "Đang kiểm tra tin mới nhất…"}
+                {confirmed
+                  ? restoring
+                    ? "Đang khôi phục tin…"
+                    : "Đang đình chỉ tin…"
+                  : "Đang kiểm tra tin mới nhất…"}
               </p>
             )}
             {Boolean(error) && (
@@ -220,8 +233,9 @@ export function StaffJobPublicationControls({
             )}
             {confirmed && !eligible && (
               <p role="status">
-                Tin hiện không đủ điều kiện đình chỉ. Chỉ tin đang công khai của công ty đã xác
-                minh, không bị đình chỉ mới có thể xử lý.
+                {restoring
+                  ? "Tin hiện không đủ điều kiện khôi phục. Chỉ tin bị đình chỉ của công ty đã xác minh, không bị đình chỉ mới có thể xử lý."
+                  : "Tin hiện không đủ điều kiện đình chỉ. Chỉ tin đang công khai của công ty đã xác minh, không bị đình chỉ mới có thể xử lý."}
               </p>
             )}
             <div className="admin-dialog-actions">
@@ -244,10 +258,14 @@ export function StaffJobPublicationControls({
               ) : (
                 <button
                   type="submit"
-                  className="admin-primary-action staff-suspend-confirm"
+                  className={
+                    restoring
+                      ? "admin-primary-action"
+                      : "admin-primary-action staff-suspend-confirm"
+                  }
                   disabled={busy || disabled || !eligible || count < 1 || count > 1000}
                 >
-                  Xác nhận đình chỉ
+                  {confirmLabel}
                 </button>
               )}
             </div>

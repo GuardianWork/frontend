@@ -14,6 +14,7 @@ export const staffPostingEventLabels: Record<string, string> = {
   JOB_PAUSED: "Đã tạm dừng tuyển dụng",
   JOB_RESUMED: "Đã tiếp tục tuyển dụng",
   JOB_SUSPENDED: "Đã ẩn tin tuyển dụng",
+  JOB_RESTORED: "Đã khôi phục tin tuyển dụng",
   JOB_CLOSED: "Đã đóng tin tuyển dụng",
   JOB_EXPIRED: "Tin tuyển dụng đã hết hạn",
 };
