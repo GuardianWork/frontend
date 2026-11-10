@@ -225,12 +225,14 @@ function RecruiterShellFrame({
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-2 md:gap-5">
+            <NotificationBell viewAllTo="/rec/notifications" />
             <Link
               to="/vn"
               className="hidden items-center gap-1.5 rounded-lg border border-warm-border bg-surface-container px-3 py-1.5 text-xs font-semibold hover:bg-surface-container-high xl:flex"
             >
               <GlobeIcon size={14} className="text-primary" aria-hidden="true" /> Trang chủ
             </Link>
+
             {recruitingEnabled && topNavExtras}
             {recruitingEnabled && (
               <Link
@@ -243,7 +245,6 @@ function RecruiterShellFrame({
                 <span className="hidden sm:inline">Đăng tin tuyển dụng</span>
               </Link>
             )}
-            <NotificationBell viewAllTo="/rec/notifications" />
             <LogoutButton />
           </div>
         </header>

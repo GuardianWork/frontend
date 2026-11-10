@@ -20,6 +20,8 @@
  *   - Mark-all is a single PATCH, not one request per item.
  *   - A 30 s poll uses `sinceId` to fetch only items newer than the newest seen.
  */
+
+/* eslint-disable react-refresh/only-export-components */
 import {
   createContext,
   useCallback,
