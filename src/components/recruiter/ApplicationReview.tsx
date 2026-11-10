@@ -230,7 +230,10 @@ export function ApplicationReview({
     <DropdownMenu
       open={menuOpen}
       onOpenChange={(open) => {
-        if (!lock.current) setMenuOpen(open);
+        if (!lock.current) {
+          if (open && mode === "menu") setError(undefined);
+          setMenuOpen(open);
+        }
       }}
     >
       <DropdownMenuTrigger asChild>

@@ -549,3 +549,35 @@ test("interview progression and confirmed hiring retain evidence and end process
   });
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
 });
+
+test("background polling keeps the inbox and open status menu mounted", async ({ page }) => {
+  await page.clock.install();
+  await setup(page, true);
+  const trigger = page.getByRole("button", { name: "Cập nhật trạng thái của Nguyễn Thị Mai" });
+  await trigger.click();
+  await expect(page.getByRole("menuitem", { name: "Đang xem xét", exact: true })).toBeVisible();
+  let release = () => {};
+  const held = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let arrived = () => {};
+  const requested = new Promise<void>((resolve) => {
+    arrived = resolve;
+  });
+  await page.route("**/api/companies/me/applications?**", async (route) => {
+    arrived();
+    await held;
+    await route.fallback();
+  });
+  try {
+    await page.clock.fastForward(10_100);
+    await requested;
+    await expect(
+      page.locator(".application-candidate").filter({ hasText: "Nguyễn Thị Mai" }),
+    ).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "Đang xem xét", exact: true })).toBeVisible();
+    await expect(page.getByText("Đang tải đơn ứng tuyển…", { exact: true })).toHaveCount(0);
+  } finally {
+    release();
+  }
+});

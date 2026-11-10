@@ -107,10 +107,8 @@ function Applications({
     if ([401, 403, 404].includes(status) || !allowed)
       client.removeQueries({ queryKey: ["recruiter-applications"], type: "inactive" });
   }, [status, allowed, client]);
-  const data =
-    !result.isError && !result.isFetching && !waiting && !invalid && allowed
-      ? result.data
-      : undefined;
+  // Keep rows and their menus mounted during background polls; hide them on access errors.
+  const data = !result.isError && !waiting && !invalid && allowed ? result.data : undefined;
   useEffect(() => {
     if (data && pageFocus.current) {
       heading.current?.focus();
