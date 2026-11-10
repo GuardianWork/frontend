@@ -14,7 +14,9 @@ test("candidate tracks applications under My jobs, filters, searches and opens a
     "Tất cả (11)",
     "Đã ứng tuyển (4)",
     "Đang xem xét (3)",
-    "Hồ sơ qua vòng (1)",
+    "Hồ sơ tiềm năng (1)",
+    "Phỏng vấn (0)",
+    "Đã tuyển (0)",
     "Đã từ chối (2)",
     "Đã rút (1)",
   ]);
@@ -64,7 +66,9 @@ test("candidate tracks applications under My jobs, filters, searches and opens a
     "Tất cả (1)",
     "Đã ứng tuyển (0)",
     "Đang xem xét (1)",
-    "Hồ sơ qua vòng (0)",
+    "Hồ sơ tiềm năng (0)",
+    "Phỏng vấn (0)",
+    "Đã tuyển (0)",
     "Đã từ chối (0)",
     "Đã rút (0)",
   ]);
@@ -98,6 +102,8 @@ test("candidate tracks applications under My jobs, filters, searches and opens a
     "Submitted (4)",
     "Under review (3)",
     "Shortlisted (1)",
+    "Interviewing (0)",
+    "Hired (0)",
     "Rejected (2)",
     "Withdrawn (1)",
   ]);

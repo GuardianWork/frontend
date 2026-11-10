@@ -41,3 +41,6 @@ playwright-report/
 .env
 .env.*
 !.env.example
+
+# Generated design review captures
+.impeccable/review/

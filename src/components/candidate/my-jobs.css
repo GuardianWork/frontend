@@ -808,3 +808,31 @@
     animation: none;
   }
 }
+
+.candidate-my-jobs .application-card__receipt {
+  flex-wrap: wrap;
+}
+.candidate-application-progress {
+  flex-basis: 100%;
+  border-top: 1px solid var(--border, #e4e2e0);
+  padding-top: 20px;
+}
+.candidate-application-progress h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.candidate-application-progress ol {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.candidate-application-progress time {
+  margin-left: 16px;
+  color: #595959;
+  font-variant-numeric: tabular-nums;
+}
+.candidate-application-progress p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

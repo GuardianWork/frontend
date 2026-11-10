@@ -29,6 +29,8 @@ const TONES: Record<ApplicationStatus, string> = {
   SUBMITTED: "info",
   UNDER_REVIEW: "warning",
   SHORTLISTED: "success",
+  INTERVIEWING: "info",
+  HIRED: "success",
   REJECTED: "danger",
   WITHDRAWN: "neutral",
 };
@@ -167,6 +169,8 @@ export function ApplicationReview({
     staleTime: 0,
     refetchOnWindowFocus: "always",
   });
+  const [hiring, setHiring] = useState(false);
+  const [hiringConfirmed, setHiringConfirmed] = useState(false);
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState<RejectionReason | "">("");
   const [explanation, setExplanation] = useState("");
@@ -182,7 +186,8 @@ export function ApplicationReview({
   const blocked = error instanceof ApiError && [401, 403, 404, 409].includes(error.status);
   const concealed = error instanceof ApiError && [401, 403, 404, 409].includes(error.status);
   const detail = !query.isError && !query.isFetching && !concealed ? query.data : undefined;
-  const terminal = detail && ["REJECTED", "WITHDRAWN"].includes(detail.status);
+  const terminal = detail && ["HIRED", "REJECTED", "WITHDRAWN"].includes(detail.status);
+  const privateEvidence = detail && ["REJECTED", "WITHDRAWN"].includes(detail.status);
   const overLimit =
     Array.from(explanation.trim()).length > 1000 || Array.from(feedback.trim()).length > 1000;
   const rejectValid = reason && (reason !== "OTHER" || explanation.trim()) && !overLimit;
@@ -196,6 +201,8 @@ export function ApplicationReview({
       await client.cancelQueries({ queryKey: key });
       const updated = await changeApplicationStatus(jobId, id, change);
       client.setQueryData(key, updated);
+      setHiring(false);
+      setHiringConfirmed(false);
       setRejecting(false);
       setMenuOpen(false);
       setExplanation("");
@@ -296,9 +303,34 @@ export function ApplicationReview({
                       {STATUS_LABELS.SHORTLISTED}
                     </DropdownMenuItem>
                   )}
-                  {["SUBMITTED", "UNDER_REVIEW"].includes(detail.status) && (
-                    <DropdownMenuSeparator className="application-menu-divider" />
+                  {["UNDER_REVIEW", "SHORTLISTED"].includes(detail.status) && (
+                    <DropdownMenuItem
+                      disabled={busy || blocked}
+                      onSelect={(event) => {
+                        event.preventDefault();
+                        void save({ status: "INTERVIEWING", version: detail.version });
+                      }}
+                    >
+                      <ApplicationStatusIcon status="INTERVIEWING" size={18} />
+                      Phỏng vấn
+                    </DropdownMenuItem>
                   )}
+                  {["UNDER_REVIEW", "SHORTLISTED", "INTERVIEWING"].includes(detail.status) && (
+                    <DropdownMenuItem
+                      disabled={busy || blocked}
+                      onSelect={() => {
+                        setError(undefined);
+                        setHiringConfirmed(false);
+                        setHiring(true);
+                      }}
+                    >
+                      <ApplicationStatusIcon status="HIRED" size={18} />
+                      Nhận việc…
+                    </DropdownMenuItem>
+                  )}
+                  {["SUBMITTED", "UNDER_REVIEW", "SHORTLISTED", "INTERVIEWING"].includes(
+                    detail.status,
+                  ) && <DropdownMenuSeparator className="application-menu-divider" />}
                   <DropdownMenuItem
                     className="application-menu-reject"
                     disabled={busy || blocked}
@@ -393,7 +425,19 @@ export function ApplicationReview({
                     Ứng tuyển lúc {applicationDate(detail.appliedAt)}
                   </p>
                 </div>
-                {terminal ? (
+                {detail.status === "INTERVIEWING" && (
+                  <p className="application-notice">
+                    Hồ sơ đã chuyển sang vòng phỏng vấn. Liên hệ với ứng viên để trao đổi chi tiết
+                    ngoài GuardianWork.
+                  </p>
+                )}
+                {detail.status === "HIRED" && (
+                  <p className="application-notice">
+                    Đã xác nhận tuyển dụng. Đây là trạng thái cuối cùng; thông tin đã gửi vẫn khả
+                    dụng khi bạn còn quyền truy cập.
+                  </p>
+                )}
+                {privateEvidence ? (
                   <p className="application-terminal">
                     {detail.status === "WITHDRAWN"
                       ? "Ứng viên đã rút đơn."
@@ -475,6 +519,61 @@ export function ApplicationReview({
           </div>
         </article>
       )}
+      <Dialog
+        open={hiring}
+        onOpenChange={(open) => {
+          if (!lock.current) setHiring(open);
+        }}
+      >
+        <DialogContent
+          className="application-rejection-dialog"
+          hideClose={busy}
+          onEscapeKeyDown={(event) => {
+            if (busy) event.preventDefault();
+          }}
+          onInteractOutside={(event) => {
+            if (busy) event.preventDefault();
+          }}
+          onCloseAutoFocus={(event) => {
+            if (menuTrigger.current?.isConnected) {
+              event.preventDefault();
+              menuTrigger.current.focus();
+            }
+          }}
+        >
+          <DialogTitle>Nhận việc</DialogTitle>
+          <DialogDescription>
+            Ghi nhận {candidateName ?? detail?.candidateName} đã đồng ý gia nhập sau khi trao đổi
+            ngoài GuardianWork. Quyết định này là cuối cùng: không thể từ chối, rút đơn hoặc thay
+            đổi trạng thái sau đó.
+          </DialogDescription>
+          <label className="application-hiring-confirmation">
+            <input
+              type="checkbox"
+              checked={hiringConfirmed}
+              disabled={busy}
+              onChange={(event) => setHiringConfirmed(event.target.checked)}
+            />
+            <span>Tôi xác nhận ứng viên đã đồng ý gia nhập doanh nghiệp.</span>
+          </label>
+          {Boolean(error) && <p role="alert">{errorMessage(error)}</p>}
+          <div className="application-dialog-actions">
+            <button className="jp-button" disabled={busy} onClick={() => setHiring(false)}>
+              Hủy
+            </button>
+            <button
+              className="jp-button jp-button--primary"
+              disabled={busy || !hiringConfirmed || !detail || blocked}
+              onClick={() => {
+                if (detail && hiringConfirmed)
+                  void save({ status: "HIRED", version: detail.version, hiringConfirmed: true });
+              }}
+            >
+              {busy ? "Đang xác nhận…" : "Xác nhận đã tuyển"}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
       <Dialog
         open={rejecting}
         onOpenChange={(open) => {

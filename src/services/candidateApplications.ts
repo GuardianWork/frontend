@@ -102,6 +102,8 @@ export const CANDIDATE_APPLICATION_STATUSES = [
   "SUBMITTED",
   "UNDER_REVIEW",
   "SHORTLISTED",
+  "INTERVIEWING",
+  "HIRED",
   "REJECTED",
   "WITHDRAWN",
 ] as const;
@@ -248,6 +250,8 @@ export interface CandidateApplicationCounts {
   submitted: number;
   underReview: number;
   shortlisted: number;
+  interviewing: number;
+  hired: number;
   rejected: number;
   withdrawn: number;
 }
@@ -258,7 +262,7 @@ export interface CandidateApplicationCountOptions {
 }
 
 /**
- * The list endpoint returns one total per filtered request. Four size-one reads
+ * The list endpoint returns one total per filtered request. Eight size-one reads
  * give the status tabs exact counts without downloading the application rows again.
  */
 export async function listApplicationCounts(
@@ -266,19 +270,24 @@ export async function listApplicationCounts(
 ): Promise<CandidateApplicationCounts> {
   const search = options.search ?? "";
   const signal = options.signal;
-  const [all, submitted, underReview, shortlisted, rejected, withdrawn] = await Promise.all([
-    listApplicationPage({ search, size: 1, signal }),
-    listApplicationPage({ search, size: 1, status: "SUBMITTED", signal }),
-    listApplicationPage({ search, size: 1, status: "UNDER_REVIEW", signal }),
-    listApplicationPage({ search, size: 1, status: "SHORTLISTED", signal }),
-    listApplicationPage({ search, size: 1, status: "REJECTED", signal }),
-    listApplicationPage({ search, size: 1, status: "WITHDRAWN", signal }),
-  ]);
+  const [all, submitted, underReview, shortlisted, interviewing, hired, rejected, withdrawn] =
+    await Promise.all([
+      listApplicationPage({ search, size: 1, signal }),
+      listApplicationPage({ search, size: 1, status: "SUBMITTED", signal }),
+      listApplicationPage({ search, size: 1, status: "UNDER_REVIEW", signal }),
+      listApplicationPage({ search, size: 1, status: "SHORTLISTED", signal }),
+      listApplicationPage({ search, size: 1, status: "INTERVIEWING", signal }),
+      listApplicationPage({ search, size: 1, status: "HIRED", signal }),
+      listApplicationPage({ search, size: 1, status: "REJECTED", signal }),
+      listApplicationPage({ search, size: 1, status: "WITHDRAWN", signal }),
+    ]);
   return {
     all: all.totalElements,
     submitted: submitted.totalElements,
     underReview: underReview.totalElements,
     shortlisted: shortlisted.totalElements,
+    interviewing: interviewing.totalElements,
+    hired: hired.totalElements,
     rejected: rejected.totalElements,
     withdrawn: withdrawn.totalElements,
   };
@@ -301,4 +310,70 @@ export async function submitApplication(
     body: JSON.stringify(payload),
   });
   return parseSubmittedApplication(data);
+}
+
+export interface CandidateApplicationHistory {
+  toStatus: string;
+  occurredAt: string;
+  candidateFeedback?: string | null;
+}
+export interface CandidateApplicationDetail {
+  id: string;
+  status: string;
+  version: number;
+  history: CandidateApplicationHistory[];
+}
+function parseCandidateDetail(value: unknown): CandidateApplicationDetail {
+  const detail = value as CandidateApplicationDetail | null;
+  if (
+    !detail ||
+    typeof detail.id !== "string" ||
+    !CANDIDATE_APPLICATION_STATUSES.some((status) => status === detail.status) ||
+    !Number.isSafeInteger(detail.version) ||
+    detail.version < 0 ||
+    !Array.isArray(detail.history) ||
+    !detail.history.every(
+      (event) =>
+        event &&
+        CANDIDATE_APPLICATION_STATUSES.some((status) => status === event.toStatus) &&
+        typeof event.occurredAt === "string" &&
+        Number.isFinite(Date.parse(event.occurredAt)) &&
+        (event.candidateFeedback == null || typeof event.candidateFeedback === "string"),
+    )
+  ) {
+    throw new ApiError("Phản hồi đơn ứng tuyển không hợp lệ. Vui lòng thử lại.", 500);
+  }
+  return {
+    id: detail.id,
+    status: detail.status,
+    version: detail.version,
+    history: detail.history.map((event) => ({
+      toStatus: event.toStatus,
+      occurredAt: event.occurredAt,
+      candidateFeedback: event.candidateFeedback,
+    })),
+  };
+}
+export async function getCandidateApplication(
+  id: string,
+  signal?: AbortSignal,
+): Promise<CandidateApplicationDetail> {
+  return parseCandidateDetail(
+    await authenticatedRequest(`/candidate/applications/${encodeURIComponent(id)}`, {
+      signal,
+      cache: "no-store",
+    }),
+  );
+}
+export async function withdrawApplication(
+  id: string,
+  version: number,
+): Promise<CandidateApplicationDetail> {
+  return parseCandidateDetail(
+    await authenticatedRequest(`/candidate/applications/${encodeURIComponent(id)}/withdraw`, {
+      method: "POST",
+      body: JSON.stringify({ version }),
+      cache: "no-store",
+    }),
+  );
 }

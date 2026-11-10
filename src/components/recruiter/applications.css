@@ -575,3 +575,18 @@
 .application-review--page .application-pdf {
   height: 700px;
 }
+
+.application-hiring-confirmation {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  line-height: 1.5;
+  cursor: pointer;
+}
+.application-hiring-confirmation input {
+  margin-top: 4px;
+  width: 18px;
+  height: 18px;
+  accent-color: #2557a7;
+  flex-shrink: 0;
+}

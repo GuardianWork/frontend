@@ -6,11 +6,13 @@ export const APPLICATION_STATUSES = [
   "SUBMITTED",
   "UNDER_REVIEW",
   "SHORTLISTED",
+  "INTERVIEWING",
+  "HIRED",
   "REJECTED",
   "WITHDRAWN",
 ] as const;
 export type ApplicationStatus = (typeof APPLICATION_STATUSES)[number];
-export type ReviewStatus = "UNDER_REVIEW" | "SHORTLISTED" | "REJECTED";
+export type ReviewStatus = "UNDER_REVIEW" | "SHORTLISTED" | "INTERVIEWING" | "REJECTED";
 export type RejectionReason =
   "QUALIFICATIONS_MISMATCH" | "EXPERIENCE_MISMATCH" | "POSITION_FILLED" | "OTHER";
 export interface RecruiterApplication {
@@ -223,6 +225,7 @@ export async function getRecruiterApplication(
   return parseDetail(data);
 }
 export type StatusChange =
+  | { status: "HIRED"; version: number; hiringConfirmed: true }
   | { status: Exclude<ReviewStatus, "REJECTED">; version: number }
   | {
       status: "REJECTED";

@@ -298,6 +298,8 @@ test("listApplicationCounts returns one exact total per status from size-one rea
       SUBMITTED: 5,
       UNDER_REVIEW: 4,
       SHORTLISTED: 3,
+      INTERVIEWING: 2,
+      HIRED: 1,
       REJECTED: 2,
       WITHDRAWN: 1,
     };
@@ -329,12 +331,23 @@ test("listApplicationCounts returns one exact total per status from size-one rea
       submitted: 5,
       underReview: 4,
       shortlisted: 3,
+      interviewing: 2,
+      hired: 1,
       rejected: 2,
       withdrawn: 1,
     });
     assert.deepEqual(
       new Set(seenStatuses),
-      new Set(["", "SUBMITTED", "UNDER_REVIEW", "SHORTLISTED", "REJECTED", "WITHDRAWN"]),
+      new Set([
+        "",
+        "SUBMITTED",
+        "UNDER_REVIEW",
+        "SHORTLISTED",
+        "INTERVIEWING",
+        "HIRED",
+        "REJECTED",
+        "WITHDRAWN",
+      ]),
     );
   } finally {
     globalThis.fetch = originalFetch;
