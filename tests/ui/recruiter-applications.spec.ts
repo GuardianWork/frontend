@@ -283,7 +283,7 @@ test("rejects with private reason and separate candidate feedback, then removes 
   });
   await expect(page.getByText("mai@example.test", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Xem CV PDF" })).toHaveCount(0);
-  await expect(page.getByText("Không thể thay đổi trạng thái.", { exact: false })).toBeVisible();
+  await expect(page.locator(".application-terminal")).toBeVisible();
   await expect(page.getByText("Lý do riêng của doanh nghiệp", { exact: false })).toBeVisible();
   await page.locator(".application-review-body").evaluate((element) => {
     element.scrollTop = element.scrollHeight;
@@ -514,7 +514,7 @@ test("interview progression and confirmed hiring retain evidence and end process
   await page.getByRole("menuitem", { name: "Đang xem xét", exact: true }).click();
   await trigger.click();
   await page.getByRole("menuitem", { name: "Phỏng vấn", exact: true }).click();
-  await expect(page.locator(".application-notice").last()).toContainText("ngoài GuardianWork");
+  await expect(page.getByRole("status")).toContainText("Đã cập nhật: Phỏng vấn.");
   await trigger.click();
   await page.getByRole("menuitem", { name: "Nhận việc…" }).click();
   const dialog = page.getByRole("dialog");

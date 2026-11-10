@@ -3,6 +3,7 @@ import { test } from "node:test";
 import { ApiError } from "./api.ts";
 import { AUTH_SESSION_KEY } from "./auth.ts";
 import {
+  getCandidateApplication,
   listApplicationCounts,
   listApplications,
   listApplicationPage,
@@ -260,7 +261,7 @@ test("listApplicationPage sends search, status and paging to the candidate endpo
       const parsed = new URL(String(url), "http://localhost");
       assert.equal(parsed.pathname, "/api/candidate/applications");
       assert.equal(parsed.searchParams.get("search"), "ky su");
-      assert.equal(parsed.searchParams.get("status"), "UNDER_REVIEW");
+      assert.equal(parsed.searchParams.get("status"), "INTERVIEWING");
       assert.equal(parsed.searchParams.get("page"), "2");
       assert.equal(parsed.searchParams.get("size"), "10");
       return Response.json({
@@ -276,7 +277,7 @@ test("listApplicationPage sends search, status and paging to the candidate endpo
     };
     const page = await listApplicationPage({
       search: "  ky su  ",
-      status: "UNDER_REVIEW",
+      status: "INTERVIEWING",
       page: 2,
       size: 10,
     });
@@ -329,8 +330,7 @@ test("listApplicationCounts returns one exact total per status from size-one rea
     assert.deepEqual(counts, {
       all: 11,
       submitted: 5,
-      underReview: 4,
-      shortlisted: 3,
+      underReview: 7,
       interviewing: 2,
       hired: 1,
       rejected: 2,
@@ -380,4 +380,132 @@ test("parseApplicationPage rejects an invalid page envelope", () => {
     () => parseApplicationPage({ content: "not-an-array" }),
     (error) => error instanceof ApiError && /không hợp lệ/.test(error.message),
   );
+});
+
+test("candidate review filter merges internal stages before paging", async () => {
+  globalThis.localStorage = session();
+  try {
+    const records = [
+      {
+        ...sampleApplication,
+        id: "new-shortlist",
+        status: "SHORTLISTED",
+        appliedAt: "2026-11-04T00:00:00Z",
+      },
+      {
+        ...sampleApplication,
+        id: "new-review",
+        status: "UNDER_REVIEW",
+        appliedAt: "2026-11-03T00:00:00Z",
+      },
+      {
+        ...sampleApplication,
+        id: "old-shortlist",
+        status: "SHORTLISTED",
+        appliedAt: "2026-11-02T00:00:00Z",
+      },
+      {
+        ...sampleApplication,
+        id: "old-review",
+        status: "UNDER_REVIEW",
+        appliedAt: "2026-11-01T00:00:00Z",
+      },
+    ];
+    for (const paginated of [false, true]) {
+      globalThis.fetch = async (url) => {
+        const params = new URL(String(url), "http://localhost").searchParams;
+        const rows = records.filter((row) => row.status === params.get("status"));
+        const page = Number(params.get("page"));
+        const size = Number(params.get("size"));
+        return Response.json({
+          status: 200,
+          data: paginated
+            ? {
+                content: rows.slice(page * size, (page + 1) * size),
+                pageNumber: page,
+                pageSize: size,
+                totalElements: rows.length,
+                totalPages: Math.ceil(rows.length / size),
+              }
+            : rows,
+        });
+      };
+      const first = await listApplicationPage({ status: "UNDER_REVIEW", size: 1 });
+      const third = await listApplicationPage({ status: "UNDER_REVIEW", size: 1, page: 2 });
+      assert.equal(first.items[0].id, "new-shortlist");
+      assert.equal(third.items[0].id, "old-shortlist");
+      assert.equal(third.items[0].status, "UNDER_REVIEW");
+      assert.equal(third.totalElements, 4);
+      assert.equal(third.totalPages, 4);
+    }
+  } finally {
+    globalThis.fetch = originalFetch;
+    delete globalThis.localStorage;
+  }
+});
+
+test("candidate detail conceals shortlist and collapses its duplicate review history", async () => {
+  globalThis.localStorage = session();
+  try {
+    globalThis.fetch = async () =>
+      Response.json({
+        status: 200,
+        data: {
+          id: "private-shortlist",
+          status: "SHORTLISTED",
+          version: 7,
+          history: [
+            { toStatus: "SUBMITTED", occurredAt: "2026-11-01T00:00:00Z" },
+            { toStatus: "UNDER_REVIEW", occurredAt: "2026-11-02T00:00:00Z" },
+            { toStatus: "SHORTLISTED", occurredAt: "2026-11-03T00:00:00Z" },
+          ],
+        },
+      });
+    const detail = await getCandidateApplication("private-shortlist");
+    assert.equal(detail.status, "UNDER_REVIEW");
+    assert.equal(detail.version, 7);
+    assert.deepEqual(
+      detail.history.map((event) => event.toStatus),
+      ["SUBMITTED", "UNDER_REVIEW"],
+    );
+    assert.equal(detail.history[1].occurredAt, "2026-11-02T00:00:00Z");
+  } finally {
+    globalThis.fetch = originalFetch;
+    delete globalThis.localStorage;
+  }
+});
+
+test("merged review paging preserves backend descending ID order for equal submission times", async () => {
+  globalThis.localStorage = session();
+  const records = ["d", "c", "b", "a"].map((id, index) => ({
+    ...sampleApplication,
+    id,
+    status: index % 2 ? "SHORTLISTED" : "UNDER_REVIEW",
+  }));
+  try {
+    globalThis.fetch = async (url) => {
+      const params = new URL(String(url), "http://localhost").searchParams;
+      const rows = records.filter((row) => row.status === params.get("status"));
+      const page = Number(params.get("page"));
+      return Response.json({
+        status: 200,
+        data: {
+          content: rows.slice(page, page + 1),
+          pageNumber: page,
+          pageSize: 1,
+          totalElements: rows.length,
+          totalPages: rows.length,
+        },
+      });
+    };
+    const ids = [];
+    for (let page = 0; page < 4; page++) {
+      const result = await listApplicationPage({ status: "UNDER_REVIEW", page, size: 1 });
+      ids.push(result.items[0].id);
+    }
+    assert.deepEqual(ids, ["d", "c", "b", "a"]);
+  } finally {
+    globalThis.fetch = originalFetch;
+    delete globalThis.localStorage;
+  }
 });

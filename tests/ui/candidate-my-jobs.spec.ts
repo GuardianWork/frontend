@@ -13,8 +13,7 @@ test("candidate tracks applications under My jobs, filters, searches and opens a
   await expect(page.locator('select[aria-label="Lọc theo trạng thái"] option')).toHaveText([
     "Tất cả (11)",
     "Đã ứng tuyển (4)",
-    "Đang xem xét (3)",
-    "Hồ sơ tiềm năng (1)",
+    "Đang xem xét (4)",
     "Phỏng vấn (0)",
     "Đã tuyển (0)",
     "Đã từ chối (2)",
@@ -66,7 +65,6 @@ test("candidate tracks applications under My jobs, filters, searches and opens a
     "Tất cả (1)",
     "Đã ứng tuyển (0)",
     "Đang xem xét (1)",
-    "Hồ sơ tiềm năng (0)",
     "Phỏng vấn (0)",
     "Đã tuyển (0)",
     "Đã từ chối (0)",
@@ -100,8 +98,7 @@ test("candidate tracks applications under My jobs, filters, searches and opens a
   await expect(page.locator('select[aria-label="Filter by status"] option')).toHaveText([
     "All (11)",
     "Submitted (4)",
-    "Under review (3)",
-    "Shortlisted (1)",
+    "Under review (4)",
     "Interviewing (0)",
     "Hired (0)",
     "Rejected (2)",

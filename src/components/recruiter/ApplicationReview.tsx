@@ -435,25 +435,12 @@ export function ApplicationReview({
                     Ứng tuyển lúc {applicationDate(detail.appliedAt)}
                   </p>
                 </div>
-                {detail.status === "INTERVIEWING" && (
-                  <p className="application-notice">
-                    Hồ sơ đã chuyển sang vòng phỏng vấn. Liên hệ với ứng viên để trao đổi chi tiết
-                    ngoài GuardianWork.
-                  </p>
-                )}
-                {detail.status === "HIRED" && (
-                  <p className="application-notice">
-                    Đã xác nhận tuyển dụng. Đây là trạng thái cuối cùng; thông tin đã gửi vẫn khả
-                    dụng khi bạn còn quyền truy cập.
-                  </p>
-                )}
                 {privateEvidence ? (
                   <p className="application-terminal">
                     {detail.status === "WITHDRAWN"
                       ? "Ứng viên đã rút đơn."
                       : "Đơn ứng tuyển đã bị từ chối."}{" "}
-                    Không thể thay đổi trạng thái. Thông tin liên hệ, thư ứng tuyển và CV không còn
-                    khả dụng.
+                    Hồ sơ không còn khả dụng.
                   </p>
                 ) : (
                   <>
