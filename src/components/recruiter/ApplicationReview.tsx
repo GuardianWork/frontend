@@ -4,8 +4,15 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { SuspendedJobError } from "@/services/recruiterJobAccess";
 import { SuspendedJobNotice } from "./RecruiterJobGate";
 import { Link } from "@tanstack/react-router";
-import { Bell, ChevronDown } from "lucide-react";
-import { ApplicationStatusIcon } from "@/components/icons/ApplicationStatusIcon";
+import {
+  Bell,
+  ChevronDown,
+  CircleX,
+  FileSearch,
+  ListChecks,
+  MessagesSquare,
+  UserCheck,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -290,7 +297,7 @@ export function ApplicationReview({
                         void save({ status: "UNDER_REVIEW", version: detail.version });
                       }}
                     >
-                      <ApplicationStatusIcon status="UNDER_REVIEW" size={18} />
+                      <FileSearch size={18} strokeWidth={1.75} aria-hidden="true" />
                       {STATUS_LABELS.UNDER_REVIEW}
                     </DropdownMenuItem>
                   )}
@@ -302,7 +309,7 @@ export function ApplicationReview({
                         void save({ status: "SHORTLISTED", version: detail.version });
                       }}
                     >
-                      <ApplicationStatusIcon status="SHORTLISTED" size={18} />
+                      <ListChecks size={18} strokeWidth={1.75} aria-hidden="true" />
                       {STATUS_LABELS.SHORTLISTED}
                     </DropdownMenuItem>
                   )}
@@ -314,7 +321,7 @@ export function ApplicationReview({
                         void save({ status: "INTERVIEWING", version: detail.version });
                       }}
                     >
-                      <ApplicationStatusIcon status="INTERVIEWING" size={18} />
+                      <MessagesSquare size={18} strokeWidth={1.75} aria-hidden="true" />
                       Phỏng vấn
                     </DropdownMenuItem>
                   )}
@@ -327,7 +334,7 @@ export function ApplicationReview({
                         setHiring(true);
                       }}
                     >
-                      <ApplicationStatusIcon status="HIRED" size={18} />
+                      <UserCheck size={18} strokeWidth={1.75} aria-hidden="true" />
                       Nhận việc…
                     </DropdownMenuItem>
                   )}
@@ -342,7 +349,7 @@ export function ApplicationReview({
                       setRejecting(true);
                     }}
                   >
-                    <ApplicationStatusIcon status="REJECTED" size={18} />
+                    <CircleX size={18} strokeWidth={1.75} aria-hidden="true" />
                     Từ chối
                   </DropdownMenuItem>
                 </>
