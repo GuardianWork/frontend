@@ -2,7 +2,8 @@
  * Notification state, backed by the /api/me/notifications backend.
  * The canonical model and parsers live in `@/services/notifications`;
  * this provider owns React state, loading, error handling, server-side
- * tab filtering, unread counts, and polling.
+ * tab filtering, unread counts, and the polling contract implemented by
+ * `@/services/notification-sync`.
  *
  * Backend contract (docs/backend/notifications.md + GW-SR-NOTIF-01):
  *   GET    /api/me/notifications?page&size&read&category&eventType&sinceId&audience → PageResponse<NotificationResponse>
@@ -18,7 +19,10 @@
  *     instead of filtering one loaded page in the client.
  *   - Badge counts come from unread-count, not from counting loaded items.
  *   - Mark-all is a single PATCH, not one request per item.
- *   - A 30 s poll uses `sinceId` to fetch only items newer than the newest seen.
+ *   - Polling uses an id watermark (`sinceId`) that is tracked per audience and
+ *     per tab-independent view, so a new item is detected no matter which tab
+ *     is open. The delta query carries no `read` filter; the tab filter is
+ *     applied when the result is merged into the visible list.
  */
 
 /* eslint-disable react-refresh/only-export-components */
@@ -33,6 +37,13 @@ import {
   type ReactNode,
 } from "react";
 import { useRouterState } from "@tanstack/react-router";
+import { useAuthUser } from "@/hooks/useAuthUser";
+import {
+  createBroadcastSyncChannel,
+  createNotificationSync,
+  mergeNotificationItems,
+  type SyncFetcher,
+} from "@/services/notification-sync";
 import {
   getNotification,
   getUnreadCount,
@@ -41,13 +52,18 @@ import {
   markAllNotificationsReadApi,
   markNotificationRead,
   markNotificationReadApi,
+  syncNotifications,
   type Notification,
   type NotificationAudience,
   type NotificationPage,
 } from "@/services/notifications";
 
 const INBOX_PAGE_SIZE = 20;
-const POLL_INTERVAL_MS = 30_000;
+/** Poll delay while the user is active; the environment may shorten it for tests. */
+const POLL_INTERVAL_MS = (() => {
+  const configured = Number(import.meta.env?.VITE_NOTIFICATION_POLL_MS);
+  return Number.isFinite(configured) && configured >= 1_000 ? configured : 20_000;
+})();
 
 export type NotificationTab = "all" | "unread" | "read";
 
@@ -62,26 +78,6 @@ function audienceForPathname(pathname: string): NotificationAudience | undefined
   if (pathname.startsWith("/rec")) return "RECRUITER";
   if (pathname.startsWith("/can")) return "CANDIDATE";
   return undefined;
-}
-
-/** Newest numeric inbox id in a list, or null when empty/non-numeric. */
-function newestId(items: readonly Notification[]): number | null {
-  let max: number | null = null;
-  for (const item of items) {
-    const num = Number(item.id);
-    if (Number.isFinite(num) && num >= 0 && (max === null || num > max)) max = num;
-  }
-  return max;
-}
-
-function mergeNewestFirst(
-  existing: readonly Notification[],
-  incoming: readonly Notification[],
-): Notification[] {
-  if (incoming.length === 0) return [...existing];
-  const known = new Set(existing.map((item) => item.id));
-  const fresh = incoming.filter((item) => !known.has(item.id));
-  return [...fresh, ...existing];
 }
 
 type NotifContextType = {
@@ -118,6 +114,8 @@ const NotifContext = createContext<NotifContextType | null>(null);
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const audience = audienceForPathname(pathname);
+  const authUser = useAuthUser();
+  const userId = authUser?.id ?? null;
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [allCount, setAllCount] = useState(0);
@@ -132,21 +130,33 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   // re-subscribing the interval on every render.
   const tabRef = useRef(activeTab);
   tabRef.current = activeTab;
-  const itemsRef = useRef(notifications);
-  itemsRef.current = notifications;
   const loadingRef = useRef(isLoading);
   loadingRef.current = isLoading;
   const audienceRef = useRef(audience);
   audienceRef.current = audience;
+  // Badge counters kept in refs so the poll can compare the server values
+  // against the local state without re-subscribing.
+  const unreadRef = useRef(unreadCount);
+  const allRef = useRef(allCount);
+  // Number of local read mutations in flight; the server counters are ignored
+  // while a mutation runs so an optimistic badge never flickers back.
+  const pendingRef = useRef(0);
 
   const hasMore = pageNumber < totalPages - 1;
 
   const refreshCounts = useCallback(
-    async (aud: NotificationAudience | undefined, signal?: AbortSignal) => {
+    async (
+      aud: NotificationAudience | undefined,
+      signal?: AbortSignal,
+      isCurrent?: () => boolean,
+    ) => {
       const [unread, allPage] = await Promise.all([
         getUnreadCount(aud),
         listNotifications({ page: 0, size: 1, audience: aud, signal }),
       ]);
+      if (isCurrent && !isCurrent()) return;
+      unreadRef.current = unread.unreadCount;
+      allRef.current = allPage.totalElements;
       setUnreadCount(unread.unreadCount);
       setAllCount(allPage.totalElements);
     },
@@ -160,6 +170,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       signal?: AbortSignal,
       append = false,
       aud: NotificationAudience | undefined = undefined,
+      isCurrent?: () => boolean,
     ) => {
       const result: NotificationPage = await listNotifications({
         page,
@@ -168,6 +179,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         audience: aud,
         signal,
       });
+      // A tab or portal switch during the request invalidates the answer.
+      if (isCurrent && !isCurrent()) return;
       setNotifications((prev) =>
         append ? mergeNewestFirst(prev, result.items) : [...result.items],
       );
@@ -178,6 +191,17 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
+    // Without a session there is no inbox to read; the provider starts over
+    // when the user signs in.
+    if (!userId) {
+      setNotifications([]);
+      unreadRef.current = 0;
+      allRef.current = 0;
+      setUnreadCount(0);
+      setAllCount(0);
+      setIsLoading(false);
+      return;
+    }
     const controller = new AbortController();
     let cancelled = false;
     (async () => {
@@ -203,37 +227,82 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       cancelled = true;
       controller.abort();
     };
-  }, [activeTab, audience, reloadNonce, loadView, refreshCounts]);
+  }, [activeTab, audience, reloadNonce, loadView, refreshCounts, userId]);
 
-  // Poll for items newer than the newest seen in the current view. Badge counts
-  // refresh even for tabs that correctly ignore new unread items (the read tab).
+  // Reload the visible view without flipping the loading flag. Used when the
+  // server reports fewer unread rows than the client knows about: an item was
+  // read in another tab or on another device and the id watermark cannot
+  // report that change.
+  const reloadView = useCallback(async () => {
+    const tab = tabRef.current;
+    const aud = audienceRef.current;
+    const isCurrent = () => tabRef.current === tab && audienceRef.current === aud;
+    try {
+      await Promise.all([
+        loadView(tab, 0, undefined, false, aud, isCurrent),
+        refreshCounts(aud, undefined, isCurrent),
+      ]);
+    } catch {
+      // Keep the current view; the next tick retries.
+    }
+  }, [loadView, refreshCounts]);
+
+  // Transport for the polling engine. One request per round: the rows newer
+  // than the watermark plus the counters of the inbox. The delta carries no
+  // `read` filter, so new items are found no matter which tab is open.
+  const fetcher = useMemo<SyncFetcher>(
+    () => ({
+      fetchSync({ audience: aud, sinceId, etag, signal }) {
+        return syncNotifications({ audience: aud, sinceId, etag, signal });
+      },
+    }),
+    [],
+  );
+
+  // Poll for items newer than the newest seen id of this audience. The engine
+  // owns the watermark, the schedule (idle/visible/backoff/jitter) and the
+  // cross-tab channel.
   useEffect(() => {
-    const timer = setInterval(() => {
-      if (document.hidden || loadingRef.current) return;
-      const cursor = newestId(itemsRef.current);
-      void (async () => {
-        try {
-          const [result, unread, allPage] = await Promise.all([
-            listNotifications({
-              page: 0,
-              size: INBOX_PAGE_SIZE,
-              read: readFilterFor(tabRef.current),
-              audience: audienceRef.current,
-              sinceId: cursor ?? undefined,
-            }),
-            getUnreadCount(audienceRef.current),
-            listNotifications({ page: 0, size: 1, audience: audienceRef.current }),
-          ]);
-          setNotifications((prev) => mergeNewestFirst(prev, result.items));
-          setUnreadCount(unread.unreadCount);
-          setAllCount(allPage.totalElements);
-        } catch {
-          // Transient poll failure; the next tick (or retry()) recovers.
-        }
-      })();
-    }, POLL_INTERVAL_MS);
-    return () => clearInterval(timer);
-  }, []);
+    if (!userId) return;
+    // The engine appends the audience to the storage namespace, so the
+    // watermark of one portal never leaks into the other.
+    const namespace = `gw:notification-sync:${userId}`;
+    const channel = createBroadcastSyncChannel(`${namespace}:${audience ?? "all"}`);
+    const sync = createNotificationSync({
+      fetcher,
+      audience,
+      baseIntervalMs: POLL_INTERVAL_MS,
+      storageNamespace: namespace,
+      storage: typeof window === "undefined" ? null : window.sessionStorage,
+      channel,
+      onItems: (items) => {
+        setNotifications((prev) => mergeNotificationItems(prev, items, tabRef.current));
+      },
+      onCounts: (counts) => {
+        // A local read mutation is in flight: keep the optimistic counters.
+        if (pendingRef.current > 0) return;
+        const localUnread = unreadRef.current;
+        unreadRef.current = counts.unreadCount;
+        allRef.current = counts.totalCount;
+        setUnreadCount(counts.unreadCount);
+        setAllCount(counts.totalCount);
+        // Fewer unread rows than the client knows about: rows were read
+        // elsewhere and the id watermark cannot report it.
+        if (counts.unreadCount < localUnread) void reloadView();
+      },
+      onResync: () => {
+        void reloadView();
+      },
+      onError: () => {
+        // Transient poll failure; the next tick (or retry()) recovers.
+      },
+    });
+    sync.start();
+    return () => {
+      sync.stop();
+      channel?.close();
+    };
+  }, [userId, audience, fetcher, reloadView]);
 
   const retry = useCallback(() => {
     setReloadNonce((nonce) => nonce + 1);
@@ -242,14 +311,18 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const loadMore = useCallback(async () => {
     if (loadingRef.current || !hasMore) return;
     loadingRef.current = true;
+    const tab = tabRef.current;
+    const aud = audienceRef.current;
     try {
       const next = pageNumber + 1;
       const result = await listNotifications({
         page: next,
         size: INBOX_PAGE_SIZE,
-        read: readFilterFor(tabRef.current),
-        audience: audienceRef.current,
+        read: readFilterFor(tab),
+        audience: aud,
       });
+      // A tab switch during the request invalidates the page.
+      if (tabRef.current !== tab || audienceRef.current !== aud) return;
       setNotifications((prev) => mergeNewestFirst(prev, result.items));
       setPageNumber(result.pageNumber);
       setTotalPages(result.totalPages);
@@ -271,7 +344,11 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       const wasUnread = !target.read;
       // Optimistic update so the row reads as read immediately.
       setNotifications((prev) => markNotificationRead(prev, id, readAt));
-      if (wasUnread) setUnreadCount((count) => Math.max(0, count - 1));
+      if (wasUnread) {
+        unreadRef.current = Math.max(0, unreadRef.current - 1);
+        setUnreadCount(unreadRef.current);
+      }
+      pendingRef.current += 1;
       try {
         const result = await markNotificationReadApi(id, audienceRef.current);
         setNotifications((prev) =>
@@ -289,10 +366,15 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         setNotifications((prev) =>
           prev.map((item) => (item.id === id ? { ...item, read: false, readAt: null } : item)),
         );
-        if (wasUnread) setUnreadCount((count) => count + 1);
+        if (wasUnread) {
+          unreadRef.current += 1;
+          setUnreadCount(unreadRef.current);
+        }
         setError(
           cause instanceof Error ? cause.message : "Không đánh dấu đã đọc. Vui lòng thử lại.",
         );
+      } finally {
+        pendingRef.current -= 1;
       }
     },
     [notifications],
@@ -304,7 +386,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     const previous = notifications;
     const previousUnread = unreadCount;
     setNotifications((prev) => markAllNotificationsRead(prev, readAtLocal));
+    unreadRef.current = 0;
     setUnreadCount(0);
+    pendingRef.current += 1;
     try {
       const receipt = await markAllNotificationsReadApi(audienceRef.current);
       setNotifications((prev) =>
@@ -318,10 +402,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       // Roll back to the exact pre-action state so the UI never claims
       // read state the server does not hold.
       setNotifications(previous);
+      unreadRef.current = previousUnread;
       setUnreadCount(previousUnread);
       setError(
         cause instanceof Error ? cause.message : "Không đánh dấu tất cả đã đọc. Vui lòng thử lại.",
       );
+    } finally {
+      pendingRef.current -= 1;
     }
   }, [notifications, unreadCount]);
 
@@ -344,15 +431,23 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       return prev.map((item) => (item.id === detail.id ? detail : item));
     });
     if (detail.read) return detail;
-    const receipt = await markNotificationReadApi(detail.id, audienceRef.current);
-    const marked: Notification = { ...detail, read: true, readAt: receipt.readAt };
-    setNotifications((prev) => {
-      const mapped = prev.map((item) => (item.id === marked.id ? marked : item));
-      // A just-read item no longer belongs to the unread-filtered view.
-      return tabRef.current === "unread" ? mapped.filter((item) => item.id !== marked.id) : mapped;
-    });
-    setUnreadCount((count) => Math.max(0, count - 1));
-    return marked;
+    pendingRef.current += 1;
+    try {
+      const receipt = await markNotificationReadApi(detail.id, audienceRef.current);
+      const marked: Notification = { ...detail, read: true, readAt: receipt.readAt };
+      setNotifications((prev) => {
+        const mapped = prev.map((item) => (item.id === marked.id ? marked : item));
+        // A just-read item no longer belongs to the unread-filtered view.
+        return tabRef.current === "unread"
+          ? mapped.filter((item) => item.id !== marked.id)
+          : mapped;
+      });
+      unreadRef.current = Math.max(0, unreadRef.current - 1);
+      setUnreadCount(unreadRef.current);
+      return marked;
+    } finally {
+      pendingRef.current -= 1;
+    }
   }, []);
 
   const readCount = useMemo(() => Math.max(0, allCount - unreadCount), [allCount, unreadCount]);
@@ -386,4 +481,14 @@ export function useNotifications() {
   const ctx = useContext(NotifContext);
   if (!ctx) throw new Error("useNotifications must be used inside NotificationProvider");
   return ctx;
+}
+
+function mergeNewestFirst(
+  existing: readonly Notification[],
+  incoming: readonly Notification[],
+): Notification[] {
+  if (incoming.length === 0) return [...existing];
+  const known = new Set(existing.map((item) => item.id));
+  const fresh = incoming.filter((item) => !known.has(item.id));
+  return [...fresh, ...existing];
 }

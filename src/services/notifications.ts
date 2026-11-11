@@ -1,5 +1,5 @@
-import { ApiError } from "./api.ts";
-import { authenticatedRequest } from "./auth.ts";
+import { ApiError, parseApiResponse } from "./api.ts";
+import { authenticatedFetch, authenticatedRequest } from "./auth.ts";
 
 /**
  * Canonical, transport-agnostic notification model.
@@ -381,6 +381,27 @@ export interface NotificationMarkAllReadResponse {
   readAt: string;
 }
 
+/**
+ * One polling round of the inbox.
+ *
+ * `notModified` is the answer to a conditional request whose tag still matches:
+ * the server sent no body, so the counters are unknown (`null`) and the client
+ * keeps what it already holds.
+ */
+export interface NotificationSyncResult {
+  /** Rows newer than the requested watermark, newest first. */
+  items: Notification[];
+  unreadCount: number | null;
+  totalCount: number | null;
+  /** Highest inbox id of the recipient; the watermark of the next round. */
+  latestId: number | null;
+  /** More rows existed than the round could carry; the view has to be reloaded. */
+  hasMore: boolean;
+  notModified: boolean;
+  /** Entity tag of this round; sent back to make the next round conditional. */
+  etag: string | null;
+}
+
 function boundedPageSize(value: number | undefined): number {
   const num = typeof value === "number" && Number.isFinite(value) ? value : NOTIFICATION_PAGE_SIZE;
   return Math.min(MAX_NOTIFICATION_PAGE_SIZE, Math.max(1, Math.trunc(num)));
@@ -427,6 +448,80 @@ export async function getUnreadCount(
   const query = normalized ? `?audience=${encodeURIComponent(normalized)}` : "";
   const data = await authenticatedRequest(`/me/notifications/unread-count${query}`);
   return parseUnreadCount(data);
+}
+
+/** Parse the GET /api/me/notifications/sync envelope. */
+export function parseNotificationSyncResponse(
+  value: unknown,
+  etag: string | null = null,
+): NotificationSyncResult {
+  const raw = asRecord(value);
+  if (!raw) {
+    throw new ApiError("Phản hồi đồng bộ thông báo không hợp lệ. Vui lòng thử lại.", 500);
+  }
+  const unread = Number(raw.unreadCount);
+  const total = Number(raw.totalCount);
+  if (!Number.isFinite(unread) || !Number.isFinite(total) || unread < 0 || total < 0) {
+    throw new ApiError("Phản hồi đồng bộ thông báo không hợp lệ. Vui lòng thử lại.", 500);
+  }
+  const latestRaw = raw.latestId;
+  const latest = latestRaw === null || latestRaw === undefined ? null : Number(latestRaw);
+  return {
+    items: Array.isArray(raw.items) ? raw.items.map(parseNotification) : [],
+    unreadCount: Math.trunc(unread),
+    totalCount: Math.trunc(total),
+    latestId: latest !== null && Number.isFinite(latest) ? Math.trunc(latest) : null,
+    hasMore: raw.hasMore === true,
+    notModified: false,
+    etag,
+  };
+}
+
+/**
+ * One polling round of the inbox: the rows newer than the watermark plus the
+ * counters of the inbox.
+ *
+ * The request is conditional when a tag is known: the server answers `304` when
+ * nothing changed, and the client keeps what it holds.
+ */
+export async function syncNotifications(query: {
+  audience?: NotificationAudience | string;
+  sinceId?: number;
+  etag?: string | null;
+  limit?: number;
+  signal?: AbortSignal;
+}): Promise<NotificationSyncResult> {
+  const params = new URLSearchParams();
+  const audience = textValue(query.audience);
+  if (audience) params.set("audience", audience);
+  if (query.sinceId !== undefined && Number.isFinite(query.sinceId)) {
+    params.set("sinceId", String(Math.trunc(query.sinceId)));
+  }
+  if (query.limit !== undefined && Number.isFinite(query.limit)) {
+    params.set("limit", String(Math.trunc(query.limit)));
+  }
+  const headers: Record<string, string> = {};
+  if (query.etag) headers["If-None-Match"] = query.etag;
+  const response = await authenticatedFetch(`/me/notifications/sync?${params.toString()}`, {
+    headers,
+    signal: query.signal,
+  });
+  const etag = response.headers.get("ETag");
+  if (response.status === 304) {
+    return {
+      items: [],
+      unreadCount: null,
+      totalCount: null,
+      latestId: null,
+      hasMore: false,
+      notModified: true,
+      etag,
+    };
+  }
+  const data = await parseApiResponse(response);
+  const record = asRecord(data);
+  const payload = record && "data" in record && asRecord(record.data) ? record.data : data;
+  return parseNotificationSyncResponse(payload, etag);
 }
 
 /** Fetch one recipient-owned notification (detail view / deep-link check). */
