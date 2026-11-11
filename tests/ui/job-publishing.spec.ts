@@ -767,6 +767,20 @@ test("job rows show application totals with scoped links, zero and unavailable s
   await expect(page.locator(".jp-job-row").last().locator(".jp-job-candidates a")).toHaveCount(0);
   await noOverflow(page);
   await page.screenshot({ path: "/tmp/recruiter-job-candidates.png", fullPage: true });
+  // Column labels must line up with their corresponding job-row cells.
+  const alignment = await page.evaluate(() => {
+    const header = [...document.querySelectorAll(".jp-job-columns > span")];
+    const cells = [...document.querySelector(".jp-job-row")!.children];
+    return header.map((label, index) =>
+      Math.abs(label.getBoundingClientRect().left - cells[index].getBoundingClientRect().left),
+    );
+  });
+  for (const offset of alignment) expect(offset).toBeLessThanOrEqual(1);
+  const search = await page.locator(".jp-search").boundingBox();
+  const row = await page.locator(".jp-job-row").first().boundingBox();
+  expect(search!.x).toBe(row!.x);
+  await expect(page.locator(".jp-search")).toHaveCSS("padding-left", "24px");
+  await expect(count.locator("strong")).toHaveCSS("font-size", "22px");
   await count.click();
   await expect(page).toHaveURL(/rec\/applications\?jobId=83/);
 });
