@@ -141,6 +141,11 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   // Number of local read mutations in flight; the server counters are ignored
   // while a mutation runs so an optimistic badge never flickers back.
   const pendingRef = useRef(0);
+  // Sequence of the local read mutations. A poll that started before the last
+  // mutation cannot know about it, so its counters must not overwrite the
+  // optimistic ones.
+  const mutationSeqRef = useRef(0);
+  const pollSeqRef = useRef(0);
 
   const hasMore = pageNumber < totalPages - 1;
 
@@ -253,6 +258,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const fetcher = useMemo<SyncFetcher>(
     () => ({
       fetchSync({ audience: aud, sinceId, etag, signal }) {
+        // Remember which mutations the round started with, so a round that
+        // overlaps a read receipt is not allowed to restore the old counters.
+        pollSeqRef.current = mutationSeqRef.current;
         return syncNotifications({ audience: aud, sinceId, etag, signal });
       },
     }),
@@ -281,6 +289,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       onCounts: (counts) => {
         // A local read mutation is in flight: keep the optimistic counters.
         if (pendingRef.current > 0) return;
+        // A mutation landed while the round was running: the counters of that
+        // round are older than the receipt and must not win.
+        if (pollSeqRef.current !== mutationSeqRef.current) return;
         const localUnread = unreadRef.current;
         unreadRef.current = counts.unreadCount;
         allRef.current = counts.totalCount;
@@ -349,6 +360,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         setUnreadCount(unreadRef.current);
       }
       pendingRef.current += 1;
+      mutationSeqRef.current += 1;
       try {
         const result = await markNotificationReadApi(id, audienceRef.current);
         setNotifications((prev) =>
@@ -389,6 +401,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     unreadRef.current = 0;
     setUnreadCount(0);
     pendingRef.current += 1;
+    mutationSeqRef.current += 1;
     try {
       const receipt = await markAllNotificationsReadApi(audienceRef.current);
       setNotifications((prev) =>
@@ -432,6 +445,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     });
     if (detail.read) return detail;
     pendingRef.current += 1;
+    mutationSeqRef.current += 1;
     try {
       const receipt = await markNotificationReadApi(detail.id, audienceRef.current);
       const marked: Notification = { ...detail, read: true, readAt: receipt.readAt };
