@@ -225,6 +225,7 @@ test("advances stages with fresh versions", async ({ page }) => {
   await page.screenshot({
     path: ".impeccable/review/recruiter-actor-names/page-status-desktop.png",
     fullPage: true,
+    animations: "disabled",
   });
   await page.getByRole("menuitem", { name: "Đang xem xét", exact: true }).click();
   await expect(detail.locator(".application-notice")).toContainText("Đã cập nhật: Đang xem xét");
@@ -249,6 +250,7 @@ test("advances stages with fresh versions", async ({ page }) => {
   await page.screenshot({
     path: ".impeccable/review/recruiter-actor-names/history-desktop.png",
     fullPage: true,
+    animations: "disabled",
   });
 });
 
@@ -281,7 +283,7 @@ test("rejects with private reason and separate candidate feedback, then removes 
   });
   await expect(page.getByText("mai@example.test", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Xem CV PDF" })).toHaveCount(0);
-  await expect(page.getByText("Không thể thay đổi trạng thái.", { exact: false })).toBeVisible();
+  await expect(page.locator(".application-terminal")).toBeVisible();
   await expect(page.getByText("Lý do riêng của doanh nghiệp", { exact: false })).toBeVisible();
   await page.locator(".application-review-body").evaluate((element) => {
     element.scrollTop = element.scrollHeight;
@@ -340,6 +342,7 @@ test("opens the inbox across assigned jobs and navigates using each row's job id
   await page.screenshot({
     path: ".impeccable/review/recruiter-dedicated/list-desktop.png",
     fullPage: true,
+    animations: "disabled",
   });
   const detailRequest = page.waitForRequest((r) => r.url().endsWith("/jobs/77/applications/a2"));
   await page.getByRole("link", { name: "Trần Minh Anh Xem hồ sơ" }).click();
@@ -349,6 +352,7 @@ test("opens the inbox across assigned jobs and navigates using each row's job id
   await page.screenshot({
     path: ".impeccable/review/recruiter-dedicated/detail-desktop.png",
     fullPage: true,
+    animations: "disabled",
   });
   await choosePageStatus(page, "Tiềm năng");
   await expect(detail.locator(".application-notice")).toContainText("Tiềm năng");
@@ -416,6 +420,7 @@ test("row status menu advances with a fresh version and confirms rejection witho
   await page.screenshot({
     path: ".impeccable/review/recruiter-dedicated/status-menu-desktop.png",
     fullPage: true,
+    animations: "disabled",
   });
   await menu.getByRole("menuitem", { name: "Đang xem xét", exact: true }).click();
   await expect(row).toContainText("Đang xem xét");
@@ -495,4 +500,84 @@ test("history without a display name uses a neutral label instead of a database 
     "Người thực hiện: Chưa có thông tin",
   );
   await expect(page.locator(".application-history")).not.toContainText("876543");
+});
+
+test("interview progression and confirmed hiring retain evidence and end processing", async ({
+  page,
+}) => {
+  const api = await setup(page);
+  await openMai(page);
+  const trigger = page.getByRole("button", { name: "Cập nhật trạng thái của Nguyễn Thị Mai" });
+  await trigger.click();
+  await expect(page.getByRole("menuitem", { name: "Phỏng vấn", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("menuitem", { name: "Nhận việc…" })).toHaveCount(0);
+  await page.getByRole("menuitem", { name: "Đang xem xét", exact: true }).click();
+  await trigger.click();
+  await page.getByRole("menuitem", { name: "Phỏng vấn", exact: true }).click();
+  await expect(page.getByRole("status")).toContainText("Đã cập nhật: Phỏng vấn.");
+  await trigger.click();
+  await page.getByRole("menuitem", { name: "Nhận việc…" }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(
+    dialog.getByRole("button", { name: "Xác nhận đã tuyển", exact: true }),
+  ).toBeDisabled();
+  await page.screenshot({
+    path: ".impeccable/review/lifecycle/hiring-desktop.png",
+    fullPage: true,
+    animations: "disabled",
+  });
+  await dialog.getByRole("button", { name: "Hủy", exact: true }).click();
+  expect(api.writes).toHaveLength(2);
+  await trigger.click();
+  await page.getByRole("menuitem", { name: "Nhận việc…" }).click();
+  await dialog.getByRole("checkbox").check();
+  await dialog.getByRole("button", { name: "Xác nhận đã tuyển", exact: true }).click();
+  await expect
+    .poll(() => api.writes[2])
+    .toEqual({ status: "HIRED", version: 2, hiringConfirmed: true });
+  await expect(page.getByText("mai@example.test", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Xem CV PDF", exact: true })).toBeVisible();
+  await trigger.click();
+  await expect(page.getByRole("menu")).toContainText("Đơn ứng tuyển đã kết thúc");
+  await expect(page.getByRole("menuitem", { name: "Từ chối", exact: true })).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("menu")).toHaveCount(0);
+  await page.screenshot({
+    path: ".impeccable/review/lifecycle/hired-desktop.png",
+    fullPage: true,
+    animations: "disabled",
+  });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+});
+
+test("background polling keeps the inbox and open status menu mounted", async ({ page }) => {
+  await page.clock.install();
+  await setup(page, true);
+  const trigger = page.getByRole("button", { name: "Cập nhật trạng thái của Nguyễn Thị Mai" });
+  await trigger.click();
+  await expect(page.getByRole("menuitem", { name: "Đang xem xét", exact: true })).toBeVisible();
+  let release = () => {};
+  const held = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let arrived = () => {};
+  const requested = new Promise<void>((resolve) => {
+    arrived = resolve;
+  });
+  await page.route("**/api/companies/me/applications?**", async (route) => {
+    arrived();
+    await held;
+    await route.fallback();
+  });
+  try {
+    await page.clock.fastForward(10_100);
+    await requested;
+    await expect(
+      page.locator(".application-candidate").filter({ hasText: "Nguyễn Thị Mai" }),
+    ).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "Đang xem xét", exact: true })).toBeVisible();
+    await expect(page.getByText("Đang tải đơn ứng tuyển…", { exact: true })).toHaveCount(0);
+  } finally {
+    release();
+  }
 });

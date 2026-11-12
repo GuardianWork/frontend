@@ -103,6 +103,8 @@ const STATUS_ICONS: Record<string, React.ComponentType<GuardianIconProps>> = {
   VIEWED: ViewedStatusIcon,
   UNDER_REVIEW: ReviewStatusIcon,
   SHORTLISTED: ShortlistedStatusIcon,
+  INTERVIEWING: ViewedStatusIcon,
+  HIRED: ShortlistedStatusIcon,
   REJECTED: RejectedStatusIcon,
   WITHDRAWN: WithdrawnStatusIcon,
 };

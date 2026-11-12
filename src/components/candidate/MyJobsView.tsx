@@ -1,6 +1,6 @@
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowDownWideNarrow,
   ArrowRight,
@@ -19,10 +19,13 @@ import { ApplicationIcon, SearchIcon } from "@/components/icons";
 import { useLanguage } from "@/context/LanguageContext";
 import { ApiError } from "@/services/api";
 import {
+  getCandidateApplication,
+  withdrawApplication,
   listApplicationCounts,
   listApplicationPage,
   type SubmittedApplication,
 } from "@/services/candidateApplications";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import "./my-jobs.css";
 
 const PAGE_SIZE = 10;
@@ -54,6 +57,24 @@ const STATUS_META: Record<
     viDetail: "Nhà tuyển dụng đang xem xét hồ sơ ứng tuyển của bạn.",
     enDetail: "The recruiter is reviewing your application.",
   },
+  INTERVIEWING: {
+    vi: "Phỏng vấn",
+    en: "Interviewing",
+    tone: "info",
+    viDetail:
+      "Hồ sơ đã chuyển sang vòng phỏng vấn. Nhà tuyển dụng sẽ liên hệ để trao đổi chi tiết.",
+    enDetail:
+      "Your application has progressed to interviews. The recruiter will contact you with details.",
+  },
+  HIRED: {
+    vi: "Đã tuyển",
+    en: "Hired",
+    tone: "success",
+    viDetail:
+      "Công ty đã xác nhận bạn đồng ý gia nhập. Nhà tuyển dụng sẽ liên hệ về các bước tiếp theo.",
+    enDetail:
+      "The company has confirmed you agreed to join. The recruiter will contact you about next steps.",
+  },
   REJECTED: {
     vi: "Hồ sơ bị từ chối",
     en: "Rejected",
@@ -74,7 +95,8 @@ const STATUS_FILTERS = [
   { value: "", vi: "Tất cả", en: "All" },
   { value: "SUBMITTED", vi: "Đã ứng tuyển", en: "Submitted" },
   { value: "UNDER_REVIEW", vi: "Đang xem xét", en: "Under review" },
-  //{ value: "SHORTLISTED", vi: "Hồ sơ qua vòng", en: "Shortlisted" },
+  { value: "INTERVIEWING", vi: "Phỏng vấn", en: "Interviewing" },
+  { value: "HIRED", vi: "Đã tuyển", en: "Hired" },
   { value: "REJECTED", vi: "Đã từ chối", en: "Rejected" },
   { value: "WITHDRAWN", vi: "Đã rút", en: "Withdrawn" },
 ] as const;
@@ -83,7 +105,8 @@ const STATUS_COUNT_KEYS = {
   "": "all",
   SUBMITTED: "submitted",
   UNDER_REVIEW: "underReview",
-  SHORTLISTED: "shortlisted",
+  INTERVIEWING: "interviewing",
+  HIRED: "hired",
   REJECTED: "rejected",
   WITHDRAWN: "withdrawn",
 } as const;
@@ -152,6 +175,153 @@ function hasDeadlinePassed(value: string) {
   if (Number.isNaN(date.getTime())) return false;
   if (/^\d{4}-\d{2}-\d{2}$/.test(value.trim())) date.setHours(23, 59, 59, 999);
   return date.getTime() < Date.now();
+}
+
+function ApplicationProgress({ id, en }: { id: string; en: boolean }) {
+  const client = useQueryClient();
+  const [confirm, setConfirm] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<unknown>();
+  const lock = useRef(false);
+  const withdrawTrigger = useRef<HTMLButtonElement>(null);
+  const query = useQuery({
+    queryKey: ["candidate-application-detail", id],
+    queryFn: ({ signal }) => getCandidateApplication(id, signal),
+    retry: false,
+    gcTime: 0,
+    staleTime: 0,
+  });
+  const detail = query.data;
+  const active =
+    detail && ["SUBMITTED", "UNDER_REVIEW", "SHORTLISTED", "INTERVIEWING"].includes(detail.status);
+  const message = (reason: unknown) =>
+    reason instanceof ApiError && reason.status === 409
+      ? en
+        ? "This application changed. Reload its status before continuing."
+        : "Đơn đã thay đổi. Tải lại trạng thái trước khi tiếp tục."
+      : en
+        ? "Application unavailable. Reload to try again."
+        : "Đơn ứng tuyển chưa khả dụng. Tải lại để thử lại.";
+  return (
+    <section
+      className="candidate-application-progress"
+      aria-label={en ? "Application progress" : "Tiến trình ứng tuyển"}
+    >
+      {query.isFetching && <p role="status">{en ? "Loading progress…" : "Đang tải tiến trình…"}</p>}
+      {(query.isError || Boolean(error)) && (
+        <div role="alert">
+          <p>{message(query.error || error)}</p>
+          <button
+            className="jp-button"
+            disabled={busy}
+            onClick={() => {
+              setError(undefined);
+              void query.refetch();
+            }}
+          >
+            {en ? "Reload status" : "Tải lại trạng thái"}
+          </button>
+        </div>
+      )}
+      {detail && !query.isError && !error && (
+        <>
+          <h3>{en ? "Status history" : "Lịch sử trạng thái"}</h3>
+          <ol>
+            {detail.history?.map((event, index) => (
+              <li key={`${event.occurredAt}:${index}`}>
+                <strong>
+                  {en ? statusMeta(event.toStatus).en : statusMeta(event.toStatus).vi}
+                </strong>
+                <time dateTime={event.occurredAt}>
+                  {formatDate(event.occurredAt, en ? "en" : "vn")}
+                </time>
+                {event.candidateFeedback && <p>{event.candidateFeedback}</p>}
+              </li>
+            ))}
+          </ol>
+          {active && (
+            <button
+              ref={withdrawTrigger}
+              className="jp-button"
+              disabled={query.isFetching || busy}
+              onClick={() => setConfirm(true)}
+            >
+              {en ? "Withdraw application" : "Rút đơn ứng tuyển"}
+            </button>
+          )}
+        </>
+      )}
+      <Dialog
+        open={confirm}
+        onOpenChange={(open) => {
+          if (!lock.current) setConfirm(open);
+        }}
+      >
+        <DialogContent
+          hideClose={busy}
+          onCloseAutoFocus={(event) => {
+            if (withdrawTrigger.current?.isConnected) {
+              event.preventDefault();
+              withdrawTrigger.current.focus();
+            }
+          }}
+          onEscapeKeyDown={(event) => {
+            if (busy) event.preventDefault();
+          }}
+          onInteractOutside={(event) => {
+            if (busy) event.preventDefault();
+          }}
+        >
+          <DialogTitle>{en ? "Withdraw this application?" : "Rút đơn ứng tuyển?"}</DialogTitle>
+          <DialogDescription>
+            {en
+              ? "This ends your participation. You cannot reopen or reapply to this posting. The company will lose access to your submitted contact details, cover letter and CV."
+              : "Bạn sẽ kết thúc quy trình ứng tuyển và không thể mở lại hoặc ứng tuyển lại tin này. Doanh nghiệp sẽ không còn xem được thông tin liên hệ, thư ứng tuyển và CV đã gửi."}
+          </DialogDescription>
+          <div className="flex justify-end gap-3">
+            <button className="jp-button" disabled={busy} onClick={() => setConfirm(false)}>
+              {en ? "Keep application" : "Giữ đơn ứng tuyển"}
+            </button>
+            <button
+              className="jp-button"
+              disabled={busy || !active}
+              onClick={async () => {
+                if (lock.current || !detail) return;
+                lock.current = true;
+                setBusy(true);
+                try {
+                  const updated = await withdrawApplication(id, detail.version);
+                  client.setQueryData(["candidate-application-detail", id], updated);
+                  setConfirm(false);
+                  await Promise.all(
+                    [
+                      "candidate-applications",
+                      "candidate-application-counts",
+                      "candidate-application-total",
+                    ].map((key) => client.invalidateQueries({ queryKey: [key] })),
+                  );
+                } catch (reason) {
+                  setError(reason);
+                  setConfirm(false);
+                } finally {
+                  lock.current = false;
+                  setBusy(false);
+                }
+              }}
+            >
+              {busy
+                ? en
+                  ? "Withdrawing…"
+                  : "Đang rút đơn…"
+                : en
+                  ? "Confirm withdrawal"
+                  : "Xác nhận rút đơn"}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </section>
+  );
 }
 
 function ApplicationCard({
@@ -296,6 +466,7 @@ function ApplicationCard({
             <ArrowRight size={16} aria-hidden="true" />
           </Link>
         ) : null}
+        {open && <ApplicationProgress id={application.id} en={en} />}
       </div>
     </li>
   );

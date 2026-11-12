@@ -102,6 +102,8 @@ export const CANDIDATE_APPLICATION_STATUSES = [
   "SUBMITTED",
   "UNDER_REVIEW",
   "SHORTLISTED",
+  "INTERVIEWING",
+  "HIRED",
   "REJECTED",
   "WITHDRAWN",
 ] as const;
@@ -219,10 +221,10 @@ export function parseApplicationPage(
 
 export async function listApplications(): Promise<SubmittedApplication[]> {
   const data = await authenticatedRequest("/candidate/applications");
-  return applicationItems(data).map(parseSubmittedApplication);
+  return applicationItems(data).map(parseSubmittedApplication).map(candidateVisibleApplication);
 }
 
-export async function listApplicationPage(
+async function requestApplicationPage(
   query: CandidateApplicationQuery = {},
 ): Promise<CandidateApplicationPage> {
   const search = (query.search ?? "").trim().slice(0, MAX_APPLICATION_SEARCH_LENGTH);
@@ -243,11 +245,78 @@ export async function listApplicationPage(
   return parseApplicationPage(data, { search, status: query.status, page, size });
 }
 
+// Shortlisting is an internal Recruiter decision, presented as continued review.
+function candidateVisibleStatus(status: string) {
+  return status === "SHORTLISTED" ? "UNDER_REVIEW" : status;
+}
+function candidateVisibleApplication(application: SubmittedApplication): SubmittedApplication {
+  return { ...application, status: candidateVisibleStatus(application.status) };
+}
+
+export async function listApplicationPage(
+  query: CandidateApplicationQuery = {},
+): Promise<CandidateApplicationPage> {
+  if (query.status !== "UNDER_REVIEW") {
+    const page = await requestApplicationPage(query);
+    return { ...page, items: page.items.map(candidateVisibleApplication) };
+  }
+  // The backend filters by one internal status. Merge both streams before paginating
+  // so shortlisted Applications remain discoverable under the visible review filter.
+  const size = Math.max(
+    1,
+    boundedInteger(query.size, APPLICATION_PAGE_SIZE, MAX_APPLICATION_PAGE_SIZE),
+  );
+  const firstPages = await Promise.all(
+    ["UNDER_REVIEW", "SHORTLISTED"].map((status) =>
+      requestApplicationPage({ ...query, status, page: 0, size }),
+    ),
+  );
+  const totalElements = firstPages.reduce((sum, page) => sum + page.totalElements, 0);
+  const totalPages = Math.max(1, Math.ceil(totalElements / size));
+  const pageNumber = Math.min(
+    boundedInteger(query.page, 0, Number.MAX_SAFE_INTEGER),
+    totalPages - 1,
+  );
+  const end = (pageNumber + 1) * size;
+  const streams = await Promise.all(
+    firstPages.map(async (first, index) => {
+      const pages = [first];
+      // Fetch only the prefix that could contribute to this merged page.
+      for (
+        let page = 1;
+        page < Math.min(first.totalPages, Math.ceil(end / first.pageSize));
+        page++
+      ) {
+        pages.push(
+          await requestApplicationPage({
+            ...query,
+            status: index === 0 ? "UNDER_REVIEW" : "SHORTLISTED",
+            page,
+            size,
+          }),
+        );
+      }
+      return pages.flatMap((page) => page.items);
+    }),
+  );
+  const items = streams
+    .flat()
+    .sort((a, b) => Date.parse(b.appliedAt) - Date.parse(a.appliedAt) || b.id.localeCompare(a.id));
+  return {
+    items: items.slice(pageNumber * size, end).map(candidateVisibleApplication),
+    pageNumber,
+    pageSize: size,
+    totalElements,
+    totalPages,
+  };
+}
+
 export interface CandidateApplicationCounts {
   all: number;
   submitted: number;
   underReview: number;
-  shortlisted: number;
+  interviewing: number;
+  hired: number;
   rejected: number;
   withdrawn: number;
 }
@@ -258,7 +327,7 @@ export interface CandidateApplicationCountOptions {
 }
 
 /**
- * The list endpoint returns one total per filtered request. Four size-one reads
+ * The list endpoint returns one total per filtered request. Eight size-one reads
  * give the status tabs exact counts without downloading the application rows again.
  */
 export async function listApplicationCounts(
@@ -266,19 +335,23 @@ export async function listApplicationCounts(
 ): Promise<CandidateApplicationCounts> {
   const search = options.search ?? "";
   const signal = options.signal;
-  const [all, submitted, underReview, shortlisted, rejected, withdrawn] = await Promise.all([
-    listApplicationPage({ search, size: 1, signal }),
-    listApplicationPage({ search, size: 1, status: "SUBMITTED", signal }),
-    listApplicationPage({ search, size: 1, status: "UNDER_REVIEW", signal }),
-    listApplicationPage({ search, size: 1, status: "SHORTLISTED", signal }),
-    listApplicationPage({ search, size: 1, status: "REJECTED", signal }),
-    listApplicationPage({ search, size: 1, status: "WITHDRAWN", signal }),
-  ]);
+  const [all, submitted, underReview, shortlisted, interviewing, hired, rejected, withdrawn] =
+    await Promise.all([
+      requestApplicationPage({ search, size: 1, signal }),
+      requestApplicationPage({ search, size: 1, status: "SUBMITTED", signal }),
+      requestApplicationPage({ search, size: 1, status: "UNDER_REVIEW", signal }),
+      requestApplicationPage({ search, size: 1, status: "SHORTLISTED", signal }),
+      requestApplicationPage({ search, size: 1, status: "INTERVIEWING", signal }),
+      requestApplicationPage({ search, size: 1, status: "HIRED", signal }),
+      requestApplicationPage({ search, size: 1, status: "REJECTED", signal }),
+      requestApplicationPage({ search, size: 1, status: "WITHDRAWN", signal }),
+    ]);
   return {
     all: all.totalElements,
     submitted: submitted.totalElements,
-    underReview: underReview.totalElements,
-    shortlisted: shortlisted.totalElements,
+    underReview: underReview.totalElements + shortlisted.totalElements,
+    interviewing: interviewing.totalElements,
+    hired: hired.totalElements,
     rejected: rejected.totalElements,
     withdrawn: withdrawn.totalElements,
   };
@@ -301,4 +374,74 @@ export async function submitApplication(
     body: JSON.stringify(payload),
   });
   return parseSubmittedApplication(data);
+}
+
+export interface CandidateApplicationHistory {
+  toStatus: string;
+  occurredAt: string;
+  candidateFeedback?: string | null;
+}
+export interface CandidateApplicationDetail {
+  id: string;
+  status: string;
+  version: number;
+  history: CandidateApplicationHistory[];
+}
+function parseCandidateDetail(value: unknown): CandidateApplicationDetail {
+  const detail = value as CandidateApplicationDetail | null;
+  if (
+    !detail ||
+    typeof detail.id !== "string" ||
+    !CANDIDATE_APPLICATION_STATUSES.some((status) => status === detail.status) ||
+    !Number.isSafeInteger(detail.version) ||
+    detail.version < 0 ||
+    !Array.isArray(detail.history) ||
+    !detail.history.every(
+      (event) =>
+        event &&
+        CANDIDATE_APPLICATION_STATUSES.some((status) => status === event.toStatus) &&
+        typeof event.occurredAt === "string" &&
+        Number.isFinite(Date.parse(event.occurredAt)) &&
+        (event.candidateFeedback == null || typeof event.candidateFeedback === "string"),
+    )
+  ) {
+    throw new ApiError("Phản hồi đơn ứng tuyển không hợp lệ. Vui lòng thử lại.", 500);
+  }
+  return {
+    id: detail.id,
+    status: candidateVisibleStatus(detail.status),
+    version: detail.version,
+    history: detail.history
+      .map((event) => ({
+        toStatus: candidateVisibleStatus(event.toStatus),
+        occurredAt: event.occurredAt,
+        candidateFeedback: event.candidateFeedback,
+      }))
+      .filter(
+        (event, index, history) => index === 0 || event.toStatus !== history[index - 1].toStatus,
+      ),
+  };
+}
+export async function getCandidateApplication(
+  id: string,
+  signal?: AbortSignal,
+): Promise<CandidateApplicationDetail> {
+  return parseCandidateDetail(
+    await authenticatedRequest(`/candidate/applications/${encodeURIComponent(id)}`, {
+      signal,
+      cache: "no-store",
+    }),
+  );
+}
+export async function withdrawApplication(
+  id: string,
+  version: number,
+): Promise<CandidateApplicationDetail> {
+  return parseCandidateDetail(
+    await authenticatedRequest(`/candidate/applications/${encodeURIComponent(id)}/withdraw`, {
+      method: "POST",
+      body: JSON.stringify({ version }),
+      cache: "no-store",
+    }),
+  );
 }

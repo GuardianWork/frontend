@@ -3,6 +3,8 @@ export const STATUS_LABELS: Record<ApplicationStatus, string> = {
   SUBMITTED: "Đã ứng tuyển",
   UNDER_REVIEW: "Đang xem xét",
   SHORTLISTED: "Tiềm năng",
+  INTERVIEWING: "Phỏng vấn",
+  HIRED: "Đã tuyển",
   REJECTED: "Đã từ chối",
   WITHDRAWN: "Đã rút",
 };

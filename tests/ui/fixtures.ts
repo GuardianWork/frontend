@@ -21,6 +21,8 @@ export const test = base.extend<{ mockApiUrl: string }>({
       await route.fulfill({ response });
     });
     await provide(page);
+    // Drain in-flight mock requests before the fixture closes its API server.
+    await page.unrouteAll({ behavior: "wait" });
   },
 });
 export { expect };

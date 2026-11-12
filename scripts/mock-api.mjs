@@ -716,11 +716,58 @@ export function createMockApiServer() {
       return;
     }
 
+    const applicationMatch = /^\/api\/candidate\/applications\/([^/]+)(\/withdraw)?$/.exec(path);
+    if (applicationMatch) {
+      const application = (candidateApplications.get(user.id) || []).find(
+        (item) => item.id === applicationMatch[1],
+      );
+      if (!application) {
+        send(404, "APPLICATION_NOT_FOUND");
+        return;
+      }
+      application.version ??= 0;
+      application.history ??= [
+        { fromStatus: null, toStatus: application.status, occurredAt: application.appliedAt },
+      ];
+      if (req.method === "POST" && applicationMatch[2]) {
+        if (body.version !== application.version) {
+          send(409, "APPLICATION_VERSION_CONFLICT");
+          return;
+        }
+        if (
+          !["SUBMITTED", "UNDER_REVIEW", "SHORTLISTED", "INTERVIEWING"].includes(application.status)
+        ) {
+          send(400, "APPLICATION_IS_TERMINAL");
+          return;
+        }
+        application.history.push({
+          fromStatus: application.status,
+          toStatus: "WITHDRAWN",
+          occurredAt: new Date().toISOString(),
+        });
+        application.status = "WITHDRAWN";
+        application.version++;
+      } else if (req.method !== "GET" || applicationMatch[2]) {
+        send(404, "NOT_FOUND");
+        return;
+      }
+      send(200, "Application detail", application);
+      return;
+    }
+
     if (req.method === "GET" && path === "/api/candidate/applications") {
       const status = url.searchParams.get("status") || "";
       if (
         status &&
-        !["SUBMITTED", "UNDER_REVIEW", "SHORTLISTED", "REJECTED", "WITHDRAWN"].includes(status)
+        ![
+          "SUBMITTED",
+          "UNDER_REVIEW",
+          "SHORTLISTED",
+          "INTERVIEWING",
+          "HIRED",
+          "REJECTED",
+          "WITHDRAWN",
+        ].includes(status)
       ) {
         send(400, "40001 INVALID_STATUS");
         return;

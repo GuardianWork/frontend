@@ -57,7 +57,7 @@ function response(data) {
   return Response.json({ status: 200, data });
 }
 
-test("recruiter list accepts five statuses and sends combined server filters", async () => {
+test("recruiter list accepts seven statuses and sends combined server filters", async () => {
   mock((url) => {
     const query = new URL(url, "http://localhost").searchParams;
     assert.equal(query.get("search"), "Nguyen");
@@ -74,13 +74,13 @@ test("recruiter list accepts five statuses and sends combined server filters", a
     });
   });
   const page = await listRecruiterApplications(42, " Nguyen ", 2, undefined, "UNDER_REVIEW");
-  assert.equal(page.content.length, 5);
+  assert.equal(page.content.length, 7);
 });
 
 test("malformed recruiter rows fail instead of displaying invented statuses", async () => {
   mock(() =>
     response({
-      content: [{ ...detail, status: "HIRED" }],
+      content: [{ ...detail, status: "UNKNOWN" }],
       pageNumber: 0,
       pageSize: 20,
       totalElements: 1,
