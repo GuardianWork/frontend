@@ -1,0 +1,75 @@
+name: Deploy to Render
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-render-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify build for Render
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Build public portal (Render preset)
+        env:
+          NITRO_PRESET: node-server
+        run: npm run build
+
+      - name: Build staff portal (Render preset)
+        env:
+          NITRO_PRESET: node-server
+        run: npm run build:staff
+
+  deploy:
+    name: Trigger Render deploys
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Trigger Render deploy (public portal)
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_PUBLIC }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "Missing repository secret RENDER_DEPLOY_HOOK_PUBLIC" >&2
+            exit 1
+          fi
+          curl -fsS -X POST "$HOOK"
+
+      - name: Trigger Render deploy (staff portal)
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_STAFF }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "Missing repository secret RENDER_DEPLOY_HOOK_STAFF" >&2
+            exit 1
+          fi
+          curl -fsS -X POST "$HOOK"
