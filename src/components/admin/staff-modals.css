@@ -1,7 +1,7 @@
 /* Staff desktop dialogs: 960px for records, 760px for focused decisions.
    Leave 32px clear around the viewport and scroll long content within the dialog. */
 @media (min-width: 1024px) {
-  body[data-portal="staff"] [role="dialog"] {
+  body[data-portal="staff"] [role="dialog"][aria-modal="true"] {
     width: min(960px, calc(100vw - 64px));
     max-width: min(960px, calc(100vw - 64px));
     max-height: calc(100dvh - 64px);

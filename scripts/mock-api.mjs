@@ -197,6 +197,191 @@ export function createMockApiServer() {
       ],
     ],
   ]);
+  // Recipient-scoped inbox fixtures, keyed by user id. They mirror the
+  // frontend Notification model directly (id, type, category, title, body,
+  // createdAt, read, readAt): the frontend renders backend fields as-is, so
+  // every fixture ships title + category and no priority/data.
+  const candidateNotifications = new Map([
+    [
+      1,
+      [
+        {
+          id: "111",
+          audience: "CANDIDATE",
+          type: "APPLICATION_STATUS_CHANGED",
+          category: "application",
+          companyId: 101,
+          companyName: "Công ty TNHH Giải Pháp Alpha",
+          jobId: 42,
+          applicationId: "app-01",
+          title: "Nhà tuyển dụng đã xem hồ sơ của bạn",
+          body: "Hồ sơ của bạn đã được Công ty TNHH Giải Pháp Alpha xem xét cho vị trí Kỹ sư Backend (Go).",
+          createdAt: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
+          read: false,
+        },
+        {
+          id: "109",
+          audience: "CANDIDATE",
+          type: "APPLICATION_STATUS_CHANGED",
+          category: "application",
+          companyId: 102,
+          companyName: "Công ty Cổ phần An Phát",
+          jobId: 18,
+          applicationId: "app-02",
+          title: "Hồ sơ của bạn đang được xem xét",
+          body: "Nhà tuyển dụng đang xem xét đơn ứng tuyển Vị trí Phân tích Dữ liệu của bạn.",
+          createdAt: new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString(),
+          read: false,
+        },
+        {
+          id: "110",
+          audience: "CANDIDATE",
+          type: "JOB_MATCHED",
+          category: "job",
+          companyId: 103,
+          companyName: "Tập đoàn Sao Mai",
+          jobId: 27,
+          title: "Tin tuyển dụng mới phù hợp với bạn",
+          body: "3 vị trí Frontend Developer vừa được đăng tại các công ty IT hàng đầu — xem ngay!",
+          createdAt: new Date(Date.now() - 8 * 3600 * 1000).toISOString(),
+          read: false,
+        },
+        {
+          id: "107",
+          audience: "CANDIDATE",
+          type: "REWARD_AWARDED",
+          category: "reward",
+          title: "🎁 Chúc mừng! Bạn đã nhận được 50 điểm thưởng",
+          body: "Điểm thưởng được cộng do bạn đã hoàn thành hồ sơ ứng viên. Quy đổi điểm ngay tại mục Phần thưởng.",
+          createdAt: new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString(),
+          read: true,
+        },
+        {
+          id: "108",
+          audience: "CANDIDATE",
+          type: "ANNOUNCEMENT_PUBLISHED",
+          category: "announcement",
+          title: "Hoàn thiện hồ sơ để nổi bật hơn",
+          body: "Hồ sơ hoàn thiện giúp bạn tăng 3x cơ hội được tìm thấy. Thêm kinh nghiệm và kỹ năng ngay.",
+          createdAt: new Date(Date.now() - 14 * 24 * 3600 * 1000).toISOString(),
+          read: true,
+        },
+        {
+          id: "104",
+          audience: "CANDIDATE",
+          type: "PROMOTION_LAUNCHED",
+          category: "promotion",
+          title: "Cơ hội có 100K topup khi tải lên CV!",
+          body: "Tải lên CV và hoàn thành khảo sát ngắn để có cơ hội trúng 100K! Xem ngay.",
+          createdAt: new Date(Date.now() - 176 * 24 * 3600 * 1000).toISOString(),
+          read: true,
+        },
+        {
+          id: "103",
+          audience: "CANDIDATE",
+          type: "COMMUNITY_CHALLENGE_STARTED",
+          category: "community",
+          title: "Tham gia thử thách viết với cộng đồng IT!",
+          body: "Chia sẻ trải nghiệm thật, tạo dấu ấn riêng trong ngành IT và nhận phần thưởng.",
+          createdAt: new Date(Date.now() - 195 * 24 * 3600 * 1000).toISOString(),
+          read: false,
+        },
+        {
+          id: "102",
+          audience: "CANDIDATE",
+          type: "ANNOUNCEMENT_PUBLISHED",
+          category: "announcement",
+          title: "Công ty nào góp mặt trong Top Công ty IT 2026?",
+          body: "Xem ngay Top 30 công ty IT có môi trường làm việc tốt nhất 2026, dựa trên review thật.",
+          createdAt: new Date(Date.now() - 231 * 24 * 3600 * 1000).toISOString(),
+          read: false,
+        },
+        {
+          id: "101",
+          audience: "CANDIDATE",
+          type: "REWARD_AWARDED",
+          category: "reward",
+          title: "Cơ hội cuối nhận 9 triệu",
+          body: "Gửi bài lên Story Hub trước 9/3 để kịp tranh giải thưởng hấp dẫn!",
+          createdAt: new Date(Date.now() - 247 * 24 * 3600 * 1000).toISOString(),
+          read: false,
+        },
+        {
+          id: "105",
+          audience: "CANDIDATE",
+          type: "ANNOUNCEMENT_PUBLISHED",
+          category: "announcement",
+          title: "🔥 Story Hub tháng 6 đã bắt đầu!",
+          body: "Chia sẻ ngay câu chuyện của bạn để nhận quà hấp dẫn!",
+          createdAt: new Date(Date.now() - 147 * 24 * 3600 * 1000).toISOString(),
+          read: true,
+        },
+        {
+          id: "106",
+          audience: "CANDIDATE",
+          type: "REWARD_AWARDED",
+          category: "reward",
+          title: "🔥 Chia sẻ câu chuyện, rinh tổng thưởng đến 6 triệu",
+          body: "Chia sẻ trải nghiệm, câu chuyện của bạn trong 3 thử thách MỚI trên Story Hub và nhận thưởng!",
+          createdAt: new Date(Date.now() - 78 * 24 * 3600 * 1000).toISOString(),
+          read: false,
+        },
+      ],
+    ],
+  ]);
+  // Recruiter-facing inbox fixtures. The recruiter and the Company Owner
+  // share the same kind of events; each recipient gets its own copy so a
+  // read receipt of one does not change the other.
+  const recruiterNotifications = [
+    {
+      id: "203",
+      audience: "RECRUITER",
+      type: "APPLICATION_WITHDRAWN",
+      category: "application",
+      companyId: 101,
+      companyName: "Công ty TNHH Giải Pháp Alpha",
+      jobId: 42,
+      applicationId: "app-77",
+      title: "Ứng viên đã rút hồ sơ",
+      body: "Ứng viên Lê Minh đã rút hồ sơ ứng tuyển vị trí Kỹ sư Backend (Go).",
+      createdAt: new Date(Date.now() - 1 * 3600 * 1000).toISOString(),
+      read: false,
+    },
+    {
+      id: "202",
+      audience: "RECRUITER",
+      type: "JOB_REVISION_APPROVED",
+      category: "job",
+      companyId: 101,
+      companyName: "Công ty TNHH Giải Pháp Alpha",
+      jobId: 42,
+      revisionId: 8,
+      title: "Bản sửa vị trí đã được duyệt",
+      body: "Bản sửa vị trí Kỹ sư Backend (Go) đã được duyệt và đã đăng lại.",
+      createdAt: new Date(Date.now() - 1 * 24 * 3600 * 1000).toISOString(),
+      read: false,
+    },
+    {
+      id: "201",
+      audience: "RECRUITER",
+      type: "RECRUITER_ACCEPTED",
+      category: "company",
+      companyId: 101,
+      companyName: "Công ty TNHH Giải Pháp Alpha",
+      title: "Yêu cầu tham gia đã được chấp nhận",
+      body: "Bạn đã được thêm vào Công ty TNHH Giải Pháp Alpha với vai trò Recruiter.",
+      createdAt: new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString(),
+      read: true,
+    },
+  ];
+  candidateNotifications.set(
+    2,
+    recruiterNotifications.map((item) => ({ ...item })),
+  );
+  candidateNotifications.set(
+    3,
+    recruiterNotifications.map((item) => ({ ...item })),
+  );
   const seededSkills = ["Go", "Kubernetes", "TypeScript", "React / Next.js"];
   const seededExperience = [
     {
@@ -323,10 +508,11 @@ export function createMockApiServer() {
   return createServer(async (req, res) => {
     const url = new URL(req.url, "http://localhost");
     const path = url.pathname.replace(/^\/api\/staff\/companies(?=\/|$)/, "/api/admin/companies");
-    const send = (status, message, data = null) => {
+    const send = (status, message, data = null, extraHeaders = {}) => {
       res.writeHead(status, {
         "Content-Type": "application/json; charset=utf-8",
         "Cache-Control": "no-store",
+        ...extraHeaders,
       });
       res.end(JSON.stringify({ status, message, data }));
     };
@@ -811,6 +997,174 @@ export function createMockApiServer() {
         first: safePage === 0,
         last: safePage >= totalPages - 1,
       });
+      return;
+    }
+
+    // POST /api/mock/notifications — dev fixture: deliver a notification to the
+    // signed-in recipient so a client can observe its polling.
+    if (req.method === "POST" && path === "/api/mock/notifications") {
+      const audience = String(body.audience || "CANDIDATE").toUpperCase();
+      const items = candidateNotifications.get(user.id) || [];
+      const id = String(items.reduce((max, item) => Math.max(max, Number(item.id) || 0), 0) + 1);
+      items.push({
+        id,
+        audience,
+        type: body.type || "ANNOUNCEMENT_PUBLISHED",
+        category: body.category || "announcement",
+        title: body.title || "Thông báo mới",
+        body: body.body || "Một thông báo mới vừa được gửi tới bạn.",
+        createdAt: new Date().toISOString(),
+        read: false,
+      });
+      candidateNotifications.set(user.id, items);
+      send(201, "Notification delivered", { id });
+      return;
+    }
+
+    // The inbox mirrors the backend contract: recipient scoped, newest first
+    // by id, and the same filters the frontend polls with
+    // (read, category, eventType, audience, sinceId).
+    const inbox = (audience) => {
+      const all = (candidateNotifications.get(user.id) || []).slice();
+      const scoped = audience
+        ? all.filter((item) => (item.audience || "CANDIDATE") === audience)
+        : all;
+      return scoped.sort((a, b) => Number(b.id) - Number(a.id));
+    };
+    const requestedAudience = (url.searchParams.get("audience") || "").trim().toUpperCase();
+
+    // GET /api/me/notifications/unread-count — badge count.
+    if (req.method === "GET" && path === "/api/me/notifications/unread-count") {
+      const items = inbox(requestedAudience || null);
+      send(200, "Unread count retrieved successfully", {
+        unreadCount: items.filter((item) => !item.read).length,
+      });
+      return;
+    }
+
+    // GET /api/me/notifications/sync — one polling round: the rows newer than
+    // the watermark plus the counters of the inbox.
+    if (req.method === "GET" && path === "/api/me/notifications/sync") {
+      const all = inbox(requestedAudience || null);
+      const limit = Math.min(100, Math.max(1, Number(url.searchParams.get("limit") || 100) || 100));
+      const sinceIdRaw = url.searchParams.get("sinceId");
+      const sinceId = sinceIdRaw === null || sinceIdRaw === "" ? null : Number(sinceIdRaw);
+      const latestId = all.length > 0 ? Number(all[0].id) : null;
+      const unreadCount = all.filter((item) => !item.read).length;
+      const totalCount = all.length;
+      const delta =
+        sinceId !== null && Number.isFinite(sinceId)
+          ? all.filter((item) => Number(item.id) > sinceId)
+          : all;
+      const hasMore = delta.length > limit;
+      const items = delta.slice(0, limit);
+      const etag = `W/"${user.id}:${requestedAudience || "ALL"}:${latestId ?? 0}:${unreadCount}:${totalCount}"`;
+      // A conditional request whose tag still matches gets no body at all.
+      if (req.headers["if-none-match"] === etag) {
+        res.writeHead(304, { ETag: etag, "Cache-Control": "no-store" });
+        res.end();
+        return;
+      }
+      send(
+        200,
+        "Notification sync retrieved successfully",
+        {
+          items,
+          unreadCount,
+          totalCount,
+          latestId,
+          hasMore,
+          serverTime: new Date().toISOString(),
+        },
+        { ETag: etag },
+      );
+      return;
+    }
+
+    // GET /api/me/notifications/{id} — one recipient owned item.
+    if (req.method === "GET" && path.startsWith("/api/me/notifications/")) {
+      const id = decodeURIComponent(path.slice("/api/me/notifications/".length));
+      const item = inbox(null).find((entry) => entry.id === id);
+      if (!item) {
+        send(404, "40406 Thông báo không tồn tại.");
+        return;
+      }
+      send(200, "Notification retrieved successfully", item);
+      return;
+    }
+
+    // GET /api/me/notifications?page&size — paginated inbox, newest first.
+    if (req.method === "GET" && path === "/api/me/notifications") {
+      const pageNumber = Math.max(0, Number(url.searchParams.get("page") || 0) || 0);
+      const pageSize = Math.min(100, Math.max(1, Number(url.searchParams.get("size") || 20) || 20));
+      const readFilter = url.searchParams.get("read");
+      const category = (url.searchParams.get("category") || "").trim().toLowerCase();
+      const eventType = (url.searchParams.get("eventType") || "").trim().toUpperCase();
+      const sinceIdRaw = url.searchParams.get("sinceId");
+      const sinceId = sinceIdRaw === null || sinceIdRaw === "" ? null : Number(sinceIdRaw);
+      let items = inbox(requestedAudience || null);
+      if (readFilter === "true") items = items.filter((item) => item.read);
+      if (readFilter === "false") items = items.filter((item) => !item.read);
+      if (category) {
+        items = items.filter((item) => (item.category || "").toLowerCase() === category);
+      }
+      if (eventType) {
+        items = items.filter((item) => (item.type || "").toUpperCase() === eventType);
+      }
+      if (sinceId !== null && Number.isFinite(sinceId)) {
+        items = items.filter((item) => Number(item.id) > sinceId);
+      }
+      const unreadCount = items.filter((item) => !item.read).length;
+      const totalElements = items.length;
+      const totalPages = Math.max(1, Math.ceil(totalElements / pageSize));
+      const safePage = Math.min(pageNumber, totalPages - 1);
+      const start = safePage * pageSize;
+      const page = items.slice(start, start + pageSize);
+      send(200, "Notifications retrieved successfully", {
+        content: page,
+        pageNumber: safePage,
+        pageSize,
+        totalElements,
+        totalPages,
+        unreadCount,
+        first: safePage === 0,
+        last: safePage >= totalPages - 1,
+      });
+      return;
+    }
+
+    // PATCH /api/me/notifications/read — mark every unread row read at once.
+    if (req.method === "PATCH" && path === "/api/me/notifications/read") {
+      const readAt = new Date().toISOString();
+      let updatedCount = 0;
+      for (const item of inbox(requestedAudience || null)) {
+        if (item.read) continue;
+        item.read = true;
+        item.readAt = readAt;
+        updatedCount += 1;
+      }
+      send(200, "Đã đánh dấu tất cả thông báo là đã đọc.", { updatedCount, readAt });
+      return;
+    }
+
+    // PATCH /api/me/notifications/{id}/read — mark a single notification read.
+    const notifReadMatch = /^\/api\/me\/notifications\/([^\/]+)\/read$/.exec(path);
+    if (req.method === "PATCH" && notifReadMatch) {
+      const id = notifReadMatch[1];
+      const items = candidateNotifications.get(user.id) || [];
+      const item = items.find((item) => item.id === id);
+      if (!item) {
+        send(404, "40401 Thông báo không tồn tại.");
+        return;
+      }
+      if (item.read === true && item.readAt) {
+        send(200, "Thông báo đã được đọc.", { id, readAt: item.readAt });
+        return;
+      }
+      const readAt = new Date().toISOString();
+      item.read = true;
+      item.readAt = readAt;
+      send(200, "Đã đánh dấu thông báo đã đọc.", { id, readAt });
       return;
     }
 

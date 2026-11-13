@@ -26,6 +26,8 @@ export default defineConfig({
           url: "http://localhost:5137/login",
           reuseExistingServer: true,
           timeout: 90000,
+          // Short poll interval so the notification polling is observable.
+          env: { VITE_NOTIFICATION_POLL_MS: "2000" },
         },
         {
           command: "npm run dev:staff:mock",

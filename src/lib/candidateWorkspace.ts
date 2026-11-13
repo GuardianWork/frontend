@@ -18,6 +18,7 @@ const vn = {
       cvs: "Hồ sơ xin việc",
       profile: "Hồ sơ cá nhân",
       copilot: "Trợ lý pháp lý",
+      notifications: "Thông báo",
     },
     pageTitles: {
       jobs: "Tìm việc làm",
@@ -26,6 +27,7 @@ const vn = {
       profile: "Hồ sơ của tôi",
       copilot: "Trợ lý pháp lý",
       account: "Cài đặt tài khoản",
+      notifications: "Thông báo",
     },
     logout: "Đăng xuất",
     loggingOut: "Đang đăng xuất…",
@@ -254,6 +256,7 @@ const en: Copy = {
       cvs: "My CVs",
       profile: "My profile",
       copilot: "Legal assistant",
+      notifications: "Notifications",
     },
     pageTitles: {
       jobs: "Find jobs",
@@ -262,6 +265,7 @@ const en: Copy = {
       profile: "My profile",
       copilot: "Legal assistant",
       account: "Account settings",
+      notifications: "Notifications",
     },
     logout: "Log out",
     loggingOut: "Logging out…",

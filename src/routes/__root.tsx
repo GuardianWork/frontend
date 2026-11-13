@@ -155,6 +155,7 @@ import { LanguageProvider } from "../context/LanguageContext";
 import { CandidateProvider } from "../context/CandidateContext";
 import { RecruiterProvider } from "../context/RecruiterContext";
 import { AuthGate } from "../components/auth/AuthGate";
+import { NotificationProvider } from "../context/NotificationContext";
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
@@ -195,10 +196,12 @@ function RootComponent() {
         <LanguageProvider>
           <CandidateProvider>
             <RecruiterProvider>
-              {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-              <AuthGate>
-                <Outlet />
-              </AuthGate>
+              <NotificationProvider>
+                {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+                <AuthGate>
+                  <Outlet />
+                </AuthGate>
+              </NotificationProvider>
             </RecruiterProvider>
           </CandidateProvider>
         </LanguageProvider>

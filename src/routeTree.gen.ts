@@ -45,6 +45,7 @@ import { Route as CanAppliedRouteImport } from './routes/can/applied'
 import { Route as CanCopilotRouteImport } from './routes/can/copilot'
 import { Route as CanCvsRouteImport } from './routes/can/cvs'
 import { Route as CanJobsRouteImport } from './routes/can/jobs'
+import { Route as CanNotificationsRouteImport } from './routes/can/notifications'
 import { Route as CanProfileRouteImport } from './routes/can/profile'
 import { Route as RecIndexRouteImport } from './routes/rec/index'
 import { Route as RecAccountRouteImport } from './routes/rec/account'
@@ -52,6 +53,7 @@ import { Route as RecApplicationsRouteImport } from './routes/rec/applications'
 import { Route as RecHubRouteImport } from './routes/rec/hub'
 import { Route as RecJobsRouteImport } from './routes/rec/jobs'
 import { Route as RecMembersRouteImport } from './routes/rec/members'
+import { Route as RecNotificationsRouteImport } from './routes/rec/notifications'
 import { Route as RecProfileRouteImport } from './routes/rec/profile'
 import { Route as RecTalentRouteImport } from './routes/rec/talent'
 import { Route as RecVerificationRouteImport } from './routes/rec/verification'
@@ -63,6 +65,7 @@ import { Route as StaffCandidatesRouteImport } from './routes/staff/candidates'
 import { Route as StaffComplianceRouteImport } from './routes/staff/compliance'
 import { Route as StaffJobsRouteImport } from './routes/staff/jobs'
 import { Route as StaffMonitoringRouteImport } from './routes/staff/monitoring'
+import { Route as StaffNotificationsRouteImport } from './routes/staff/notifications'
 import { Route as StaffReportsRouteImport } from './routes/staff/reports'
 import { Route as StaffTasksRouteImport } from './routes/staff/tasks'
 import { Route as StaffVerificationsRouteImport } from './routes/staff/verifications'
@@ -249,6 +252,11 @@ const CanJobsRoute = CanJobsRouteImport.update({
   path: '/jobs',
   getParentRoute: () => CanRoute,
 } as any)
+const CanNotificationsRoute = CanNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => CanRoute,
+} as any)
 const CanProfileRoute = CanProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -282,6 +290,11 @@ const RecJobsRoute = RecJobsRouteImport.update({
 const RecMembersRoute = RecMembersRouteImport.update({
   id: '/members',
   path: '/members',
+  getParentRoute: () => RecRoute,
+} as any)
+const RecNotificationsRoute = RecNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => RecRoute,
 } as any)
 const RecProfileRoute = RecProfileRouteImport.update({
@@ -337,6 +350,11 @@ const StaffJobsRoute = StaffJobsRouteImport.update({
 const StaffMonitoringRoute = StaffMonitoringRouteImport.update({
   id: '/staff/monitoring',
   path: '/staff/monitoring',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffNotificationsRoute = StaffNotificationsRouteImport.update({
+  id: '/staff/notifications',
+  path: '/staff/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StaffReportsRoute = StaffReportsRouteImport.update({
@@ -401,12 +419,14 @@ export interface FileRoutesByFullPath {
   '/can/copilot': typeof CanCopilotRoute
   '/can/cvs': typeof CanCvsRoute
   '/can/jobs': typeof CanJobsRoute
+  '/can/notifications': typeof CanNotificationsRoute
   '/can/profile': typeof CanProfileRoute
   '/rec/account': typeof RecAccountRoute
   '/rec/applications': typeof RecApplicationsRoute
   '/rec/hub': typeof RecHubRoute
   '/rec/jobs': typeof RecJobsRoute
   '/rec/members': typeof RecMembersRoute
+  '/rec/notifications': typeof RecNotificationsRoute
   '/rec/profile': typeof RecProfileRoute
   '/rec/talent': typeof RecTalentRoute
   '/rec/verification': typeof RecVerificationRoute
@@ -417,6 +437,7 @@ export interface FileRoutesByFullPath {
   '/staff/compliance': typeof StaffComplianceRoute
   '/staff/jobs': typeof StaffJobsRoute
   '/staff/monitoring': typeof StaffMonitoringRoute
+  '/staff/notifications': typeof StaffNotificationsRoute
   '/staff/reports': typeof StaffReportsRoute
   '/staff/tasks': typeof StaffTasksRoute
   '/staff/verifications': typeof StaffVerificationsRoute
@@ -460,12 +481,14 @@ export interface FileRoutesByTo {
   '/can/copilot': typeof CanCopilotRoute
   '/can/cvs': typeof CanCvsRoute
   '/can/jobs': typeof CanJobsRoute
+  '/can/notifications': typeof CanNotificationsRoute
   '/can/profile': typeof CanProfileRoute
   '/rec/account': typeof RecAccountRoute
   '/rec/applications': typeof RecApplicationsRoute
   '/rec/hub': typeof RecHubRoute
   '/rec/jobs': typeof RecJobsRoute
   '/rec/members': typeof RecMembersRoute
+  '/rec/notifications': typeof RecNotificationsRoute
   '/rec/profile': typeof RecProfileRoute
   '/rec/talent': typeof RecTalentRoute
   '/rec/verification': typeof RecVerificationRoute
@@ -476,6 +499,7 @@ export interface FileRoutesByTo {
   '/staff/compliance': typeof StaffComplianceRoute
   '/staff/jobs': typeof StaffJobsRoute
   '/staff/monitoring': typeof StaffMonitoringRoute
+  '/staff/notifications': typeof StaffNotificationsRoute
   '/staff/reports': typeof StaffReportsRoute
   '/staff/tasks': typeof StaffTasksRoute
   '/staff/verifications': typeof StaffVerificationsRoute
@@ -522,12 +546,14 @@ export interface FileRoutesById {
   '/can/copilot': typeof CanCopilotRoute
   '/can/cvs': typeof CanCvsRoute
   '/can/jobs': typeof CanJobsRoute
+  '/can/notifications': typeof CanNotificationsRoute
   '/can/profile': typeof CanProfileRoute
   '/rec/account': typeof RecAccountRoute
   '/rec/applications': typeof RecApplicationsRoute
   '/rec/hub': typeof RecHubRoute
   '/rec/jobs': typeof RecJobsRoute
   '/rec/members': typeof RecMembersRoute
+  '/rec/notifications': typeof RecNotificationsRoute
   '/rec/profile': typeof RecProfileRoute
   '/rec/talent': typeof RecTalentRoute
   '/rec/verification': typeof RecVerificationRoute
@@ -538,6 +564,7 @@ export interface FileRoutesById {
   '/staff/compliance': typeof StaffComplianceRoute
   '/staff/jobs': typeof StaffJobsRoute
   '/staff/monitoring': typeof StaffMonitoringRoute
+  '/staff/notifications': typeof StaffNotificationsRoute
   '/staff/reports': typeof StaffReportsRoute
   '/staff/tasks': typeof StaffTasksRoute
   '/staff/verifications': typeof StaffVerificationsRoute
@@ -585,12 +612,14 @@ export interface FileRouteTypes {
     | '/can/copilot'
     | '/can/cvs'
     | '/can/jobs'
+    | '/can/notifications'
     | '/can/profile'
     | '/rec/account'
     | '/rec/applications'
     | '/rec/hub'
     | '/rec/jobs'
     | '/rec/members'
+    | '/rec/notifications'
     | '/rec/profile'
     | '/rec/talent'
     | '/rec/verification'
@@ -601,6 +630,7 @@ export interface FileRouteTypes {
     | '/staff/compliance'
     | '/staff/jobs'
     | '/staff/monitoring'
+    | '/staff/notifications'
     | '/staff/reports'
     | '/staff/tasks'
     | '/staff/verifications'
@@ -644,12 +674,14 @@ export interface FileRouteTypes {
     | '/can/copilot'
     | '/can/cvs'
     | '/can/jobs'
+    | '/can/notifications'
     | '/can/profile'
     | '/rec/account'
     | '/rec/applications'
     | '/rec/hub'
     | '/rec/jobs'
     | '/rec/members'
+    | '/rec/notifications'
     | '/rec/profile'
     | '/rec/talent'
     | '/rec/verification'
@@ -660,6 +692,7 @@ export interface FileRouteTypes {
     | '/staff/compliance'
     | '/staff/jobs'
     | '/staff/monitoring'
+    | '/staff/notifications'
     | '/staff/reports'
     | '/staff/tasks'
     | '/staff/verifications'
@@ -705,12 +738,14 @@ export interface FileRouteTypes {
     | '/can/copilot'
     | '/can/cvs'
     | '/can/jobs'
+    | '/can/notifications'
     | '/can/profile'
     | '/rec/account'
     | '/rec/applications'
     | '/rec/hub'
     | '/rec/jobs'
     | '/rec/members'
+    | '/rec/notifications'
     | '/rec/profile'
     | '/rec/talent'
     | '/rec/verification'
@@ -721,6 +756,7 @@ export interface FileRouteTypes {
     | '/staff/compliance'
     | '/staff/jobs'
     | '/staff/monitoring'
+    | '/staff/notifications'
     | '/staff/reports'
     | '/staff/tasks'
     | '/staff/verifications'
@@ -768,6 +804,7 @@ export interface RootRouteChildren {
   StaffComplianceRoute: typeof StaffComplianceRoute
   StaffJobsRoute: typeof StaffJobsRoute
   StaffMonitoringRoute: typeof StaffMonitoringRoute
+  StaffNotificationsRoute: typeof StaffNotificationsRoute
   StaffReportsRoute: typeof StaffReportsRoute
   StaffTasksRoute: typeof StaffTasksRoute
   StaffVerificationsRoute: typeof StaffVerificationsRoute
@@ -1029,6 +1066,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CanJobsRouteImport
       parentRoute: typeof CanRoute
     }
+    '/can/notifications': {
+      id: '/can/notifications'
+      path: '/notifications'
+      fullPath: '/can/notifications'
+      preLoaderRoute: typeof CanNotificationsRouteImport
+      parentRoute: typeof CanRoute
+    }
     '/can/profile': {
       id: '/can/profile'
       path: '/profile'
@@ -1076,6 +1120,13 @@ declare module '@tanstack/react-router' {
       path: '/members'
       fullPath: '/rec/members'
       preLoaderRoute: typeof RecMembersRouteImport
+      parentRoute: typeof RecRoute
+    }
+    '/rec/notifications': {
+      id: '/rec/notifications'
+      path: '/notifications'
+      fullPath: '/rec/notifications'
+      preLoaderRoute: typeof RecNotificationsRouteImport
       parentRoute: typeof RecRoute
     }
     '/rec/profile': {
@@ -1155,6 +1206,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StaffMonitoringRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/staff/notifications': {
+      id: '/staff/notifications'
+      path: '/staff/notifications'
+      fullPath: '/staff/notifications'
+      preLoaderRoute: typeof StaffNotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/staff/reports': {
       id: '/staff/reports'
       path: '/staff/reports'
@@ -1200,6 +1258,7 @@ interface CanRouteChildren {
   CanCopilotRoute: typeof CanCopilotRoute
   CanCvsRoute: typeof CanCvsRoute
   CanJobsRoute: typeof CanJobsRoute
+  CanNotificationsRoute: typeof CanNotificationsRoute
   CanProfileRoute: typeof CanProfileRoute
   CanIndexRoute: typeof CanIndexRoute
   CanJobsApplyRoute: typeof CanJobsApplyRoute
@@ -1212,6 +1271,7 @@ const CanRouteChildren: CanRouteChildren = {
   CanCopilotRoute: CanCopilotRoute,
   CanCvsRoute: CanCvsRoute,
   CanJobsRoute: CanJobsRoute,
+  CanNotificationsRoute: CanNotificationsRoute,
   CanProfileRoute: CanProfileRoute,
   CanIndexRoute: CanIndexRoute,
   CanJobsApplyRoute: CanJobsApplyRoute,
@@ -1225,6 +1285,7 @@ interface RecRouteChildren {
   RecHubRoute: typeof RecHubRoute
   RecJobsRoute: typeof RecJobsRoute
   RecMembersRoute: typeof RecMembersRoute
+  RecNotificationsRoute: typeof RecNotificationsRoute
   RecProfileRoute: typeof RecProfileRoute
   RecTalentRoute: typeof RecTalentRoute
   RecVerificationRoute: typeof RecVerificationRoute
@@ -1238,6 +1299,7 @@ const RecRouteChildren: RecRouteChildren = {
   RecHubRoute: RecHubRoute,
   RecJobsRoute: RecJobsRoute,
   RecMembersRoute: RecMembersRoute,
+  RecNotificationsRoute: RecNotificationsRoute,
   RecProfileRoute: RecProfileRoute,
   RecTalentRoute: RecTalentRoute,
   RecVerificationRoute: RecVerificationRoute,
@@ -1284,6 +1346,7 @@ const rootRouteChildren: RootRouteChildren = {
   StaffComplianceRoute: StaffComplianceRoute,
   StaffJobsRoute: StaffJobsRoute,
   StaffMonitoringRoute: StaffMonitoringRoute,
+  StaffNotificationsRoute: StaffNotificationsRoute,
   StaffReportsRoute: StaffReportsRoute,
   StaffTasksRoute: StaffTasksRoute,
   StaffVerificationsRoute: StaffVerificationsRoute,

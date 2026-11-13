@@ -10,8 +10,10 @@ export function RecruiterAccess({ children }: { children: ReactNode }) {
   const stage = context?.onboarding.stage;
   const companyPage = pathname === "/rec/verification";
   const invitationsPage = pathname === "/rec/members";
+  const notificationsPage = pathname === "/rec/notifications";
   const allowed =
     pathname === "/rec/account" ||
+    notificationsPage ||
     (stage === "VERIFIED" && !context?.onboarding.companySuspended) ||
     (context?.onboarding.companySuspended && companyPage) ||
     (stage === "COMPANY_ACTION_REQUIRED" && (companyPage || invitationsPage)) ||
