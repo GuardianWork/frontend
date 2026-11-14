@@ -9,16 +9,20 @@ import {
   formatJobDate,
 } from "@/lib/job-content";
 import { JobDescription } from "./JobDescription";
+import { JobAnalyzedDescription } from "./JobAnalyzedDescription";
+import type { ScanFinding } from "@/services/jobScans";
 export function JobContentView({
   content,
   onEdit,
   editDisabled = false,
   showTitle = true,
+  findings = [],
 }: {
   content: JobContent;
   onEdit?: (step: number, field?: string) => void;
   editDisabled?: boolean;
   showTitle?: boolean;
+  findings?: ScanFinding[];
 }) {
   if (onEdit)
     return (
@@ -40,7 +44,7 @@ export function JobContentView({
         {content.headcount && <span>Tuyển {content.headcount} người</span>}
         <span>Hạn ứng tuyển: {formatJobDate(content.deadline)}</span>
       </div>
-      <p className="jp-salary">
+      <p className={`jp-salary${!pay ? " jp-salary--missing" : ""}`}>
         {!pay
           ? "Chưa có thông tin lương"
           : !pay.disclosed
@@ -50,7 +54,14 @@ export function JobContentView({
       {textSections.map(([key, label]) => (
         <section key={key}>
           <h4>{label}</h4>
-          <JobDescription value={content[key] || "Chưa bổ sung nội dung."} />
+          {findings.length ? (
+            <JobAnalyzedDescription
+              value={content[key] || "Chưa bổ sung nội dung."}
+              findings={findings}
+            />
+          ) : (
+            <JobDescription value={content[key] || "Chưa bổ sung nội dung."} />
+          )}
         </section>
       ))}
       {!!content.screeningQuestions?.length && (

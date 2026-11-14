@@ -1,4 +1,5 @@
 import { ValidationSummary } from "@/components/ui/validation-summary";
+import type { ScanFinding } from "@/services/jobScans";
 import { useState } from "react";
 import { JobDescriptionEditor } from "./JobDescriptionEditor";
 import { CircleAlert, Plus, Trash2 } from "lucide-react";
@@ -28,7 +29,11 @@ export function JobContentEditor({
   disabled,
   step,
   invalidField,
+  analysisFindings,
+  analysisTargetRef,
 }: {
+  analysisFindings?: ScanFinding[];
+  analysisTargetRef?: (node: HTMLDivElement | null) => void;
   content: JobContent;
   onChange: (content: JobContent) => void;
   disabled: boolean;
@@ -200,6 +205,8 @@ export function JobContentEditor({
             Mô tả công việc <RequiredMark />
           </h3>
           <JobDescriptionEditor
+            findings={analysisFindings}
+            analysisTargetRef={analysisTargetRef}
             invalid={Boolean(fieldError("description"))}
             onBlur={() => setTouched((previous) => ({ ...previous, description: true }))}
             errorId={fieldError("description") ? "job-description-error" : undefined}
