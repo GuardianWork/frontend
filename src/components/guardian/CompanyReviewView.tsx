@@ -30,6 +30,7 @@ import { CompanyIndexLink } from "./CompanyLinks";
 import { Footer } from "./Footer";
 import { Header } from "./Header";
 import { CompanyMark, useJobsPath } from "./PublicJobsView";
+import { CompanyIcon } from "../icons";
 
 const SECTION_IDS = [
   "company-overview",
@@ -434,7 +435,7 @@ export function CompanyReviewView({
 
             <div className="company-dossier-hero__row">
               <div className="company-dossier-hero__identity">
-                <CompanyMark name={company.name} />
+                <CompanyIcon size={60}/>
                 <div className="min-w-0">
                   <p className="company-dossier-hero__verified">
                     <ShieldCheck size={14} aria-hidden="true" />

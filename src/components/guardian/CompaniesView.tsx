@@ -13,6 +13,7 @@ import { CompanyDetailLink } from "./CompanyLinks";
 import { Footer } from "./Footer";
 import { Header } from "./Header";
 import { CompanyMark } from "./PublicJobsView";
+import { CompanyIcon } from "../icons";
 
 function countLabel(template: string, count: number) {
   return template.replace("{count}", String(count));
@@ -73,7 +74,7 @@ function CompanyCard({ company, summary }: { company: PublicCompany; summary: Co
     <CompanyDetailLink companyId={company.id} className="company-card">
       <span className="company-card__top">
         <span className="company-card__mark">
-          <CompanyMark name={company.name} />
+          <CompanyIcon size={40} />
         </span>
         <span className="company-card__identity">
           <span className="company-card__name">{company.name}</span>
