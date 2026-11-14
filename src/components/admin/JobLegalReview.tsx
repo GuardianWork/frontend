@@ -1,3 +1,7 @@
+import { useEffect, useRef, useState } from "react";
+import { getStaffJobScan, scanProcessing, type ScanView } from "@/services/jobScans";
+import { jobError } from "@/services/jobs";
+import { ScanResult } from "@/components/recruiter/JobScanPanel";
 import type { StaffJobReview } from "@/services/staffJobs";
 import { LABOR_CODE_URL, reviewJobContent } from "@/lib/job-legal-review";
 import { StaffStatusBadge } from "./StaffStatusBadge";
@@ -24,8 +28,7 @@ export function JobLegalReview({
         </div>
       </div>
       <div className="staff-job-legal-body">
-        <StaffStatusBadge tone="neutral">Chưa có kết quả AI</StaffStatusBadge>
-        <p>Dịch vụ AI chưa được kết nối.</p>
+        <KnownScan key={`${review.id}:${review.revisionVersion}`} revisionId={review.id} />
         <h3>Kiểm tra sơ bộ nội dung</h3>
         <StaffStatusBadge tone={findings.length ? "pending" : "info"}>
           {findings.length
@@ -68,5 +71,93 @@ export function JobLegalReview({
         </details>
       </div>
     </section>
+  );
+}
+
+function KnownScan({ revisionId }: { revisionId: number }) {
+  const [scanId, setScanId] = useState("");
+  const [scan, setScan] = useState<ScanView | null>(null);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const request = useRef<AbortController | null>(null);
+  useEffect(() => () => request.current?.abort(), []);
+  useEffect(() => {
+    if (!scan || !scanProcessing(scan) || error) return;
+    const abort = new AbortController();
+    const timer = setTimeout(() => {
+      void getStaffJobScan(revisionId, scan.scanId, abort.signal)
+        .then((result) => {
+          if (!abort.signal.aborted) setScan(result);
+        })
+        .catch((cause) => {
+          if (!abort.signal.aborted) {
+            setScan(null);
+            setError(jobError(cause));
+          }
+        });
+    }, 2000);
+    return () => {
+      clearTimeout(timer);
+      abort.abort();
+    };
+  }, [revisionId, scan, error]);
+  return (
+    <div className="jp-page staff-known-scan">
+      {!scan && !busy && <StaffStatusBadge tone="neutral">Chưa có kết quả AI</StaffStatusBadge>}
+      <p>
+        Chưa hỗ trợ tự động tìm kết quả AI. Nhập mã phân tích đã biết để xem kết quả của phiên bản
+        này.
+      </p>
+      <form
+        className="staff-known-scan-form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          const id = Number(scanId);
+          if (!Number.isSafeInteger(id) || id <= 0) {
+            setError("Vui lòng nhập mã phân tích hợp lệ.");
+            return;
+          }
+          request.current?.abort();
+          const abort = new AbortController();
+          request.current = abort;
+          setBusy(true);
+          setError("");
+          setScan(null);
+          void getStaffJobScan(revisionId, id, abort.signal)
+            .then((result) => {
+              if (!abort.signal.aborted) setScan(result);
+            })
+            .catch((cause) => {
+              if (!abort.signal.aborted) setError(jobError(cause));
+            })
+            .finally(() => {
+              if (!abort.signal.aborted) setBusy(false);
+            });
+        }}
+      >
+        <label htmlFor="staff-known-scan-id">Mã phân tích</label>
+        <input
+          id="staff-known-scan-id"
+          type="text"
+          inputMode="numeric"
+          value={scanId}
+          onChange={(event) => setScanId(event.target.value)}
+          required
+        />
+        <button type="submit" className="jp-button" disabled={busy}>
+          {busy ? "Đang tải…" : "Xem kết quả AI"}
+        </button>
+      </form>
+      {error && (
+        <p className="jp-feedback jp-error" role="alert">
+          {error}
+        </p>
+      )}
+      {scan && <ScanResult scan={scan} />}
+      <p>
+        Chỉ xem được kết quả thuộc nội dung được phép truy cập. Kết quả tham khảo không thay thế
+        quyết định xét duyệt.
+      </p>
+    </div>
   );
 }
