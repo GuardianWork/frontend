@@ -466,6 +466,267 @@ export function createMockApiServer() {
   }
   const accessTokens = new Map();
   const refreshTokens = new Map();
+  /** Publicly visible, verified companies and their published postings. */
+  const publicJobCompanies = [
+    { id: 201, name: "Công ty TNHH Vận tải & Kho lạnh Việt Thành" },
+    { id: 202, name: "Meadow Food & Beverage JSC" },
+    { id: 203, name: "Công ty CP Công nghệ Bản Việt" },
+    { id: 204, name: "TechNova Solutions Ltd." },
+    { id: 205, name: "Green Energy Corp." },
+    { id: 206, name: "VietHealth Pharmaceuticals" },
+    { id: 207, name: "Urban Design Studios" },
+  ];
+  const publicJobs = [
+    {
+      id: 9001,
+      companyId: 201,
+      approvedDeadline: "2026-12-20T00:00:00Z",
+      content: {
+        title: "Chuyên viên điều phối kho lạnh",
+        description:
+          "Việt Thành vận hành chuỗi kho lạnh phục vụ chuỗi thực phẩm đông lạnh trên toàn quốc. Chúng tôi tuyển chuyên viên điều phối ca để theo dõi nhiệt độ, tồn kho và phối hợp lịch xuất hàng mỗi ngày.\n\nCông ty làm việc theo ca 6 ngày mỗi tuần, có xe đưa đón và phụ cấp đường.",
+        location: "TP. Hồ Chí Minh, Quận 7",
+        industry: "Vận tải & Logistics",
+        employmentType: "FULL_TIME",
+        workArrangement: "ONSITE",
+        deadline: "2026-12-20",
+        headcount: 3,
+        compensation: {
+          disclosed: true,
+          minimum: 18000000,
+          maximum: 25000000,
+          currency: "VND",
+          payPeriod: "MONTH",
+        },
+        screeningQuestions: [],
+      },
+    },
+    {
+      id: 9002,
+      companyId: 201,
+      approvedDeadline: "2026-12-28T00:00:00Z",
+      content: {
+        title: "Nhân viên vận hành xe tải lạnh (Hà Nội)",
+        description:
+          "Đội xe Việt Thành tại Hà Nội cần thêm tài xế và phụ xe cho các tuyến lạnh trong nội thành và vùng lân cận.\n\nBằng lái xe B2 trở lên, có kinh nghiệm vận hành phương tiện lạnh là một lợi thế.",
+        location: "Hà Nội, Hoàng Mai",
+        industry: "Vận tải & Logistics",
+        employmentType: "FULL_TIME",
+        workArrangement: "ONSITE",
+        deadline: "2026-12-28",
+        headcount: 5,
+        compensation: {
+          disclosed: true,
+          minimum: 15000000,
+          maximum: 21000000,
+          currency: "VND",
+          payPeriod: "MONTH",
+        },
+        screeningQuestions: [],
+      },
+    },
+    {
+      id: 9003,
+      companyId: 202,
+      approvedDeadline: "2026-12-15T00:00:00Z",
+      content: {
+        title: "Chuyên gia phát triển sản phẩm thực phẩm",
+        description:
+          "Meadow Food & Beverage phát triển dòng thực phẩm đông lạnh lành mạnh cho thị trường bán lẻ Việt Nam. Chúng tôi cần chuyên gia phát triển sản phẩm để đưa danh mục mới ra thị trường trong quý tới.\n\nSản phẩm được kiểm định theo quy chuẩn HACCP và ISO 22000.",
+        location: "TP. Hồ Chí Minh, Quận 12",
+        industry: "Sản xuất & Thực phẩm",
+        employmentType: "FULL_TIME",
+        workArrangement: "HYBRID",
+        deadline: "2026-12-15",
+        headcount: 2,
+        compensation: {
+          disclosed: true,
+          minimum: 25000000,
+          maximum: 38000000,
+          currency: "VND",
+          payPeriod: "MONTH",
+        },
+        screeningQuestions: [],
+      },
+    },
+    {
+      id: 9004,
+      companyId: 202,
+      approvedDeadline: "2026-12-22T00:00:00Z",
+      content: {
+        title: "Thực tập sinh bộ phận chất lượng",
+        description:
+          "Bộ phận Chất lượng của Meadow Food & Beverage đang cần thực tập sinh hỗ trợ lấy mẫu, kiểm tra nhãn hiển thị và hoàn thiện hồ sơ HACCP.\n\nThực tập sinh được làm việc 5 ngày mỗi tuần tại nhà máy Quận 12.",
+        location: "TP. Hồ Chí Minh, Quận 12",
+        industry: "Sản xuất & Thực phẩm",
+        employmentType: "INTERNSHIP",
+        workArrangement: "ONSITE",
+        deadline: "2026-12-22",
+        headcount: 1,
+        compensation: {
+          disclosed: false,
+          currency: "VND",
+          payPeriod: "MONTH",
+        },
+        screeningQuestions: [],
+      },
+    },
+    {
+      id: 9005,
+      companyId: 203,
+      approvedDeadline: "2027-01-10T00:00:00Z",
+      content: {
+        title: "Kỹ sư nền tảng (Go) — môi trường hybrid",
+        description:
+          "Bản Việt xây dựng nền tảng dịch vụ dùng chung cho các đội vận hành trong nước. Chúng tôi tuyển kỹ sư nền tảng để vận hành hệ thống phục vụ hàng triệu người dùng mỗi ngày.\n\nĐội ngũ làm việc 2 ngày tại văn phòng và 3 ngày linh hoạt.",
+        location: "Hà Nội, Cầu Giấy",
+        industry: "Công nghệ thông tin",
+        employmentType: "FULL_TIME",
+        workArrangement: "HYBRID",
+        deadline: "2027-01-10",
+        headcount: 4,
+        compensation: {
+          disclosed: true,
+          minimum: 35000000,
+          maximum: 52000000,
+          currency: "VND",
+          payPeriod: "MONTH",
+        },
+        screeningQuestions: [],
+      },
+    },
+    {
+      id: 9006,
+      companyId: 203,
+      approvedDeadline: "2027-01-05T00:00:00Z",
+      content: {
+        title: "Kỹ sư kiểm thử tự động (remote)",
+        description:
+          "Bản Việt cần một kỹ sư kiểm thử tự động để xây dựng bộ hồi quy cho các dịch vụ thanh toán nội địa. Công việc hoàn toàn từ xa, làm việc theo mốc bàn giao hằng tuần với đội phát triển.\n\nCông ty cung cấp thiết bị và thẻ mua sắm thiết bị từ ngày đầu tiên.",
+        location: "Remote — Việt Nam",
+        industry: "Công nghệ thông tin",
+        employmentType: "CONTRACT",
+        workArrangement: "REMOTE",
+        deadline: "2027-01-05",
+        headcount: 2,
+        compensation: {
+          disclosed: true,
+          minimum: 30000000,
+          maximum: 45000000,
+          currency: "VND",
+          payPeriod: "MONTH",
+        },
+        screeningQuestions: [],
+      },
+    },
+    // Additional mock jobs for other companies
+    {
+      id: 9008,
+      companyId: 204,
+      approvedDeadline: "2026-12-31T00:00:00Z",
+      content: {
+        title: "Software Engineer",
+        description:
+          "TechNova Solutions Ltd. is looking for a software engineer experienced in TypeScript and Node.js.",
+        location: "Ho Chi Minh City",
+        industry: "Software",
+        employmentType: "FULL_TIME",
+        workArrangement: "HYBRID",
+        deadline: "2026-12-31",
+        headcount: 2,
+        compensation: {
+          disclosed: true,
+          minimum: 20000000,
+          maximum: 28000000,
+          currency: "VND",
+          payPeriod: "MONTH",
+        },
+        screeningQuestions: [],
+      },
+    },
+    {
+      id: 9009,
+      companyId: 205,
+      approvedDeadline: "2026-12-30T00:00:00Z",
+      content: {
+        title: "Renewable Energy Analyst",
+        description: "Green Energy Corp. seeks an analyst to evaluate solar and wind projects.",
+        location: "Da Nang",
+        industry: "Energy",
+        employmentType: "FULL_TIME",
+        workArrangement: "ONSITE",
+        deadline: "2026-12-30",
+        headcount: 1,
+        compensation: {
+          disclosed: true,
+          minimum: 24000000,
+          maximum: 34000000,
+          currency: "VND",
+          payPeriod: "MONTH",
+        },
+        screeningQuestions: [],
+      },
+    },
+    {
+      id: 9010,
+      companyId: 206,
+      approvedDeadline: "2026-12-28T00:00:00Z",
+      content: {
+        title: "Pharmacist",
+        description: "VietHealth Pharmaceuticals is hiring pharmacists for retail distribution.",
+        location: "Hai Phong",
+        industry: "Pharmaceutical",
+        employmentType: "FULL_TIME",
+        workArrangement: "ONSITE",
+        deadline: "2026-12-28",
+        headcount: 3,
+        compensation: {
+          disclosed: true,
+          minimum: 18000000,
+          maximum: 25000000,
+          currency: "VND",
+          payPeriod: "MONTH",
+        },
+        screeningQuestions: [],
+      },
+    },
+    {
+      id: 9011,
+      companyId: 207,
+      approvedDeadline: "2027-01-05T00:00:00Z",
+      content: {
+        title: "Architect",
+        description:
+          "Urban Design Studios looking for an architect with experience in modern urban planning.",
+        location: "Can Tho",
+        industry: "Architecture",
+        employmentType: "FULL_TIME",
+        workArrangement: "HYBRID",
+        deadline: "2027-01-05",
+        headcount: 2,
+        compensation: {
+          disclosed: true,
+          minimum: 22000000,
+          maximum: 30000000,
+          currency: "VND",
+          payPeriod: "MONTH",
+        },
+        screeningQuestions: [],
+      },
+    },
+  ];
+  function publicJobDetail(job) {
+    const company = publicJobCompanies.find((entry) => entry.id === job.companyId);
+    return {
+      id: job.id,
+      company: { id: company?.id ?? job.companyId, name: company?.name ?? "Doanh nghiệp" },
+      content: job.content,
+      publicationStatus: job.publicationStatus ?? "PUBLISHED",
+      approvedDeadline: job.approvedDeadline ?? null,
+      applicationsAvailable: true,
+      applicationAvailabilityReason: null,
+    };
+  }
   const companies = [
     {
       id: 101,
@@ -713,6 +974,68 @@ export function createMockApiServer() {
         send(200, "Recovered; sign in normally", { selfServiceState: "ACTIVE" });
         return;
       }
+    }
+    if (req.method === "GET" && path === "/api/jobs/search") {
+      const keyword = (url.searchParams.get("keyword") || "").trim().toLowerCase();
+      const location = (url.searchParams.get("location") || "").trim().toLowerCase();
+      const employmentType = (url.searchParams.get("employmentType") || "").trim().toUpperCase();
+      const workArrangement = (url.searchParams.get("workArrangement") || "").trim().toUpperCase();
+      const salaryMinParam = url.searchParams.get("salaryMin");
+      const salaryMaxParam = url.searchParams.get("salaryMax");
+      const salaryMin = salaryMinParam ? Number(salaryMinParam) : undefined;
+      const salaryMax = salaryMaxParam ? Number(salaryMaxParam) : undefined;
+      const page = Math.max(0, Number(url.searchParams.get("page")) || 0);
+      const size = Math.min(20, Math.max(1, Number(url.searchParams.get("size")) || 5));
+      const memberToken = req.headers.authorization?.replace(/^Bearer /, "");
+      const memberSession = accessTokens.get(memberToken);
+      const memberUser =
+        memberSession && memberSession.expiresAt > Date.now()
+          ? users.find((entry) => entry.id === memberSession.userId)
+          : undefined;
+      const memberCompanyId = memberUser ? (membership(memberUser)?.companyId ?? null) : null;
+      const matches = publicJobs.filter((job) => {
+        if (job.companyId === memberCompanyId) return false;
+        const content = job.content;
+        const haystack =
+          `${content.title} ${content.description} ${content.location}`.toLowerCase();
+        if (keyword && !haystack.includes(keyword)) return false;
+        if (location && !content.location.toLowerCase().includes(location)) return false;
+        if (employmentType && content.employmentType !== employmentType) return false;
+        if (workArrangement && content.workArrangement !== workArrangement) return false;
+        const compensation = content.compensation;
+        if (Number.isFinite(salaryMin)) {
+          if (!compensation?.disclosed || compensation.maximum < salaryMin) return false;
+        }
+        if (Number.isFinite(salaryMax)) {
+          if (!compensation?.disclosed || compensation.minimum > salaryMax) return false;
+        }
+        return true;
+      });
+      const totalElements = matches.length;
+      const totalPages = Math.max(1, Math.ceil(totalElements / size));
+      const content = matches
+        .slice(page * size, page * size + size)
+        .map((job) => publicJobDetail(job));
+      send(200, "Jobs retrieved successfully", {
+        content,
+        pageNumber: page,
+        pageSize: size,
+        totalElements,
+        totalPages,
+        first: page === 0,
+        last: page + 1 >= totalPages,
+      });
+      return;
+    }
+    const publicJobRoute = /^\/api\/jobs\/(\d+)$/.exec(path);
+    if (req.method === "GET" && publicJobRoute) {
+      const job = publicJobs.find((entry) => entry.id === Number(publicJobRoute[1]));
+      if (!job) {
+        send(404, "Tin tuyển dụng không còn khả dụng");
+        return;
+      }
+      send(200, "Job retrieved successfully", publicJobDetail(job));
+      return;
     }
     const token = req.headers.authorization?.replace(/^Bearer /, "");
     const session = accessTokens.get(token);

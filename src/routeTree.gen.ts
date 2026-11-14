@@ -47,6 +47,8 @@ import { Route as CanCvsRouteImport } from './routes/can/cvs'
 import { Route as CanJobsRouteImport } from './routes/can/jobs'
 import { Route as CanNotificationsRouteImport } from './routes/can/notifications'
 import { Route as CanProfileRouteImport } from './routes/can/profile'
+import { Route as CompaniesIndexRouteImport } from './routes/companies.index'
+import { Route as CompaniesCompanyIdRouteImport } from './routes/companies.$companyId'
 import { Route as RecIndexRouteImport } from './routes/rec/index'
 import { Route as RecAccountRouteImport } from './routes/rec/account'
 import { Route as RecApplicationsRouteImport } from './routes/rec/applications'
@@ -69,6 +71,8 @@ import { Route as StaffNotificationsRouteImport } from './routes/staff/notificat
 import { Route as StaffReportsRouteImport } from './routes/staff/reports'
 import { Route as StaffTasksRouteImport } from './routes/staff/tasks'
 import { Route as StaffVerificationsRouteImport } from './routes/staff/verifications'
+import { Route as CanCompaniesIndexRouteImport } from './routes/can/companies.index'
+import { Route as CanCompaniesCompanyIdRouteImport } from './routes/can/companies.$companyId'
 import { Route as CanJobsApplyRouteImport } from './routes/can/jobs_.apply'
 import { Route as RecApplicationsJobIdApplicationIdRouteImport } from './routes/rec/applications_.$jobId.$applicationId'
 
@@ -262,6 +266,16 @@ const CanProfileRoute = CanProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => CanRoute,
 } as any)
+const CompaniesIndexRoute = CompaniesIndexRouteImport.update({
+  id: '/companies/',
+  path: '/companies/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompaniesCompanyIdRoute = CompaniesCompanyIdRouteImport.update({
+  id: '/companies/$companyId',
+  path: '/companies/$companyId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecIndexRoute = RecIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -372,6 +386,16 @@ const StaffVerificationsRoute = StaffVerificationsRouteImport.update({
   path: '/staff/verifications',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CanCompaniesIndexRoute = CanCompaniesIndexRouteImport.update({
+  id: '/companies/',
+  path: '/companies/',
+  getParentRoute: () => CanRoute,
+} as any)
+const CanCompaniesCompanyIdRoute = CanCompaniesCompanyIdRouteImport.update({
+  id: '/companies/$companyId',
+  path: '/companies/$companyId',
+  getParentRoute: () => CanRoute,
+} as any)
 const CanJobsApplyRoute = CanJobsApplyRouteImport.update({
   id: '/jobs_/apply',
   path: '/jobs/apply',
@@ -421,6 +445,7 @@ export interface FileRoutesByFullPath {
   '/can/jobs': typeof CanJobsRoute
   '/can/notifications': typeof CanNotificationsRoute
   '/can/profile': typeof CanProfileRoute
+  '/companies/$companyId': typeof CompaniesCompanyIdRoute
   '/rec/account': typeof RecAccountRoute
   '/rec/applications': typeof RecApplicationsRoute
   '/rec/hub': typeof RecHubRoute
@@ -443,9 +468,12 @@ export interface FileRoutesByFullPath {
   '/staff/verifications': typeof StaffVerificationsRoute
   '/admin/': typeof AdminIndexRoute
   '/can/': typeof CanIndexRoute
+  '/companies/': typeof CompaniesIndexRoute
   '/rec/': typeof RecIndexRoute
   '/staff/': typeof StaffIndexRoute
+  '/can/companies/$companyId': typeof CanCompaniesCompanyIdRoute
   '/can/jobs/apply': typeof CanJobsApplyRoute
+  '/can/companies/': typeof CanCompaniesIndexRoute
   '/rec/applications/$jobId/$applicationId': typeof RecApplicationsJobIdApplicationIdRoute
 }
 export interface FileRoutesByTo {
@@ -483,6 +511,7 @@ export interface FileRoutesByTo {
   '/can/jobs': typeof CanJobsRoute
   '/can/notifications': typeof CanNotificationsRoute
   '/can/profile': typeof CanProfileRoute
+  '/companies/$companyId': typeof CompaniesCompanyIdRoute
   '/rec/account': typeof RecAccountRoute
   '/rec/applications': typeof RecApplicationsRoute
   '/rec/hub': typeof RecHubRoute
@@ -505,9 +534,12 @@ export interface FileRoutesByTo {
   '/staff/verifications': typeof StaffVerificationsRoute
   '/admin': typeof AdminIndexRoute
   '/can': typeof CanIndexRoute
+  '/companies': typeof CompaniesIndexRoute
   '/rec': typeof RecIndexRoute
   '/staff': typeof StaffIndexRoute
+  '/can/companies/$companyId': typeof CanCompaniesCompanyIdRoute
   '/can/jobs/apply': typeof CanJobsApplyRoute
+  '/can/companies': typeof CanCompaniesIndexRoute
   '/rec/applications/$jobId/$applicationId': typeof RecApplicationsJobIdApplicationIdRoute
 }
 export interface FileRoutesById {
@@ -548,6 +580,7 @@ export interface FileRoutesById {
   '/can/jobs': typeof CanJobsRoute
   '/can/notifications': typeof CanNotificationsRoute
   '/can/profile': typeof CanProfileRoute
+  '/companies/$companyId': typeof CompaniesCompanyIdRoute
   '/rec/account': typeof RecAccountRoute
   '/rec/applications': typeof RecApplicationsRoute
   '/rec/hub': typeof RecHubRoute
@@ -570,9 +603,12 @@ export interface FileRoutesById {
   '/staff/verifications': typeof StaffVerificationsRoute
   '/admin/': typeof AdminIndexRoute
   '/can/': typeof CanIndexRoute
+  '/companies/': typeof CompaniesIndexRoute
   '/rec/': typeof RecIndexRoute
   '/staff/': typeof StaffIndexRoute
+  '/can/companies/$companyId': typeof CanCompaniesCompanyIdRoute
   '/can/jobs_/apply': typeof CanJobsApplyRoute
+  '/can/companies/': typeof CanCompaniesIndexRoute
   '/rec/applications_/$jobId/$applicationId': typeof RecApplicationsJobIdApplicationIdRoute
 }
 export interface FileRouteTypes {
@@ -614,6 +650,7 @@ export interface FileRouteTypes {
     | '/can/jobs'
     | '/can/notifications'
     | '/can/profile'
+    | '/companies/$companyId'
     | '/rec/account'
     | '/rec/applications'
     | '/rec/hub'
@@ -636,9 +673,12 @@ export interface FileRouteTypes {
     | '/staff/verifications'
     | '/admin/'
     | '/can/'
+    | '/companies/'
     | '/rec/'
     | '/staff/'
+    | '/can/companies/$companyId'
     | '/can/jobs/apply'
+    | '/can/companies/'
     | '/rec/applications/$jobId/$applicationId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -676,6 +716,7 @@ export interface FileRouteTypes {
     | '/can/jobs'
     | '/can/notifications'
     | '/can/profile'
+    | '/companies/$companyId'
     | '/rec/account'
     | '/rec/applications'
     | '/rec/hub'
@@ -698,9 +739,12 @@ export interface FileRouteTypes {
     | '/staff/verifications'
     | '/admin'
     | '/can'
+    | '/companies'
     | '/rec'
     | '/staff'
+    | '/can/companies/$companyId'
     | '/can/jobs/apply'
+    | '/can/companies'
     | '/rec/applications/$jobId/$applicationId'
   id:
     | '__root__'
@@ -740,6 +784,7 @@ export interface FileRouteTypes {
     | '/can/jobs'
     | '/can/notifications'
     | '/can/profile'
+    | '/companies/$companyId'
     | '/rec/account'
     | '/rec/applications'
     | '/rec/hub'
@@ -762,9 +807,12 @@ export interface FileRouteTypes {
     | '/staff/verifications'
     | '/admin/'
     | '/can/'
+    | '/companies/'
     | '/rec/'
     | '/staff/'
+    | '/can/companies/$companyId'
     | '/can/jobs_/apply'
+    | '/can/companies/'
     | '/rec/applications_/$jobId/$applicationId'
   fileRoutesById: FileRoutesById
 }
@@ -797,6 +845,7 @@ export interface RootRouteChildren {
   AdminReportsRoute: typeof AdminReportsRoute
   AdminTasksRoute: typeof AdminTasksRoute
   AdminVerificationsRoute: typeof AdminVerificationsRoute
+  CompaniesCompanyIdRoute: typeof CompaniesCompanyIdRoute
   StaffAccountsRoute: typeof StaffAccountsRoute
   StaffAnalyticsRoute: typeof StaffAnalyticsRoute
   StaffAuditLogsRoute: typeof StaffAuditLogsRoute
@@ -809,6 +858,7 @@ export interface RootRouteChildren {
   StaffTasksRoute: typeof StaffTasksRoute
   StaffVerificationsRoute: typeof StaffVerificationsRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  CompaniesIndexRoute: typeof CompaniesIndexRoute
   StaffIndexRoute: typeof StaffIndexRoute
 }
 
@@ -1080,6 +1130,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CanProfileRouteImport
       parentRoute: typeof CanRoute
     }
+    '/companies/': {
+      id: '/companies/'
+      path: '/companies'
+      fullPath: '/companies/'
+      preLoaderRoute: typeof CompaniesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/companies/$companyId': {
+      id: '/companies/$companyId'
+      path: '/companies/$companyId'
+      fullPath: '/companies/$companyId'
+      preLoaderRoute: typeof CompaniesCompanyIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rec/': {
       id: '/rec/'
       path: '/'
@@ -1234,6 +1298,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StaffVerificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/can/companies/': {
+      id: '/can/companies/'
+      path: '/companies'
+      fullPath: '/can/companies/'
+      preLoaderRoute: typeof CanCompaniesIndexRouteImport
+      parentRoute: typeof CanRoute
+    }
+    '/can/companies/$companyId': {
+      id: '/can/companies/$companyId'
+      path: '/companies/$companyId'
+      fullPath: '/can/companies/$companyId'
+      preLoaderRoute: typeof CanCompaniesCompanyIdRouteImport
+      parentRoute: typeof CanRoute
+    }
     '/can/jobs_/apply': {
       id: '/can/jobs_/apply'
       path: '/jobs/apply'
@@ -1261,7 +1339,9 @@ interface CanRouteChildren {
   CanNotificationsRoute: typeof CanNotificationsRoute
   CanProfileRoute: typeof CanProfileRoute
   CanIndexRoute: typeof CanIndexRoute
+  CanCompaniesCompanyIdRoute: typeof CanCompaniesCompanyIdRoute
   CanJobsApplyRoute: typeof CanJobsApplyRoute
+  CanCompaniesIndexRoute: typeof CanCompaniesIndexRoute
 }
 
 const CanRouteChildren: CanRouteChildren = {
@@ -1274,7 +1354,9 @@ const CanRouteChildren: CanRouteChildren = {
   CanNotificationsRoute: CanNotificationsRoute,
   CanProfileRoute: CanProfileRoute,
   CanIndexRoute: CanIndexRoute,
+  CanCompaniesCompanyIdRoute: CanCompaniesCompanyIdRoute,
   CanJobsApplyRoute: CanJobsApplyRoute,
+  CanCompaniesIndexRoute: CanCompaniesIndexRoute,
 }
 
 const CanRouteWithChildren = CanRoute._addFileChildren(CanRouteChildren)
@@ -1339,6 +1421,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminReportsRoute: AdminReportsRoute,
   AdminTasksRoute: AdminTasksRoute,
   AdminVerificationsRoute: AdminVerificationsRoute,
+  CompaniesCompanyIdRoute: CompaniesCompanyIdRoute,
   StaffAccountsRoute: StaffAccountsRoute,
   StaffAnalyticsRoute: StaffAnalyticsRoute,
   StaffAuditLogsRoute: StaffAuditLogsRoute,
@@ -1351,6 +1434,7 @@ const rootRouteChildren: RootRouteChildren = {
   StaffTasksRoute: StaffTasksRoute,
   StaffVerificationsRoute: StaffVerificationsRoute,
   AdminIndexRoute: AdminIndexRoute,
+  CompaniesIndexRoute: CompaniesIndexRoute,
   StaffIndexRoute: StaffIndexRoute,
 }
 export const routeTree = rootRouteImport

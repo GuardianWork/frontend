@@ -1,5 +1,6 @@
 import { getPublicJobDetail } from "@/services/publicJobs";
 import { JobDescription } from "@/components/recruiter/JobDescription";
+import { CompanyDetailLink } from "./CompanyLinks";
 /* Hallmark · page: public job discovery · genre: modern-minimal
  * macrostructure: Workbench · tone: utilitarian · theme: GuardianWork (DESIGN.md locked)
  * anchor hue: Guardian Blue · enrichment: none (typography + functional states) · job-list focus
@@ -55,7 +56,7 @@ import {
   type JobSearchParams,
 } from "@/lib/job-search";
 
-function useJobsPath() {
+export function useJobsPath() {
   return useRouterState({
     select: (state) =>
       state.location.pathname.startsWith("/can/") ? ("/can/jobs" as const) : ("/jobs" as const),
@@ -65,7 +66,7 @@ const PAGE_SIZE = 9;
 
 const POPULAR_QUERIES = ["Kinh doanh", "Kế toán", "Tiếp thị", "Nhân sự"];
 
-function CompanyMark({ name }: { name: string }) {
+export function CompanyMark({ name }: { name: string }) {
   const initials = name
     .split(" ")
     .filter(Boolean)
@@ -80,7 +81,29 @@ function CompanyMark({ name }: { name: string }) {
   );
 }
 
-function toPublicJobItem(job: PublicJobSearchResult): JobItem {
+export function CompanyTitleLink({
+  name,
+  companyId,
+  className,
+}: {
+  name: string;
+  companyId?: number;
+  className?: string;
+}) {
+  if (typeof companyId !== "number" || companyId <= 0)
+    return <span className={className}>{name}</span>;
+  return (
+    <CompanyDetailLink
+      companyId={companyId}
+      className={className}
+      onClick={(event) => event.stopPropagation()}
+    >
+      {name}
+    </CompanyDetailLink>
+  );
+}
+
+export function toPublicJobItem(job: PublicJobSearchResult): JobItem {
   const content = job.content ?? {};
   const compensation = content.compensation;
   const hasSalary =
@@ -94,6 +117,7 @@ function toPublicJobItem(job: PublicJobSearchResult): JobItem {
     id: String(job.id),
     title: content.title ?? "Tin tuyển dụng",
     company: job.company?.name ?? "Doanh nghiệp",
+    companyId: typeof job.company?.id === "number" ? job.company.id : undefined,
     location: content.location ?? "Chưa cập nhật",
     salaryRange,
     badge: "Công ty đã xác thực",
@@ -462,7 +486,7 @@ export function PublicJobsView({
  * One listing item, shared by the guest catalogue and the two-column layout so the
  * job card reads identically in both. The title always opens the full detail page.
  */
-function JobCard({
+export function JobCard({
   job,
   search,
   active,
@@ -482,7 +506,11 @@ function JobCard({
     >
       <div className="career-job__company min-w-0">
         <CompanyMark name={job.company} />
-        <span className="min-w-0 truncate">{job.company}</span>
+        <CompanyTitleLink
+          name={job.company}
+          companyId={job.companyId}
+          className="career-job__company-name min-w-0 truncate"
+        />
         <span className={`${badgeClass(job)} shrink-0`}>{badgeLabel(job.badge)}</span>
         <ArrowRight size={18} className="career-job__arrow shrink-0" aria-hidden="true" />
       </div>
@@ -911,7 +939,9 @@ function JobDetail({
             <div className="career-detail__company">
               <CompanyMark name={job.company} />
               <div>
-                <p>{job.company}</p>
+                <p>
+                  <CompanyTitleLink name={job.company} companyId={job.companyId} />
+                </p>
                 <span className={badgeClass(job)}>{badgeLabel(job.badge)}</span>
               </div>
             </div>
@@ -1030,7 +1060,9 @@ function JobDetail({
             <dl>
               <div>
                 <dt>Doanh nghiệp</dt>
-                <dd>{job.company}</dd>
+                <dd>
+                  <CompanyTitleLink name={job.company} companyId={job.companyId} />
+                </dd>
               </div>
               <div>
                 <dt>Ngành nghề</dt>

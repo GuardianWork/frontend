@@ -16,6 +16,7 @@ import {
   MenuIcon,
   CloseIcon,
   GlobeIcon,
+  CompanyIcon,
 } from "@/components/icons";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { BriefcaseBusiness, ChevronDown, X, ShieldCheck, Bell as BellIcon } from "lucide-react";
@@ -182,6 +183,7 @@ function AdminShellFrame({
     { to: "/can/profile", label: copy.nav.profile, icon: "badge" },
     { to: "/can/copilot", label: copy.nav.copilot, icon: "gavel" },
     { to: "/can/notifications", label: copy.nav.notifications, icon: "bell" },
+    { to: "/can/companies", label: copy.nav.companies, icon: "company" },
   ];
 
   const navItems =
@@ -206,7 +208,11 @@ function AdminShellFrame({
                 ? copy.pageTitles.account
                 : pathname === "/can/notifications"
                   ? copy.pageTitles.notifications
-                  : null;
+                  : pathname.startsWith("/can/companies")
+                    ? copy.pageTitles.companies
+                    : pathname === "/companies"
+                      ? copy.pageTitles.companies
+                      : null;
   const pageTitle = currentRole === "candidate" ? (candidatePageTitle ?? title) : title;
 
   const roleMeta =
@@ -268,6 +274,8 @@ function AdminShellFrame({
                   <LegalReferenceIcon size={20} />
                 ) : item.icon === "bell" ? (
                   <BellIcon size={20} />
+                ) : item.icon === "company" ? (
+                  <CompanyIcon size={20} />
                 ) : (
                   <CandidateProfileIcon size={20} />
                 )}
