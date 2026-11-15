@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
@@ -15,8 +15,8 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useLanguage } from "@/context/LanguageContext";
 import {
   compactSalary,
-  findPublicCompany,
-  readCompanySummary,
+  findPublicCompanyInfo,
+  findPublicCompanyRoles,
   type CompanyRole,
 } from "@/services/publicCompanies";
 import { mockCompanyProfile } from "@/lib/company-profile-mock";
@@ -46,6 +46,8 @@ function listOrDash(values: string[], fallback: string) {
 function countLabel(template: string, count: number) {
   return template.replace("{count}", String(count));
 }
+
+const COMPANY_ROLE_PAGE_SIZE = 10;
 
 function SectionHeading({ id, title, note }: { id: string; title: string; note?: string }) {
   return (
@@ -181,18 +183,32 @@ export function CompanyReviewView({
   const { dict } = useLanguage();
   const navigate = useNavigate();
   const jobsPath = useJobsPath();
-  const companyQuery = useQuery({
-    queryKey: ["public-company", companyId],
-    queryFn: () => findPublicCompany(companyId),
+  const [companyPage, setCompanyPage] = useState(0);
+
+  useEffect(() => {
+    setCompanyPage(0);
+  }, [companyId]);
+
+  const infoQuery = useQuery({
+    queryKey: ["public-company-info", companyId],
+    queryFn: () => findPublicCompanyInfo(companyId),
     enabled: companyId > 0,
     staleTime: 60_000,
   });
 
-  const company = companyQuery.data ?? null;
-  const summary = useMemo(() => (company ? readCompanySummary(company) : null), [company]);
+  const rolesQuery = useQuery({
+    queryKey: ["public-company-roles", companyId, companyPage, COMPANY_ROLE_PAGE_SIZE],
+    queryFn: () => findPublicCompanyRoles(companyId, companyPage, COMPANY_ROLE_PAGE_SIZE),
+    enabled: companyId > 0,
+    staleTime: 60_000,
+  });
+
+  const company = infoQuery.data ?? null;
+  const summary = company?.summary ?? null;
+  const rolesPage = rolesQuery.data ?? null;
   const profile = useMemo(
-    () => (company && summary ? mockCompanyProfile(company, summary) : null),
-    [company, summary],
+    () => (company ? mockCompanyProfile(company, company.summary) : null),
+    [company],
   );
   const activeTab = tab ?? DEFAULT_COMPANY_TAB;
 
@@ -204,15 +220,15 @@ export function CompanyReviewView({
 
   const selectTab = (nextTab: CompanyTabId) => {
     if (nextTab === "danh-gia") return;
+    const tab = nextTab === DEFAULT_COMPANY_TAB ? undefined : nextTab;
     void navigate({
-      search: (previous) => ({
-        ...previous,
-        tab: nextTab === DEFAULT_COMPANY_TAB ? undefined : nextTab,
-      }),
+      to: workspace ? "/can/companies/$companyId" : "/companies/$companyId",
+      params: { companyId: String(companyId) },
+      search: { tab },
     });
   };
 
-  if (companyId <= 0 || (!companyQuery.isPending && !companyQuery.isError && !company)) {
+  if (companyId <= 0 || (!infoQuery.isPending && !infoQuery.isError && !company)) {
     return (
       <div
         className={`career-site guardian-company${workspace ? " guardian-company--workspace" : ""}`}
@@ -242,7 +258,7 @@ export function CompanyReviewView({
     );
   }
 
-  if (companyQuery.isError) {
+  if (infoQuery.isError || rolesQuery.isError) {
     return (
       <div
         className={`career-site guardian-company${workspace ? " guardian-company--workspace" : ""}`}
@@ -263,7 +279,10 @@ export function CompanyReviewView({
               <button
                 type="button"
                 className="career-button"
-                onClick={() => void companyQuery.refetch()}
+                onClick={() => {
+                  void infoQuery.refetch();
+                  void rolesQuery.refetch();
+                }}
               >
                 {dict.companyReview.retry}
               </button>
@@ -275,7 +294,7 @@ export function CompanyReviewView({
     );
   }
 
-  if (companyQuery.isPending || !company || !summary) {
+  if (infoQuery.isPending || rolesQuery.isPending || !company || !summary || !rolesPage) {
     return (
       <div
         className={`career-site guardian-company${workspace ? " guardian-company--workspace" : ""}`}
@@ -297,7 +316,7 @@ export function CompanyReviewView({
   }
 
   const band = summary.salaryBands[0] ?? null;
-  const featured = summary.roles.find((role) => role.deadline) ?? summary.roles[0] ?? null;
+  const featured = rolesPage.roles.find((role) => role.deadline) ?? rolesPage.roles[0] ?? null;
   const earliestDeadline = summary.deadlines[0] ?? null;
 
   return (
@@ -366,7 +385,7 @@ export function CompanyReviewView({
               </div>
               <div>
                 <dt>{dict.companyReview.snapshotSalary}</dt>
-                <dd>{band ? compactSalary(band) : "—"}</dd>
+               <dd>{band ? compactSalary(band) : "—"}</dd>
               </div>
               <div>
                 <dt>{dict.companyReview.snapshotDeadline}</dt>
@@ -396,9 +415,6 @@ export function CompanyReviewView({
                 ) : null}
               </button>
             ))}
-            <span className="company-tabs__count">
-              {countLabel(dict.companyReview.openRolesCount, summary.roleCount)}
-            </span>
           </div>
         </nav>
 
@@ -531,14 +547,58 @@ export function CompanyReviewView({
                     title={dict.companyReview.openRoles}
                     note={dict.companyReview.rolesNote}
                   />
-                  {summary.roles.length ? (
+                  {rolesPage.roles.length ? (
                     <ul className="company-roles">
-                      {summary.roles.map((role) => (
+                      {rolesPage.roles.map((role) => (
                         <RoleRow key={role.id} role={role} jobsPath={jobsPath} dict={dict} />
                       ))}
                     </ul>
                   ) : (
                     <p className="company-block__empty">{dict.companyReview.noOpenRoles}</p>
+                  )}
+
+                  {rolesPage.pagination.totalPages > 1 && (
+                    <nav className="career-pagination" aria-label="Phân trang kết quả">
+                      <button
+                        type="button"
+                        aria-label="Trang trước"
+                        disabled={rolesPage.pagination.pageNumber === 0}
+                        onClick={() => setCompanyPage((previous) => Math.max(0, previous - 1))}
+                      >
+                        <span className="career-pagination__full">Trang trước</span>
+                        <span className="career-pagination__short" aria-hidden="true">
+                          Trước
+                        </span>
+                      </button>
+                      <div className="career-pagination__pages">
+                        {Array.from({ length: rolesPage.pagination.totalPages }, (_, index) => (
+                          <button
+                            key={index}
+                            type="button"
+                            aria-current={
+                              rolesPage.pagination.pageNumber === index ? "page" : undefined
+                            }
+                            aria-label={`Trang ${index + 1}`}
+                            onClick={() => setCompanyPage(index)}
+                          >
+                            {index + 1}
+                          </button>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        aria-label="Trang sau"
+                        disabled={
+                          rolesPage.pagination.pageNumber >= rolesPage.pagination.totalPages - 1
+                        }
+                        onClick={() => setCompanyPage((previous) => previous + 1)}
+                      >
+                        <span className="career-pagination__full">Trang sau</span>
+                        <span className="career-pagination__short" aria-hidden="true">
+                          Sau
+                        </span>
+                      </button>
+                    </nav>
                   )}
                 </section>
               </div>
@@ -608,11 +668,6 @@ export function CompanyReviewView({
               </Link>
             </section>
 
-            <section className="company-rail-card company-rail-card--quiet">
-              <h2>{dict.companyReview.sourceTitle}</h2>
-              <p>{dict.companyReview.sourceNote}</p>
-              <p className="company-rail-card__demo">{dict.companyReview.mockProfileNote}</p>
-            </section>
           </aside>
         </div>
       </div>

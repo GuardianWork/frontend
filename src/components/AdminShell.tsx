@@ -178,12 +178,12 @@ function AdminShellFrame({
 
   const candidateNav: NavItem[] = [
     { to: "/can/jobs", label: copy.nav.jobs, icon: "work" },
-    { to: "/can/applied", label: copy.nav.myJobs, icon: "application" },
-    { to: "/can/cvs", label: copy.nav.cvs, icon: "description" },
+    { to: "/can/companies", label: copy.nav.companies, icon: "company" },
     { to: "/can/profile", label: copy.nav.profile, icon: "badge" },
+    { to: "/can/cvs", label: copy.nav.cvs, icon: "description" },
+    { to: "/can/applied", label: copy.nav.myJobs, icon: "application" },
     { to: "/can/copilot", label: copy.nav.copilot, icon: "gavel" },
     { to: "/can/notifications", label: copy.nav.notifications, icon: "bell" },
-    { to: "/can/companies", label: copy.nav.companies, icon: "company" },
   ];
 
   const navItems =

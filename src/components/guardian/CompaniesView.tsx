@@ -1,19 +1,20 @@
-import { useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, BriefcaseBusiness, Search, SearchX, ShieldCheck, X } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
-import { matchesSearch } from "@/lib/list-search";
+import { paginateItems } from "@/lib/pagination";
 import {
-  listPublicCompanies,
-  readCompanySummary,
+  searchPublicCompanies,
   type CompanySummary,
-  type PublicCompany,
+  type PublicCompanyDirectoryEntry,
 } from "@/services/publicCompanies";
 import { CompanyDetailLink } from "./CompanyLinks";
 import { Footer } from "./Footer";
 import { Header } from "./Header";
 import { CompanyMark } from "./PublicJobsView";
 import { CompanyIcon } from "../icons";
+
+const COMPANIES_PER_PAGE = 15;
 
 function countLabel(template: string, count: number) {
   return template.replace("{count}", String(count));
@@ -65,19 +66,20 @@ function cityLabels(locations: CompanySummary["locations"]) {
   return [...labels];
 }
 
-function CompanyCard({ company, summary }: { company: PublicCompany; summary: CompanySummary }) {
+function CompanyCard({ entry }: { entry: PublicCompanyDirectoryEntry }) {
   const { dict } = useLanguage();
+  const summary = entry.summary;
   const tags = summary.industries.slice(0, 4).map((item) => item.label);
   const locations = cityLabels(summary.locations);
 
   return (
-    <CompanyDetailLink companyId={company.id} className="company-card">
+    <CompanyDetailLink companyId={entry.id} className="company-card">
       <span className="company-card__top">
         <span className="company-card__mark">
           <CompanyIcon size={40} />
         </span>
         <span className="company-card__identity">
-          <span className="company-card__name">{company.name}</span>
+          <span className="company-card__name">{entry.name}</span>
           <span className="company-card__verified">
             <ShieldCheck size={13} aria-hidden="true" />
             {dict.companyReview.verified}
@@ -144,35 +146,20 @@ function DirectorySkeleton() {
 export function CompaniesView({ workspace = false }: { workspace?: boolean }) {
   const { dict } = useLanguage();
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(0);
+  const deferredQuery = useDeferredValue(query);
+  useEffect(() => {
+    setPage(0);
+  }, [deferredQuery]);
   const companiesQuery = useQuery({
-    queryKey: ["public-companies"],
-    queryFn: () => listPublicCompanies(),
+    queryKey: ["public-companies", deferredQuery.trim()],
+    queryFn: () => searchPublicCompanies({ keyword: deferredQuery }),
     staleTime: 60_000,
   });
 
-  const companies = useMemo(
-    () =>
-      (companiesQuery.data ?? []).map((company) => ({
-        company,
-        summary: readCompanySummary(company),
-      })),
-    [companiesQuery.data],
-  );
-
-  const filtered = useMemo(() => {
-    if (!query.trim()) return companies;
-    return companies.filter(({ company, summary }) =>
-      matchesSearch(
-        query,
-        company.name,
-        ...summary.industries.map((item) => item.label),
-        ...summary.locations.map((item) => item.label),
-        ...summary.roles.map((role) => role.title),
-      ),
-    );
-  }, [companies, query]);
-
+  const companies = useMemo(() => companiesQuery.data ?? [], [companiesQuery.data]);
   const totalRoles = companies.reduce((total, item) => total + item.summary.roleCount, 0);
+  const pagination = paginateItems(companies, page, COMPANIES_PER_PAGE);
 
   return (
     <div
@@ -229,7 +216,7 @@ export function CompaniesView({ workspace = false }: { workspace?: boolean }) {
                 <>
                   <span>
                     {query.trim()
-                      ? countLabel(dict.companyReview.directoryFilteredCount, filtered.length)
+                      ? countLabel(dict.companyReview.directoryFilteredCount, companies.length)
                       : countLabel(dict.companyReview.directoryCount, companies.length)}
                   </span>
                   <span aria-hidden="true">·</span>
@@ -257,12 +244,7 @@ export function CompaniesView({ workspace = false }: { workspace?: boolean }) {
                 </button>
               </div>
             </div>
-          ) : companies.length === 0 ? (
-            <div className="career-empty">
-              <BriefcaseBusiness size={36} aria-hidden="true" />
-              <p>{dict.companyReview.emptyDirectory}</p>
-            </div>
-          ) : filtered.length === 0 ? (
+          ) : companies.length === 0 && query.trim() ? (
             <div className="career-empty company-empty company-empty--filter">
               <SearchX size={34} aria-hidden="true" />
               <h2>{dict.companyReview.directoryNoMatch}</h2>
@@ -275,14 +257,64 @@ export function CompaniesView({ workspace = false }: { workspace?: boolean }) {
                 {dict.companyReview.directorySearchClear}
               </button>
             </div>
+          ) : companies.length === 0 ? (
+            <div className="career-empty">
+              <BriefcaseBusiness size={36} aria-hidden="true" />
+              <p>{dict.companyReview.emptyDirectory}</p>
+            </div>
           ) : (
-            <ul className="company-directory">
-              {filtered.map(({ company, summary }) => (
-                <li key={company.id}>
-                  <CompanyCard company={company} summary={summary} />
-                </li>
-              ))}
-            </ul>
+            <>
+              <ul className="company-directory">
+                {pagination.items.map((entry) => (
+                  <li key={entry.id}>
+                    <CompanyCard entry={entry} />
+                  </li>
+                ))}
+              </ul>
+
+              {pagination.totalPages > 1 && (
+                <nav className="career-pagination" aria-label={dict.companyReview.paginationLabel}>
+                  <button
+                    type="button"
+                    aria-label={dict.companyReview.paginationPrev}
+                    disabled={pagination.page === 0}
+                    onClick={() => setPage(pagination.page - 1)}
+                  >
+                    <span className="career-pagination__full">{dict.companyReview.paginationPrev}</span>
+                    <span className="career-pagination__short" aria-hidden="true">
+                      {dict.companyReview.paginationPrevShort}
+                    </span>
+                  </button>
+                  <div className="career-pagination__pages">
+                    {Array.from({ length: pagination.totalPages }, (_, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        aria-current={pagination.page === index ? "page" : undefined}
+                        aria-label={dict.companyReview.paginationPage.replace(
+                          "{page}",
+                          String(index + 1),
+                        )}
+                        onClick={() => setPage(index)}
+                      >
+                        {index + 1}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    aria-label={dict.companyReview.paginationNext}
+                    disabled={pagination.page >= pagination.totalPages - 1}
+                    onClick={() => setPage(pagination.page + 1)}
+                  >
+                    <span className="career-pagination__full">{dict.companyReview.paginationNext}</span>
+                    <span className="career-pagination__short" aria-hidden="true">
+                      {dict.companyReview.paginationNextShort}
+                    </span>
+                  </button>
+                </nav>
+              )}
+            </>
           )}
 
           <p className="career-demo-note">{dict.companyReview.sourceNote}</p>

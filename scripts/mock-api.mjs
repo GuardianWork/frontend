@@ -727,6 +727,119 @@ export function createMockApiServer() {
       applicationAvailabilityReason: null,
     };
   }
+  function publicCompanyDeadline(job) {
+    const raw = job.approvedDeadline ?? job.content?.deadline;
+    return raw ? String(raw).slice(0, 10) : null;
+  }
+  function publicCompanyCounts(values) {
+    const counts = new Map();
+    for (const value of values) {
+      const label = String(value ?? "").trim();
+      if (!label) continue;
+      counts.set(label, (counts.get(label) ?? 0) + 1);
+    }
+    return [...counts.entries()]
+      .map(([label, count]) => ({ label, count }))
+      .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+  }
+  function publicCompanySummary(jobs) {
+    const roles = jobs.map((job) => {
+      const content = job.content ?? {};
+      const compensation = content.compensation;
+      const disclosed =
+        compensation?.disclosed &&
+        Number.isFinite(compensation.minimum) &&
+        Number.isFinite(compensation.maximum);
+      return {
+        id: job.id,
+        title: content.title?.trim() || null,
+        location: content.location?.trim() || null,
+        industry: content.industry?.trim() || null,
+        employmentType: content.employmentType ?? null,
+        workArrangement: content.workArrangement ?? null,
+        salary: disclosed
+          ? {
+              minimum: compensation.minimum,
+              maximum: compensation.maximum,
+              currency: compensation.currency ?? "VND",
+              payPeriod: compensation.payPeriod ?? "MONTH",
+            }
+          : null,
+        headcount:
+          Number.isFinite(content.headcount) && content.headcount > 0 ? content.headcount : null,
+        deadline: publicCompanyDeadline(job),
+        description: content.description?.trim() || null,
+        applicationsAvailable: true,
+      };
+    });
+    roles.sort(
+      (a, b) =>
+        (a.deadline ?? "9999-12-31").localeCompare(b.deadline ?? "9999-12-31") || a.id - b.id,
+    );
+    const bands = new Map();
+    for (const role of roles) {
+      if (!role.salary) continue;
+      const key = `${role.salary.currency}|${role.salary.payPeriod}`;
+      const existing = bands.get(key);
+      if (existing) {
+        existing.minimum = Math.min(existing.minimum, role.salary.minimum);
+        existing.maximum = Math.max(existing.maximum, role.salary.maximum);
+        existing.count += 1;
+      } else {
+        bands.set(key, {
+          currency: role.salary.currency,
+          payPeriod: role.salary.payPeriod,
+          minimum: role.salary.minimum,
+          maximum: role.salary.maximum,
+          count: 1,
+        });
+      }
+    }
+    return {
+      roles,
+      summary: {
+        roleCount: roles.length,
+        locations: publicCompanyCounts(roles.map((role) => role.location)),
+        industries: publicCompanyCounts(roles.map((role) => role.industry)),
+        employmentTypes: publicCompanyCounts(roles.map((role) => role.employmentType)),
+        workArrangements: publicCompanyCounts(roles.map((role) => role.workArrangement)),
+        salaryBands: [...bands.values()].sort((a, b) => b.count - a.count || a.minimum - b.minimum),
+        disclosedSalaryCount: roles.filter((role) => role.salary).length,
+        headcountTotal: roles.reduce((total, role) => total + (role.headcount ?? 0), 0),
+        deadlines: [...new Set(roles.map((role) => role.deadline).filter(Boolean))].sort(),
+      },
+    };
+  }
+  function publicCompanyDirectory(keyword) {
+    const needle = keyword.trim().toLowerCase();
+    return publicJobCompanies
+      .map((company) => {
+        const jobs = publicJobs.filter((job) => job.companyId === company.id);
+        return { company, jobs, detail: publicCompanySummary(jobs) };
+      })
+      .filter(({ company, jobs }) => {
+        if (!jobs.length) return false;
+        if (!needle) return true;
+        if (company.name.toLowerCase().includes(needle)) return true;
+        return jobs.some((job) =>
+          [job.content?.title, job.content?.location, job.content?.industry].some((value) =>
+            String(value ?? "")
+              .toLowerCase()
+              .includes(needle),
+          ),
+        );
+      })
+      .sort(
+        (a, b) =>
+          b.detail.summary.roleCount - a.detail.summary.roleCount ||
+          a.company.name.localeCompare(b.company.name),
+      )
+      .map(({ company, detail }) => ({
+        id: company.id,
+        name: company.name,
+        summary: detail.summary,
+      }));
+  }
   const companies = [
     {
       id: 101,
@@ -1035,6 +1148,66 @@ export function createMockApiServer() {
         return;
       }
       send(200, "Job retrieved successfully", publicJobDetail(job));
+      return;
+    }
+    if (req.method === "GET" && path === "/api/companies/public") {
+      const keyword = (url.searchParams.get("keyword") || "").trim();
+      const entries = publicCompanyDirectory(keyword);
+      const page = Math.max(0, Number(url.searchParams.get("page")) || 0);
+      const size = Math.min(20, Math.max(1, Number(url.searchParams.get("size")) || 20));
+      const totalElements = entries.length;
+      const totalPages = Math.ceil(totalElements / size);
+      send(200, "Public companies retrieved successfully", {
+        content: entries.slice(page * size, page * size + size),
+        pageNumber: page,
+        pageSize: size,
+        totalElements,
+        totalPages,
+        first: page === 0,
+        last: page + 1 >= totalPages,
+      });
+      return;
+    }
+    const publicCompanyRolesRoute = /^\/api\/companies\/public\/(\d+)\/roles$/.exec(path);
+    if (req.method === "GET" && publicCompanyRolesRoute) {
+      const companyId = Number(publicCompanyRolesRoute[1]);
+      const company = publicJobCompanies.find((entry) => entry.id === companyId);
+      const jobs = publicJobs.filter((job) => job.companyId === companyId);
+      if (!company || !jobs.length) {
+        send(404, "40400 COMPANY_NOT_FOUND: Company not found");
+        return;
+      }
+      const detail = publicCompanySummary(jobs);
+      const totalElements = detail.roles.length;
+      const page = Math.max(0, Number(url.searchParams.get("page")) || 0);
+      const size = Math.min(20, Math.max(1, Number(url.searchParams.get("size")) || 10));
+      const totalPages = Math.max(1, Math.ceil(totalElements / size));
+      send(200, "Public company roles retrieved successfully", {
+        content: detail.roles.slice(page * size, (page + 1) * size),
+        pageNumber: page,
+        pageSize: size,
+        totalElements,
+        totalPages,
+        first: page === 0,
+        last: page + 1 >= totalPages,
+      });
+      return;
+    }
+    const publicCompanyRoute = /^\/api\/companies\/public\/(\d+)$/.exec(path);
+    if (req.method === "GET" && publicCompanyRoute) {
+      const companyId = Number(publicCompanyRoute[1]);
+      const company = publicJobCompanies.find((entry) => entry.id === companyId);
+      const jobs = publicJobs.filter((job) => job.companyId === companyId);
+      if (!company || !jobs.length) {
+        send(404, "40400 COMPANY_NOT_FOUND: Company not found");
+        return;
+      }
+      const detail = publicCompanySummary(jobs);
+      send(200, "Public company retrieved successfully", {
+        id: company.id,
+        name: company.name,
+        summary: detail.summary,
+      });
       return;
     }
     const token = req.headers.authorization?.replace(/^Bearer /, "");

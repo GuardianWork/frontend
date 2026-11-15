@@ -19,7 +19,7 @@ const vn = {
       profile: "Hồ sơ cá nhân",
       copilot: "Trợ lý pháp lý",
       notifications: "Thông báo",
-      companies: "Công ty",
+      companies: "Tìm công ty",
     },
     pageTitles: {
       jobs: "Tìm việc làm",
@@ -29,7 +29,7 @@ const vn = {
       copilot: "Trợ lý pháp lý",
       account: "Cài đặt tài khoản",
       notifications: "Thông báo",
-      companies: "Công ty",
+      companies: "Tìm công ty",
     },
     logout: "Đăng xuất",
     loggingOut: "Đang đăng xuất…",
@@ -259,7 +259,7 @@ const en: Copy = {
       profile: "My profile",
       copilot: "Legal assistant",
       notifications: "Notifications",
-      companies: "Companies",
+      companies: "Find companies",
     },
     pageTitles: {
       jobs: "Find jobs",
