@@ -280,7 +280,9 @@ export function CompaniesView({ workspace = false }: { workspace?: boolean }) {
                     disabled={pagination.page === 0}
                     onClick={() => setPage(pagination.page - 1)}
                   >
-                    <span className="career-pagination__full">{dict.companyReview.paginationPrev}</span>
+                    <span className="career-pagination__full">
+                      {dict.companyReview.paginationPrev}
+                    </span>
                     <span className="career-pagination__short" aria-hidden="true">
                       {dict.companyReview.paginationPrevShort}
                     </span>
@@ -307,7 +309,9 @@ export function CompaniesView({ workspace = false }: { workspace?: boolean }) {
                     disabled={pagination.page >= pagination.totalPages - 1}
                     onClick={() => setPage(pagination.page + 1)}
                   >
-                    <span className="career-pagination__full">{dict.companyReview.paginationNext}</span>
+                    <span className="career-pagination__full">
+                      {dict.companyReview.paginationNext}
+                    </span>
                     <span className="career-pagination__short" aria-hidden="true">
                       {dict.companyReview.paginationNextShort}
                     </span>

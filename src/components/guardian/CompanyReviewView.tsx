@@ -29,7 +29,8 @@ import { jobSearch } from "@/lib/job-search";
 import { CompanyIndexLink } from "./CompanyLinks";
 import { Footer } from "./Footer";
 import { Header } from "./Header";
-import { CompanyMark, useJobsPath } from "./PublicJobsView";
+import { CompanyMark } from "./PublicJobsView";
+import { useJobsPath } from "@/hooks/useJobsPath";
 import { CompanyIcon } from "../icons";
 
 function formatDate(value?: string | null) {
@@ -385,7 +386,7 @@ export function CompanyReviewView({
               </div>
               <div>
                 <dt>{dict.companyReview.snapshotSalary}</dt>
-               <dd>{band ? compactSalary(band) : "—"}</dd>
+                <dd>{band ? compactSalary(band) : "—"}</dd>
               </div>
               <div>
                 <dt>{dict.companyReview.snapshotDeadline}</dt>
@@ -667,7 +668,6 @@ export function CompanyReviewView({
                 <ArrowRight size={16} aria-hidden="true" />
               </Link>
             </section>
-
           </aside>
         </div>
       </div>
