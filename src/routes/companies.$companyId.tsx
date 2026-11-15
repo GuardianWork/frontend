@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CompanyReviewView } from "@/components/guardian/CompanyReviewView";
+import { parseCompanyTabSearch } from "@/lib/company-tabs";
 import { publicSeo } from "@/lib/public-seo";
 
 /**
@@ -8,6 +9,7 @@ import { publicSeo } from "@/lib/public-seo";
  * terms and the live roles that carry those facts.
  */
 export const Route = createFileRoute("/companies/$companyId")({
+  validateSearch: parseCompanyTabSearch,
   head: () => ({
     links: publicSeo("/companies").links,
     meta: [
@@ -25,6 +27,7 @@ export const Route = createFileRoute("/companies/$companyId")({
 
 function CompanyReviewPage() {
   const { companyId } = Route.useParams();
+  const { tab } = Route.useSearch();
   const id = Number(companyId);
-  return <CompanyReviewView companyId={Number.isSafeInteger(id) && id > 0 ? id : 0} />;
+  return <CompanyReviewView companyId={Number.isSafeInteger(id) && id > 0 ? id : 0} tab={tab} />;
 }

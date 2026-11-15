@@ -1,12 +1,7 @@
+/* eslint-disable-next-line react-refresh/only-export-components*/
 import { getPublicJobDetail } from "@/services/publicJobs";
 import { JobDescription } from "@/components/recruiter/JobDescription";
 import { CompanyDetailLink } from "./CompanyLinks";
-/* Hallmark · page: public job discovery · genre: modern-minimal
- * macrostructure: Workbench · tone: utilitarian · theme: GuardianWork (DESIGN.md locked)
- * anchor hue: Guardian Blue · enrichment: none (typography + functional states) · job-list focus
- * states: default · hover · focus · active · disabled · loading · error · success
- * pre-emit critique: P5 H5 E5 S5 R5 V4
- */
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";

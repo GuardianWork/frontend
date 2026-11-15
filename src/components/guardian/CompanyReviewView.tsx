@@ -435,7 +435,7 @@ export function CompanyReviewView({
 
             <div className="company-dossier-hero__row">
               <div className="company-dossier-hero__identity">
-                <CompanyIcon size={60}/>
+                <CompanyIcon size={60} />
                 <div className="min-w-0">
                   <p className="company-dossier-hero__verified">
                     <ShieldCheck size={14} aria-hidden="true" />

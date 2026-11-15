@@ -10,6 +10,19 @@ test("public company directory opens a dossier and returns to the directory", as
 
   await expect(page).toHaveURL(/\/companies\/\d+$/);
   await expect(page.locator(".company-dossier-hero h1")).toBeVisible();
+  await expect(page.locator("#company-overview")).toBeVisible();
+  await expect(page.locator("#company-about")).not.toContainText("Chưa công khai");
+  await expect(page.locator("#company-expertise .company-expertise li").first()).toBeVisible();
+  await expect(page.locator("#company-headquarters .company-headquarters")).toBeVisible();
+  await expect(page.locator(".company-rail-card__demo")).toContainText("dữ liệu minh hoạ");
+
+  await expect(page.getByRole("tab", { name: "Đánh giá" })).toHaveAttribute(
+    "aria-disabled",
+    "true",
+  );
+
+  await page.getByRole("tab", { name: "Việc làm" }).click();
+  await expect(page).toHaveURL(/tab=viec-lam/);
   await expect(page.locator("#company-roles")).toBeVisible();
 
   await page.getByRole("link", { name: /Danh sách công ty/ }).click();

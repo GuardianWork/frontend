@@ -3932,47 +3932,69 @@ body {
   overflow-wrap: anywhere;
 }
 
-/* Section index */
-.company-section-nav {
+/* Profile tabs */
+.company-tabs {
   background: var(--color-paper);
   border-bottom: 1px solid var(--color-rule);
 }
-.company-section-nav__row {
+.company-tabs__row {
   display: flex;
-  align-items: center;
-  gap: 26px;
+  align-items: stretch;
+  gap: 4px;
   overflow-x: auto;
   scrollbar-width: thin;
 }
-.company-section-nav__row a {
+.company-tab {
   position: relative;
-  padding: 15px 0 13px;
-  color: var(--color-ink-2);
-  font-size: 13px;
-  font-weight: 650;
-  text-decoration: none;
-  white-space: nowrap;
-}
-.company-section-nav__row a::after {
-  content: "";
-  position: absolute;
-  inset-inline: 0;
-  bottom: -1px;
-  height: 2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-block: 6px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 8px;
   background: transparent;
-  transition: background-color 160ms ease;
+  color: var(--color-ink-2);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
 }
-.company-section-nav__row a:hover {
+.company-tab:hover {
+  background: var(--color-paper-2);
   color: var(--color-accent);
 }
-.company-section-nav__row a[aria-current="location"] {
+.company-tab[aria-selected="true"] {
+  background: var(--color-accent-subtle);
   color: var(--color-accent-deep);
 }
-.company-section-nav__row a[aria-current="location"]::after {
-  background: var(--color-accent);
+.company-tab[aria-disabled="true"] {
+  color: var(--color-ink-3);
+  cursor: not-allowed;
 }
-.company-section-nav__count {
+.company-tab[aria-disabled="true"]:hover {
+  background: transparent;
+  color: var(--color-ink-3);
+}
+.company-tab__soon {
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--color-paper-3);
+  color: var(--color-ink-3);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.03em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+.company-tabs__count {
   margin-left: auto;
+  align-self: center;
   padding-left: 18px;
   color: var(--color-ink-3);
   font-size: 12px;
@@ -4063,6 +4085,44 @@ body {
   font-weight: 650;
   line-height: 1.55;
   overflow-wrap: anywhere;
+}
+
+/* Expertise */
+.company-expertise {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.company-expertise li {
+  padding: 5px 11px;
+  border: 1px solid var(--color-rule);
+  border-radius: 5px;
+  background: var(--color-paper-2);
+  color: var(--color-ink);
+  font-size: 12.5px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+/* Headquarters */
+.company-headquarters {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  max-width: 72ch;
+  color: var(--color-ink);
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.6;
+}
+.company-headquarters svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: var(--color-accent);
 }
 
 /* Prose */
@@ -4492,11 +4552,16 @@ body {
   align-items: center;
   justify-content: center;
   gap: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
   color: var(--color-on-rail);
+  font: inherit;
   font-size: 12.5px;
   font-weight: 650;
   text-decoration: underline;
   text-underline-offset: 3px;
+  cursor: pointer;
 }
 .company-featured__all:hover {
   color: var(--color-paper-2);
@@ -4527,6 +4592,14 @@ body {
 }
 .company-rail-card--quiet {
   background: var(--color-paper-2);
+}
+.company-rail-card .company-rail-card__demo {
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-rule);
+  color: var(--color-ink-3);
+  font-size: 11.5px;
+  line-height: 1.55;
 }
 .company-rail-card .career-text-link {
   font-size: 12.5px;
@@ -4607,13 +4680,13 @@ body {
 .guardian-company--workspace .company-dossier-hero {
   padding-inline: 32px;
 }
-.guardian-company--workspace .company-section-nav {
+.guardian-company--workspace .company-tabs {
   margin-top: 20px;
   border: 1px solid var(--color-rule);
   border-radius: 10px;
   overflow: hidden;
 }
-.guardian-company--workspace .company-section-nav__row {
+.guardian-company--workspace .company-tabs__row {
   padding-inline: 20px;
 }
 .guardian-company--workspace .company-dossier-layout {
@@ -4772,10 +4845,10 @@ body {
     padding-left: 0;
     border-top: 1px solid var(--color-rail-rule);
   }
-  .company-section-nav__row {
+  .company-tabs__row {
     gap: 20px;
   }
-  .company-section-nav__count {
+  .company-tabs__count {
     display: none;
   }
   .company-facts {
