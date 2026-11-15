@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
@@ -8,40 +8,29 @@ import {
   CalendarClock,
   Info,
   MapPin,
-  RefreshCw,
   ShieldCheck,
   Users,
 } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useLanguage } from "@/context/LanguageContext";
 import {
   compactSalary,
-  companyIntroduction,
   findPublicCompany,
-  payPeriodLabel,
   readCompanySummary,
-  salaryBandLabel,
   type CompanyRole,
-  type CompanySalaryBand,
-  type CompanySummary,
 } from "@/services/publicCompanies";
+import { mockCompanyProfile } from "@/lib/company-profile-mock";
+import {
+  DEFAULT_COMPANY_TAB,
+  type CompanyTabId,
+  type CompanyTabSelection,
+} from "@/lib/company-tabs";
 import { jobSearch } from "@/lib/job-search";
 import { CompanyIndexLink } from "./CompanyLinks";
 import { Footer } from "./Footer";
 import { Header } from "./Header";
 import { CompanyMark, useJobsPath } from "./PublicJobsView";
 import { CompanyIcon } from "../icons";
-
-const SECTION_IDS = [
-  "company-overview",
-  "company-about",
-  "company-hiring",
-  "company-roles",
-  "company-locations",
-  "company-source",
-] as const;
-
-type SectionId = (typeof SECTION_IDS)[number];
 
 function formatDate(value?: string | null) {
   if (!value) return "";
@@ -58,125 +47,11 @@ function countLabel(template: string, count: number) {
   return template.replace("{count}", String(count));
 }
 
-function useActiveSection(ids: readonly string[]) {
-  const [active, setActive] = useState<string>(ids[0] ?? "");
-  const key = ids.join("|");
-  useEffect(() => {
-    if (!ids.length) return;
-    const elements = ids
-      .map((id) => document.getElementById(id))
-      .filter((element): element is HTMLElement => Boolean(element));
-    if (!elements.length) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-        if (visible[0]) setActive(visible[0].target.id);
-      },
-      { rootMargin: "-24% 0px -58% 0px", threshold: 0 },
-    );
-    elements.forEach((element) => observer.observe(element));
-    return () => observer.disconnect();
-    // The joined ids are the stable identity of this observation set.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
-  return active;
-}
-
 function SectionHeading({ id, title, note }: { id: string; title: string; note?: string }) {
   return (
     <div className="company-block__head">
       <h2 id={`${id}-title`}>{title}</h2>
       {note ? <p>{note}</p> : null}
-    </div>
-  );
-}
-
-function PayChart({
-  summary,
-  band,
-  dict,
-}: {
-  summary: CompanySummary;
-  band: CompanySalaryBand;
-  dict: ReturnType<typeof useLanguage>["dict"];
-}) {
-  const span = Math.max(0, band.maximum - band.minimum);
-  const matches = (role: CompanyRole) =>
-    Boolean(
-      role.salary &&
-      role.salary.currency === band.currency &&
-      role.salary.payPeriod === band.payPeriod,
-    );
-  const rows = [...summary.roles].sort((a, b) => {
-    const aMatch = matches(a);
-    const bMatch = matches(b);
-    if (aMatch && bMatch) return a.salary!.minimum - b.salary!.minimum || a.id - b.id;
-    if (aMatch) return -1;
-    if (bMatch) return 1;
-    return a.id - b.id;
-  });
-
-  return (
-    <div className="company-pay">
-      <div className="company-pay__head">
-        <h3>{dict.companyReview.salaryChartTitle}</h3>
-        <p>
-          {dict.companyReview.salaryTransparencyValue
-            .replace("{disclosed}", String(summary.disclosedSalaryCount))
-            .replace("{total}", String(summary.roleCount))}
-        </p>
-      </div>
-      <p className="company-pay__band">{salaryBandLabel(band)}</p>
-      <ul className="company-pay__rows">
-        {rows.map((role) => {
-          const inBand = matches(role);
-          const left = inBand && span ? ((role.salary!.minimum - band.minimum) / span) * 100 : 0;
-          const width =
-            inBand && span
-              ? Math.min(
-                  Math.max(((role.salary!.maximum - role.salary!.minimum) / span) * 100, 4),
-                  100 - left,
-                )
-              : 100;
-          return (
-            <li
-              key={role.id}
-              className={`company-pay__row${inBand ? "" : " company-pay__row--muted"}`}
-            >
-              <span className="company-pay__role" title={role.title}>
-                {role.title}
-              </span>
-              <span className="company-pay__track" aria-hidden="true">
-                {inBand ? (
-                  <span
-                    className="company-pay__bar"
-                    style={{ left: `${left}%`, width: `${width}%` }}
-                  />
-                ) : null}
-              </span>
-              <span className="company-pay__value">
-                {role.salary ? role.salary.label : dict.companyReview.roleSalaryHidden}
-              </span>
-            </li>
-          );
-        })}
-      </ul>
-      <p className="company-pay__note">
-        {dict.companyReview.salaryChartNote.replace(
-          "{unit}",
-          `${band.currency}/${payPeriodLabel(band.payPeriod)}`,
-        )}
-      </p>
-      {summary.salaryBands.length > 1 ? (
-        <p className="company-pay__note">
-          {dict.companyReview.salaryOtherBands.replace(
-            "{bands}",
-            summary.salaryBands.slice(1).map(salaryBandLabel).join(" · "),
-          )}
-        </p>
-      ) : null}
     </div>
   );
 }
@@ -296,12 +171,15 @@ function DossierSkeleton({ label }: { label: string }) {
  */
 export function CompanyReviewView({
   companyId,
+  tab,
   workspace = false,
 }: {
   companyId: number;
+  tab?: CompanyTabSelection;
   workspace?: boolean;
 }) {
   const { dict } = useLanguage();
+  const navigate = useNavigate();
   const jobsPath = useJobsPath();
   const companyQuery = useQuery({
     queryKey: ["public-company", companyId],
@@ -312,17 +190,27 @@ export function CompanyReviewView({
 
   const company = companyQuery.data ?? null;
   const summary = useMemo(() => (company ? readCompanySummary(company) : null), [company]);
-  const introduction = useMemo(() => (company ? companyIntroduction(company) : null), [company]);
-  const activeSection = useActiveSection(company ? SECTION_IDS : []);
+  const profile = useMemo(
+    () => (company && summary ? mockCompanyProfile(company, summary) : null),
+    [company, summary],
+  );
+  const activeTab = tab ?? DEFAULT_COMPANY_TAB;
 
-  const navItems: { id: SectionId; label: string }[] = [
-    { id: "company-overview", label: dict.companyReview.navOverview },
-    { id: "company-about", label: dict.companyReview.navAbout },
-    { id: "company-hiring", label: dict.companyReview.navHiring },
-    { id: "company-roles", label: dict.companyReview.navRoles },
-    { id: "company-locations", label: dict.companyReview.navLocations },
-    { id: "company-source", label: dict.companyReview.navSource },
+  const tabs: { id: CompanyTabId; label: string; disabled?: boolean }[] = [
+    { id: "gioi-thieu", label: dict.companyReview.tabOverview },
+    { id: "viec-lam", label: dict.companyReview.tabJobs },
+    { id: "danh-gia", label: dict.companyReview.tabReviews, disabled: true },
   ];
+
+  const selectTab = (nextTab: CompanyTabId) => {
+    if (nextTab === "danh-gia") return;
+    void navigate({
+      search: (previous) => ({
+        ...previous,
+        tab: nextTab === DEFAULT_COMPANY_TAB ? undefined : nextTab,
+      }),
+    });
+  };
 
   if (companyId <= 0 || (!companyQuery.isPending && !companyQuery.isError && !company)) {
     return (
@@ -456,10 +344,14 @@ export function CompanyReviewView({
                 </div>
               </div>
               <div className="company-dossier-hero__actions">
-                <a className="career-button career-button--inverse" href="#company-roles">
+                <button
+                  type="button"
+                  className="career-button career-button--inverse"
+                  onClick={() => selectTab("viec-lam")}
+                >
                   {countLabel(dict.companyReview.openRolesCount, summary.roleCount)}
                   <ArrowRight size={17} aria-hidden="true" />
-                </a>
+                </button>
               </div>
             </div>
 
@@ -484,18 +376,27 @@ export function CompanyReviewView({
           </div>
         </section>
 
-        <nav className="company-section-nav" aria-label={dict.companyReview.navLabel}>
-          <div className="career-container company-section-nav__row">
-            {navItems.map((item) => (
-              <a
+        <nav className="company-tabs" aria-label={dict.companyReview.tabsLabel}>
+          <div className="career-container company-tabs__row" role="tablist">
+            {tabs.map((item) => (
+              <button
                 key={item.id}
-                href={`#${item.id}`}
-                aria-current={activeSection === item.id ? "location" : undefined}
+                type="button"
+                role="tab"
+                id={`company-tab-${item.id}`}
+                aria-selected={activeTab === item.id}
+                aria-controls={item.disabled ? undefined : `company-panel-${item.id}`}
+                aria-disabled={item.disabled || undefined}
+                className="company-tab"
+                onClick={() => selectTab(item.id)}
               >
                 {item.label}
-              </a>
+                {item.disabled ? (
+                  <span className="company-tab__soon">{dict.companyReview.tabSoon}</span>
+                ) : null}
+              </button>
             ))}
-            <span className="company-section-nav__count">
+            <span className="company-tabs__count">
               {countLabel(dict.companyReview.openRolesCount, summary.roleCount)}
             </span>
           </div>
@@ -503,233 +404,145 @@ export function CompanyReviewView({
 
         <div className="career-container company-dossier-layout">
           <div className="company-dossier-main">
-            <section
-              id="company-overview"
-              className="company-block"
-              aria-labelledby="company-overview-title"
-            >
-              <SectionHeading
-                id="company-overview"
-                title={dict.companyReview.employmentTerms}
-                note={dict.companyReview.overviewNote.replace("{count}", String(summary.roleCount))}
-              />
-              <dl className="company-facts">
-                <div>
-                  <dt>{dict.companyReview.industries}</dt>
-                  <dd>
-                    {listOrDash(
-                      summary.industries.map((item) => item.label),
-                      "—",
-                    )}
-                  </dd>
-                </div>
-                <div>
-                  <dt>{dict.companyReview.locations}</dt>
-                  <dd>
-                    {listOrDash(
-                      summary.locations.map((item) => item.label),
-                      "—",
-                    )}
-                  </dd>
-                </div>
-                <div>
-                  <dt>{dict.companyReview.employmentTypes}</dt>
-                  <dd>
-                    {listOrDash(
-                      summary.employmentTypes.map((item) => item.label),
-                      "—",
-                    )}
-                  </dd>
-                </div>
-                <div>
-                  <dt>{dict.companyReview.workArrangements}</dt>
-                  <dd>
-                    {listOrDash(
-                      summary.workArrangements.map((item) => item.label),
-                      "—",
-                    )}
-                  </dd>
-                </div>
-                <div>
-                  <dt>{dict.companyReview.salary}</dt>
-                  <dd>{band ? salaryBandLabel(band) : dict.companyReview.salaryHidden}</dd>
-                </div>
-                <div>
-                  <dt>{dict.companyReview.deadlines}</dt>
-                  <dd>
-                    {summary.deadlines.length
-                      ? summary.deadlines.map(formatDate).join(" · ")
-                      : dict.companyReview.deadlineNone}
-                  </dd>
-                </div>
-                {summary.headcountTotal ? (
-                  <div>
-                    <dt>{dict.companyReview.headcount}</dt>
-                    <dd>{countLabel(dict.companyReview.roleHeadcount, summary.headcountTotal)}</dd>
-                  </div>
-                ) : null}
-              </dl>
-            </section>
-
-            <section
-              id="company-about"
-              className="company-block"
-              aria-labelledby="company-about-title"
-            >
-              <SectionHeading
-                id="company-about"
-                title={dict.companyReview.companyLead}
-                note={dict.companyReview.companyLeadNote}
-              />
-              {introduction ? (
-                <div className="company-prose">
-                  {introduction.paragraphs.map((paragraph, index) => (
-                    <p key={index}>{paragraph}</p>
-                  ))}
-                  <p className="company-prose__source">
-                    <Link to={jobsPath} search={jobSearch({ job: String(introduction.jobId) })}>
-                      {dict.companyReview.aboutSource.replace("{title}", introduction.roleTitle)}
-                    </Link>
-                    <ArrowRight size={14} aria-hidden="true" />
-                  </p>
-                </div>
-              ) : (
-                <p className="company-block__empty">{dict.companyReview.aboutEmpty}</p>
-              )}
-            </section>
-
-            <section
-              id="company-hiring"
-              className="company-block"
-              aria-labelledby="company-hiring-title"
-            >
-              <SectionHeading
-                id="company-hiring"
-                title={dict.companyReview.hiringTitle}
-                note={dict.companyReview.hiringNote}
-              />
-              <div className="company-hiring">
-                {band ? (
-                  <PayChart summary={summary} band={band} dict={dict} />
-                ) : (
-                  <div className="company-pay">
-                    <h3>{dict.companyReview.salaryChartTitle}</h3>
-                    <p className="company-block__empty">{dict.companyReview.salaryChartEmpty}</p>
-                  </div>
-                )}
-                <div className="company-shape">
-                  <h3>{dict.companyReview.workingShapeTitle}</h3>
-                  <dl>
+            {activeTab === "gioi-thieu" ? (
+              <div
+                id="company-panel-gioi-thieu"
+                role="tabpanel"
+                aria-labelledby="company-tab-gioi-thieu"
+              >
+                <section
+                  id="company-overview"
+                  className="company-block"
+                  aria-labelledby="company-overview-title"
+                >
+                  <SectionHeading
+                    id="company-overview"
+                    title={dict.companyReview.generalInfo}
+                    note={dict.companyReview.overviewNote}
+                  />
+                  <dl className="company-facts">
+                    <div>
+                      <dt>{dict.companyReview.industries}</dt>
+                      <dd>
+                        {listOrDash(
+                          summary.industries.map((item) => item.label),
+                          "—",
+                        )}
+                      </dd>
+                    </div>
                     <div>
                       <dt>{dict.companyReview.employmentTypes}</dt>
-                      {summary.employmentTypes.map((item) => (
-                        <dd key={item.label}>
-                          <span>{item.label}</span>
-                          <span className="company-shape__count">{item.count}</span>
-                        </dd>
-                      ))}
+                      <dd>
+                        {listOrDash(
+                          summary.employmentTypes.map((item) => item.label),
+                          "—",
+                        )}
+                      </dd>
                     </div>
                     <div>
                       <dt>{dict.companyReview.workArrangements}</dt>
-                      {summary.workArrangements.map((item) => (
-                        <dd key={item.label}>
-                          <span>{item.label}</span>
-                          <span className="company-shape__count">{item.count}</span>
-                        </dd>
-                      ))}
+                      <dd>
+                        {listOrDash(
+                          summary.workArrangements.map((item) => item.label),
+                          "—",
+                        )}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>{dict.companyReview.workingHours}</dt>
+                      <dd>{profile?.workingHours ?? dict.companyReview.notDisclosed}</dd>
+                    </div>
+                    <div>
+                      <dt>{dict.companyReview.companyScale}</dt>
+                      <dd>{profile?.companyScale ?? dict.companyReview.notDisclosed}</dd>
                     </div>
                   </dl>
-                </div>
-              </div>
-            </section>
+                </section>
 
-            <section
-              id="company-roles"
-              className="company-block"
-              aria-labelledby="company-roles-title"
-            >
-              <SectionHeading
-                id="company-roles"
-                title={dict.companyReview.openRoles}
-                note={dict.companyReview.rolesNote}
-              />
-              {summary.roles.length ? (
-                <ul className="company-roles">
-                  {summary.roles.map((role) => (
-                    <RoleRow key={role.id} role={role} jobsPath={jobsPath} dict={dict} />
-                  ))}
-                </ul>
-              ) : (
-                <p className="company-block__empty">{dict.companyReview.noOpenRoles}</p>
-              )}
-            </section>
-
-            <section
-              id="company-locations"
-              className="company-block"
-              aria-labelledby="company-locations-title"
-            >
-              <SectionHeading
-                id="company-locations"
-                title={dict.companyReview.locationsTitle}
-                note={dict.companyReview.locationsNote}
-              />
-              <ul className="company-locations">
-                {summary.locations.map((location) => (
-                  <li key={location.label} className="company-location">
-                    <div className="company-location__head">
-                      <MapPin size={16} aria-hidden="true" />
-                      <span>{location.label}</span>
-                      <span className="company-location__count">
-                        {countLabel(dict.companyReview.locationRolesCount, location.count)}
-                      </span>
+                <section
+                  id="company-about"
+                  className="company-block"
+                  aria-labelledby="company-about-title"
+                >
+                  <SectionHeading
+                    id="company-about"
+                    title={dict.companyReview.companyLead}
+                    note={dict.companyReview.companyLeadNote}
+                  />
+                  {profile ? (
+                    <div className="company-prose">
+                      {profile.introduction.map((paragraph, index) => (
+                        <p key={index}>{paragraph}</p>
+                      ))}
                     </div>
-                    <ul className="company-location__roles">
-                      {summary.roles
-                        .filter((role) => role.location === location.label)
-                        .map((role) => (
-                          <li key={role.id}>
-                            <Link to={jobsPath} search={jobSearch({ job: String(role.id) })}>
-                              {role.title}
-                            </Link>
-                          </li>
-                        ))}
-                    </ul>
-                  </li>
-                ))}
-              </ul>
-              <p className="company-block__note">{dict.companyReview.locationsMapNote}</p>
-            </section>
+                  ) : (
+                    <p className="company-block__empty">{dict.companyReview.aboutEmpty}</p>
+                  )}
+                </section>
 
-            <section
-              id="company-source"
-              className="company-block"
-              aria-labelledby="company-source-title"
-            >
-              <SectionHeading
-                id="company-source"
-                title={dict.companyReview.sourceTitle}
-                note={dict.companyReview.sourceIntro}
-              />
-              <ul className="company-source-list">
-                <li>
-                  <ShieldCheck size={18} aria-hidden="true" />
-                  <span>{dict.companyReview.sourceIdentity}</span>
-                </li>
-                <li>
-                  <ShieldCheck size={18} aria-hidden="true" />
-                  <span>{dict.companyReview.sourceVerification}</span>
-                </li>
-                <li>
-                  <RefreshCw size={18} aria-hidden="true" />
-                  <span>{dict.companyReview.sourceAggregated}</span>
-                </li>
-                <li>
-                  <Info size={18} aria-hidden="true" />
-                  <span>{dict.companyReview.sourceMissing}</span>
-                </li>
-              </ul>
-            </section>
+                <section
+                  id="company-expertise"
+                  className="company-block"
+                  aria-labelledby="company-expertise-title"
+                >
+                  <SectionHeading id="company-expertise" title={dict.companyReview.expertise} />
+                  {profile?.expertise.length ? (
+                    <ul className="company-expertise">
+                      {profile.expertise.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="company-block__empty">{dict.companyReview.notDisclosed}</p>
+                  )}
+                </section>
+
+                <section
+                  id="company-headquarters"
+                  className="company-block"
+                  aria-labelledby="company-headquarters-title"
+                >
+                  <SectionHeading
+                    id="company-headquarters"
+                    title={dict.companyReview.headquartersTitle}
+                    note={dict.companyReview.headquartersNote}
+                  />
+                  <p className="company-headquarters">
+                    <MapPin size={16} aria-hidden="true" />
+                    <span>{profile?.headquarters ?? dict.companyReview.notDisclosed}</span>
+                  </p>
+                </section>
+              </div>
+            ) : null}
+
+            {activeTab === "viec-lam" ? (
+              <div
+                id="company-panel-viec-lam"
+                role="tabpanel"
+                aria-labelledby="company-tab-viec-lam"
+              >
+                <section
+                  id="company-roles"
+                  className="company-block"
+                  aria-labelledby="company-roles-title"
+                >
+                  <SectionHeading
+                    id="company-roles"
+                    title={dict.companyReview.openRoles}
+                    note={dict.companyReview.rolesNote}
+                  />
+                  {summary.roles.length ? (
+                    <ul className="company-roles">
+                      {summary.roles.map((role) => (
+                        <RoleRow key={role.id} role={role} jobsPath={jobsPath} dict={dict} />
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="company-block__empty">{dict.companyReview.noOpenRoles}</p>
+                  )}
+                </section>
+              </div>
+            ) : null}
           </div>
 
           <aside className="company-dossier-rail" aria-label={dict.companyReview.navLabel}>
@@ -775,10 +588,14 @@ export function CompanyReviewView({
                   {dict.companyReview.viewRole}
                   <ArrowRight size={16} aria-hidden="true" />
                 </Link>
-                <a href="#company-roles" className="company-featured__all">
+                <button
+                  type="button"
+                  className="company-featured__all"
+                  onClick={() => selectTab("viec-lam")}
+                >
                   {dict.companyReview.allRoles.replace("{count}", String(summary.roleCount))}
                   <ArrowRight size={14} aria-hidden="true" />
-                </a>
+                </button>
               </section>
             ) : null}
 
@@ -794,10 +611,7 @@ export function CompanyReviewView({
             <section className="company-rail-card company-rail-card--quiet">
               <h2>{dict.companyReview.sourceTitle}</h2>
               <p>{dict.companyReview.sourceNote}</p>
-              <a href="#company-source" className="career-text-link">
-                {dict.companyReview.sourceSectionLink}
-                <ArrowRight size={15} aria-hidden="true" />
-              </a>
+              <p className="company-rail-card__demo">{dict.companyReview.mockProfileNote}</p>
             </section>
           </aside>
         </div>
