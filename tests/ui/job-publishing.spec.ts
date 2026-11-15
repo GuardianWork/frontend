@@ -563,7 +563,10 @@ test("rejection reasons remain readable and a replacement draft starts from the 
   mock.getJobs()[0].availableActions = ["CREATE_DRAFT"];
   await login(page, "owner_demo", true);
   await page.goto("/rec/jobs?jobId=83");
-  await expect(page.locator(".jp-content-view")).toContainText(completeContent.title!);
+  await expect(
+    page.getByRole("heading", { level: 1, name: completeContent.title!, exact: true }),
+  ).toBeVisible();
+  await expect(page.locator(".jp-content-view")).toContainText(completeContent.description!);
   await page.getByRole("button", { name: "Lịch sử xét duyệt", exact: true }).click();
   await expect(page.getByText(rejected.rejectionReason, { exact: false })).toBeVisible();
   await page.getByRole("button", { name: "Bản v1 · Chuyên viên kinh doanh", exact: true }).click();
@@ -839,4 +842,538 @@ test("latest JD loading failure offers retry without changing the job", async ({
   await page.getByRole("button", { name: "Thử lại", exact: true }).click();
   await expect(page.locator(".jp-content-view")).toContainText(completeContent.description!);
   expect(mock.writes).toEqual([]);
+});
+
+const scanFixture = (status = "COMPLETED", revisionVersion = 3) => ({
+  scanId: 401,
+  revisionId: 91,
+  revisionVersion,
+  status,
+  mode: "crawler",
+  outdated: false,
+  failureCode: null,
+  analysisText: "Mô tả: 😀 Chỉ tuyển nam dưới 30 tuổi.",
+  profile: "recruitment",
+  legalSnapshot: "2026-11",
+  asOfDate: "2026-11-12",
+  createdAt: stamp,
+  report:
+    status === "COMPLETED"
+      ? {
+          schemaVersion: "1",
+          mode: "crawler",
+          profile: "recruitment",
+          legalSnapshot: "2026-11",
+          asOfDate: "2026-11-12",
+          outcome: "POTENTIAL_RISKS",
+          warnings: ["Cần đối chiếu hoàn cảnh tuyển dụng thực tế."],
+          usage: { available: false },
+          findings: [
+            {
+              spanText: "Chỉ tuyển nam",
+              start: 9,
+              end: 22,
+              riskType: "DISCRIMINATION",
+              severity: "high",
+              verdict: "NEEDS_REVIEW",
+              explanation: "Yêu cầu về giới tính cần được kiểm tra trong ngữ cảnh công việc.",
+              citations: [
+                {
+                  nodeId: "8",
+                  label: "Điều 8",
+                  documentNumber: "45/2019/QH14",
+                  quote: "Phân biệt đối xử trong lao động.",
+                  quoteGrounded: true,
+                  effectiveStatus: "UNKNOWN",
+                  applicability: "UNVERIFIED",
+                },
+              ],
+            },
+          ],
+        }
+      : null,
+});
+
+test("current JD shows inline AI results without a right-side analysis panel", async ({
+  page,
+}, testInfo) => {
+  await mockJobs(page, [
+    makeJob({
+      ...completeContent,
+      description:
+        "Phát triển khách hàng doanh nghiệp.\n\nChỉ tuyển nam dưới 30 tuổi.\n\nTư vấn, theo dõi hợp đồng và chăm sóc khách hàng.",
+    }),
+  ]);
+  await page.route("**/revisions/91/scans", (route) =>
+    route.fulfill({ json: { status: 200, data: scanFixture() } }),
+  );
+  await login(page, "owner_demo", true);
+  await page.goto("/rec/jobs?jobId=83");
+  await expect(page.locator(".jp-content-view")).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath("jd-analysis.png") });
+  const button = page.getByRole("button", { name: "Kiểm tra nội dung với AI", exact: true });
+  await expect(button).toBeInViewport();
+  const tab = (await page
+    .getByRole("button", { name: "Bản mới nhất", exact: true })
+    .boundingBox())!;
+  const action = (await button.boundingBox())!;
+  expect(Math.abs(tab.y + tab.height / 2 - action.y - action.height / 2)).toBeLessThan(2);
+  expect(action.x).toBeGreaterThan(tab.x + tab.width);
+  await expect(page.locator(".jp-workspace-main .jp-scan")).toHaveCount(1);
+  await expect(page.locator(".jp-workspace-side .jp-scan")).toHaveCount(0);
+  await expect(page.locator(".jp-scan h3, .jp-scan-revision, .jp-scan-hint")).toHaveCount(0);
+  await button.click();
+  await expect(page.locator(".jp-analysis-count")).toHaveText("1 phát hiện");
+  await expect(page.locator(".jp-content-view")).toBeInViewport();
+  await expect(page.locator(".jp-inline-finding")).toBeInViewport();
+  await expect(page.locator(".jp-analysis-count")).toHaveText("1 phát hiện");
+  await expect(page.locator(".jp-content-view mark")).toHaveText("Chỉ tuyển nam");
+  const inline = page.locator(".jp-inline-finding");
+  const highlight = (await page.locator(".jp-content-view mark").boundingBox())!;
+  const expand = (await inline.locator("summary").first().boundingBox())!;
+  expect(expand.y).toBeGreaterThanOrEqual(highlight.y + highlight.height);
+  expect(expand.y - highlight.y - highlight.height).toBeLessThan(24);
+  await expect(inline).toHaveAttribute("open", "");
+  await expect(inline.locator(".jp-inline-finding-explanation")).toContainText(
+    "Yêu cầu về giới tính cần được kiểm tra",
+  );
+  await inline.locator("summary").first().press("Enter");
+  await expect(inline).not.toHaveAttribute("open");
+  await expect(inline.locator(".jp-inline-finding-explanation")).toBeHidden();
+  await inline.locator("summary").first().press("Enter");
+  await expect(inline.locator(".jp-inline-finding-explanation")).toBeVisible();
+  await expect(inline.locator("blockquote")).toBeVisible();
+  await inline.locator(".jp-inline-citation summary").click();
+  await expect(inline.locator("blockquote")).toBeHidden();
+  await inline.locator(".jp-inline-citation summary").press("Enter");
+  await expect(inline.locator("blockquote")).toBeVisible();
+  await expect(page.getByText("Xem báo cáo phân tích đầy đủ", { exact: true })).toHaveCount(0);
+  await expect(page.locator(".jp-scan").getByRole("button")).toHaveCount(1);
+  await page.screenshot({ path: testInfo.outputPath("jd-analysis-result.png") });
+  await page.getByRole("button", { name: "Soạn tin", exact: true }).click();
+  await page.getByLabel("Chức danh công việc", { exact: true }).fill("Nội dung đang sửa");
+  await page.getByRole("button", { name: "Bản mới nhất", exact: true }).click();
+  await expect(page.locator(".jp-content-view mark")).toHaveCount(0);
+  await expect(page.locator(".jp-analysis-count")).toHaveText("Kết quả cần cập nhật");
+});
+
+test("inline results expand independently beneath each highlighted paragraph", async ({ page }) => {
+  const description = "Chỉ tuyển nam dưới 30 tuổi.\n\nThử việc 90 ngày.";
+  await mockJobs(page, [makeJob({ ...completeContent, description })]);
+  const scan = scanFixture();
+  const base = scan.report!.findings[0];
+  scan.analysisText = description;
+  scan.report!.findings = [
+    { ...base, start: 0, end: Array.from(base.spanText).length },
+    {
+      ...base,
+      spanText: "Thử việc 90 ngày",
+      start: Array.from(description.split("Thử việc")[0]).length,
+      end: Array.from(description).length - 1,
+      explanation: "Thời gian thử việc cần được kiểm tra theo tính chất công việc.",
+      severity: "medium",
+      citations: [],
+    },
+  ];
+  await page.route("**/revisions/91/scans", (route) =>
+    route.fulfill({ json: { status: 200, data: scan } }),
+  );
+  await login(page, "owner_demo", true);
+  await page.goto("/rec/jobs?jobId=83");
+  await page.getByRole("button", { name: "Kiểm tra nội dung với AI", exact: true }).click();
+  await expect(page.locator(".jp-analysis-count")).toHaveText("2 phát hiện");
+  const passages = page.locator(".jp-inline-passage");
+  await expect(passages).toHaveCount(2);
+  for (const passage of await passages.all()) {
+    const mark = (await passage.locator("mark").boundingBox())!;
+    const summary = (await passage.locator(".jp-inline-finding > summary").boundingBox())!;
+    expect(summary.y).toBeGreaterThanOrEqual(mark.y + mark.height);
+    expect(summary.y - mark.y - mark.height).toBeLessThan(24);
+    await expect(passage.locator(".jp-inline-finding")).toHaveAttribute("open", "");
+    await expect(passage.locator(".jp-inline-finding-explanation")).toBeVisible();
+  }
+  await passages.first().locator(".jp-inline-finding > summary").press("Enter");
+  await expect(passages.first().locator(".jp-inline-finding-explanation")).toBeHidden();
+  await expect(passages.last().locator(".jp-inline-finding-explanation")).toBeVisible();
+});
+
+test("each finding in one paragraph is followed immediately by its own result and open quotation", async ({
+  page,
+}, testInfo) => {
+  const first = "Ứng viên phải nộp bản chính CCCD và công ty giữ trong suốt thời gian làm việc.";
+  const second =
+    "Trước khi nhận việc, ứng viên phải đặt cọc 3.000.000 đồng để bảo đảm thực hiện hợp đồng.";
+  const description = `Tuyển nhân viên bảo vệ làm việc tại Hồ Chí Minh. ${first} ${second}`;
+  await mockJobs(page, [makeJob({ title: "Nhân viên bảo vệ", description })]);
+  const scan = scanFixture();
+  const base = scan.report!.findings[0];
+  scan.analysisText = description;
+  scan.report!.findings = [first, second].map((spanText, index) => ({
+    ...base,
+    spanText,
+    start: Array.from(description.slice(0, description.indexOf(spanText))).length,
+    end: Array.from(description.slice(0, description.indexOf(spanText) + spanText.length)).length,
+    explanation:
+      index === 0
+        ? "Cần kiểm tra yêu cầu giữ bản chính CCCD theo điều khoản được truy xuất."
+        : "Cần kiểm tra yêu cầu đặt cọc để bảo đảm thực hiện hợp đồng theo điều khoản được truy xuất.",
+    citations: [
+      {
+        ...base.citations[0],
+        nodeId: `article-17-${index}`,
+        label: "Điều 17",
+        quote:
+          index === 0
+            ? "1. Giữ bản chính giấy tờ tùy thân, văn bằng, chứng chỉ của người lao động."
+            : "2. Yêu cầu người lao động phải thực hiện biện pháp bảo đảm bằng tiền hoặc tài sản khác cho việc thực hiện hợp đồng lao động.",
+      },
+    ],
+  }));
+  await page.route("**/revisions/91/scans", (route) =>
+    route.fulfill({ json: { status: 200, data: scan } }),
+  );
+  await login(page, "owner_demo", true);
+  await page.goto("/rec/jobs?jobId=83");
+  await page.getByRole("button", { name: "Kiểm tra nội dung với AI", exact: true }).click();
+  await expect(page.locator(".jp-analysis-count")).toHaveText("2 phát hiện");
+  const passages = page.locator(".jp-inline-passage");
+  await expect(passages).toHaveCount(2);
+  for (const [index, passage] of (await passages.all()).entries()) {
+    await expect(passage.locator("mark")).toHaveText(index === 0 ? first : second);
+    await expect(passage.locator(".jp-inline-finding")).toHaveCount(1);
+    await expect(passage.locator(".jp-inline-finding-explanation")).toBeVisible();
+    await expect(passage.locator(".jp-inline-citation")).toHaveAttribute("open", "");
+    await expect(passage.locator("blockquote")).toBeVisible();
+  }
+  const firstResult = (await passages.first().locator(".jp-inline-finding").boundingBox())!;
+  const secondPassage = (await passages.last().locator(".jp-inline-passage-text").boundingBox())!;
+  expect(firstResult.y + firstResult.height).toBeLessThanOrEqual(secondPassage.y);
+  await page.screenshot({
+    path: testInfo.outputPath("same-paragraph-results.png"),
+    animations: "disabled",
+  });
+  await passages.last().scrollIntoViewIfNeeded();
+  await page.screenshot({
+    path: testInfo.outputPath("second-passage-result.png"),
+    animations: "disabled",
+  });
+});
+
+test("inline AI annotations preserve emphasis and keep legacy HTML literal", async ({ page }) => {
+  await mockJobs(page, [
+    makeJob({
+      ...completeContent,
+      description: "<!-- guardwork:markdown:v1 -->\nYêu cầu: Chỉ **tuyển** nam dưới 30 tuổi.",
+    }),
+  ]);
+  await page.route("**/revisions/91/scans", (route) =>
+    route.fulfill({ json: { status: 200, data: scanFixture() } }),
+  );
+  await login(page, "owner_demo", true);
+  await page.goto("/rec/jobs?jobId=83");
+  await page.getByRole("button", { name: "Kiểm tra nội dung với AI", exact: true }).click();
+  await expect(page.locator(".jp-analysis-count")).toHaveText("1 phát hiện");
+  expect((await page.locator(".jp-content-view mark").allTextContents()).join("")).toBe(
+    "Chỉ tuyển nam",
+  );
+  await expect(page.locator(".jp-content-view strong mark")).toHaveText("tuyển");
+  await page.route("**/api/companies/me/jobs/83", (route) =>
+    route.fulfill({
+      json: {
+        status: 200,
+        data: makeJob({
+          ...completeContent,
+          description: "Chỉ tuyển nam dưới 30 tuổi. <img src=x onerror=alert(1)>",
+        }),
+      },
+    }),
+  );
+  await page.getByRole("button", { name: "Tải dữ liệu mới", exact: true }).click();
+  await page.getByRole("button", { name: "Kiểm tra nội dung với AI", exact: true }).click();
+  await expect(page.locator(".jp-content-view mark")).toHaveText("Chỉ tuyển nam");
+  await expect(page.locator(".jp-content-view")).toContainText("<img src=x onerror=alert(1)>");
+  await expect(page.locator(".jp-content-view img")).toHaveCount(0);
+});
+
+test("AI scan saves edits, polls, renders code-point snapshot and becomes stale immediately", async ({
+  page,
+}) => {
+  const mock = await mockJobs(page);
+  const calls: string[] = [];
+  await page.route("**/revisions/91/scans**", async (route) => {
+    expect(route.request().headers().authorization).toMatch(/^Bearer /);
+    calls.push(route.request().method());
+    if (route.request().method() === "POST") {
+      expect(mock.writes.at(-1)?.path).toBe("/api/companies/me/jobs/83/draft");
+      expect(route.request().postDataJSON()).toEqual({ expectedRevisionVersion: 4 });
+      return route.fulfill({ json: { status: 200, data: scanFixture("QUEUED", 4) } });
+    }
+    return route.fulfill({ json: { status: 200, data: scanFixture("COMPLETED", 4) } });
+  });
+  await login(page, "owner_demo", true);
+  await page.goto("/rec/jobs?jobId=83");
+  await page.getByRole("button", { name: "Soạn tin", exact: true }).click();
+  await page.getByLabel("Chức danh công việc", { exact: true }).fill("Chuyên viên kinh doanh mới");
+  await page.getByRole("button", { name: "Kiểm tra nội dung với AI", exact: true }).click();
+  await expect(page.getByText("Đang chờ phân tích", { exact: true })).toBeVisible();
+  await expect(page.getByText("Phát hiện dấu hiệu rủi ro", { exact: true })).toBeVisible();
+  expect(calls).toEqual(["POST", "GET"]);
+  await page.getByText("45/2019/QH14 · Điều 8", { exact: true }).click();
+  await expect(page.getByText("Cần xác minh hiệu lực điều khoản", { exact: true })).toBeVisible();
+  await page.getByText("Xem bản nội dung đã phân tích", { exact: true }).click();
+  await expect(page.locator(".jp-scan-snapshot mark")).toHaveText("Chỉ tuyển nam");
+  await expect(
+    page.getByText("Kết quả thuộc phiên bản nội dung hoặc dữ liệu phân tích trước đó", {
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await page.getByLabel("Chức danh công việc", { exact: true }).fill("Nội dung chưa lưu");
+  await expect(
+    page.getByText("Kết quả thuộc phiên bản nội dung hoặc dữ liệu phân tích trước đó", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page.locator(".jp-scan").scrollIntoViewIfNeeded();
+  await page.locator(".jp-scan").evaluate((element) => {
+    element.scrollIntoView({ block: "start" });
+    const main = element.closest("main");
+    if (main) main.scrollTop -= 24;
+  });
+  await page.screenshot({ path: ".impeccable/review/job-scan-panel-desktop.png", fullPage: true });
+  await page.locator(".jp-scan-snapshot").scrollIntoViewIfNeeded();
+  await page.screenshot({
+    path: ".impeccable/review/job-scan-snapshot-desktop.png",
+    fullPage: true,
+  });
+  await page.locator("main").evaluate((element) => {
+    element.scrollTop = 0;
+  });
+  await page.screenshot({ path: ".impeccable/review/job-scan-desktop.png", fullPage: true });
+  await page.getByRole("button", { name: "Lưu và xem trước", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Xác nhận gửi duyệt", exact: true })).toBeEnabled();
+});
+
+for (const status of [400, 403, 404, 503]) {
+  test(`AI scan ${status} leaves ordinary job actions available`, async ({ page }) => {
+    await mockJobs(page);
+    await page.route("**/revisions/91/scans", (route) =>
+      route.fulfill({ status, json: { status, message: "unavailable", data: null } }),
+    );
+    await login(page, "owner_demo", true);
+    await page.goto("/rec/jobs?jobId=83");
+    await page.getByRole("button", { name: "Soạn tin", exact: true }).click();
+    await page.getByRole("button", { name: "Kiểm tra nội dung với AI", exact: true }).click();
+    await expect(page.locator(".jp-scan [role=alert]")).toBeVisible();
+    if (status === 503) await expect(page.locator(".jp-scan")).toContainText("hiện đang tắt");
+    await expect(page.getByRole("button", { name: "Lưu bản nháp", exact: true })).toBeEnabled();
+    await expect(page.getByRole("button", { name: "Lưu và xem trước", exact: true })).toBeEnabled();
+  });
+}
+
+test("AI scan requires description and reuses failed scans without promising a fresh retry", async ({
+  page,
+}) => {
+  await mockJobs(page, [makeJob({ ...completeContent, description: "" })]);
+  let requests = 0;
+  await page.route("**/revisions/91/scans", (route) => {
+    requests++;
+    return route.fulfill({
+      json: {
+        status: 200,
+        data: { ...scanFixture("FAILED", 4), mode: "stub", failureCode: "INTERNAL_SECRET" },
+      },
+    });
+  });
+  await login(page, "owner_demo", true);
+  await page.goto("/rec/jobs?jobId=83");
+  await page.getByRole("button", { name: "Soạn tin", exact: true }).click();
+  await page.getByRole("button", { name: "Kiểm tra nội dung với AI", exact: true }).click();
+  await expect(page.locator(".jp-scan [role=alert]")).toContainText("nhập mô tả");
+  expect(requests).toBe(0);
+  await page.locator(".tiptap").fill("Mô tả công việc hợp lệ");
+  await page.getByRole("button", { name: "Kiểm tra nội dung với AI", exact: true }).click();
+  await expect(page.locator(".jp-scan")).toContainText("Không thể hoàn tất phân tích");
+  await expect(page.locator(".jp-scan")).toContainText(
+    "Chế độ thử nghiệm — chưa thực hiện phân tích AI",
+  );
+  await expect(page.locator(".jp-scan")).not.toContainText("INTERNAL_SECRET");
+  await expect(page.locator(".jp-scan").getByRole("button", { name: /Thử lại/ })).toHaveCount(0);
+});
+
+test("AI scan conflict reloads current revision version before requesting again", async ({
+  page,
+}) => {
+  await mockJobs(page);
+  let requests = 0;
+  await page.route("**/revisions/91/scans", async (route) => {
+    requests++;
+    if (requests === 1) return route.fulfill({ status: 409, json: { status: 409, data: null } });
+    expect(route.request().postDataJSON()).toEqual({ expectedRevisionVersion: 8 });
+    return route.fulfill({ json: { status: 200, data: scanFixture("COMPLETED", 8) } });
+  });
+  await login(page, "owner_demo", true);
+  await page.goto("/rec/jobs?jobId=83");
+  await expect(
+    page.getByRole("button", { name: "Kiểm tra nội dung với AI", exact: true }),
+  ).toBeVisible();
+  await page.route("**/api/companies/me/jobs/83", (route) =>
+    route.fulfill({
+      json: {
+        status: 200,
+        data: { ...makeJob(), workingRevision: { ...makeJob().workingRevision, version: 8 } },
+      },
+    }),
+  );
+  await page.getByRole("button", { name: "Kiểm tra nội dung với AI", exact: true }).click();
+  await expect(page.locator(".jp-analysis-count")).toHaveText("1 phát hiện");
+  expect(requests).toBe(2);
+});
+
+test("AI scan stops polling on loss of access and on leaving the editor", async ({ page }) => {
+  await mockJobs(page);
+  let polls = 0;
+  let deny = true;
+  await page.route("**/revisions/91/scans**", (route) => {
+    if (route.request().method() === "GET") {
+      polls++;
+      if (deny) return route.fulfill({ status: 403, json: { status: 403, data: null } });
+    }
+    return route.fulfill({ json: { status: 200, data: scanFixture("RUNNING") } });
+  });
+  await login(page, "owner_demo", true);
+  await page.goto("/rec/jobs?jobId=83");
+  await page.getByRole("button", { name: "Kiểm tra nội dung với AI", exact: true }).click();
+  await expect(page.locator(".jp-scan [role=alert]")).toContainText("không có quyền");
+  await page.waitForTimeout(2400);
+  expect(polls).toBe(1);
+  await expect(page.locator(".jp-scan-result")).toHaveCount(0);
+  deny = false;
+  await page.getByRole("button", { name: "Kiểm tra nội dung với AI", exact: true }).click();
+  await expect(page.getByText("Đang phân tích nội dung", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Quay lại danh sách", exact: true }).click();
+  await page.waitForTimeout(2400);
+  expect(polls).toBe(1);
+});
+
+test("AI scan ignores a late response after loading another revision", async ({ page }) => {
+  await mockJobs(page);
+  let release!: () => void;
+  let started = false;
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route("**/revisions/91/scans", async (route) => {
+    started = true;
+    await pending;
+    await route.fulfill({ json: { status: 200, data: scanFixture() } }).catch(() => {});
+  });
+  await login(page, "owner_demo", true);
+  await page.goto("/rec/jobs?jobId=83");
+  await page.getByRole("button", { name: "Kiểm tra nội dung với AI", exact: true }).click();
+  await expect.poll(() => started).toBe(true);
+  await page.route("**/api/companies/me/jobs/83", (route) =>
+    route.fulfill({
+      json: {
+        status: 200,
+        data: {
+          ...makeJob(),
+          workingRevision: {
+            ...makeJob().workingRevision,
+            id: 92,
+            version: 1,
+            content: { ...completeContent, title: "Phiên bản khác" },
+          },
+        },
+      },
+    }),
+  );
+  await page.getByRole("button", { name: "Tải dữ liệu mới", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Phiên bản khác", exact: true, level: 1 }),
+  ).toBeVisible();
+  release();
+  await expect(page.locator(".jp-scan-result")).toHaveCount(0);
+  await expect(page.locator(".jp-scan")).not.toContainText("Phát hiện dấu hiệu rủi ro");
+});
+
+test("draft editor highlights AI findings and rescans after five idle seconds", async ({
+  page,
+}, testInfo) => {
+  test.setTimeout(45000);
+  const mock = await mockJobs(page, [
+    makeJob({ ...completeContent, description: "Chỉ tuyển nam dưới 30 tuổi." }),
+  ]);
+  let scans = 0;
+  await page.route("**/revisions/91/scans", async (route) => {
+    scans++;
+    await route.fulfill({
+      json: {
+        status: 200,
+        data: scanFixture("COMPLETED", mock.getJobs()[0].workingRevision!.version),
+      },
+    });
+  });
+  await login(page, "owner_demo", true);
+  await page.goto("/rec/jobs?jobId=83");
+  await page.getByRole("button", { name: "Soạn tin", exact: true }).click();
+  const editor = page.getByRole("textbox", { name: "Mô tả công việc", exact: true });
+  await expect(editor).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Phân tích JD bằng AI" })).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Kiểm tra nội dung với AI", exact: true }),
+  ).toHaveCount(0);
+  await expect(editor.locator(".jp-editor-mark")).toHaveText("Chỉ tuyển nam", { timeout: 10000 });
+  expect(scans).toBe(1);
+  const mark = editor.locator(".jp-editor-mark");
+  await editor.evaluate((element) => element.scrollIntoView({ block: "center" }));
+  await mark.hover();
+  const popup = page.getByRole("region", { name: "Kết quả phân tích AI" });
+  await expect(popup).toContainText("Yêu cầu về giới tính cần được kiểm tra");
+  await popup.getByText("45/2019/QH14 · Điều 8", { exact: true }).click();
+  await expect(popup).toContainText("Phân biệt đối xử trong lao động.");
+  await page.screenshot({ path: testInfo.outputPath("editor-ai-popup.png") });
+  await mark.focus();
+  await mark.press("Escape");
+  await expect(popup).toHaveCount(0);
+  await editor.focus();
+  await mark.focus();
+  await expect(popup).toBeVisible();
+  await editor.fill("Chỉ tuyển nam. Đang sửa nội dung.");
+  await expect(editor.locator(".jp-editor-mark")).toHaveCount(0);
+  await expect(popup).toHaveCount(0);
+  await page.waitForTimeout(3000);
+  expect(scans).toBe(1);
+  await editor.fill("Chỉ tuyển nam. Nội dung mới đã hoàn tất.");
+  await page.waitForTimeout(3000);
+  expect(scans).toBe(1);
+  await expect(editor.locator(".jp-editor-mark")).toHaveText("Chỉ tuyển nam", { timeout: 6000 });
+  expect(scans).toBe(2);
+  expect(mock.getJobs()[0].workingRevision!.content.description).toBe(
+    "Chỉ tuyển nam. Nội dung mới đã hoàn tất.",
+  );
+  await page.getByRole("button", { name: "Bản mới nhất", exact: true }).click();
+  await expect(page.locator(".jp-content-view mark")).toHaveText("Chỉ tuyển nam");
+});
+
+test("draft editor keeps typing available when automatic analysis is unavailable", async ({
+  page,
+}) => {
+  await mockJobs(page, [makeJob({ ...completeContent, description: "Nội dung mô tả." })]);
+  let unavailable = true;
+  await page.route("**/revisions/91/scans", (route) =>
+    route.fulfill(
+      unavailable
+        ? { status: 503, json: { status: 503, message: "Unavailable" } }
+        : { json: { status: 200, data: scanFixture() } },
+    ),
+  );
+  await login(page, "owner_demo", true);
+  await page.goto("/rec/jobs?jobId=83");
+  await page.getByRole("button", { name: "Soạn tin", exact: true }).click();
+  const field = page.locator(".job-description-field");
+  await expect(field.getByRole("alert")).toContainText("hiện đang tắt", { timeout: 10000 });
+  await expect(field.getByRole("textbox")).toHaveAttribute("contenteditable", "true");
+  unavailable = false;
+  await field.getByRole("button", { name: "Thử lại" }).click();
+  await expect(field.getByRole("status")).toContainText("1 phát hiện");
 });

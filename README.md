@@ -46,12 +46,12 @@ Mở **http://localhost:5137**. Lệnh này khởi động frontend và API mock
 
 Mật khẩu chung cho tất cả tài khoản mẫu: **`Guardian123!`**.
 
-| Username         | Email                    | Chọn trên màn hình đăng nhập | Role backend | Membership / dữ liệu ban đầu                        |
-| ---------------- | ------------------------ | ---------------------------- | ------------ | --------------------------------------------------- |
-| `candidate_demo` | `candidate@example.test` | Tôi muốn tìm việc            | `USER`       | `activeMembership: null`, mở trang tìm việc         |
-| `recruiter_demo` | `recruiter@example.test` | Đăng ký công ty              | `USER`       | Chưa có công ty, mở form đăng ký công ty            |
-| `owner_demo`     | `owner@example.test`     | Đăng ký công ty              | `USER`       | `OWNER` của Alpha, công ty `PENDING`                |
-| `admin_demo`     | `admin@example.test`     | Đăng nhập cổng 5138           | `STAFF`      | Mở `/staff` ở cổng 5138, có hồ sơ Alpha trong hàng đợi xác minh |
+| Username         | Email                    | Chọn trên màn hình đăng nhập | Role backend | Membership / dữ liệu ban đầu                                    |
+| ---------------- | ------------------------ | ---------------------------- | ------------ | --------------------------------------------------------------- |
+| `candidate_demo` | `candidate@example.test` | Tôi muốn tìm việc            | `USER`       | `activeMembership: null`, mở trang tìm việc                     |
+| `recruiter_demo` | `recruiter@example.test` | Đăng ký công ty              | `USER`       | Chưa có công ty, mở form đăng ký công ty                        |
+| `owner_demo`     | `owner@example.test`     | Đăng ký công ty              | `USER`       | `OWNER` của Alpha, công ty `PENDING`                            |
+| `admin_demo`     | `admin@example.test`     | Đăng nhập cổng 5138          | `STAFF`      | Mở `/staff` ở cổng 5138, có hồ sơ Alpha trong hàng đợi xác minh |
 
 Có thể đăng nhập bằng username hoặc email. Tài khoản đăng ký mới luôn có role `USER`.
 
@@ -118,6 +118,110 @@ Phiên dùng `sessionStorage`, giữ access/refresh token trong tab hiện tại
 
 Form công ty gửi bốn trường backend hỗ trợ: `name`, `taxCode`, `email`, `registrationCertificateUrl`. Tài liệu phải có URL http/https; chưa tích hợp tải tệp vì chưa có API upload. Các trường không được backend lưu đã được bỏ khỏi form gửi hồ sơ.
 
+## Run real AI analysis locally
+
+The recruiter JD analyzer (`/rec/jobs`) and Candidate Copilot (`/can/copilot`) need the real backend and a separate AI adapter. `npm run dev` starts the frontend portals only. `npm run dev:mock` uses in-memory fixtures and does not verify database persistence or real model analysis.
+
+### Prerequisites and configuration
+
+Use the sibling checkout layout `frontend/`, `guard-work/`, and `crawler/`. You need Node.js 22.18+, Java 25, Docker with the existing PostgreSQL 18 development database, and the crawler's prepared Python virtual environment at `crawler/.venv/`. Neo4j must be running with the imported Labor Code corpus and the `legal_chunk_text` index online. Configure working Gemini or NVIDIA credentials in the crawler environment; keep secrets out of frontend `VITE_` variables and committed files.
+
+From `frontend/`, prepare the shared AI configuration once:
+
+```sh
+cd ../guard-work
+# Preserve an existing local configuration.
+test -f ai/.env.local || cp ai/.env.example ai/.env.local
+```
+
+Edit `guard-work/ai/.env.local` to set `GUARDWORK_AI_LEGAL_SNAPSHOT` to the identifier of the actual imported corpus. The template placeholder is rejected. Keep `GUARDWORK_AI_PROFILE` consistent between backend and adapter; change it after provider/model, prompt, or retrieval changes. An optional `LLM_BACKEND` selects `gemini` or `nvidia`. If setting `GUARDWORK_AI_SHARED_KEY`, both processes must load the same value. Both startup commands below load this file; explicit process environment values take precedence for the backend.
+
+See the backend's [local AI setup](../guard-work/docs/backend/legal-chat.md) and [JD scanning contract](../guard-work/docs/backend/jd-scanning.md) for dependency setup and configuration details.
+
+### Start the services
+
+Each terminal below starts from `frontend/`. Leave the adapter, backend and frontend terminals running. Reuse already-running services with matching configuration rather than starting a second instance on the same port.
+
+1. Start the existing database in a setup terminal:
+
+   ```sh
+   cd ../guard-work/backend
+   docker compose up -d
+   ```
+
+   Start your existing Neo4j service too. On the development machine documented by the backend, its command is `sudo systemctl start neo4j`. Preserve the existing database volumes and imported corpus.
+
+2. In the adapter terminal, run preflight, then start real analysis:
+
+   ```sh
+   cd ../guard-work
+   bash ai/run-local.sh check
+   bash ai/run-local.sh adapter
+   ```
+
+   Preflight should report `status: ready` and `mode: crawler`. It checks dependencies and retrieval setup without a model call; provider availability is verified by the E2E test below.
+
+3. In the backend terminal:
+
+   ```sh
+   cd ../guard-work
+   bash ai/run-local.sh backend
+   ```
+
+   The API runs on `http://localhost:8080`. On a fresh database, this starts Flyway migrations, allowing the seed service to finish. In the setup terminal (`guard-work/backend`), check `docker compose logs --tail 50 seed` and wait for `Local mock data ready` before logging in. Existing seeded passwords are preserved.
+
+4. In the frontend terminal:
+
+   ```sh
+   npm run dev
+   ```
+
+   The public portal runs on `http://localhost:5137`; Staff runs on `http://localhost:5138`. The default API proxy target is `http://localhost:8080`.
+
+5. Check the adapter from another terminal:
+
+   ```sh
+   curl --fail --silent --show-error http://127.0.0.1:8011/health
+   ```
+
+   Expect `status: ready`, `mode: crawler`, and the same `profile` and `legalSnapshot` configured for the backend. A healthy adapter alone does not prove a successful model response.
+
+### Verify the E2E flow
+
+For an automated live smoke test, run from `frontend/`:
+
+```sh
+cd ../guard-work
+python3 -B -m ai.smoke --require-real --wait-seconds 720
+```
+
+This logs in as the local `demo_owner`, creates a synthetic private JD draft in PostgreSQL, requests real analysis, polls for completion, and verifies that repeating the request reuses the persisted result. It prints the new job ID and report. Every invocation creates a new draft; it never submits or publishes it. Real provider calls may incur charges. If the demo password was changed, supply it through the `GUARDWORK_SMOKE_PASSWORD` environment variable. Add `--chat` to also verify a real Candidate legal-chat response with grounded citations.
+
+For the desktop browser flow:
+
+1. Open `http://localhost:5137/login?role=recruiter` and log in as `demo_owner`. Newly seeded local accounts use `GuardWork123!`, which differs from the frontend mock password.
+2. Open `/rec/jobs?jobId=<job ID printed by the smoke test>`. The manually seeded fixture [JD #118](http://localhost:5137/rec/jobs?jobId=118) is also available in the current development database; its ID is not portable to a fresh database.
+3. On **Bản mới nhất**, click **Kiểm tra nội dung với AI**. Expect queued/running feedback, then a finding count, highlighted passages, and expanded analysis below each affected passage. Reusing a completed result may finish immediately.
+4. Open **Soạn tin**. The description editor shows current findings as highlights; hover or focus a marked passage to see the analysis popup and citations.
+5. Edit the description. Stale highlights should clear immediately. After five seconds without typing, the draft saves and a new analysis is requested. Wait for completion; updated highlights should match the newly saved content. Switching back to **Bản mới nhất** should show the corresponding current results.
+6. Optionally log in as `demo_candidate`, open `/can/copilot`, and ask a Labor Code question to check the chat path. Accounts are separate from the `owner_demo` / `candidate_demo` frontend mock fixtures.
+
+The synthetic JD includes retention of the worker's original CCCD and a 3,000,000 VND deposit requirement. The live verification on 2026-11-14 returned two findings with grounded citations, and the browser showed both JD highlights and editor popups without runtime errors. Model output can vary; grounded quotations still have `UNVERIFIED` temporal applicability and do not constitute a compliance decision.
+
+### Troubleshoot AI analysis
+
+| Symptom                                                     | Check and recovery                                                                                                                                                                                                                                     |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ADAPTER_UNAVAILABLE` or analysis becomes failed            | Check `http://127.0.0.1:8011/health`. Start `bash ai/run-local.sh adapter` from `guard-work/` if the adapter is stopped. The backend retries transient failures up to three attempts before a terminal failure.                                        |
+| The same failed result returns after restarting the adapter | Failed scans are immutable and reused for identical input and analysis identity. Make a meaningful change to the draft and analyze again. A retry on unchanged content does not create a fresh run. Do not delete scan history or alter database rows. |
+| HTTP 503 / AI feature disabled                              | Start the backend with `bash ai/run-local.sh backend` and confirm real-mode configuration. For chat, also check provider availability and adapter response validity.                                                                                   |
+| `mode: stub` or a trial-mode notice                         | Stub verifies plumbing and intentionally supplies no real findings. Use the shared real-mode startup commands and require `--require-real` in smoke tests.                                                                                             |
+| Health passes but real analysis fails                       | Check provider credentials/model access, Neo4j/corpus/index readiness, matching shared key, profile and snapshot, and backend/adapter logs. Redact tokens and credentials before sharing logs.                                                         |
+| HTTP 401/403 or missing fixture                             | Use the real local account, verify its active Company membership/access, and wait for database seeding. JD #118 belongs to the demo owner's Company.                                                                                                   |
+| Old highlights disappear while editing                      | Expected: findings apply to an exact saved input. Wait five idle seconds for saving and the new request, then wait for AI completion.                                                                                                                  |
+
+The diagnosed outage on JD #118 was a stopped adapter on port 8011. Scan #11 exhausted three connection attempts and remained failed. Starting the adapter and changing only the synthetic draft produced scan #12, which completed with two findings. This is why both service health and a fresh-input E2E request matter when testing recovery.
+
 ## Kiểm tra
 
 ```sh
@@ -172,7 +276,6 @@ Run `npm run dev` with the real backend configured to use the staff portal at `h
 npx playwright test tests/ui/job-approvals.spec.ts
 ```
 
-
 Staff jobs also exposes the restored illustrative AI/legal review on the same screen below the approval queue. This reuses `JobManagementPanel` and local sample findings with official Labour Code reference links. The API-backed approval queue remains separate; the staff API still provides no live AI scan endpoint.
 
-Job details now include a revision-specific legal review panel. Until an AI result API is supplied, `reviewJobContent` performs explicitly labeled local keyword screening, not AI inference. It never declares legal compliance, sends approval decisions, or changes backend approval eligibility. Sample legal-review records remain separate from real revision results.
+The recruiter `/rec/jobs` detail screen uses persisted, revision-specific backend AI scans, with findings in the current JD and description editor. Follow **Run real AI analysis locally** above to exercise that flow. Staff illustrative/local review remains separate from these real recruiter scan results. AI analysis does not submit, publish, or approve a job.

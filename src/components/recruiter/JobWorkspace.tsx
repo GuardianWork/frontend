@@ -1,11 +1,14 @@
+import { ApiError } from "@/services/api";
 import { jobEditorIssues } from "@/lib/job-content-validation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { ScanView } from "@/services/jobScans";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useBlocker } from "@tanstack/react-router";
 import {
   ArrowLeft,
   ArrowRight,
   Check,
+  ChevronDown,
   Eye,
   FileText,
   History,
@@ -29,6 +32,7 @@ import {
   changeJobStatus,
   createJob,
   deriveJob,
+  getJob,
   jobError,
   jobHistory,
   jobStatusLabels,
@@ -43,12 +47,14 @@ import {
   type JobPreview,
   type RevisionHistory,
 } from "@/services/jobs";
+import { JobScanPanel } from "./JobScanPanel";
 import { JobContentEditor } from "./JobContentEditor";
 import { JobContentView } from "./JobContentView";
 import { JobReviewSectionDialog } from "./JobReviewSectionDialog";
 import { formatJobDate, textSections } from "@/lib/job-content";
 import { JobResponsibility } from "./JobResponsibility";
 import { SuspendedJobDetails } from "./SuspendedJobDetails";
+import "./job-detail.css";
 
 const creationSteps = [
   "Thông tin vị trí",
@@ -153,6 +159,17 @@ export function JobWorkspace({
   const dirtyRef = useRef(dirty);
   dirtyRef.current = dirty;
   const [view, setView] = useState<View>(!initialJob || guided ? "edit" : "latest");
+  const [editorAnalysisTarget, setEditorAnalysisTarget] = useState<HTMLDivElement | null>(null);
+  const [scanEditSequence, setScanEditSequence] = useState(0);
+  const [analysis, setAnalysis] = useState<{ scan: ScanView | null; outdated: boolean }>({
+    scan: null,
+    outdated: false,
+  });
+  const receiveAnalysis = useCallback(
+    (scan: ScanView | null, outdated: boolean) => setAnalysis({ scan, outdated }),
+    [],
+  );
+  const [dialogDirty, setDialogDirty] = useState(false);
   const [editSection, setEditSection] = useState<number | null>(null);
   const editTrigger = useRef<HTMLElement | null>(null);
   const [editFocusField, setEditFocusField] = useState<string | undefined>();
@@ -179,6 +196,15 @@ export function JobWorkspace({
   const editable =
     !job || (job.status !== "SUSPENDED" && job.availableActions.includes("SAVE_DRAFT"));
   const newestRevision = job?.workingRevision ?? latest.data;
+  const analysisCurrent =
+    analysis.scan?.status === "COMPLETED" &&
+    !analysis.outdated &&
+    !analysis.scan.outdated &&
+    !dirty &&
+    !dialogDirty &&
+    analysis.scan.revisionId === newestRevision?.id &&
+    analysis.scan.revisionVersion === newestRevision?.version;
+  const currentFindings = analysisCurrent ? (analysis.scan?.report?.findings ?? []) : [];
   const can = (action: string) =>
     job?.status !== "SUSPENDED" && job?.availableActions.includes(action);
   const invalidate = () => {
@@ -289,6 +315,7 @@ export function JobWorkspace({
   };
   const closeReviewSection = () => {
     editDirtyRef.current = false;
+    setDialogDirty(false);
     setEditSection(null);
   };
   const saveReviewSection = async (next: JobContent) => {
@@ -334,9 +361,52 @@ export function JobWorkspace({
     setView(next);
     headingRef.current?.focus();
   };
+  const scanPanel = (editable || job?.workingRevision) && (
+    <JobScanPanel
+      job={job}
+      busy={busy}
+      editable={editable}
+      localEdits={dialogDirty}
+      editSequence={scanEditSequence}
+      onResult={receiveAnalysis}
+      editorMode={!guided && view === "edit"}
+      editorTarget={editorAnalysisTarget}
+      autoReady={Boolean(content.description?.trim())}
+      compact={!guided && view === "latest"}
+      prepare={async () => {
+        if (!content.description?.trim())
+          throw new ApiError(
+            "Vui lòng nhập mô tả công việc trước khi kiểm tra nội dung với AI.",
+            400,
+          );
+        if (busyRef.current) throw new Error("Vui lòng đợi thao tác lưu hoàn tất.");
+        if (!dirty && job) return job;
+        busyRef.current = true;
+        setBusy(true);
+        try {
+          return await persist();
+        } finally {
+          busyRef.current = false;
+          setBusy(false);
+        }
+      }}
+      recover={async (id) => {
+        const fresh = await getJob(id);
+        setJob(fresh);
+        setPreview(null);
+        if (!dirtyRef.current) {
+          const next = fresh.workingRevision?.content ?? {};
+          setContent(next);
+          savedContent.current = JSON.stringify(next);
+        }
+        invalidate();
+        return fresh;
+      }}
+    />
+  );
   if (job?.status === "SUSPENDED") return <SuspendedJobDetails job={job} scope={scope} />;
   return (
-    <>
+    <div className={guided ? "jp-job-creation" : "jp-job-detail"}>
       <button className="jp-back" onClick={onBack}>
         <ArrowLeft size={17} aria-hidden="true" />
         Quay lại danh sách
@@ -465,10 +535,43 @@ export function JobWorkspace({
               </button>
             )}
           </nav>
+          {!guided && (
+            <div
+              className="jp-detail-scan-slot"
+              hidden={view === "published" || view === "history"}
+            >
+              {scanPanel}
+            </div>
+          )}
           {view === "latest" && job && (
             <div className="jp-preview">
               {newestRevision ? (
-                <JobContentView content={newestRevision.content} />
+                <>
+                  <div className="jp-current-heading">
+                    <div>
+                      <h2>Nội dung JD hiện tại</h2>
+                      <p>
+                        Bản v{newestRevision.revisionNumber} ·{" "}
+                        {revisionLabels[newestRevision.state]}
+                      </p>
+                    </div>
+                    <span
+                      className={`jp-analysis-count${analysisCurrent && currentFindings.length ? " jp-analysis-count--findings" : ""}`}
+                      role="status"
+                    >
+                      {analysisCurrent
+                        ? `${currentFindings.length} phát hiện`
+                        : analysis.scan
+                          ? "Kết quả cần cập nhật"
+                          : "Chưa phân tích"}
+                    </span>
+                  </div>
+                  <JobContentView
+                    content={newestRevision.content}
+                    showTitle={false}
+                    findings={currentFindings}
+                  />
+                </>
               ) : latest.isPending ? (
                 <p className="jp-empty" role="status">
                   Đang tải nội dung JD mới nhất…
@@ -497,11 +600,15 @@ export function JobWorkspace({
               }}
             >
               <JobContentEditor
+                analysisFindings={!guided ? currentFindings : undefined}
+                analysisTargetRef={!guided ? setEditorAnalysisTarget : undefined}
                 invalidField={invalidField}
                 step={guided ? step : undefined}
                 content={content}
                 onChange={(next) => {
                   setContent(next);
+                  if (JSON.stringify(next) !== JSON.stringify(content))
+                    setScanEditSequence((value) => value + 1);
                   setPreview(null);
                   if (
                     invalidField &&
@@ -587,6 +694,7 @@ export function JobWorkspace({
               )}
               <JobContentView
                 content={preview.content}
+                findings={previewCurrent ? currentFindings : []}
                 onEdit={guided && editable ? openReviewSection : undefined}
                 editDisabled={busy}
               />
@@ -630,132 +738,142 @@ export function JobWorkspace({
               </div>
             </div>
           )}
+          {guided && scanPanel}
           {view === "published" && job && <PublishedContent job={job} scope={scope} />}
           {view === "history" && job && <JobReviewHistory job={job} scope={scope} />}
         </div>
-        <aside className="jp-workspace-side" aria-label="Quản lý tin">
-          <section className="jp-side-section">
-            <h3>
-              <Users size={18} aria-hidden="true" />
-              Người phụ trách
-            </h3>
-            {job ? (
-              <JobResponsibility
-                job={job}
-                owner={owner}
-                scope={scope}
-                busy={busy}
-                onChange={accept}
-                run={run}
-              />
-            ) : (
-              <p>
-                Lưu bản nháp để quản lý phân công.{" "}
-                {owner
-                  ? "Bạn sẽ được ghi nhận là chủ sở hữu phụ trách tin."
-                  : "Bạn sẽ được tự động phân công vào tin do mình tạo."}
-              </p>
-            )}
-          </section>
-          {!guided && (
+        <aside
+          className="jp-workspace-side"
+          aria-label="Quản lý tin"
+          tabIndex={guided ? undefined : 0}
+        >
+          <details className="jp-detail-tools" open>
+            <summary>
+              Quản lý tin tuyển dụng <ChevronDown size={16} aria-hidden="true" />
+            </summary>
             <section className="jp-side-section">
-              <h3>Xuất bản và cập nhật</h3>
-              {job && (
-                <div className="jp-badges" aria-label="Trạng thái tin tuyển dụng">
-                  <span className={`jp-badge jp-status-${job.status.toLowerCase()}`}>
-                    {jobStatusLabels[job.status]}
-                  </span>
-                  {job.workingRevision && (
-                    <span
-                      className={`jp-badge jp-revision-${job.workingRevision.state.toLowerCase()}`}
-                    >
-                      {revisionLabels[job.workingRevision.state]} · v
-                      {job.workingRevision.revisionNumber}
-                    </span>
-                  )}
-                </div>
-              )}
-              <p>Thay đổi nội dung cần được xét duyệt trước khi xuất bản.</p>
-              {job?.approvedDeadline && (
+              <h3>
+                <Users size={18} aria-hidden="true" />
+                Người phụ trách
+              </h3>
+              {job ? (
+                <JobResponsibility
+                  job={job}
+                  owner={owner}
+                  scope={scope}
+                  busy={busy}
+                  onChange={accept}
+                  run={run}
+                />
+              ) : (
                 <p>
-                  Hạn đã duyệt: <strong>{formatJobDate(job.approvedDeadline)}</strong>
+                  Lưu bản nháp để quản lý phân công.{" "}
+                  {owner
+                    ? "Bạn sẽ được ghi nhận là chủ sở hữu phụ trách tin."
+                    : "Bạn sẽ được tự động phân công vào tin do mình tạo."}
                 </p>
               )}
-              {can("CREATE_DRAFT") && (
-                <button
-                  className="jp-button jp-primary"
-                  disabled={busy}
-                  onClick={() => {
-                    void run(async () => {
-                      const updated = await deriveJob(job!);
-                      accept(updated);
-                      const next = updated.workingRevision!.content;
-                      setContent(next);
-                      savedContent.current = JSON.stringify(next);
-                      setView("edit");
-                      setNotice("Đã tạo bản nháp mới từ bản gần nhất.");
-                    });
-                  }}
-                >
-                  Tạo bản chỉnh sửa
-                </button>
-              )}
-              {can("WITHDRAW") && (
-                <button
-                  className="jp-button"
-                  disabled={busy}
-                  onClick={() => setConfirmation("withdraw")}
-                >
-                  Rút bản gửi duyệt
-                </button>
-              )}
-              {can("PAUSE") && (
-                <button
-                  className="jp-button"
-                  disabled={busy || dirty}
-                  onClick={() => {
-                    void run(async () => {
-                      accept(await changeJobStatus(job!, "pause"));
-                      setNotice("Đã tạm dừng tin tuyển dụng.");
-                    });
-                  }}
-                >
-                  <Pause size={16} aria-hidden="true" />
-                  Tạm dừng tin
-                </button>
-              )}
-              {can("RESUME") && (
-                <button
-                  className="jp-button"
-                  disabled={busy || dirty}
-                  onClick={() => {
-                    void run(async () => {
-                      accept(await changeJobStatus(job!, "resume"));
-                      setNotice("Tin đã được đăng trở lại.");
-                    });
-                  }}
-                >
-                  <Play size={16} aria-hidden="true" />
-                  Tiếp tục đăng tin
-                </button>
-              )}
-              {can("CLOSE") && (
-                <button
-                  className="jp-button jp-danger"
-                  disabled={busy || dirty}
-                  onClick={() => setConfirmation("close")}
-                >
-                  Đóng tin tuyển dụng
-                </button>
-              )}
-              {dirty && job && (
-                <p className="jp-hint">Lưu nội dung trước khi thay đổi trạng thái xuất bản.</p>
-              )}
-              {job && ["CLOSED", "EXPIRED"].includes(job.status) && (
-                <p>Tin đã kết thúc. Không thể tiếp tục đăng hoặc tạo bản chỉnh sửa.</p>
-              )}
             </section>
-          )}
+            {!guided && (
+              <section className="jp-side-section">
+                <h3>Xuất bản và cập nhật</h3>
+                {job && (
+                  <div className="jp-badges" aria-label="Trạng thái tin tuyển dụng">
+                    <span className={`jp-badge jp-status-${job.status.toLowerCase()}`}>
+                      {jobStatusLabels[job.status]}
+                    </span>
+                    {job.workingRevision && (
+                      <span
+                        className={`jp-badge jp-revision-${job.workingRevision.state.toLowerCase()}`}
+                      >
+                        {revisionLabels[job.workingRevision.state]} · v
+                        {job.workingRevision.revisionNumber}
+                      </span>
+                    )}
+                  </div>
+                )}
+                <p>Thay đổi nội dung cần được xét duyệt trước khi xuất bản.</p>
+                {job?.approvedDeadline && (
+                  <p>
+                    Hạn đã duyệt: <strong>{formatJobDate(job.approvedDeadline)}</strong>
+                  </p>
+                )}
+                {can("CREATE_DRAFT") && (
+                  <button
+                    className="jp-button jp-primary"
+                    disabled={busy}
+                    onClick={() => {
+                      void run(async () => {
+                        const updated = await deriveJob(job!);
+                        accept(updated);
+                        const next = updated.workingRevision!.content;
+                        setContent(next);
+                        savedContent.current = JSON.stringify(next);
+                        setView("edit");
+                        setNotice("Đã tạo bản nháp mới từ bản gần nhất.");
+                      });
+                    }}
+                  >
+                    Tạo bản chỉnh sửa
+                  </button>
+                )}
+                {can("WITHDRAW") && (
+                  <button
+                    className="jp-button"
+                    disabled={busy}
+                    onClick={() => setConfirmation("withdraw")}
+                  >
+                    Rút bản gửi duyệt
+                  </button>
+                )}
+                {can("PAUSE") && (
+                  <button
+                    className="jp-button"
+                    disabled={busy || dirty}
+                    onClick={() => {
+                      void run(async () => {
+                        accept(await changeJobStatus(job!, "pause"));
+                        setNotice("Đã tạm dừng tin tuyển dụng.");
+                      });
+                    }}
+                  >
+                    <Pause size={16} aria-hidden="true" />
+                    Tạm dừng tin
+                  </button>
+                )}
+                {can("RESUME") && (
+                  <button
+                    className="jp-button"
+                    disabled={busy || dirty}
+                    onClick={() => {
+                      void run(async () => {
+                        accept(await changeJobStatus(job!, "resume"));
+                        setNotice("Tin đã được đăng trở lại.");
+                      });
+                    }}
+                  >
+                    <Play size={16} aria-hidden="true" />
+                    Tiếp tục đăng tin
+                  </button>
+                )}
+                {can("CLOSE") && (
+                  <button
+                    className="jp-button jp-danger"
+                    disabled={busy || dirty}
+                    onClick={() => setConfirmation("close")}
+                  >
+                    Đóng tin tuyển dụng
+                  </button>
+                )}
+                {dirty && job && (
+                  <p className="jp-hint">Lưu nội dung trước khi thay đổi trạng thái xuất bản.</p>
+                )}
+                {job && ["CLOSED", "EXPIRED"].includes(job.status) && (
+                  <p>Tin đã kết thúc. Không thể tiếp tục đăng hoặc tạo bản chỉnh sửa.</p>
+                )}
+              </section>
+            )}
+          </details>
         </aside>
       </div>
       {editSection !== null && (
@@ -769,6 +887,8 @@ export function JobWorkspace({
           onSave={saveReviewSection}
           onDirtyChange={(value) => {
             editDirtyRef.current = value;
+            setDialogDirty(value);
+            if (value) setScanEditSequence((sequence) => sequence + 1);
           }}
           returnFocus={editTrigger.current}
         />
@@ -859,7 +979,7 @@ export function JobWorkspace({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </div>
   );
 }
 function PublishedContent({ job, scope }: { job: Job; scope: string }) {
