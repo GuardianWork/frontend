@@ -32,7 +32,6 @@ import { CompanyMark } from "./PublicJobsView";
 import { useJobsPath } from "@/hooks/useJobsPath";
 import { CompanyIcon } from "../icons";
 import { useCandidate } from "@/context/CandidateContext";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 function formatDate(value?: string | null) {
   if (!value) return "";
@@ -548,12 +547,12 @@ export function CompanyReviewView({
                     <div>
                       {/* TODO(api): profile workingHours once the backend exposes it */}
                       <dt>{dict.companyReview.workingHours}</dt>
-                      <dd>{dict.companyReview.notDisclosed}</dd>
+                      <dd></dd>
                     </div>
                     <div>
                       {/* TODO(api): profile companyScale once the backend exposes it */}
                       <dt>{dict.companyReview.companyScale}</dt>
-                      <dd>{dict.companyReview.notDisclosed}</dd>
+                      <dd></dd>
                     </div>
                   </dl>
                 </section>
@@ -569,7 +568,6 @@ export function CompanyReviewView({
                     note={dict.companyReview.companyLeadNote}
                   />
                   {/* TODO(api): render the company introduction once the backend exposes it */}
-                  <p className="company-block__empty">{dict.companyReview.notDisclosed}</p>
                 </section>
 
                 <section
@@ -579,7 +577,6 @@ export function CompanyReviewView({
                 >
                   <SectionHeading id="company-expertise" title={dict.companyReview.expertise} />
                   {/* TODO(api): render the company expertise taxonomy once the backend exposes it */}
-                  <p className="company-block__empty">{dict.companyReview.notDisclosed}</p>
                 </section>
 
                 <section
@@ -688,31 +685,15 @@ export function CompanyReviewView({
           <aside className="company-dossier-rail" aria-label={dict.companyReview.navLabel}>
             {featured ? (
               <section className="company-featured" aria-labelledby="company-featured-title">
-                <p className="company-featured__label">
-                  {dict.companyReview.featuredTitle}
+                <div className="company-featured__head">
+                  <p className="company-featured__label">{dict.companyReview.featuredTitle}</p>
                   {featuredNote ? (
-                    <TooltipProvider delayDuration={150}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            type="button"
-                            className="company-featured__hint"
-                            aria-label={featuredNote}
-                          >
-                            <Info size={12} aria-hidden="true" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent
-                          side="bottom"
-                          sideOffset={8}
-                          className="company-featured__tooltip"
-                        >
-                          {featuredNote}
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    <p className="company-featured__note">
+                      <Info size={12} aria-hidden="true" />
+                      {featuredNote}
+                    </p>
                   ) : null}
-                </p>
+                </div>
                 <h2 id="company-featured-title">
                   <Link to={jobsPath} search={jobSearch({ job: String(featured.id) })}>
                     {featured.title}
