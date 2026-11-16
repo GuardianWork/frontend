@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
@@ -19,7 +19,6 @@ import {
   findPublicCompanyRoles,
   type CompanyRole,
 } from "@/services/publicCompanies";
-import { mockCompanyProfile } from "@/lib/company-profile-mock";
 import {
   DEFAULT_COMPANY_TAB,
   type CompanyTabId,
@@ -32,6 +31,8 @@ import { Header } from "./Header";
 import { CompanyMark } from "./PublicJobsView";
 import { useJobsPath } from "@/hooks/useJobsPath";
 import { CompanyIcon } from "../icons";
+import { useCandidate } from "@/context/CandidateContext";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 function formatDate(value?: string | null) {
   if (!value) return "";
@@ -46,6 +47,80 @@ function listOrDash(values: string[], fallback: string) {
 
 function countLabel(template: string, count: number) {
   return template.replace("{count}", String(count));
+}
+
+/** Date-only deadlines stay open through the end of that local day. */
+function hasDeadlinePassed(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return false;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value.trim())) date.setHours(23, 59, 59, 999);
+  return date.getTime() < Date.now();
+}
+
+function compareById(a: CompanyRole, b: CompanyRole) {
+  return a.id - b.id;
+}
+
+type FeaturedTier = "deadline" | "salary" | "applicants" | "headcount" | "fallback";
+
+interface FeaturedPick {
+  role: CompanyRole;
+  tier: FeaturedTier;
+}
+
+/**
+ * Picks the posting to feature in the rail. Eligibility first: applications
+ * must be open, the candidate must not have applied yet and the deadline must
+ * not have passed. Then cascade by most applicants (postings with zero applications carry no
+ * signal and fall through) → nearest open deadline → highest disclosed salary → most openings.
+ * Ties break by role id for a deterministic pick.
+ */
+function featuredRole(
+  roles: CompanyRole[],
+  isApplied: (jobId: string) => boolean,
+): FeaturedPick | null {
+  const eligible = roles.filter(
+    (role) => role.applicationsAvailable !== false && !isApplied(String(role.id)),
+  );
+  const byApplicants = eligible
+    // A count of 0 is no social-proof signal; zero-count postings fall through to the next tier.
+    .filter((role) => (role.applicationCount ?? 0) > 0)
+    .sort((a, b) => (b.applicationCount ?? 0) - (a.applicationCount ?? 0) || compareById(a, b));
+  if (byApplicants.length) return { role: byApplicants[0], tier: "applicants" };
+  const byDeadline = eligible
+    .filter((role) => role.deadline && !hasDeadlinePassed(role.deadline))
+    .sort(
+      (a, b) =>
+        new Date(a.deadline!).getTime() - new Date(b.deadline!).getTime() || compareById(a, b),
+    );
+  if (byDeadline.length) return { role: byDeadline[0], tier: "deadline" };
+  const bySalary = eligible
+    .filter((role) => role.salary)
+    .sort((a, b) => (b.salary?.maximum ?? 0) - (a.salary?.maximum ?? 0) || compareById(a, b));
+  if (bySalary.length) return { role: bySalary[0], tier: "salary" };
+  const byHeadcount = eligible
+    .filter((role) => (role.headcount ?? 0) > 0)
+    .sort((a, b) => (b.headcount ?? 0) - (a.headcount ?? 0) || compareById(a, b));
+  if (byHeadcount.length) return { role: byHeadcount[0], tier: "headcount" };
+  return eligible[0] ? { role: eligible[0], tier: "fallback" } : null;
+}
+
+function featuredTierNote(
+  dict: ReturnType<typeof useLanguage>["dict"],
+  tier: FeaturedTier,
+): string {
+  switch (tier) {
+    case "deadline":
+      return dict.companyReview.featuredNote;
+    case "salary":
+      return dict.companyReview.featuredNoteSalary;
+    case "applicants":
+      return dict.companyReview.featuredNoteApplicants;
+    case "headcount":
+      return dict.companyReview.featuredNoteHeadcount;
+    case "fallback":
+      return dict.companyReview.featuredNoteFallback;
+  }
 }
 
 const COMPANY_ROLE_PAGE_SIZE = 10;
@@ -184,6 +259,7 @@ export function CompanyReviewView({
   const { dict } = useLanguage();
   const navigate = useNavigate();
   const jobsPath = useJobsPath();
+  const { isApplied } = useCandidate();
   const [companyPage, setCompanyPage] = useState(0);
 
   useEffect(() => {
@@ -207,10 +283,12 @@ export function CompanyReviewView({
   const company = infoQuery.data ?? null;
   const summary = company?.summary ?? null;
   const rolesPage = rolesQuery.data ?? null;
-  const profile = useMemo(
-    () => (company ? mockCompanyProfile(company, company.summary) : null),
-    [company],
-  );
+  // API wiring (future): once the backend exposes a public company profile
+  // endpoint (e.g. GET /companies/public/{id}/profile) returning the
+  // introduction, working hours, company scale and expertise, wire it here via
+  // a `profileQuery` alongside `infoQuery` and render those fields in place of
+  // the "not disclosed" placeholders below (overview facts, company-about,
+  // company-expertise).
   const activeTab = tab ?? DEFAULT_COMPANY_TAB;
 
   const tabs: { id: CompanyTabId; label: string; disabled?: boolean }[] = [
@@ -317,7 +395,9 @@ export function CompanyReviewView({
   }
 
   const band = summary.salaryBands[0] ?? null;
-  const featured = rolesPage.roles.find((role) => role.deadline) ?? rolesPage.roles[0] ?? null;
+  const pick = featuredRole(rolesPage.roles, isApplied);
+  const featured = pick?.role ?? null;
+  const featuredNote = pick ? featuredTierNote(dict, pick.tier) : null;
   const earliestDeadline = summary.deadlines[0] ?? null;
 
   return (
@@ -466,12 +546,14 @@ export function CompanyReviewView({
                       </dd>
                     </div>
                     <div>
+                      {/* TODO(api): profile workingHours once the backend exposes it */}
                       <dt>{dict.companyReview.workingHours}</dt>
-                      <dd>{profile?.workingHours ?? dict.companyReview.notDisclosed}</dd>
+                      <dd>{dict.companyReview.notDisclosed}</dd>
                     </div>
                     <div>
+                      {/* TODO(api): profile companyScale once the backend exposes it */}
                       <dt>{dict.companyReview.companyScale}</dt>
-                      <dd>{profile?.companyScale ?? dict.companyReview.notDisclosed}</dd>
+                      <dd>{dict.companyReview.notDisclosed}</dd>
                     </div>
                   </dl>
                 </section>
@@ -486,15 +568,8 @@ export function CompanyReviewView({
                     title={dict.companyReview.companyLead}
                     note={dict.companyReview.companyLeadNote}
                   />
-                  {profile ? (
-                    <div className="company-prose">
-                      {profile.introduction.map((paragraph, index) => (
-                        <p key={index}>{paragraph}</p>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="company-block__empty">{dict.companyReview.aboutEmpty}</p>
-                  )}
+                  {/* TODO(api): render the company introduction once the backend exposes it */}
+                  <p className="company-block__empty">{dict.companyReview.notDisclosed}</p>
                 </section>
 
                 <section
@@ -503,15 +578,8 @@ export function CompanyReviewView({
                   aria-labelledby="company-expertise-title"
                 >
                   <SectionHeading id="company-expertise" title={dict.companyReview.expertise} />
-                  {profile?.expertise.length ? (
-                    <ul className="company-expertise">
-                      {profile.expertise.map((item) => (
-                        <li key={item}>{item}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="company-block__empty">{dict.companyReview.notDisclosed}</p>
-                  )}
+                  {/* TODO(api): render the company expertise taxonomy once the backend exposes it */}
+                  <p className="company-block__empty">{dict.companyReview.notDisclosed}</p>
                 </section>
 
                 <section
@@ -521,13 +589,24 @@ export function CompanyReviewView({
                 >
                   <SectionHeading
                     id="company-headquarters"
-                    title={dict.companyReview.headquartersTitle}
-                    note={dict.companyReview.headquartersNote}
+                    title={dict.companyReview.locationsTitle}
+                    note={dict.companyReview.locationsNote}
                   />
-                  <p className="company-headquarters">
-                    <MapPin size={16} aria-hidden="true" />
-                    <span>{profile?.headquarters ?? dict.companyReview.notDisclosed}</span>
-                  </p>
+                  <ul className="company-headquarters">
+                    {summary.locations.length ? (
+                      summary.locations.map((item) => (
+                        <li key={item.label}>
+                          <MapPin size={16} aria-hidden="true" />
+                          <span>{item.label}</span>
+                        </li>
+                      ))
+                    ) : (
+                      <li>
+                        <MapPin size={16} aria-hidden="true" />
+                        <span>{dict.companyReview.notDisclosed}</span>
+                      </li>
+                    )}
+                  </ul>
                 </section>
               </div>
             ) : null}
@@ -609,7 +688,31 @@ export function CompanyReviewView({
           <aside className="company-dossier-rail" aria-label={dict.companyReview.navLabel}>
             {featured ? (
               <section className="company-featured" aria-labelledby="company-featured-title">
-                <p className="company-featured__label">{dict.companyReview.featuredTitle}</p>
+                <p className="company-featured__label">
+                  {dict.companyReview.featuredTitle}
+                  {featuredNote ? (
+                    <TooltipProvider delayDuration={150}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            className="company-featured__hint"
+                            aria-label={featuredNote}
+                          >
+                            <Info size={12} aria-hidden="true" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent
+                          side="bottom"
+                          sideOffset={8}
+                          className="company-featured__tooltip"
+                        >
+                          {featuredNote}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ) : null}
+                </p>
                 <h2 id="company-featured-title">
                   <Link to={jobsPath} search={jobSearch({ job: String(featured.id) })}>
                     {featured.title}

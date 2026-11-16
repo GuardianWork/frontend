@@ -2,7 +2,7 @@ import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, BriefcaseBusiness, Search, SearchX, ShieldCheck, X } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
-import { paginateItems } from "@/lib/pagination";
+import { getPaginationItems, paginateItems } from "@/lib/pagination";
 import {
   searchPublicCompanies,
   type CompanySummary,
@@ -160,6 +160,7 @@ export function CompaniesView({ workspace = false }: { workspace?: boolean }) {
   const companies = useMemo(() => companiesQuery.data ?? [], [companiesQuery.data]);
   const totalRoles = companies.reduce((total, item) => total + item.summary.roleCount, 0);
   const pagination = paginateItems(companies, page, COMPANIES_PER_PAGE);
+  const pageItems = getPaginationItems(pagination.page, pagination.totalPages);
 
   return (
     <div
@@ -288,20 +289,26 @@ export function CompaniesView({ workspace = false }: { workspace?: boolean }) {
                     </span>
                   </button>
                   <div className="career-pagination__pages">
-                    {Array.from({ length: pagination.totalPages }, (_, index) => (
-                      <button
-                        key={index}
-                        type="button"
-                        aria-current={pagination.page === index ? "page" : undefined}
-                        aria-label={dict.companyReview.paginationPage.replace(
-                          "{page}",
-                          String(index + 1),
-                        )}
-                        onClick={() => setPage(index)}
-                      >
-                        {index + 1}
-                      </button>
-                    ))}
+                    {pageItems.map((item) =>
+                      typeof item === "number" ? (
+                        <button
+                          key={item}
+                          type="button"
+                          aria-current={pagination.page === item - 1 ? "page" : undefined}
+                          aria-label={dict.companyReview.paginationPage.replace(
+                            "{page}",
+                            String(item),
+                          )}
+                          onClick={() => setPage(item - 1)}
+                        >
+                          {item}
+                        </button>
+                      ) : (
+                        <span key={item} className="career-pagination__ellipsis" aria-hidden="true">
+                          …
+                        </span>
+                      ),
+                    )}
                   </div>
                   <button
                     type="button"

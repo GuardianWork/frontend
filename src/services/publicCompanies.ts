@@ -43,6 +43,8 @@ export interface CompanyRole {
   deadline: string | null;
   description: string | null;
   applicationsAvailable: boolean;
+  /** Applicants so far, or null when the API does not disclose it. */
+  applicationCount: number | null;
 }
 
 export interface CompanySalaryBand {
@@ -130,6 +132,12 @@ interface ApiCompanyRole {
   deadline: string | null;
   description: string | null;
   applicationsAvailable: boolean;
+  /**
+   * Exposed by the public roles API (`GET /api/companies/public/{id}/roles`): exact total of
+   * applications for the posting, `0` when nobody applied yet. Mapped defensively in case an
+   * older backend deploy omits it.
+   */
+  applicationCount?: number | null;
 }
 
 interface ApiCompanyDirectoryEntry {
@@ -250,6 +258,12 @@ function toRole(role: ApiCompanyRole): CompanyRole {
     deadline: role.deadline ?? null,
     description: role.description?.trim() || null,
     applicationsAvailable: role.applicationsAvailable !== false,
+    applicationCount:
+      typeof role.applicationCount === "number" &&
+      Number.isSafeInteger(role.applicationCount) &&
+      role.applicationCount >= 0
+        ? role.applicationCount
+        : null,
   };
 }
 

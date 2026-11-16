@@ -37,7 +37,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
 import { useCandidate } from "@/context/CandidateContext";
 import { badgeLabel, isSampleListing, type JobItem } from "@/lib/job-listings";
-import { paginateItems } from "@/lib/pagination";
+import { getPaginationItems, paginateItems } from "@/lib/pagination";
 import {
   EXPERIENCE_BANDS,
   SALARY_BANDS,
@@ -519,6 +519,7 @@ function Results({
       }
     : clientPagination;
   const filtersActive = hasActiveFilters(search);
+  const pageItems = getPaginationItems(pagination.page, pagination.totalPages);
   const panelFiltersActive = Boolean(
     search.salaryMin || search.salaryMax || search.mode || search.employmentType || search.industry,
   );
@@ -782,17 +783,23 @@ function Results({
                 </span>
               </button>
               <div className="career-pagination__pages">
-                {Array.from({ length: pagination.totalPages }, (_, index) => (
-                  <button
-                    key={index}
-                    type="button"
-                    aria-current={pagination.page === index ? "page" : undefined}
-                    aria-label={`Trang ${index + 1}`}
-                    onClick={() => update({ page: index })}
-                  >
-                    {index + 1}
-                  </button>
-                ))}
+                {pageItems.map((item) =>
+                  typeof item === "number" ? (
+                    <button
+                      key={item}
+                      type="button"
+                      aria-current={pagination.page === item - 1 ? "page" : undefined}
+                      aria-label={`Trang ${item}`}
+                      onClick={() => update({ page: item - 1 })}
+                    >
+                      {item}
+                    </button>
+                  ) : (
+                    <span key={item} className="career-pagination__ellipsis" aria-hidden="true">
+                      …
+                    </span>
+                  ),
+                )}
               </div>
               <button
                 type="button"
