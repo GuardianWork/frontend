@@ -1,14 +1,9 @@
 import { getPublicJobDetail } from "@/services/publicJobs";
 import { JobDescription } from "@/components/recruiter/JobDescription";
-/* Hallmark · page: public job discovery · genre: modern-minimal
- * macrostructure: Workbench · tone: utilitarian · theme: GuardianWork (DESIGN.md locked)
- * anchor hue: Guardian Blue · enrichment: none (typography + functional states) · job-list focus
- * states: default · hover · focus · active · disabled · loading · error · success
- * pre-emit critique: P5 H5 E5 S5 R5 V4
- */
+import { CompanyDetailLink } from "./CompanyLinks";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import {
   ArrowLeft,
   ArrowRight,
@@ -35,13 +30,14 @@ import { AdminShell } from "@/components/AdminShell";
 import { Footer } from "./Footer";
 import { searchPublicJobs } from "../../services/publicJobs";
 import type { JobContent } from "@/services/jobs";
-import type { PublicJobSearchResult } from "../../services/publicJobs";
+import { useJobsPath } from "@/hooks/useJobsPath";
+import { employmentTypeLabel, toPublicJobItem } from "@/lib/public-job-item";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
 import { useCandidate } from "@/context/CandidateContext";
 import { badgeLabel, isSampleListing, type JobItem } from "@/lib/job-listings";
-import { paginateItems } from "@/lib/pagination";
+import { getPaginationItems, paginateItems } from "@/lib/pagination";
 import {
   EXPERIENCE_BANDS,
   SALARY_BANDS,
@@ -55,17 +51,11 @@ import {
   type JobSearchParams,
 } from "@/lib/job-search";
 
-function useJobsPath() {
-  return useRouterState({
-    select: (state) =>
-      state.location.pathname.startsWith("/can/") ? ("/can/jobs" as const) : ("/jobs" as const),
-  });
-}
 const PAGE_SIZE = 9;
 
 const POPULAR_QUERIES = ["Kinh doanh", "Kế toán", "Tiếp thị", "Nhân sự"];
 
-function CompanyMark({ name }: { name: string }) {
+export function CompanyMark({ name }: { name: string }) {
   const initials = name
     .split(" ")
     .filter(Boolean)
@@ -80,51 +70,26 @@ function CompanyMark({ name }: { name: string }) {
   );
 }
 
-function toPublicJobItem(job: PublicJobSearchResult): JobItem {
-  const content = job.content ?? {};
-  const compensation = content.compensation;
-  const hasSalary =
-    Boolean(compensation?.disclosed) &&
-    typeof compensation?.minimum === "number" &&
-    typeof compensation?.maximum === "number";
-  const salaryRange = hasSalary
-    ? `${Math.round(compensation!.minimum!).toLocaleString("vi-VN").replace(/,/g, ".")} - ${Math.round(compensation!.maximum!).toLocaleString("vi-VN").replace(/,/g, ".")} ${compensation!.currency ?? "VND"} / ${(compensation!.payPeriod ?? "MONTH").toLowerCase()}`
-    : "Thỏa thuận";
-  return {
-    id: String(job.id),
-    title: content.title ?? "Tin tuyển dụng",
-    company: job.company?.name ?? "Doanh nghiệp",
-    location: content.location ?? "Chưa cập nhật",
-    salaryRange,
-    badge: "Công ty đã xác thực",
-    badgeTone: "success",
-    time: "Đang tuyển",
-    department: employmentTypeLabel(content.employmentType),
-    industry: "Chưa cập nhật",
-    matchScore: 0,
-    description: content.description ?? "",
-    requirements: [],
-    statutoryBase: "Thông tin công khai từ tin tuyển dụng",
-    statutoryNote: "Kiểm tra kỹ điều khoản và điều kiện làm việc trước khi ứng tuyển.",
-    suggestedRevision: "Xem chi tiết để biết đầy đủ thông tin tuyển dụng.",
-  };
-}
-
-function employmentTypeLabel(value?: string) {
-  switch (value) {
-    case "FULL_TIME":
-      return "Toàn thời gian";
-    case "PART_TIME":
-      return "Bán thời gian";
-    case "CONTRACT":
-      return "Hợp đồng";
-    case "INTERNSHIP":
-      return "Thực tập";
-    case "TEMPORARY":
-      return "Thời vụ";
-    default:
-      return value ?? "Việc làm";
-  }
+export function CompanyTitleLink({
+  name,
+  companyId,
+  className,
+}: {
+  name: string;
+  companyId?: number;
+  className?: string;
+}) {
+  if (typeof companyId !== "number" || companyId <= 0)
+    return <span className={className}>{name}</span>;
+  return (
+    <CompanyDetailLink
+      companyId={companyId}
+      className={className}
+      onClick={(event) => event.stopPropagation()}
+    >
+      {name}
+    </CompanyDetailLink>
+  );
 }
 
 function badgeClass(job: JobItem) {
@@ -462,7 +427,7 @@ export function PublicJobsView({
  * One listing item, shared by the guest catalogue and the two-column layout so the
  * job card reads identically in both. The title always opens the full detail page.
  */
-function JobCard({
+export function JobCard({
   job,
   search,
   active,
@@ -482,7 +447,11 @@ function JobCard({
     >
       <div className="career-job__company min-w-0">
         <CompanyMark name={job.company} />
-        <span className="min-w-0 truncate">{job.company}</span>
+        <CompanyTitleLink
+          name={job.company}
+          companyId={job.companyId}
+          className="career-job__company-name min-w-0 truncate"
+        />
         <span className={`${badgeClass(job)} shrink-0`}>{badgeLabel(job.badge)}</span>
         <ArrowRight size={18} className="career-job__arrow shrink-0" aria-hidden="true" />
       </div>
@@ -550,6 +519,7 @@ function Results({
       }
     : clientPagination;
   const filtersActive = hasActiveFilters(search);
+  const pageItems = getPaginationItems(pagination.page, pagination.totalPages);
   const panelFiltersActive = Boolean(
     search.salaryMin || search.salaryMax || search.mode || search.employmentType || search.industry,
   );
@@ -813,17 +783,23 @@ function Results({
                 </span>
               </button>
               <div className="career-pagination__pages">
-                {Array.from({ length: pagination.totalPages }, (_, index) => (
-                  <button
-                    key={index}
-                    type="button"
-                    aria-current={pagination.page === index ? "page" : undefined}
-                    aria-label={`Trang ${index + 1}`}
-                    onClick={() => update({ page: index })}
-                  >
-                    {index + 1}
-                  </button>
-                ))}
+                {pageItems.map((item) =>
+                  typeof item === "number" ? (
+                    <button
+                      key={item}
+                      type="button"
+                      aria-current={pagination.page === item - 1 ? "page" : undefined}
+                      aria-label={`Trang ${item}`}
+                      onClick={() => update({ page: item - 1 })}
+                    >
+                      {item}
+                    </button>
+                  ) : (
+                    <span key={item} className="career-pagination__ellipsis" aria-hidden="true">
+                      …
+                    </span>
+                  ),
+                )}
               </div>
               <button
                 type="button"
@@ -911,7 +887,9 @@ function JobDetail({
             <div className="career-detail__company">
               <CompanyMark name={job.company} />
               <div>
-                <p>{job.company}</p>
+                <p>
+                  <CompanyTitleLink name={job.company} companyId={job.companyId} />
+                </p>
                 <span className={badgeClass(job)}>{badgeLabel(job.badge)}</span>
               </div>
             </div>
@@ -1030,7 +1008,9 @@ function JobDetail({
             <dl>
               <div>
                 <dt>Doanh nghiệp</dt>
-                <dd>{job.company}</dd>
+                <dd>
+                  <CompanyTitleLink name={job.company} companyId={job.companyId} />
+                </dd>
               </div>
               <div>
                 <dt>Ngành nghề</dt>

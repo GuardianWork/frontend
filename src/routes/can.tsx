@@ -27,7 +27,9 @@ function CandidateLayout() {
                 ? "Cài đặt tài khoản"
                 : path.startsWith("/can/notifications")
                   ? "Thông báo"
-                  : "Không gian ứng viên";
+                  : path.startsWith("/can/companies")
+                    ? "Công ty"
+                    : "Không gian ứng viên";
   return (
     <SidebarProvider>
       <AdminShell title={title} role="candidate">
