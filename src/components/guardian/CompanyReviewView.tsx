@@ -6,6 +6,7 @@ import {
   Banknote,
   BriefcaseBusiness,
   CalendarClock,
+  ExternalLink,
   Info,
   MapPin,
   ShieldCheck,
@@ -33,6 +34,7 @@ import { CompanyMark } from "./PublicJobsView";
 import { useJobsPath } from "@/hooks/useJobsPath";
 import { CompanyIcon } from "../icons";
 import { useCandidate } from "@/context/CandidateContext";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 function formatDate(value?: string | null) {
   if (!value) return "";
@@ -603,7 +605,20 @@ export function CompanyReviewView({
                   <ul className="company-headquarters">
                     <li>
                       <MapPin size={16} aria-hidden="true" />
-                      <span>{profile?.workAddress ?? dict.companyReview.notDisclosed}</span>
+                      {profile?.workAddress ? (
+                        <a
+                          className="company-headquarters__link"
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(profile.workAddress)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          aria-label={`${profile.workAddress} — ${dict.companyReview.openInMaps}`}
+                        >
+                          <span>{profile.workAddress}</span>
+                          <ExternalLink size={13} aria-hidden="true" />
+                        </a>
+                      ) : (
+                        <span>{dict.companyReview.notDisclosed}</span>
+                      )}
                     </li>
                   </ul>
                 </section>
@@ -687,15 +702,31 @@ export function CompanyReviewView({
           <aside className="company-dossier-rail" aria-label={dict.companyReview.navLabel}>
             {featured ? (
               <section className="company-featured" aria-labelledby="company-featured-title">
-                <div className="company-featured__head">
-                  <p className="company-featured__label">{dict.companyReview.featuredTitle}</p>
+                <p className="company-featured__label">
+                  {dict.companyReview.featuredTitle}
                   {featuredNote ? (
-                    <p className="company-featured__note">
-                      <Info size={12} aria-hidden="true" />
-                      {featuredNote}
-                    </p>
+                    <TooltipProvider delayDuration={150}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            className="company-featured__hint"
+                            aria-label={featuredNote}
+                          >
+                            <Info size={12} aria-hidden="true" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent
+                          side="bottom"
+                          sideOffset={8}
+                          className="company-featured__tooltip"
+                        >
+                          {featuredNote}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   ) : null}
-                </div>
+                </p>
                 <h2 id="company-featured-title">
                   <Link to={jobsPath} search={jobSearch({ job: String(featured.id) })}>
                     {featured.title}

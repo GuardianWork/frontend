@@ -1056,6 +1056,7 @@ export const dictionaries = {
       rolesNote: "Sắp xếp theo hạn nộp gần nhất.",
       locationsTitle: "Địa điểm",
       locationsNote: "Địa điểm trụ sở công ty",
+      openInMaps: "Mở trong Google Maps",
       locationsMapNote: "Bản đồ và địa chỉ trụ sở chỉ hiển thị khi doanh nghiệp công bố công khai.",
       locationRolesCount: "{count} vị trí",
       sourceTitle: "Nguồn và phạm vi thông tin",
@@ -2137,6 +2138,7 @@ export const dictionaries = {
       rolesNote: "Ordered by the nearest deadline.",
       locationsTitle: "Hiring locations",
       locationsNote: "Headquarters location",
+      openInMaps: "Open in Google Maps",
       locationsMapNote:
         "A map and headquarters address appear only when the company publishes them.",
       locationRolesCount: "{count} roles",
