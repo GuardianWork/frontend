@@ -470,7 +470,21 @@ export function createMockApiServer() {
   const publicJobCompanies = [
     { id: 201, name: "Công ty TNHH Vận tải & Kho lạnh Việt Thành" },
     { id: 202, name: "Meadow Food & Beverage JSC" },
-    { id: 203, name: "Công ty CP Công nghệ Bản Việt" },
+    {
+      id: 203,
+      name: "Công ty CP Công nghệ Bản Việt",
+      // The mock dossier publishes a self-declared profile (GW-123, schemaVersion 1).
+      profile: {
+        schemaVersion: 1,
+        industry: "Công nghệ thông tin",
+        introduction:
+          "Bản Việt là công ty sản phẩm công nghệ, xây dựng hệ thống lõi cho ngân hàng và fintech tại Việt Nam và Singapore.\n\nChúng tôi làm việc theo mô hình lai 3 ngày tại văn phòng, đội ngũ hơn 120 kỹ sư và đặt độ tin cậy của hệ thống lên hàng đầu.",
+        workAddress: "Tòa nhà Bitexco, tầng 18, Quận 1, TP. Hồ Chí Minh",
+        workingHours: "Thứ 2 - Thứ 6, 08:30 - 17:30",
+        companyScale: { employeeRange: "51-200" },
+        expertise: ["Cloud infrastructure", "Open Banking", "Core Banking", "DevSecOps"],
+      },
+    },
     { id: 204, name: "TechNova Solutions Ltd." },
     { id: 205, name: "Green Energy Corp." },
     { id: 206, name: "VietHealth Pharmaceuticals" },
@@ -1207,6 +1221,7 @@ export function createMockApiServer() {
         id: company.id,
         name: company.name,
         summary: detail.summary,
+        ...(company.profile ? { profile: company.profile } : {}),
       });
       return;
     }
