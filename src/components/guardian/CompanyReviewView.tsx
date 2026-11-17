@@ -6,6 +6,7 @@ import {
   Banknote,
   BriefcaseBusiness,
   CalendarClock,
+  ExternalLink,
   Info,
   MapPin,
   ShieldCheck,
@@ -17,6 +18,7 @@ import {
   compactSalary,
   findPublicCompanyInfo,
   findPublicCompanyRoles,
+  cityOnly,
   type CompanyRole,
 } from "@/services/publicCompanies";
 import {
@@ -283,12 +285,9 @@ export function CompanyReviewView({
   const company = infoQuery.data ?? null;
   const summary = company?.summary ?? null;
   const rolesPage = rolesQuery.data ?? null;
-  // API wiring (future): once the backend exposes a public company profile
-  // endpoint (e.g. GET /companies/public/{id}/profile) returning the
-  // introduction, working hours, company scale and expertise, wire it here via
-  // a `profileQuery` alongside `infoQuery` and render those fields in place of
-  // the "not disclosed" placeholders below (overview facts, company-about,
-  // company-expertise).
+  // The profile payload is recruiter-authored and self-declared (schemaVersion 1); unset
+  // payloads are absent from the dossier response and every placeholder below falls back.
+  const profile = company?.profile ?? null;
   const activeTab = tab ?? DEFAULT_COMPANY_TAB;
 
   const tabs: { id: CompanyTabId; label: string; disabled?: boolean }[] = [
@@ -395,6 +394,18 @@ export function CompanyReviewView({
   }
 
   const band = summary.salaryBands[0] ?? null;
+  // Declared industry wins when the company self-declared one; otherwise fall back to the
+  // posting-derived labels. Same rule for the address line: declared headquarters wins,
+  // otherwise the posting-derived hiring locations are shown. Both drive the hero line and
+  // the general-info rows.
+  const industries = profile?.industry
+    ? [profile.industry]
+    : summary.industries.map((item) => item.label);
+  // Hero shows only the trailing city/province for the declared address; the full
+  // address stays in the Địa điểm section. Posting-derived locations keep their labels.
+  const headquarters = profile?.workAddress
+    ? cityOnly(profile.workAddress)
+    : summary.locations.map((item) => item.label).join(" · ");
   const pick = featuredRole(rolesPage.roles, isApplied);
   const featured = pick?.role ?? null;
   const featuredNote = pick ? featuredTierNote(dict, pick.tier) : null;
@@ -431,15 +442,9 @@ export function CompanyReviewView({
                   </p>
                   <h1>{company.name}</h1>
                   <p className="company-dossier-hero__meta">
-                    {summary.industries.length ? (
-                      <span>{summary.industries.map((item) => item.label).join(" · ")}</span>
-                    ) : null}
-                    {summary.industries.length && summary.locations.length ? (
-                      <span aria-hidden="true">·</span>
-                    ) : null}
-                    {summary.locations.length ? (
-                      <span>{summary.locations.map((item) => item.label).join(" · ")}</span>
-                    ) : null}
+                    {industries.length ? <span>{industries.join(" · ")}</span> : null}
+                    {industries.length && headquarters ? <span aria-hidden="true">·</span> : null}
+                    {headquarters ? <span>{headquarters}</span> : null}
                   </p>
                 </div>
               </div>
@@ -520,12 +525,7 @@ export function CompanyReviewView({
                   <dl className="company-facts">
                     <div>
                       <dt>{dict.companyReview.industries}</dt>
-                      <dd>
-                        {listOrDash(
-                          summary.industries.map((item) => item.label),
-                          "—",
-                        )}
-                      </dd>
+                      <dd>{listOrDash(industries, "—")}</dd>
                     </div>
                     <div>
                       <dt>{dict.companyReview.employmentTypes}</dt>
@@ -546,14 +546,14 @@ export function CompanyReviewView({
                       </dd>
                     </div>
                     <div>
-                      {/* TODO(api): profile workingHours once the backend exposes it */}
                       <dt>{dict.companyReview.workingHours}</dt>
-                      <dd>{dict.companyReview.notDisclosed}</dd>
+                      <dd>{profile?.workingHours ?? dict.companyReview.notDisclosed}</dd>
                     </div>
                     <div>
-                      {/* TODO(api): profile companyScale once the backend exposes it */}
                       <dt>{dict.companyReview.companyScale}</dt>
-                      <dd>{dict.companyReview.notDisclosed}</dd>
+                      <dd>
+                        {profile?.companyScale?.employeeRange ?? dict.companyReview.notDisclosed}
+                      </dd>
                     </div>
                   </dl>
                 </section>
@@ -568,8 +568,11 @@ export function CompanyReviewView({
                     title={dict.companyReview.companyLead}
                     note={dict.companyReview.companyLeadNote}
                   />
-                  {/* TODO(api): render the company introduction once the backend exposes it */}
-                  <p className="company-block__empty">{dict.companyReview.notDisclosed}</p>
+                  {profile?.introduction ? (
+                    <p className="company-about__body">{profile.introduction}</p>
+                  ) : (
+                    <p className="company-block__empty">{dict.companyReview.notDisclosed}</p>
+                  )}
                 </section>
 
                 <section
@@ -578,8 +581,15 @@ export function CompanyReviewView({
                   aria-labelledby="company-expertise-title"
                 >
                   <SectionHeading id="company-expertise" title={dict.companyReview.expertise} />
-                  {/* TODO(api): render the company expertise taxonomy once the backend exposes it */}
-                  <p className="company-block__empty">{dict.companyReview.notDisclosed}</p>
+                  {profile?.expertise.length ? (
+                    <ul className="company-expertise">
+                      {profile.expertise.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="company-block__empty">{dict.companyReview.notDisclosed}</p>
+                  )}
                 </section>
 
                 <section
@@ -593,19 +603,23 @@ export function CompanyReviewView({
                     note={dict.companyReview.locationsNote}
                   />
                   <ul className="company-headquarters">
-                    {summary.locations.length ? (
-                      summary.locations.map((item) => (
-                        <li key={item.label}>
-                          <MapPin size={16} aria-hidden="true" />
-                          <span>{item.label}</span>
-                        </li>
-                      ))
-                    ) : (
-                      <li>
-                        <MapPin size={16} aria-hidden="true" />
+                    <li>
+                      <MapPin size={16} aria-hidden="true" />
+                      {profile?.workAddress ? (
+                        <a
+                          className="company-headquarters__link"
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(profile.workAddress)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          aria-label={`${profile.workAddress} — ${dict.companyReview.openInMaps}`}
+                        >
+                          <span>{profile.workAddress}</span>
+                          <ExternalLink size={13} aria-hidden="true" />
+                        </a>
+                      ) : (
                         <span>{dict.companyReview.notDisclosed}</span>
-                      </li>
-                    )}
+                      )}
+                    </li>
                   </ul>
                 </section>
               </div>

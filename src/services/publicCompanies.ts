@@ -67,11 +67,21 @@ export interface CompanySummary {
   deadlines: string[];
 }
 
+export interface CompanyProfile {
+  schemaVersion: number | null;
+  industry: string | null;
+  introduction: string | null;
+  workAddress: string | null;
+  workingHours: string | null;
+  companyScale: { employeeRange: string } | null;
+  expertise: string[];
+}
+
 export interface PublicCompanyDirectoryEntry extends PublicCompany {
   summary: CompanySummary;
 }
 
-export type PublicCompanyInfo = PublicCompanyDirectoryEntry;
+export type PublicCompanyInfo = PublicCompanyDirectoryEntry & { profile: CompanyProfile | null };
 
 export interface PublicCompanyRolesPage {
   roles: CompanyRole[];
@@ -146,7 +156,20 @@ interface ApiCompanyDirectoryEntry {
   summary: ApiCompanySummary;
 }
 
-type ApiCompanyInfo = ApiCompanyDirectoryEntry;
+interface ApiCompanyInfo extends ApiCompanyDirectoryEntry {
+  profile?: ApiCompanyProfile | null;
+}
+
+interface ApiCompanyProfile {
+  schemaVersion?: number | null;
+  industry?: string | null;
+  introduction?: string | null;
+  workAddress?: string | null;
+  workingHours?: string | null;
+  companyScale?: { employeeRange?: string | null } | null;
+  /** Validated entry by entry; anything else is dropped. */
+  expertise?: unknown;
+}
 
 const EMPLOYMENT_TYPE_LABELS: Record<string, string> = {
   FULL_TIME: "Toàn thời gian",
@@ -172,6 +195,21 @@ const PAY_PERIOD_LABELS: Record<string, string> = {
 export function employmentTypeLabel(value?: string | null) {
   if (!value) return "Việc làm";
   return EMPLOYMENT_TYPE_LABELS[value] ?? value;
+}
+
+/**
+ * Best-effort city/province extraction for compact summary lines. Vietnamese addresses end
+ * with the city or province; a trailing country segment ("Việt Nam", "VN") is dropped first,
+ * then the final comma-separated segment is returned. The full address stays in the dossier's
+ * location section; this only shortens the hero meta line.
+ */
+export function cityOnly(address: string): string {
+  const withoutCountry = address.trim().replace(/,?\s*(việt\s*nam|vietnam|vn)\s*$/i, "");
+  const segments = withoutCountry
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  return segments[segments.length - 1] ?? withoutCountry;
 }
 
 export function workArrangementLabel(value?: string | null) {
@@ -275,6 +313,54 @@ function toDirectoryEntry(entry: ApiCompanyDirectoryEntry): PublicCompanyDirecto
   };
 }
 
+function cleanProfileText(value: unknown, max: number): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed ? trimmed.slice(0, max) : null;
+}
+
+function normalizeExpertise(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
+  const items: string[] = [];
+  for (const item of value) {
+    const trimmed = typeof item === "string" ? item.trim() : "";
+    if (!trimmed || trimmed.length > 50) continue;
+    const key = trimmed.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    items.push(trimmed);
+    if (items.length >= 10) break;
+  }
+  return items;
+}
+
+function toProfile(api?: ApiCompanyProfile | null): CompanyProfile | null {
+  if (!api || typeof api !== "object") return null;
+  const employeeRange = cleanProfileText(api.companyScale?.employeeRange, 20);
+  const expertise = normalizeExpertise(api.expertise);
+  const profile: CompanyProfile = {
+    schemaVersion:
+      typeof api.schemaVersion === "number" && Number.isSafeInteger(api.schemaVersion)
+        ? api.schemaVersion
+        : null,
+    industry: cleanProfileText(api.industry, 100),
+    introduction: cleanProfileText(api.introduction, 2000),
+    workAddress: cleanProfileText(api.workAddress, 500),
+    workingHours: cleanProfileText(api.workingHours, 60),
+    companyScale: employeeRange ? { employeeRange } : null,
+    expertise,
+  };
+  const payloadEmpty =
+    !profile.industry &&
+    !profile.introduction &&
+    !profile.workAddress &&
+    !profile.workingHours &&
+    !profile.companyScale &&
+    profile.expertise.length === 0;
+  return payloadEmpty ? null : profile;
+}
+
 async function companyPage(keyword: string, page: number) {
   const query = new URLSearchParams({
     page: String(page),
@@ -326,7 +412,7 @@ export async function findPublicCompanyInfo(companyId: number): Promise<PublicCo
     if (error instanceof ApiError && error.status === 404) return null;
     throw error;
   }
-  return toDirectoryEntry(data);
+  return { ...toDirectoryEntry(data), profile: toProfile(data.profile) };
 }
 
 /** Paginated visible roles for the dossier opening roles tab. */
