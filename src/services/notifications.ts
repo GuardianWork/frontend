@@ -599,7 +599,7 @@ export type NotificationPortal = "can" | "rec" | "staff";
 /**
  * In-app destination for a notification, resolved from backend `action.href` to a
  * registered frontend route. Backend hrefs (`/jobs/{id}`, `/applications/{uuid}`,
- * `/companies/{id}`) are portal-agnostic and do not match TanStack routes, so each
+ * `/companies/{id}`) and Company workspace hrefs do not match TanStack routes, so each
  * portal maps them to its own list/detail screen. Returns `null` when there is no
  * known screen (informational-only, or a portal without one) — callers stay put.
  */
@@ -612,14 +612,42 @@ export type NotificationPath =
       to: "/rec/applications/$jobId/$applicationId";
       params: { jobId: string; applicationId: string };
     }
-  | { to: "/rec/members" };
+  | { to: "/rec/members" }
+  | { to: "/rec/verification" };
 
 export function resolveNotificationPath(
   notification: Notification,
   portal: NotificationPortal,
+  ownedCompanyId?: number,
 ): NotificationPath | null {
   const href = notification.action?.href?.trim() ?? "";
   if (!href || notification.action?.external) return null;
+
+  if (href === "/companies/me/verification") {
+    const companyId = notification.references.companyId ?? notification.references.company;
+    return portal === "rec" && ownedCompanyId !== undefined && companyId === String(ownedCompanyId)
+      ? { to: "/rec/verification" }
+      : null;
+  }
+
+  const companyApplicationMatch = href.match(
+    /^\/companies\/me\/jobs\/([1-9]\d*)\/applications\/([a-f\d-]+)\/?$/i,
+  );
+  if (companyApplicationMatch) {
+    const [, jobId, applicationId] = companyApplicationMatch;
+    return portal === "rec"
+      ? { to: "/rec/applications/$jobId/$applicationId", params: { jobId, applicationId } }
+      : null;
+  }
+
+  const companyJobMatch = href.match(/^\/companies\/me\/jobs\/([1-9]\d*)\/?$/);
+  if (companyJobMatch) {
+    const jobId = Number(companyJobMatch[1]);
+    return portal === "rec" && Number.isSafeInteger(jobId)
+      ? { to: "/rec/jobs", search: { jobId } }
+      : null;
+  }
+
   const jobMatch = href.match(/^\/jobs\/(\d+)\/?$/);
   const applicationMatch = href.match(/^\/applications\/([^/?#]+)\/?$/);
   const companyMatch = href.match(/^\/companies\/(\d+)\/?$/);

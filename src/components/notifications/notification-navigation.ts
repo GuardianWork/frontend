@@ -28,5 +28,8 @@ export function navigateToPath(
     case "/rec/members":
       void navigate({ to: "/rec/members" });
       return;
+    case "/rec/verification":
+      void navigate({ to: "/rec/verification" });
+      return;
   }
 }
