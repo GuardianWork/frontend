@@ -49,10 +49,52 @@ test.describe("notification inbox", () => {
   test("marks one notification read and lowers the unread counter", async ({ page }) => {
     await expect(page.locator("#notif-tab-unread .notif-tab__badge")).toHaveText("7");
 
-    await page.getByRole("button", { name: /Nhà tuyển dụng đã xem hồ sơ của bạn/ }).click();
+    // A job suggestion has no destination, so the inbox stays in view.
+    await page.getByRole("button", { name: /Tin tuyển dụng mới phù hợp với bạn/ }).click();
 
     await expect(page.locator("#notif-tab-unread .notif-tab__badge")).toHaveText("6");
     await expect(page.locator("#notif-tab-read .notif-tab__badge")).toHaveText("5");
+  });
+
+  test("opens the application an application notification is about", async ({ page }) => {
+    await page.getByRole("button", { name: /Nhà tuyển dụng đã xem hồ sơ của bạn/ }).click();
+
+    await expect(page).toHaveURL(/\/can\/applied\?application=app-01$/);
+    const card = page.locator('.application-card[data-targeted="true"]');
+    await expect(card).toHaveCount(1);
+    await expect(card.locator(".application-card__title")).toHaveText("Kỹ sư Backend (Go)");
+    await expect(card.locator(".application-card__status")).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    await expect(card.locator(".application-card__receipt")).toBeVisible();
+    await expect(card.locator(".application-progress__event")).not.toHaveCount(0);
+    await expect(card.locator(".application-card__status")).toBeFocused();
+  });
+
+  test("opens an application that sits on a later ledger page", async ({ page, mockApiUrl }) => {
+    const token = await loginThroughApi(mockApiUrl, "candidate_demo");
+    await deliverNotification(mockApiUrl, token, {
+      type: "APPLICATION_STATUS_CHANGED",
+      category: "application",
+      title: "Đơn ứng tuyển vừa cập nhật trạng thái",
+      body: "Nhà tuyển dụng vừa cập nhật trạng thái đơn Chuyên viên Nội dung.",
+      applicationId: "app-12",
+    });
+    await page.goto("/can/notifications", { waitUntil: "domcontentloaded" });
+
+    await page.getByRole("button", { name: /Đơn ứng tuyển vừa cập nhật trạng thái/ }).click();
+
+    await expect(page).toHaveURL(/\/can\/applied\?application=app-12$/);
+    const card = page.locator('.application-card[data-targeted="true"]');
+    await expect(card).toHaveCount(1);
+    await expect(card.locator(".application-card__title")).toHaveText("Chuyên viên Nội dung");
+    await expect(card.locator(".application-card__receipt")).toBeVisible();
+    await expect(card.locator(".application-progress__event")).toHaveCount(3);
+    await expect(page.getByRole("button", { name: "Trang 2", exact: true })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
   });
 
   test("marks every notification read with one request", async ({ page }) => {

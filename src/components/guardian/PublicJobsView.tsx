@@ -26,6 +26,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useQuery } from "@tanstack/react-query";
 import { ApiError } from "@/services/api";
 import { Header } from "./Header";
+import { JobDetailSkeleton, JobListSkeleton } from "./JobSkeletons";
 import { AdminShell } from "@/components/AdminShell";
 import { Footer } from "./Footer";
 import { searchPublicJobs } from "../../services/publicJobs";
@@ -160,15 +161,6 @@ export function PublicJobsView({
     refetchInterval: 10000,
     refetchOnWindowFocus: "always",
     refetchOnReconnect: "always",
-    placeholderData: {
-      content: [],
-      pageNumber: 0,
-      pageSize: PAGE_SIZE,
-      totalElements: 0,
-      totalPages: 0,
-      first: true,
-      last: true,
-    },
   });
   const publicApiJobs =
     (publicJobSearch.isError ? [] : publicJobSearch.data?.content)
@@ -285,10 +277,8 @@ export function PublicJobsView({
       {!inWorkspace && <Header variant="landing" />}
       <Content id="main-content">
         {selectedBackendJobId ? (
-          backendDetail.isFetching ? (
-            <section className="career-container career-detail">
-              <p role="status">Đang tải tin tuyển dụng…</p>
-            </section>
+          backendDetail.isPending ? (
+            <JobDetailSkeleton />
           ) : backendDetail.isError ? (
             backendDetail.error instanceof ApiError && backendDetail.error.status === 404 ? (
               <MissingJob search={search} jobs={jobs} />
@@ -406,6 +396,7 @@ export function PublicJobsView({
                 signedIn={Boolean(user)}
                 applied={appliedFor}
                 remotePagination={serverPagination}
+                loading={publicJobSearch.isPending}
               />
             )}
           </>
@@ -491,6 +482,7 @@ function Results({
   signedIn,
   applied,
   remotePagination,
+  loading = false,
 }: {
   search: JobSearchParams;
   update: (patch: JobSearchParams) => void;
@@ -503,6 +495,7 @@ function Results({
     totalPages: number;
     totalElements: number;
   };
+  loading?: boolean;
 }) {
   // Backend pages and filters postings; the client must not re-filter a single
   // server page, otherwise later pages and counts are ignored.
@@ -566,12 +559,19 @@ function Results({
     requestAnimationFrame(() => detailRef.current?.scrollIntoView({ block: "start", behavior }));
   };
 
+  // Postings are still arriving: hold the result layout with matching placeholders
+  // instead of reporting "0 tin" and a false empty state. Filters stay live because
+  // they only depend on the URL.
   return (
-    <section className="career-container career-discovery" aria-labelledby="results-title">
+    <section
+      className={`career-container career-discovery${loading ? " career-discovery--loading career-skeleton" : ""}`}
+      aria-labelledby="results-title"
+      aria-busy={loading || undefined}
+    >
       <div className="career-results-head">
         <h2 id="results-title">Danh sách việc làm</h2>
         <p className="career-results-count" aria-live="polite">
-          {pagination.totalItems} tin đang hoạt động
+          {loading ? "Đang tải tin tuyển dụng…" : `${pagination.totalItems} tin đang hoạt động`}
         </p>
       </div>
 
@@ -716,17 +716,23 @@ function Results({
       )}
 
       <div className="career-results-meta">
-        <p
-          className={pagination.totalItems > 0 ? "career-results-count" : "sr-only"}
-          aria-live="polite"
-        >
-          {pagination.items.length > 0
-            ? `Đang hiển thị ${pagination.items.length} trên ${pagination.totalItems} tin tuyển dụng${filtersActive ? " phù hợp bộ lọc" : ""}`
-            : `${pagination.totalItems} tin tuyển dụng đang hoạt động`}
-        </p>
+        {loading ? (
+          <span className="career-skeleton__bar career-skeleton__meta-line" aria-hidden="true" />
+        ) : (
+          <p
+            className={pagination.totalItems > 0 ? "career-results-count" : "sr-only"}
+            aria-live="polite"
+          >
+            {pagination.items.length > 0
+              ? `Đang hiển thị ${pagination.items.length} trên ${pagination.totalItems} tin tuyển dụng${filtersActive ? " phù hợp bộ lọc" : ""}`
+              : `${pagination.totalItems} tin tuyển dụng đang hoạt động`}
+          </p>
+        )}
       </div>
 
-      {pagination.items.length > 0 ? (
+      {loading ? (
+        <JobListSkeleton split={splitView} />
+      ) : pagination.items.length > 0 ? (
         <>
           {splitView ? (
             <div className="career-split">
