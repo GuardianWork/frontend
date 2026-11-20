@@ -358,3 +358,45 @@ test("resolves backend action hrefs to portal routes", () => {
   });
   assert.equal(resolveNotificationPath(external, "can"), null);
 });
+
+test("opens GW-128 Company views only in the recruiter portal", () => {
+  const applicationId = "ad7a10d4-5f05-406f-b7c3-656b78980d1b";
+  const cases = [
+    {
+      type: "APPLICATION_SUBMITTED",
+      href: "/companies/me/jobs/12/applications/" + applicationId,
+      destination: {
+        to: "/rec/applications/$jobId/$applicationId",
+        params: { jobId: "12", applicationId },
+      },
+    },
+    ...["JOB_SUSPENDED", "JOB_RESTORED"].map((type) => ({
+      type,
+      href: "/companies/me/jobs/12",
+      destination: { to: "/rec/jobs", search: { jobId: 12 } },
+    })),
+    ...["COMPANY_VERIFICATION_APPROVED", "COMPANY_VERIFICATION_REJECTED"].map((type) => ({
+      type,
+      href: "/companies/me/verification",
+      destination: { to: "/rec/verification" },
+    })),
+  ];
+
+  for (const { type, href, destination } of cases) {
+    const notification = parseNotification(
+      minimal("1", {
+        type,
+        audience: "RECRUITER",
+        action: { href },
+        references: { companyId: 7 },
+      }),
+    );
+    assert.deepEqual(resolveNotificationPath(notification, "rec", 7), destination);
+    assert.equal(resolveNotificationPath(notification, "can", 7), null);
+    assert.equal(resolveNotificationPath(notification, "staff", 7), null);
+    if (destination.to === "/rec/verification") {
+      assert.equal(resolveNotificationPath(notification, "rec"), null);
+      assert.equal(resolveNotificationPath(notification, "rec", 8), null);
+    }
+  }
+});

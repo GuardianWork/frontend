@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { ArrowRight, Bell } from "lucide-react";
 import { useNotifications } from "@/context/NotificationContext";
+import { useAuthUser } from "@/hooks/useAuthUser";
 import {
   listNotifications,
   resolveNotificationPath,
@@ -43,6 +44,8 @@ export function NotificationBell({
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const portal = portalFromPathname(pathname);
+  const membership = useAuthUser()?.activeMembership;
+  const ownedCompanyId = membership?.companyRole === "OWNER" ? membership.companyId : undefined;
   const [open, setOpen] = useState(false);
   const [preview, setPreview] = useState<Notification[]>([]);
   const [previewLoading, setPreviewLoading] = useState(false);
@@ -90,7 +93,7 @@ export function NotificationBell({
     try {
       const detail = await openNotification(item.id);
       setPreview((prev) => prev.map((entry) => (entry.id === detail.id ? detail : entry)));
-      const path = resolveNotificationPath(detail, portal);
+      const path = resolveNotificationPath(detail, portal, ownedCompanyId);
       if (path) {
         navigateToPath(path, navigate);
         setOpen(false);

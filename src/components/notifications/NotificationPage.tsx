@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { ArrowDownWideNarrow, Bell, Check, CheckCheck } from "lucide-react";
 import { useNotifications } from "@/context/NotificationContext";
+import { useAuthUser } from "@/hooks/useAuthUser";
 import {
   resolveNotificationPath,
   sortNewestFirst,
@@ -95,6 +96,8 @@ export function NotificationPage() {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const portal = portalFromPathname(pathname);
+  const membership = useAuthUser()?.activeMembership;
+  const ownedCompanyId = membership?.companyRole === "OWNER" ? membership.companyId : undefined;
   const [focusTarget, setFocusTarget] = useState<string | null>(null);
 
   // The provider already returns the server-filtered view for the active tab;
@@ -133,7 +136,7 @@ export function NotificationPage() {
     setFocusTarget(next ? `notif-item-${next.id}` : `notif-tab-${activeTab}`);
     try {
       const detail = await openNotification(item.id);
-      const path = resolveNotificationPath(detail, portal);
+      const path = resolveNotificationPath(detail, portal, ownedCompanyId);
       if (path) navigateToPath(path, navigate);
     } catch {
       // The provider records the error; stay on the inbox so the user can retry.
@@ -176,7 +179,7 @@ export function NotificationPage() {
     // Unread rows open their detail (mark + navigate). Read rows stay static
     // unless they have a resolvable destination, in which case they open it
     // without re-marking.
-    const path = resolveNotificationPath(n, portal);
+    const path = resolveNotificationPath(n, portal, ownedCompanyId);
     const clickable = !n.read || path !== null;
     return (
       <li key={n.id}>
