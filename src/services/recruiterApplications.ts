@@ -10,6 +10,7 @@ export const APPLICATION_STATUSES = [
   "HIRED",
   "REJECTED",
   "WITHDRAWN",
+  "INACTIVE",
 ] as const;
 export type ApplicationStatus = (typeof APPLICATION_STATUSES)[number];
 export type ReviewStatus = "UNDER_REVIEW" | "SHORTLISTED" | "INTERVIEWING" | "REJECTED";
@@ -48,6 +49,12 @@ export interface ApplicationDetail extends RecruiterApplication {
   cvFileSize: number;
   history: ApplicationHistory[];
   candidateFeedback: string | null;
+  /** Server-resolved access to the submitted CV through either CV endpoint. */
+  canViewCv: boolean;
+  /** Live shared-grant expiry after the Candidate removes the library CV, when bounded. */
+  reviewWindowEndsAt: string | null;
+  /** Next inactivity transition for an active Application; null for paused or terminal rows. */
+  inactivityDeadline: string | null;
 }
 export interface ApplicationPage {
   content: RecruiterApplication[];
@@ -96,6 +103,12 @@ function parseDetail(value: unknown): ApplicationDetail {
     ].every((v) => v == null || typeof v === "string") ||
     !Number.isSafeInteger(detail.cvFileSize) ||
     detail.cvFileSize < 0 ||
+    (detail.reviewWindowEndsAt != null &&
+      (typeof detail.reviewWindowEndsAt !== "string" ||
+        !Number.isFinite(Date.parse(detail.reviewWindowEndsAt)))) ||
+    (detail.inactivityDeadline != null &&
+      (typeof detail.inactivityDeadline !== "string" ||
+        !Number.isFinite(Date.parse(detail.inactivityDeadline)))) ||
     !Array.isArray(detail.history) ||
     !detail.history.every(
       (event) =>
@@ -114,18 +127,33 @@ function parseDetail(value: unknown): ApplicationDetail {
     )
   )
     invalidResponse();
+  const cvDenied =
+    ["REJECTED", "WITHDRAWN", "INACTIVE"].includes(detail.status) || detail.canViewCv !== true;
+  const normalized: ApplicationDetail = {
+    ...detail,
+    canViewCv: !cvDenied,
+    reviewWindowEndsAt:
+      cvDenied || detail.reviewWindowEndsAt == null ? null : detail.reviewWindowEndsAt,
+    inactivityDeadline:
+      detail.inactivityDeadline == null || detail.status === "INACTIVE"
+        ? null
+        : detail.inactivityDeadline,
+  };
   // Do not retain personal evidence from a terminal response, even if a server sends it.
-  return ["REJECTED", "WITHDRAWN"].includes(detail.status)
+  return ["REJECTED", "WITHDRAWN"].includes(normalized.status)
     ? {
-        ...detail,
+        ...normalized,
         email: null,
         phoneNumber: null,
         coverLetter: null,
         cvFileName: null,
         cvContentType: null,
         cvFileSize: 0,
+        canViewCv: false,
+        reviewWindowEndsAt: null,
+        inactivityDeadline: null,
       }
-    : detail;
+    : normalized;
 }
 export async function listRecruiterApplications(
   jobId: number,
@@ -273,4 +301,36 @@ export async function getApplicationPdf(
   if (blob.size === 0 || blob.size > 10 * 1024 * 1024) invalidResponse();
   await assertRecruiterJobAvailable(jobId, signal);
   return blob;
+}
+
+export interface ApplicationCvDownloadUrl {
+  url: string;
+  expiresAt: string;
+  fileName: string;
+}
+
+/** Issues the short-lived signed provider URL used for PDF, DOC, and DOCX downloads. */
+export async function getApplicationCvDownloadUrl(
+  jobId: number,
+  id: string,
+  signal?: AbortSignal,
+): Promise<ApplicationCvDownloadUrl> {
+  await assertRecruiterJobAvailable(jobId, signal);
+  const data = await authenticatedRequest(`${applicationPath(jobId, id)}/cv/download-url`, {
+    signal,
+    cache: "no-store",
+  });
+  await assertRecruiterJobAvailable(jobId, signal);
+  const value = data as Partial<ApplicationCvDownloadUrl> | null;
+  if (
+    !value ||
+    typeof value.url !== "string" ||
+    !/^https?:\/\//i.test(value.url) ||
+    typeof value.fileName !== "string" ||
+    !value.fileName ||
+    typeof value.expiresAt !== "string" ||
+    !Number.isFinite(Date.parse(value.expiresAt))
+  )
+    invalidResponse();
+  return { url: value.url, expiresAt: value.expiresAt, fileName: value.fileName };
 }
