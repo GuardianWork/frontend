@@ -17,6 +17,7 @@ export const Route = createFileRoute("/sitemap.xml")({
         const entries = [
           { path: "/vn", priority: "1.0" },
           { path: "/jobs", priority: "0.9" },
+          { path: "/companies", priority: "0.8" },
         ];
         const urls = (IS_STAFF_PORTAL ? [] : entries).map(
           (e) =>

@@ -28,6 +28,7 @@ export interface PublicJobContent {
   title?: string;
   description?: string;
   location?: string;
+  industry?: string;
   employmentType?: string;
   workArrangement?: string;
   deadline?: string;

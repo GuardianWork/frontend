@@ -2,6 +2,7 @@ export type JobItem = {
   id: string;
   title: string;
   company: string;
+  companyId?: number;
   location: string;
   salaryRange: string;
   badge:
