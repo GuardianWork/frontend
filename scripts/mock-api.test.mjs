@@ -268,3 +268,57 @@ test("mock API answers a polling round with the delta, the counters and a tag", 
   assert.equal(changedPayload.unreadCount, 8);
   assert.equal(changedPayload.totalCount, 12);
 });
+
+test("mock API seeds GW-112 candidate CV and paused-application fixtures", async (t) => {
+  const server = createMockApiServer();
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  t.after(() => new Promise((resolve) => server.close(resolve)));
+  const base = `http://127.0.0.1:${server.address().port}/api`;
+  const call = async (path, method = "GET", body, token) => {
+    const response = await fetch(base + path, {
+      method,
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(body ? { "Content-Type": "application/json" } : {}),
+      },
+      ...(body ? { body: JSON.stringify(body) } : {}),
+    });
+    return { status: response.status, ...(await response.json()) };
+  };
+  const candidate = await call("/auth/login", "POST", {
+    usernameOrEmail: "candidate_demo",
+    password: MOCK_PASSWORD,
+  });
+  const token = candidate.data.accessToken;
+
+  const cvs = await call("/candidate/cvs", "GET", null, token);
+  assert.equal(cvs.status, 200);
+  assert.equal(cvs.data.length, 2);
+  assert.ok(cvs.data.every((cv) => cv.accessMode === "authenticated"));
+
+  const applications = await call("/candidate/applications?page=0&size=20", "GET", null, token);
+  assert.equal(applications.data.totalElements, 12);
+  assert.equal(
+    applications.data.content.find((application) => application.id === "app-12").status,
+    "INACTIVE",
+  );
+
+  const active = await call("/candidate/applications/app-01", "GET", null, token);
+  assert.equal(active.data.canViewCv, true);
+  assert.equal(active.data.inactivityDeadline, "2026-11-29T09:00:00Z");
+
+  const paused = await call("/candidate/applications/app-12", "GET", null, token);
+  assert.equal(paused.data.status, "INACTIVE");
+  assert.equal(paused.data.canViewCv, true);
+  assert.equal(paused.data.inactivityDeadline, null);
+
+  const download = await call(
+    "/candidate/applications/app-12/cv/download-url",
+    "GET",
+    null,
+    token,
+  );
+  assert.equal(download.status, 200);
+  assert.equal(download.data.fileName, "Nguyen_Van_An_Content_CV_2026.pdf");
+  assert.match(download.data.url, /^\/api\/mock\//);
+});

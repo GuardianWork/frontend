@@ -224,6 +224,18 @@
   color: var(--color-ink-3);
 }
 
+/* Stated quietly: the deep link missed its target but the ledger is still here. */
+.candidate-my-jobs .my-jobs-focus-note {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--color-rule);
+  border-radius: 8px;
+  color: var(--color-ink-2);
+  background: var(--color-paper-2);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
 .candidate-my-jobs .my-jobs-spinner {
   animation: my-jobs-spin 900ms linear infinite;
 }
@@ -256,6 +268,17 @@
 }
 .candidate-my-jobs .application-card--expired {
   opacity: 0.6;
+}
+
+/* The application a notification links to: selected, so it stays findable after
+   the scroll lands it among its neighbours. */
+.candidate-my-jobs .application-card[data-targeted] {
+  border-color: var(--color-accent);
+  scroll-margin-block: 24px;
+}
+
+.candidate-my-jobs .application-card[data-targeted]:hover {
+  border-color: var(--color-accent-hover);
 }
 
 .candidate-my-jobs .application-card__head {
@@ -812,27 +835,292 @@
 .candidate-my-jobs .application-card__receipt {
   flex-wrap: wrap;
 }
-.candidate-application-progress {
+/* Expanded card: the application's status history as a dated timeline, then the card's real actions. */
+.candidate-my-jobs .candidate-application-progress {
   flex-basis: 100%;
-  border-top: 1px solid var(--border, #e4e2e0);
+  margin-top: 2px;
   padding-top: 20px;
+  border-top: 1px solid var(--color-rule);
 }
-.candidate-application-progress h3 {
-  font-size: 16px;
+
+.candidate-my-jobs .application-progress__title {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: 15px;
   font-weight: 700;
-  margin-bottom: 12px;
+  line-height: 1.4;
 }
-.candidate-application-progress ol {
-  display: grid;
-  gap: 12px;
-  margin-bottom: 20px;
+
+.candidate-my-jobs .application-progress__timeline {
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
 }
-.candidate-application-progress time {
-  margin-left: 16px;
-  color: #595959;
+
+.candidate-my-jobs .application-progress__event {
+  position: relative;
+  padding: 0 0 16px 28px;
+}
+
+.candidate-my-jobs .application-progress__event:last-child {
+  padding-bottom: 0;
+}
+
+/* Hollow marker for past states, filled blue for the most recent one. */
+.candidate-my-jobs .application-progress__event::before {
+  content: "";
+  position: absolute;
+  top: 7px;
+  left: 2px;
+  box-sizing: border-box;
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--color-rule-2);
+  border-radius: 50%;
+  background: var(--color-paper);
+}
+
+.candidate-my-jobs .application-progress__event::after {
+  content: "";
+  position: absolute;
+  top: 21px;
+  bottom: 2px;
+  left: 6px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--color-rule);
+}
+
+.candidate-my-jobs .application-progress__event:last-child::after {
+  content: none;
+}
+
+.candidate-my-jobs .application-progress__event[data-latest]::before {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+}
+
+.candidate-my-jobs .application-progress__event-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 24px;
+}
+
+.candidate-my-jobs .application-progress__event-head .status-tag {
+  padding: 2px 8px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.candidate-my-jobs .application-progress__event-head time {
+  color: var(--color-ink-3);
+  font-size: 13px;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
-.candidate-application-progress p {
+
+.candidate-my-jobs .application-progress__clock::before {
+  content: "·";
+  margin: 0 5px 0 6px;
+  color: var(--color-ink-3);
+}
+
+.candidate-my-jobs .application-progress__feedback {
+  max-width: 68ch;
+  margin: 8px 0 0;
+  color: var(--color-ink-2);
+  font-size: 14px;
+  line-height: 1.65;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+.candidate-my-jobs .application-progress__empty {
+  margin: 12px 0 0;
+  color: var(--color-ink-2);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.candidate-my-jobs .application-progress__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.candidate-my-jobs .application-progress__action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--color-rule-2);
+  border-radius: 8px;
+  color: var(--color-ink);
+  background: var(--color-paper);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  cursor: pointer;
+  transition:
+    color 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+.candidate-my-jobs .application-progress__action:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  color: var(--color-accent-deep);
+  background: var(--color-accent-subtle);
+}
+
+.candidate-my-jobs .application-progress__action:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.candidate-my-jobs .application-progress__action:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Withdrawal ends the candidate's participation, so it stays quiet and red-tinted
+   instead of competing with the safe CV download action. */
+.candidate-my-jobs .application-progress__action--withdraw {
+  margin-left: auto;
+  border-color: transparent;
+  color: var(--color-attention);
+  background: transparent;
+}
+
+.candidate-my-jobs .application-progress__action--withdraw:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--color-attention) 24%, transparent);
+  color: var(--color-attention);
+  background: var(--color-attention-ground);
+}
+
+.candidate-my-jobs .application-progress__error > p {
+  margin: 0;
+}
+
+.candidate-my-jobs .application-progress__error .application-progress__action {
+  margin-top: 12px;
+  border-color: var(--color-rule);
+}
+
+.candidate-my-jobs .application-progress__notice {
+  margin-top: 12px;
+}
+
+.candidate-my-jobs .application-progress__loading {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+  padding-left: 28px;
+}
+
+.candidate-my-jobs .application-progress__skeleton {
+  position: relative;
+  display: block;
+  width: min(420px, 100%);
+  height: 14px;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--color-paper-2) 0%,
+    var(--color-paper-3) 50%,
+    var(--color-paper-2) 100%
+  );
+  background-size: 200% 100%;
+  animation: my-jobs-shimmer 1.4s ease-in-out infinite;
+}
+
+/* The placeholder keeps the timeline's marker column, so loading and loaded
+   states share the same left edge. */
+.candidate-my-jobs .application-progress__skeleton::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: -28px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-paper-3);
+}
+
+.candidate-my-jobs .application-progress__skeleton + .application-progress__skeleton {
+  width: min(300px, 72%);
+}
+
+/* The withdrawal confirmation is portalled outside the workspace scope, so its
+   actions keep their own global rules. */
+.application-progress__dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.application-progress__dialog-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--color-rule-2);
+  border-radius: 8px;
+  color: var(--color-ink);
+  background: var(--color-paper);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  cursor: pointer;
+  transition:
+    color 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+.application-progress__dialog-action:hover:not(:disabled) {
+  border-color: var(--color-ink-3);
+  background: var(--color-paper-2);
+}
+
+.application-progress__dialog-action--confirm {
+  border-color: var(--color-attention);
+  color: var(--color-accent-ink);
+  background: var(--color-attention);
+}
+
+.application-progress__dialog-action--confirm:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--color-attention) 88%, #000);
+  background: color-mix(in srgb, var(--color-attention) 88%, #000);
+}
+
+.application-progress__dialog-action:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.application-progress__dialog-action:focus-visible {
+  outline: 2px solid var(--color-discovery-accent);
+  outline-offset: 2px;
+}
+
+/* Declared after the progress base rules so reduced motion wins the cascade. */
+@media (prefers-reduced-motion: reduce) {
+  .candidate-my-jobs .application-progress__skeleton {
+    animation: none;
+  }
+
+  .candidate-my-jobs .application-progress__action,
+  .application-progress__dialog-action {
+    transition: none;
+  }
 }

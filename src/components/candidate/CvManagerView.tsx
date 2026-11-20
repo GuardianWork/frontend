@@ -771,8 +771,7 @@ export function CvManagerView() {
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-5 text-sm leading-6 text-ink-2">
-            Thao tác này không thể hoàn tác. Các đơn ứng tuyển đã nộp trước đó vẫn giữ bản hồ sơ đã
-            gửi.
+            Thao tác này không thể hoàn tác. Các đơn ứng tuyển đã nộp trước đó vẫn giữ nguyên. Hệ thống sẽ rút quyền truy cập CV phía nhà tuyển dụng sau 60 ngày.
           </div>
           <DialogFooter className="flex-row justify-end gap-2 border-t border-rule px-6 py-4">
             <button

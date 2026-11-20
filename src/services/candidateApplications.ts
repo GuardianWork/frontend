@@ -106,6 +106,7 @@ export const CANDIDATE_APPLICATION_STATUSES = [
   "HIRED",
   "REJECTED",
   "WITHDRAWN",
+  "INACTIVE",
 ] as const;
 
 export type CandidateApplicationStatus = (typeof CANDIDATE_APPLICATION_STATUSES)[number];
@@ -311,6 +312,51 @@ export async function listApplicationPage(
   };
 }
 
+/** Scan size used to locate one application; the endpoint accepts up to 100. */
+const LOCATE_PAGE_SIZE = MAX_APPLICATION_PAGE_SIZE;
+/** Bound the scan so a missing id cannot walk the whole ledger. */
+const MAX_LOCATE_REQUESTS = 10;
+
+/** Ledger page that holds the wanted application, plus its position in the ledger. */
+export interface CandidateApplicationLocation {
+  /** Zero-based page of the ledger when it is read at the requested page size. */
+  page: number;
+  /** Zero-based position in the newest-first ledger. */
+  index: number;
+}
+
+/**
+ * Find the ledger page that holds one application.
+ *
+ * A notification links to a single application, but the ledger is paged and that
+ * application may sit on any page. The list endpoint is ordered newest-first with
+ * a stable tie-break, so scanning larger pages yields an index that divides back
+ * into the displayed page size without walking every page. Returns `null` when
+ * the application is not in the ledger at all — the posting may be suspended.
+ */
+export async function locateApplicationPage(
+  id: string,
+  options: { pageSize: number; signal?: AbortSignal },
+): Promise<CandidateApplicationLocation | null> {
+  const wanted = id.trim();
+  const pageSize = Math.max(1, Math.trunc(options.pageSize) || 1);
+  if (!wanted) return null;
+  for (let scan = 0; scan < MAX_LOCATE_REQUESTS; scan += 1) {
+    const result = await requestApplicationPage({
+      page: scan,
+      size: LOCATE_PAGE_SIZE,
+      signal: options.signal,
+    });
+    const offset = result.items.findIndex((application) => application.id === wanted);
+    if (offset !== -1) {
+      const index = result.pageSize * result.pageNumber + offset;
+      return { page: Math.floor(index / pageSize), index };
+    }
+    if (result.pageNumber + 1 >= result.totalPages) return null;
+  }
+  return null;
+}
+
 export interface CandidateApplicationCounts {
   all: number;
   submitted: number;
@@ -319,6 +365,7 @@ export interface CandidateApplicationCounts {
   hired: number;
   rejected: number;
   withdrawn: number;
+  inactive: number;
 }
 
 export interface CandidateApplicationCountOptions {
@@ -327,7 +374,7 @@ export interface CandidateApplicationCountOptions {
 }
 
 /**
- * The list endpoint returns one total per filtered request. Eight size-one reads
+ * The list endpoint returns one total per filtered request. Nine size-one reads
  * give the status tabs exact counts without downloading the application rows again.
  */
 export async function listApplicationCounts(
@@ -335,17 +382,27 @@ export async function listApplicationCounts(
 ): Promise<CandidateApplicationCounts> {
   const search = options.search ?? "";
   const signal = options.signal;
-  const [all, submitted, underReview, shortlisted, interviewing, hired, rejected, withdrawn] =
-    await Promise.all([
-      requestApplicationPage({ search, size: 1, signal }),
-      requestApplicationPage({ search, size: 1, status: "SUBMITTED", signal }),
-      requestApplicationPage({ search, size: 1, status: "UNDER_REVIEW", signal }),
-      requestApplicationPage({ search, size: 1, status: "SHORTLISTED", signal }),
-      requestApplicationPage({ search, size: 1, status: "INTERVIEWING", signal }),
-      requestApplicationPage({ search, size: 1, status: "HIRED", signal }),
-      requestApplicationPage({ search, size: 1, status: "REJECTED", signal }),
-      requestApplicationPage({ search, size: 1, status: "WITHDRAWN", signal }),
-    ]);
+  const [
+    all,
+    submitted,
+    underReview,
+    shortlisted,
+    interviewing,
+    hired,
+    rejected,
+    withdrawn,
+    inactive,
+  ] = await Promise.all([
+    requestApplicationPage({ search, size: 1, signal }),
+    requestApplicationPage({ search, size: 1, status: "SUBMITTED", signal }),
+    requestApplicationPage({ search, size: 1, status: "UNDER_REVIEW", signal }),
+    requestApplicationPage({ search, size: 1, status: "SHORTLISTED", signal }),
+    requestApplicationPage({ search, size: 1, status: "INTERVIEWING", signal }),
+    requestApplicationPage({ search, size: 1, status: "HIRED", signal }),
+    requestApplicationPage({ search, size: 1, status: "REJECTED", signal }),
+    requestApplicationPage({ search, size: 1, status: "WITHDRAWN", signal }),
+    requestApplicationPage({ search, size: 1, status: "INACTIVE", signal }),
+  ]);
   return {
     all: all.totalElements,
     submitted: submitted.totalElements,
@@ -354,6 +411,7 @@ export async function listApplicationCounts(
     hired: hired.totalElements,
     rejected: rejected.totalElements,
     withdrawn: withdrawn.totalElements,
+    inactive: inactive.totalElements,
   };
 }
 
@@ -385,7 +443,16 @@ export interface CandidateApplicationDetail {
   id: string;
   status: string;
   version: number;
+  cvFileName: string;
+  /** Whether the Candidate can still download the submitted CV. */
+  canViewCv: boolean;
   history: CandidateApplicationHistory[];
+}
+
+export interface CandidateCvDownloadUrl {
+  url: string;
+  expiresAt: string;
+  fileName: string;
 }
 function parseCandidateDetail(value: unknown): CandidateApplicationDetail {
   const detail = value as CandidateApplicationDetail | null;
@@ -411,6 +478,8 @@ function parseCandidateDetail(value: unknown): CandidateApplicationDetail {
     id: detail.id,
     status: candidateVisibleStatus(detail.status),
     version: detail.version,
+    cvFileName: textValue(detail.cvFileName),
+    canViewCv: detail.canViewCv === true,
     history: detail.history
       .map((event) => ({
         toStatus: candidateVisibleStatus(event.toStatus),
@@ -444,4 +513,27 @@ export async function withdrawApplication(
       cache: "no-store",
     }),
   );
+}
+
+export async function getCandidateApplicationCvDownloadUrl(
+  id: string,
+  signal?: AbortSignal,
+): Promise<CandidateCvDownloadUrl> {
+  const data = await authenticatedRequest(
+    `/candidate/applications/${encodeURIComponent(id)}/cv/download-url`,
+    { signal, cache: "no-store" },
+  );
+  const value = data as Partial<CandidateCvDownloadUrl> | null;
+  if (
+    !value ||
+    typeof value.url !== "string" ||
+    !/^https?:\/\//i.test(value.url) ||
+    typeof value.fileName !== "string" ||
+    !value.fileName ||
+    typeof value.expiresAt !== "string" ||
+    !Number.isFinite(Date.parse(value.expiresAt))
+  ) {
+    throw new ApiError("Phản hồi liên kết tải CV không hợp lệ.", 500);
+  }
+  return { url: value.url, expiresAt: value.expiresAt, fileName: value.fileName };
 }

@@ -7,14 +7,15 @@ test("candidate tracks applications under My jobs, filters, searches and opens a
   await page.getByRole("link", { name: "Công việc của tôi", exact: true }).click();
   await expect(page).toHaveURL(/\/can\/applied$/);
   await expect(page.getByRole("heading", { name: "Công việc của tôi", exact: true })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Đã ứng tuyển (11)", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Đã ứng tuyển (12)", exact: true })).toBeVisible();
   await expect(page.locator(".application-card")).toHaveCount(10);
-  await expect(page.locator(".my-jobs-count")).toContainText("11 đơn");
+  await expect(page.locator(".my-jobs-count")).toContainText("12 đơn");
   await expect(page.locator('select[aria-label="Lọc theo trạng thái"] option')).toHaveText([
-    "Tất cả (11)",
+    "Tất cả (12)",
     "Đã ứng tuyển (4)",
     "Đang xem xét (4)",
     "Phỏng vấn (0)",
+    "Tạm dừng xử lý (1)",
     "Đã tuyển (0)",
     "Đã từ chối (2)",
     "Đã rút (1)",
@@ -53,7 +54,7 @@ test("candidate tracks applications under My jobs, filters, searches and opens a
   ]);
 
   await page.locator('select[aria-label="Lọc theo trạng thái"]').selectOption({
-    label: "Tất cả (11)",
+    label: "Tất cả (12)",
   });
   await page
     .getByRole("searchbox", { name: "Tìm theo tên công việc hoặc công ty", exact: true })
@@ -66,6 +67,7 @@ test("candidate tracks applications under My jobs, filters, searches and opens a
     "Đã ứng tuyển (0)",
     "Đang xem xét (1)",
     "Phỏng vấn (0)",
+    "Tạm dừng xử lý (0)",
     "Đã tuyển (0)",
     "Đã từ chối (0)",
     "Đã rút (0)",
@@ -87,19 +89,27 @@ test("candidate tracks applications under My jobs, filters, searches and opens a
   });
 
   await page.getByRole("button", { name: "Trang sau", exact: true }).click();
-  await expect(page.locator(".application-card")).toHaveCount(1);
-  await expect(page.locator(".application-card__title")).toHaveText(
+  await expect(page.locator(".application-card")).toHaveCount(2);
+  await expect(page.locator(".application-card__title").first()).toHaveText(
     "Thiết kế Trải nghiệm Người dùng",
   );
+  const pausedCard = page.locator(".application-card").nth(1);
+  await expect(pausedCard.locator(".application-card__status-tag")).toHaveText("Tạm dừng xử lý");
+  await pausedCard.locator(".application-card__status").click();
+  await expect(pausedCard).toContainText("Đơn đang tạm dừng xử lý vì công ty chưa cập nhật");
+  await expect(
+    pausedCard.getByRole("button", { name: "Tải CV đã gửi", exact: true }),
+  ).toBeVisible();
 
   await page.getByRole("button", { name: "Chuyển sang tiếng Anh", exact: true }).click();
   await expect(page.getByRole("heading", { name: "My jobs", exact: true })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Applied (11)", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Applied (12)", exact: true })).toBeVisible();
   await expect(page.locator('select[aria-label="Filter by status"] option')).toHaveText([
-    "All (11)",
+    "All (12)",
     "Submitted (4)",
     "Under review (4)",
     "Interviewing (0)",
+    "Processing paused (1)",
     "Hired (0)",
     "Rejected (2)",
     "Withdrawn (1)",
