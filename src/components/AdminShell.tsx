@@ -19,7 +19,14 @@ import {
   CompanyIcon,
 } from "@/components/icons";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { BriefcaseBusiness, ChevronDown, X, ShieldCheck, Bell as BellIcon } from "lucide-react";
+import {
+  BriefcaseBusiness,
+  ChevronDown,
+  X,
+  ShieldCheck,
+  Bell as BellIcon,
+  FileUser,
+} from "lucide-react";
 import { NotificationBell } from "./notifications/NotificationBell";
 import { useContext, useEffect, useState, type ReactNode } from "react";
 import { useNotifications } from "@/context/NotificationContext";
@@ -180,7 +187,7 @@ function AdminShellFrame({
     { to: "/can/jobs", label: copy.nav.jobs, icon: "work" },
     { to: "/can/companies", label: copy.nav.companies, icon: "company" },
     { to: "/can/profile", label: copy.nav.profile, icon: "badge" },
-    { to: "/can/cvs", label: copy.nav.cvs, icon: "description" },
+    { to: "/can/cvs", label: copy.nav.cvs, icon: "cvs" },
     { to: "/can/applied", label: copy.nav.myJobs, icon: "application" },
     { to: "/can/copilot", label: copy.nav.copilot, icon: "gavel" },
     { to: "/can/notifications", label: copy.nav.notifications, icon: "bell" },
@@ -276,6 +283,8 @@ function AdminShellFrame({
                   <BellIcon size={20} />
                 ) : item.icon === "company" ? (
                   <CompanyIcon size={20} />
+                ) : item.icon === "cvs" ? (
+                  <FileUser size={20} />
                 ) : (
                   <CandidateProfileIcon size={20} />
                 )}
