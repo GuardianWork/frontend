@@ -226,13 +226,13 @@ function ApplicationProgress({ id, en }: { id: string; en: boolean }) {
     ["SUBMITTED", "UNDER_REVIEW", "SHORTLISTED", "INTERVIEWING", "INACTIVE"].includes(
       detail.status,
     );
-  // A timeline reads oldest → newest regardless of the order the API returns.
+  // History reads newest → oldest regardless of the order the API returns.
   const events = useMemo(() => {
     const history = detail?.history ?? [];
     return history
       .map((event, index) => ({ event, index }))
       .sort((a, b) => {
-        const difference = Date.parse(a.event.occurredAt) - Date.parse(b.event.occurredAt);
+        const difference = Date.parse(b.event.occurredAt) - Date.parse(a.event.occurredAt);
         return difference !== 0 ? difference : a.index - b.index;
       })
       .map(({ event }) => event);
@@ -283,7 +283,7 @@ function ApplicationProgress({ id, en }: { id: string; en: boolean }) {
             <ol className="application-progress__timeline">
               {events.map((event, index) => {
                 const meta = statusMeta(event.toStatus);
-                const latest = index === events.length - 1;
+                const latest = index === 0;
                 return (
                   <li
                     key={`${event.occurredAt}:${index}`}
