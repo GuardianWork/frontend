@@ -11,7 +11,7 @@ test("staff job details omit posting activity and display revision history inlin
   });
   await login(page, "admin_demo");
   await page.goto(`${origin}/staff/jobs`);
-  await page.getByRole("button", { name: "Xem chi tiết Chuyên viên kế toán", exact: true }).click();
+  await page.getByRole("link", { name: "Xem chi tiết Chuyên viên kế toán", exact: true }).click();
   await expect(page.getByRole("tab")).toHaveCount(0);
   await expect(page.locator(".staff-posting-history")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Ẩn tin tuyển dụng", exact: true })).toHaveCount(0);

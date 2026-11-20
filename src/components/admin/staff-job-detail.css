@@ -114,15 +114,16 @@
     padding-bottom: 12px;
   }
   body[data-portal="staff"] main .staff-job-detail .staff-job-object-heading h1 {
-    font-size: 24px;
-    line-height: 32px;
+    font-size: 28px;
+    line-height: 36px;
+    letter-spacing: -0.025em;
   }
   body[data-portal="staff"] main .staff-job-detail .compliance-detail-layout {
     margin-top: 16px;
     gap: 24px;
   }
   body[data-portal="staff"] main .staff-job-detail .staff-job-review-layout {
-    grid-template-columns: minmax(0, 1fr) 360px;
+    grid-template-columns: minmax(0, 1fr) 320px;
   }
   body[data-portal="staff"] main .staff-job-detail .compliance-jd > .admin-panel-heading {
     align-items: center;
@@ -130,7 +131,7 @@
     background: var(--color-paper);
   }
   body[data-portal="staff"] main .staff-job-detail .staff-jobs-content {
-    padding: 16px 0;
+    padding: 20px 0 0;
   }
   body[data-portal="staff"] main .staff-job-detail .jp-content-view {
     padding: 0;
@@ -163,8 +164,12 @@
   }
   body[data-portal="staff"] main .staff-job-detail .compliance-inspector {
     gap: 16px;
-    padding-left: 20px;
-    border-left: 1px solid var(--color-rule);
+    padding: 20px;
+    border: 1px solid var(--color-rule);
+    border-radius: 12px;
+    background: var(--color-paper);
+    position: sticky;
+    top: 24px;
   }
   body[data-portal="staff"]
     main
@@ -225,15 +230,14 @@
     text-underline-offset: 3px;
   }
   body[data-portal="staff"] main .staff-job-detail .staff-job-legal-review {
-    margin-top: 12px;
-    margin-bottom: 0;
-    border-top: 1px solid var(--color-rule);
+    margin: 0;
+    border: 0;
   }
   body[data-portal="staff"] main .staff-job-detail .staff-job-legal-review .admin-panel-heading {
-    padding-top: 16px;
+    padding: 0 0 16px;
   }
   body[data-portal="staff"] main .staff-job-detail .staff-job-legal-body {
-    max-width: 88ch;
+    max-width: none;
   }
   body[data-portal="staff"] main .staff-job-detail .staff-event-list .staff-event-entry {
     grid-template-columns: 160px minmax(0, 1fr);
@@ -324,7 +328,7 @@
     gap: 8px;
   }
   body[data-portal="staff"] #staff-reviews .staff-job-review-actions button {
-    width: auto;
+    width: 100%;
   }
   body[data-portal="staff"] #staff-reviews .staff-job-object-heading > button {
     margin-left: auto;
@@ -346,5 +350,157 @@
   body[data-portal="staff"] main .staff-publication-receipt[data-status="PUBLISHED"] {
     color: var(--status-success-ink);
     background: var(--status-success-ground);
+  }
+}
+
+/* The submitted revision and AI evidence share one reading sheet. */
+@media (min-width: 1024px) {
+  body[data-portal="staff"] main .staff-job-detail .staff-job-review-layout {
+    padding: 20px;
+    gap: 20px;
+    background: var(--color-paper-2);
+    border-radius: 16px;
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-job-sheet {
+    overflow: hidden;
+    background: var(--color-paper);
+    border: 1px solid var(--color-rule);
+    border-radius: 12px;
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-jobs-history {
+    margin-top: 20px;
+    padding: 20px 24px 8px;
+    border: 1px solid var(--color-rule);
+    border-radius: 12px;
+    background: var(--color-paper);
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-jobs-history > .admin-panel-heading {
+    padding: 0 0 16px;
+  }
+  body[data-portal="staff"] main .staff-job-detail .jp-content-view .jp-job-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    color: var(--color-ink-2);
+    font-size: 14px;
+    line-height: 22px;
+  }
+  body[data-portal="staff"] main .staff-job-detail .jp-content-view .jp-salary {
+    margin: 16px 0 28px;
+    color: var(--color-discovery-deep);
+    font-size: 20px;
+    line-height: 28px;
+  }
+  body[data-portal="staff"] main .staff-job-detail .jp-content-view > section > h4 {
+    margin-bottom: 12px;
+    font-size: 16px;
+    line-height: 24px;
+    color: var(--color-ink);
+  }
+  body[data-portal="staff"] main .staff-job-detail .jp-content-view section :is(p, li) {
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--color-ink);
+  }
+  body[data-portal="staff"] main .staff-job-detail .compliance-inspector {
+    align-self: start;
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-publication-controls {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-job-review-actions {
+    align-items: stretch;
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-job-review-actions button {
+    width: 100%;
+    min-height: 42px;
+  }
+  body[data-portal="staff"] main .staff-job-detail button.staff-detail-legal-link {
+    justify-content: flex-start;
+    padding: 8px 0;
+    border: 0;
+    background: transparent;
+    text-align: left;
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-job-legal-body {
+    padding: 0;
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-known-scan {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-known-scan > :is(p, .jp-scan-result) {
+    flex-basis: 100%;
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-ai-report {
+    flex: 1;
+    min-width: 0;
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-ai-report[open] {
+    flex-basis: 100%;
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-preliminary-review {
+    margin: 0 24px 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--color-rule);
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-preliminary-review > summary {
+    margin: 0 0 12px;
+    font-size: 16px;
+    color: var(--color-ink);
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-preliminary-review p {
+    font-size: 14px;
+    line-height: 23px;
+  }
+  body[data-portal="staff"] main .staff-job-detail :is(input, button, summary):focus-visible {
+    outline: 2px solid var(--color-discovery-accent);
+    outline-offset: 3px;
+  }
+  body[data-portal="staff"] main .staff-job-detail ::selection {
+    color: var(--color-discovery-deep);
+    background: var(--color-discovery-subtle);
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-job-sheet > .admin-panel-heading {
+    padding: 18px 24px;
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-jobs-content {
+    padding: 24px;
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-job-legal-review {
+    margin: 16px 0 0;
+    padding: 0;
+    border: 0;
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-scan-refresh {
+    min-height: 36px;
+    font-size: 13px;
+  }
+  body[data-portal="staff"]
+    main
+    .staff-job-detail
+    .staff-known-scan
+    > :is(.staff-scan-hint, .staff-scan-loading, .staff-ai-report) {
+    margin: 0;
+    color: var(--color-ink-2);
+    font-size: 13px;
+    line-height: 20px;
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-ai-report > summary {
+    width: fit-content;
+    color: var(--color-discovery-deep);
+    font-weight: 600;
+    cursor: pointer;
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-preliminary-review > summary {
+    cursor: pointer;
+    line-height: 24px;
+  }
+  body[data-portal="staff"] main .staff-job-detail .staff-preliminary-review > summary > span {
+    margin-left: 8px;
   }
 }

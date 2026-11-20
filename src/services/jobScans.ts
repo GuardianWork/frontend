@@ -75,6 +75,10 @@ async function readScan(
   expectedScanId?: number,
 ): Promise<ScanView> {
   const scan = (await authenticatedRequest(path, { cache: "no-store", ...init })) as ScanView;
+  return validateScan(scan, revisionId, expectedScanId);
+}
+
+function validateScan(scan: ScanView, revisionId: number, expectedScanId?: number): ScanView {
   if (
     !scan ||
     scan.revisionId !== revisionId ||
@@ -123,3 +127,29 @@ export const getJobScan = (
 ) => readScan(`${root(jobId, revisionId)}/${scanId}`, revisionId, { signal }, scanId);
 export const getStaffJobScan = (revisionId: number, scanId: number, signal?: AbortSignal) =>
   readScan(`/staff/job-revisions/${revisionId}/scans/${scanId}`, revisionId, { signal }, scanId);
+
+async function latestScan(
+  path: string,
+  revisionId: number,
+  revisionVersion: number,
+  signal?: AbortSignal,
+) {
+  const value = await authenticatedRequest(
+    `${path}/latest?expectedRevisionVersion=${revisionVersion}`,
+    { cache: "no-store", signal },
+  );
+  return value === null ? null : validateScan(value as ScanView, revisionId);
+}
+
+export const getLatestJobScan = (
+  jobId: number,
+  revisionId: number,
+  revisionVersion: number,
+  signal?: AbortSignal,
+) => latestScan(root(jobId, revisionId), revisionId, revisionVersion, signal);
+
+export const getLatestStaffJobScan = (
+  revisionId: number,
+  revisionVersion: number,
+  signal?: AbortSignal,
+) => latestScan(`/staff/job-revisions/${revisionId}/scans`, revisionId, revisionVersion, signal);

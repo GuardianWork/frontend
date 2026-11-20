@@ -1,6 +1,6 @@
 import { ArrowRightIcon } from "@/components/icons";
 import { useEffect, useState, type FormEvent } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { LoaderCircle, ShieldCheck } from "lucide-react";
 import { PasswordInput, authInputClass } from "./PasswordInput";
 import {
@@ -15,6 +15,7 @@ import "./staff-login.css";
 
 export function StaffLoginPage() {
   const navigate = useNavigate();
+  const { next } = useSearch({ from: "/login" });
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [ready, setReady] = useState(false);
@@ -29,7 +30,7 @@ export function StaffLoginPage() {
     void loadCurrentUser()
       .then(async (user) => {
         if (cancelled) return;
-        if (isStaffUser(user)) await navigate({ to: "/staff", replace: true });
+        if (isStaffUser(user)) await navigate({ href: next ?? "/staff", replace: true });
         else await logoutAccount();
       })
       .catch(() => {})
@@ -39,7 +40,7 @@ export function StaffLoginPage() {
     return () => {
       cancelled = true;
     };
-  }, [navigate]);
+  }, [navigate, next]);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -58,7 +59,7 @@ export function StaffLoginPage() {
       const user = await loadCurrentUser();
       if (!isStaffUser(user))
         throw new Error("Tài khoản này không có quyền truy cập Platform staff.");
-      await navigate({ to: "/staff", replace: true });
+      await navigate({ href: next ?? "/staff", replace: true });
     } catch (cause) {
       if (stored) {
         const revocation = logoutAccount();

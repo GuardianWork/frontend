@@ -101,7 +101,7 @@ async function setup(page: import("@playwright/test").Page, suspended = false) {
   await login(page, "admin_demo");
   await page.goto(`${origin}/staff/jobs`);
   await page.getByRole("combobox", { name: "Trạng thái", exact: true }).selectOption("APPROVED");
-  await page.getByRole("button", { name: "Xem chi tiết Chuyên viên kế toán", exact: true }).click();
+  await page.getByRole("link", { name: "Xem chi tiết Chuyên viên kế toán", exact: true }).click();
   return { api, state };
 }
 

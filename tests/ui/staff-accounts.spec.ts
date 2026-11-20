@@ -15,7 +15,7 @@ const user = {
   canBan: true,
   canUnban: false,
 };
-test("account enforcement preserves values, reconciles uncertain results and renders responsive views", async ({
+test("account enforcement preserves values, reconciles uncertain results and renders desktop views", async ({
   page,
 }) => {
   let current = { ...user };
@@ -68,12 +68,10 @@ test("account enforcement preserves values, reconciles uncertain results and ren
   });
   await login(page, "admin_demo");
   await page.goto(`${origin}/staff/accounts`);
-  await expect(page.getByRole("button", { name: "Xem chi tiết" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Xem chi tiết" })).toBeVisible();
   await page.screenshot({ path: ".impeccable/review/accounts-desktop.png", fullPage: true });
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.screenshot({ path: ".impeccable/review/accounts-mobile.png", fullPage: true });
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
-  await page.getByRole("button", { name: "Xem chi tiết" }).click();
+  await page.getByRole("link", { name: "Xem chi tiết" }).click();
   await expect(page.getByRole("heading", { name: "nguyen.an", exact: true })).toBeFocused();
   await page.getByRole("button", { name: "Khóa tài khoản", exact: true }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Hủy", exact: true }).click();
@@ -94,7 +92,7 @@ test("account enforcement preserves values, reconciles uncertain results and ren
   await expect(page.getByRole("button", { name: "Mở khóa tài khoản", exact: true })).toBeVisible();
   expect(mutations).toBe(2);
   await page.getByRole("button", { name: "Quay lại danh sách" }).click();
-  await expect(page.getByRole("button", { name: "nguyen.an", exact: true })).toBeFocused();
+  await expect(page.getByRole("link", { name: "nguyen.an", exact: true })).toBeFocused();
 });
 
 test("company temporary ban, conflict refresh and unban use server permissions", async ({
@@ -164,7 +162,7 @@ test("company temporary ban, conflict refresh and unban use server permissions",
   await login(page, "admin_demo");
   await page.goto(`${origin}/staff/accounts`);
   await page.getByRole("tab", { name: "Công ty", exact: true }).click();
-  await page.getByRole("button", { name: "Xem chi tiết" }).click();
+  await page.getByRole("link", { name: "Xem chi tiết" }).click();
   await page.getByRole("button", { name: "Khóa tài khoản", exact: true }).click();
   const dialog = page.getByRole("dialog");
   await expect(dialog.getByText(/Phiên đăng nhập của các thành viên/)).toBeVisible();
@@ -192,7 +190,6 @@ test("company temporary ban, conflict refresh and unban use server permissions",
   const bounds = await toast.boundingBox();
   expect(bounds!.x + bounds!.width).toBeGreaterThan(1300);
   expect(bounds!.y + bounds!.height).toBeGreaterThan(900);
-  await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({
     path: ".impeccable/review/toast-mobile.png",
     fullPage: true,
@@ -204,7 +201,7 @@ test("company temporary ban, conflict refresh and unban use server permissions",
   expect(posts).toBe(3);
 });
 
-test("search is debounced and encoded; pages and tabs reset; stale details close on 404", async ({
+test("search is debounced and encoded; pages and tabs reset; missing details keep their URL until returning to the list", async ({
   page,
 }) => {
   const searches: string[] = [];
@@ -242,9 +239,11 @@ test("search is debounced and encoded; pages and tabs reset; stale details close
   await page.getByRole("tab", { name: "Công ty", exact: true }).click();
   await expect.poll(() => searches.at(-1)).toBe("/api/staff/accounts/companies::0");
   await page.getByRole("tab", { name: "Tài khoản người dùng" }).click();
-  await page.getByRole("button", { name: "Xem chi tiết" }).click();
+  await page.getByRole("link", { name: "Xem chi tiết" }).click();
   await expect(
     page.getByText("Tài khoản không còn tồn tại. Vui lòng tìm kiếm lại.", { exact: true }),
   ).toBeVisible();
+  await expect(page).toHaveURL(/\/staff\/accounts\/users\/25$/);
+  await page.getByRole("button", { name: "Quay lại danh sách" }).click();
   await expect(page.getByRole("searchbox")).toBeVisible();
 });

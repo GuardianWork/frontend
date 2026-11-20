@@ -95,6 +95,7 @@ export async function staffJobApi(page: Page) {
         revisionVersion: review.revisionVersion,
       });
     }
+    if (url.pathname === "/api/staff/job-revisions/91/scans/latest") return json(null);
     if (url.pathname === "/api/staff/job-revisions/91") {
       state.detailLoads++;
       return json(review);

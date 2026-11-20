@@ -1,7 +1,13 @@
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, test } from "node:test";
 import { AUTH_SESSION_KEY } from "./auth.ts";
-import { requestJobScan, getJobScan, getStaffJobScan } from "./jobScans.ts";
+import {
+  requestJobScan,
+  getJobScan,
+  getStaffJobScan,
+  getLatestJobScan,
+  getLatestStaffJobScan,
+} from "./jobScans.ts";
 const originalFetch = globalThis.fetch;
 const scan = {
   scanId: 401,
@@ -60,4 +66,29 @@ test("scan reads reject a different snapshot identity and malformed completed fi
     globalThis.fetch = async () => Response.json({ status: 200, data });
     await assert.rejects(getJobScan(83, 91, 401), /không hợp lệ/);
   }
+});
+
+test("latest scans are resolved by the viewed revision and current locking version", async () => {
+  const calls = [];
+  globalThis.fetch = async (url, init) => {
+    calls.push(url);
+    assert.equal(init.headers.Authorization, "Bearer scan-access");
+    return Response.json({ data: { ...scan, revisionVersion: 2, outdated: false } });
+  };
+  const result = await getLatestStaffJobScan(91, 3);
+  assert.equal(result.revisionVersion, 2); // Identical content survives a submission-only version bump.
+  await getLatestJobScan(83, 91, 3);
+  assert.deepEqual(calls, [
+    "/api/staff/job-revisions/91/scans/latest?expectedRevisionVersion=3",
+    "/api/companies/me/jobs/83/revisions/91/scans/latest?expectedRevisionVersion=3",
+  ]);
+});
+
+test("a missing analysis is distinct from lookup failure or another revision's result", async () => {
+  globalThis.fetch = async () => Response.json({ data: null });
+  assert.equal(await getLatestStaffJobScan(91, 3), null);
+  globalThis.fetch = async () => Response.json({ data: { ...scan, revisionId: 92 } });
+  await assert.rejects(getLatestStaffJobScan(91, 3), /không hợp lệ/);
+  globalThis.fetch = async () => Response.json({ message: "Unavailable" }, { status: 503 });
+  await assert.rejects(getLatestStaffJobScan(91, 3), (error) => error.status === 503);
 });

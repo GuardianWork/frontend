@@ -8,7 +8,8 @@ import { GuardianIllustration } from "@/components/GuardianIllustration";
 import { dossierDate as date } from "@/lib/dossier-date";
 import { DossierHistory, LegacyEvidence } from "@/components/staff/DossierHistory";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { staffVerificationsSearch } from "@/lib/staff-detail-routing";
 import { Database } from "lucide-react";
 import "@/components/admin/verification-detail.css";
 import { StaffDetailNotice } from "@/components/admin/StaffDetailNotice";
@@ -27,23 +28,13 @@ import {
   VERIFICATION_PAGE_SIZE,
   decideAdminVerification,
   getAdminVerifications,
+  getAdminVerification,
   type AdminCompany,
   type VerificationFilter,
 } from "@/services/adminCompanies";
 
 export const Route = createFileRoute("/staff/verifications")({
-  validateSearch: (
-    search: Record<string, unknown>,
-  ): { status: VerificationFilter; page: number } => ({
-    status:
-      search.status === "ALL" || search.status === "VERIFIED" || search.status === "REJECTED"
-        ? search.status
-        : "PENDING",
-    page:
-      typeof search.page === "number" && Number.isInteger(search.page) && search.page >= 0
-        ? search.page
-        : 0,
-  }),
+  validateSearch: staffVerificationsSearch,
   head: () => ({
     meta: [
       { name: "robots", content: "noindex, nofollow" },
@@ -58,9 +49,9 @@ const STATUS_OPTIONS: { id: VerificationFilter; label: string }[] = [
   { id: "REJECTED", label: "Đã từ chối" },
   { id: "ALL", label: "Tất cả" },
 ];
-function AdminVerificationsPage() {
-  const search = Route.useSearch();
-  const navigate = Route.useNavigate();
+export function AdminVerificationsPage({ companyId = null }: { companyId?: number | null }) {
+  const search = useSearch({ strict: false }) as ReturnType<typeof staffVerificationsSearch>;
+  const navigate = useNavigate({ from: "/staff/verifications" });
   const [rows, setRows] = useState<AdminCompany[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -73,61 +64,64 @@ function AdminVerificationsPage() {
   const [saving, setSaving] = useState(false);
   const [decisionError, setDecisionError] = useState<AdminApiError | null>(null);
   const [reload, setReload] = useState(0);
-  const [mockMode, setMockMode] = useState(false);
-  const mockRows: AdminCompany[] = [
-    {
-      id: -1,
-      name: "An Phúc Retail",
-      taxCode: "0318456721",
-      email: "phaply@anphuc.example.test",
-      registrationCertificateUrl: null,
-      verificationStatus: "PENDING",
-      rejectionReason: null,
-      verifiedBy: null,
-      verifiedAt: null,
-      version: 1,
-      createdAt: "2026-10-19T02:15:00Z",
-    },
-    {
-      id: -2,
-      name: "Mộc Lan Foods",
-      taxCode: "0109283645",
-      email: "hr@moclan.example.test",
-      registrationCertificateUrl: null,
-      verificationStatus: "VERIFIED",
-      rejectionReason: null,
-      verifiedBy: 42,
-      verifiedAt: "2026-10-17T04:30:00Z",
-      version: 3,
-      createdAt: "2026-10-15T06:20:00Z",
-    },
-    {
-      id: -3,
-      name: "Minh An Logistics",
-      taxCode: "0316720984",
-      email: "admin@minhan.example.test",
-      registrationCertificateUrl: null,
-      verificationStatus: "REJECTED",
-      rejectionReason: "Thông tin mã số thuế chưa khớp với hồ sơ đăng ký.",
-      verifiedBy: 37,
-      verifiedAt: "2026-10-16T08:45:00Z",
-      version: 2,
-      createdAt: "2026-10-14T03:10:00Z",
-    },
-    {
-      id: -4,
-      name: "Hợp Nhất Services",
-      taxCode: "0105847392",
-      email: "contact@hopnhat.example.test",
-      registrationCertificateUrl: null,
-      verificationStatus: "PENDING",
-      rejectionReason: null,
-      verifiedBy: null,
-      verifiedAt: null,
-      version: 1,
-      createdAt: "2026-10-18T09:05:00Z",
-    },
-  ];
+  const [mockMode, setMockMode] = useState(companyId !== null && companyId < 0);
+  const mockRows = useMemo<AdminCompany[]>(
+    () => [
+      {
+        id: -1,
+        name: "An Phúc Retail",
+        taxCode: "0318456721",
+        email: "phaply@anphuc.example.test",
+        registrationCertificateUrl: null,
+        verificationStatus: "PENDING",
+        rejectionReason: null,
+        verifiedBy: null,
+        verifiedAt: null,
+        version: 1,
+        createdAt: "2026-10-19T02:15:00Z",
+      },
+      {
+        id: -2,
+        name: "Mộc Lan Foods",
+        taxCode: "0109283645",
+        email: "hr@moclan.example.test",
+        registrationCertificateUrl: null,
+        verificationStatus: "VERIFIED",
+        rejectionReason: null,
+        verifiedBy: 42,
+        verifiedAt: "2026-10-17T04:30:00Z",
+        version: 3,
+        createdAt: "2026-10-15T06:20:00Z",
+      },
+      {
+        id: -3,
+        name: "Minh An Logistics",
+        taxCode: "0316720984",
+        email: "admin@minhan.example.test",
+        registrationCertificateUrl: null,
+        verificationStatus: "REJECTED",
+        rejectionReason: "Thông tin mã số thuế chưa khớp với hồ sơ đăng ký.",
+        verifiedBy: 37,
+        verifiedAt: "2026-10-16T08:45:00Z",
+        version: 2,
+        createdAt: "2026-10-14T03:10:00Z",
+      },
+      {
+        id: -4,
+        name: "Hợp Nhất Services",
+        taxCode: "0105847392",
+        email: "contact@hopnhat.example.test",
+        registrationCertificateUrl: null,
+        verificationStatus: "PENDING",
+        rejectionReason: null,
+        verifiedBy: null,
+        verifiedAt: null,
+        version: 1,
+        createdAt: "2026-10-18T09:05:00Z",
+      },
+    ],
+    [],
+  );
   const load = useCallback(
     async (signal: AbortSignal) => {
       setLoading(true);
@@ -155,10 +149,35 @@ function AdminVerificationsPage() {
     [navigate, search.page, search.status],
   );
   useEffect(() => {
+    if (companyId !== null) return;
     const controller = new AbortController();
     void load(controller.signal);
     return () => controller.abort();
-  }, [load, reload]);
+  }, [load, reload, companyId]);
+  useEffect(() => {
+    if (companyId === null) return;
+    const controller = new AbortController();
+    setSelected(null);
+    setLoading(true);
+    setError(null);
+    if (companyId < 0) {
+      setSelected(mockRows.find((row) => row.id === companyId) ?? null);
+      setLoading(false);
+      return;
+    }
+    void getAdminVerification(companyId, search.status, search.page, controller.signal)
+      .then((company) => {
+        if (!controller.signal.aborted) setSelected(company);
+      })
+      .catch((cause) => {
+        if (!controller.signal.aborted)
+          setError(cause instanceof Error ? cause.message : "Không tải được hồ sơ.");
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => controller.abort();
+  }, [companyId, search.status, search.page, mockRows]);
   const sourceRows = mockMode
     ? mockRows.filter(
         (item) => search.status === "ALL" || item.verificationStatus === search.status,
@@ -189,10 +208,6 @@ function AdminVerificationsPage() {
   const updateSearch = (values: Partial<typeof search>) =>
     void navigate({ search: (previous) => ({ ...previous, ...values }) });
   const retry = () => setReload((value) => value + 1);
-  const choose = (item: AdminCompany) => {
-    setSelected(item);
-    setDecisionError(null);
-  };
   const openDecision = (value: "VERIFIED" | "REJECTED") => {
     setDecision(value);
     setDecisionError(null);
@@ -240,10 +255,26 @@ function AdminVerificationsPage() {
     setDecisionError(null);
     toast.info("Danh sách đang được tải lại để lấy trạng thái mới nhất.");
     retry();
+    void navigate({ to: "/staff/verifications", search });
   };
   return (
     <AdminShell title="Hồ sơ xác minh công ty" role="admin">
-      {!selected ? (
+      {companyId !== null && !selected ? (
+        <section className="admin-panel staff-jobs-message">
+          <h1>Hồ sơ xác minh công ty</h1>
+          {loading ? (
+            <p role="status">Đang tải hồ sơ…</p>
+          ) : (
+            <p role="alert">{error || "Không tìm thấy hồ sơ."}</p>
+          )}
+          <button
+            className="admin-text-link"
+            onClick={() => void navigate({ to: "/staff/verifications", search })}
+          >
+            Quay lại danh sách
+          </button>
+        </section>
+      ) : !selected ? (
         <>
           <div className="admin-page-heading">
             <div>
@@ -363,13 +394,16 @@ function AdminVerificationsPage() {
                   {displayedRows.map((item) => (
                     <tr key={item.id}>
                       <td>
-                        <button
-                          type="button"
+                        <Link
                           className="admin-record-name"
-                          onClick={() => choose(item)}
+                          to="/staff/verifications/$companyId"
+                          params={{
+                            companyId: item.id < 0 ? `sample-${-item.id}` : String(item.id),
+                          }}
+                          search={search}
                         >
                           {item.name}
-                        </button>
+                        </Link>
                       </td>
                       <td>{item.taxCode}</td>
                       <td>{item.email || "Chưa cung cấp"}</td>
@@ -380,13 +414,16 @@ function AdminVerificationsPage() {
                         </StaffStatusBadge>
                       </td>
                       <td>
-                        <button
-                          type="button"
+                        <Link
                           className="admin-text-link"
-                          onClick={() => choose(item)}
+                          to="/staff/verifications/$companyId"
+                          params={{
+                            companyId: item.id < 0 ? `sample-${-item.id}` : String(item.id),
+                          }}
+                          search={search}
                         >
                           Mở hồ sơ <ArrowRightIcon size={16} aria-hidden="true" />
-                        </button>
+                        </Link>
                       </td>
                     </tr>
                   ))}
@@ -443,6 +480,7 @@ function AdminVerificationsPage() {
                 retry();
               }
               setSelected(null);
+              void navigate({ to: "/staff/verifications", search });
             }}
           >
             <ArrowLeftIcon size={16} />
