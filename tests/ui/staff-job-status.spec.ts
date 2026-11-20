@@ -62,7 +62,7 @@ test("suspension appears in the list and the detail header independently of revi
     path: info.outputPath("suspended-list-desktop.png"),
     animations: "disabled",
   });
-  await page.getByRole("button", { name: "Xem chi tiết Chuyên viên kế toán", exact: true }).click();
+  await page.getByRole("link", { name: "Xem chi tiết Chuyên viên kế toán", exact: true }).click();
   await expect(page.locator(".staff-job-object-heading .staff-job-posting-status")).toHaveText(
     "Đã đình chỉ",
   );
@@ -70,7 +70,7 @@ test("suspension appears in the list and the detail header independently of revi
     page.getByRole("region", { name: "Tin tuyển dụng đã bị đình chỉ", exact: true }),
   ).toBeVisible();
   await expect(page.locator(".staff-jobs-eligibility")).toContainText("Đình chỉ công ty");
-  await expect(page.locator(".compliance-jd .admin-record-status")).toHaveText("Đã duyệt");
+  await expect(page.locator(".compliance-jd > .admin-panel-heading .admin-record-status")).toHaveText("Đã duyệt");
   await expect(
     page.getByRole("button", { name: "Khôi phục tin tuyển dụng", exact: true }),
   ).toBeVisible();
@@ -85,7 +85,7 @@ test("detail reload refreshes posting status and the list shows the resulting st
   page,
 }) => {
   const { state } = await setup(page);
-  await page.getByRole("button", { name: "Xem chi tiết Chuyên viên kế toán", exact: true }).click();
+  await page.getByRole("link", { name: "Xem chi tiết Chuyên viên kế toán", exact: true }).click();
   await expect(page.locator(".staff-job-object-heading .staff-job-posting-status")).toHaveText(
     "Đã đình chỉ",
   );

@@ -4,7 +4,7 @@ const name = "Công ty TNHH Giải Pháp Alpha";
 async function openDossier(page: import("@playwright/test").Page) {
   await login(page, "admin_demo");
   await page.goto(`${origin}/staff/verifications`);
-  await page.getByRole("button", { name: /Mở hồ sơ/ }).click();
+  await page.getByRole("link", { name: /Mở hồ sơ/ }).click();
 }
 test("legacy dossier remains reviewable and rejection refreshes queue and details", async ({
   page,
@@ -101,7 +101,7 @@ test("conflict keeps rejection reason and requires a queue reload before reopeni
   await dialog.getByRole("button", { name: "Hủy", exact: true }).click();
   const before = queueLoads;
   await page.getByRole("button", { name: "Quay lại danh sách" }).click();
-  await page.getByRole("button", { name: /Mở hồ sơ/ }).click();
+  await page.getByRole("link", { name: /Mở hồ sơ/ }).click();
   expect(queueLoads).toBeGreaterThan(before);
   await expect(page.getByRole("button", { name: "Phê duyệt", exact: true })).toBeEnabled();
 });

@@ -86,7 +86,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
             to: "/login",
             search:
               area === "staff"
-                ? {}
+                ? { next: returnTo }
                 : {
                     role: area === "rec" ? "recruiter" : "candidate",
                     ...(returnTo && !returnTo.startsWith("/login") ? { next: returnTo } : {}),

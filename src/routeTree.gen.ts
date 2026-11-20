@@ -70,7 +70,10 @@ import { Route as StaffReportsRouteImport } from './routes/staff/reports'
 import { Route as StaffTasksRouteImport } from './routes/staff/tasks'
 import { Route as StaffVerificationsRouteImport } from './routes/staff/verifications'
 import { Route as CanJobsApplyRouteImport } from './routes/can/jobs_.apply'
+import { Route as StaffJobsRevisionIdRouteImport } from './routes/staff/jobs_.$revisionId'
+import { Route as StaffVerificationsCompanyIdRouteImport } from './routes/staff/verifications_.$companyId'
 import { Route as RecApplicationsJobIdApplicationIdRouteImport } from './routes/rec/applications_.$jobId.$applicationId'
+import { Route as StaffAccountsAccountTypeAccountIdRouteImport } from './routes/staff/accounts_.$accountType.$accountId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -377,11 +380,28 @@ const CanJobsApplyRoute = CanJobsApplyRouteImport.update({
   path: '/jobs/apply',
   getParentRoute: () => CanRoute,
 } as any)
+const StaffJobsRevisionIdRoute = StaffJobsRevisionIdRouteImport.update({
+  id: '/staff/jobs_/$revisionId',
+  path: '/staff/jobs/$revisionId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffVerificationsCompanyIdRoute =
+  StaffVerificationsCompanyIdRouteImport.update({
+    id: '/staff/verifications_/$companyId',
+    path: '/staff/verifications/$companyId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const RecApplicationsJobIdApplicationIdRoute =
   RecApplicationsJobIdApplicationIdRouteImport.update({
     id: '/applications_/$jobId/$applicationId',
     path: '/applications/$jobId/$applicationId',
     getParentRoute: () => RecRoute,
+  } as any)
+const StaffAccountsAccountTypeAccountIdRoute =
+  StaffAccountsAccountTypeAccountIdRouteImport.update({
+    id: '/staff/accounts_/$accountType/$accountId',
+    path: '/staff/accounts/$accountType/$accountId',
+    getParentRoute: () => rootRouteImport,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -446,7 +466,10 @@ export interface FileRoutesByFullPath {
   '/rec/': typeof RecIndexRoute
   '/staff/': typeof StaffIndexRoute
   '/can/jobs/apply': typeof CanJobsApplyRoute
+  '/staff/jobs/$revisionId': typeof StaffJobsRevisionIdRoute
+  '/staff/verifications/$companyId': typeof StaffVerificationsCompanyIdRoute
   '/rec/applications/$jobId/$applicationId': typeof RecApplicationsJobIdApplicationIdRoute
+  '/staff/accounts/$accountType/$accountId': typeof StaffAccountsAccountTypeAccountIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -508,7 +531,10 @@ export interface FileRoutesByTo {
   '/rec': typeof RecIndexRoute
   '/staff': typeof StaffIndexRoute
   '/can/jobs/apply': typeof CanJobsApplyRoute
+  '/staff/jobs/$revisionId': typeof StaffJobsRevisionIdRoute
+  '/staff/verifications/$companyId': typeof StaffVerificationsCompanyIdRoute
   '/rec/applications/$jobId/$applicationId': typeof RecApplicationsJobIdApplicationIdRoute
+  '/staff/accounts/$accountType/$accountId': typeof StaffAccountsAccountTypeAccountIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -573,7 +599,10 @@ export interface FileRoutesById {
   '/rec/': typeof RecIndexRoute
   '/staff/': typeof StaffIndexRoute
   '/can/jobs_/apply': typeof CanJobsApplyRoute
+  '/staff/jobs_/$revisionId': typeof StaffJobsRevisionIdRoute
+  '/staff/verifications_/$companyId': typeof StaffVerificationsCompanyIdRoute
   '/rec/applications_/$jobId/$applicationId': typeof RecApplicationsJobIdApplicationIdRoute
+  '/staff/accounts_/$accountType/$accountId': typeof StaffAccountsAccountTypeAccountIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -639,7 +668,10 @@ export interface FileRouteTypes {
     | '/rec/'
     | '/staff/'
     | '/can/jobs/apply'
+    | '/staff/jobs/$revisionId'
+    | '/staff/verifications/$companyId'
     | '/rec/applications/$jobId/$applicationId'
+    | '/staff/accounts/$accountType/$accountId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -701,7 +733,10 @@ export interface FileRouteTypes {
     | '/rec'
     | '/staff'
     | '/can/jobs/apply'
+    | '/staff/jobs/$revisionId'
+    | '/staff/verifications/$companyId'
     | '/rec/applications/$jobId/$applicationId'
+    | '/staff/accounts/$accountType/$accountId'
   id:
     | '__root__'
     | '/'
@@ -765,7 +800,10 @@ export interface FileRouteTypes {
     | '/rec/'
     | '/staff/'
     | '/can/jobs_/apply'
+    | '/staff/jobs_/$revisionId'
+    | '/staff/verifications_/$companyId'
     | '/rec/applications_/$jobId/$applicationId'
+    | '/staff/accounts_/$accountType/$accountId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -810,6 +848,9 @@ export interface RootRouteChildren {
   StaffVerificationsRoute: typeof StaffVerificationsRoute
   AdminIndexRoute: typeof AdminIndexRoute
   StaffIndexRoute: typeof StaffIndexRoute
+  StaffJobsRevisionIdRoute: typeof StaffJobsRevisionIdRoute
+  StaffVerificationsCompanyIdRoute: typeof StaffVerificationsCompanyIdRoute
+  StaffAccountsAccountTypeAccountIdRoute: typeof StaffAccountsAccountTypeAccountIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1241,12 +1282,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CanJobsApplyRouteImport
       parentRoute: typeof CanRoute
     }
+    '/staff/jobs_/$revisionId': {
+      id: '/staff/jobs_/$revisionId'
+      path: '/staff/jobs/$revisionId'
+      fullPath: '/staff/jobs/$revisionId'
+      preLoaderRoute: typeof StaffJobsRevisionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff/verifications_/$companyId': {
+      id: '/staff/verifications_/$companyId'
+      path: '/staff/verifications/$companyId'
+      fullPath: '/staff/verifications/$companyId'
+      preLoaderRoute: typeof StaffVerificationsCompanyIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rec/applications_/$jobId/$applicationId': {
       id: '/rec/applications_/$jobId/$applicationId'
       path: '/applications/$jobId/$applicationId'
       fullPath: '/rec/applications/$jobId/$applicationId'
       preLoaderRoute: typeof RecApplicationsJobIdApplicationIdRouteImport
       parentRoute: typeof RecRoute
+    }
+    '/staff/accounts_/$accountType/$accountId': {
+      id: '/staff/accounts_/$accountType/$accountId'
+      path: '/staff/accounts/$accountType/$accountId'
+      fullPath: '/staff/accounts/$accountType/$accountId'
+      preLoaderRoute: typeof StaffAccountsAccountTypeAccountIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -1352,6 +1414,10 @@ const rootRouteChildren: RootRouteChildren = {
   StaffVerificationsRoute: StaffVerificationsRoute,
   AdminIndexRoute: AdminIndexRoute,
   StaffIndexRoute: StaffIndexRoute,
+  StaffJobsRevisionIdRoute: StaffJobsRevisionIdRoute,
+  StaffVerificationsCompanyIdRoute: StaffVerificationsCompanyIdRoute,
+  StaffAccountsAccountTypeAccountIdRoute:
+    StaffAccountsAccountTypeAccountIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

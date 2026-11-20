@@ -4,12 +4,13 @@ import { FileSearch } from "lucide-react";
 import { ApiError } from "@/services/api";
 import {
   getJobScan,
+  getLatestJobScan,
   requestJobScan,
   scanProcessing,
   type ScanView,
   type ScanFinding,
 } from "@/services/jobScans";
-import { jobError, type Job } from "@/services/jobs";
+import { jobError, type Job, type JobRevision } from "@/services/jobs";
 import "./job-scan.css";
 
 const outcomes = {
@@ -86,11 +87,18 @@ function Snapshot({ scan }: { scan: ScanView }) {
   );
 }
 
-export function ScanResult({ scan, outdated = false }: { scan: ScanView; outdated?: boolean }) {
+export function ScanResult({
+  scan,
+  outdated = false,
+  audience = "recruiter",
+}: {
+  scan: ScanView;
+  outdated?: boolean;
+  audience?: "recruiter" | "staff";
+}) {
   const report = scan.status === "COMPLETED" ? scan.report : null;
   return (
     <div className="jp-scan-result">
-      <p className="jp-scan-date">Mã phân tích #{scan.scanId}</p>
       {(scan.mode === "stub" || report?.mode === "stub") && (
         <p className="jp-feedback jp-warning">
           <strong>Chế độ thử nghiệm — chưa thực hiện phân tích AI</strong>
@@ -106,12 +114,17 @@ export function ScanResult({ scan, outdated = false }: { scan: ScanView; outdate
         {report && <span>{report.findings.length} phát hiện</span>}
       </div>
       {scanProcessing(scan) && (
-        <p>Bạn có thể tiếp tục chỉnh sửa hoặc gửi duyệt trong khi chờ kết quả.</p>
+        <p>
+          {audience === "staff"
+            ? "Kết quả sẽ tự cập nhật. Bạn có thể tiếp tục đọc nội dung trong khi chờ."
+            : "Bạn có thể tiếp tục chỉnh sửa hoặc gửi duyệt trong khi chờ kết quả."}
+        </p>
       )}
       {scan.status === "FAILED" && (
         <p>
-          Chưa thể phân tích nội dung này. Bạn vẫn có thể lưu và gửi duyệt bình thường. Yêu cầu lại
-          cùng phiên bản sẽ trả về kết quả này.
+          {audience === "staff"
+            ? "Chưa thể phân tích nội dung này. Đọc nội dung và đối chiếu căn cứ trước khi quyết định xét duyệt."
+            : "Chưa thể phân tích nội dung này. Bạn vẫn có thể lưu và gửi duyệt bình thường. Yêu cầu lại cùng phiên bản sẽ trả về kết quả này."}
         </p>
       )}
       {report && (
@@ -156,6 +169,7 @@ export function ScanResult({ scan, outdated = false }: { scan: ScanView; outdate
 
 export function JobScanPanel({
   job,
+  revision,
   busy,
   editable,
   localEdits,
@@ -169,13 +183,14 @@ export function JobScanPanel({
   autoReady = false,
 }: {
   job: Job | null;
+  revision?: JobRevision | null;
   busy: boolean;
   editable: boolean;
   localEdits: boolean;
   editSequence: number;
   prepare: () => Promise<Job>;
   recover: (jobId: number) => Promise<Job>;
-  onResult?: (scan: ScanView | null, outdated: boolean) => void;
+  onResult?: (scan: ScanView | null, outdated: boolean, viewedVersion?: number) => void;
   compact?: boolean;
   editorMode?: boolean;
   editorTarget?: HTMLElement | null;
@@ -185,13 +200,10 @@ export function JobScanPanel({
   const [error, setError] = useState("");
   const [requesting, setRequesting] = useState(false);
   const [analyzedSequence, setAnalyzedSequence] = useState(-1);
+  const [resultRevisionVersion, setResultRevisionVersion] = useState<number | undefined>();
+  const [resolvedScope, setResolvedScope] = useState("");
   const controller = useRef<AbortController | null>(null);
   const mounted = useRef(false);
-  const currentRevision = useRef(job?.workingRevision?.id);
-  currentRevision.current = job?.workingRevision?.id;
-  const sequence = useRef(editSequence);
-  sequence.current = editSequence;
-  const previousRevision = useRef(currentRevision.current);
   useEffect(() => {
     mounted.current = true;
     return () => {
@@ -199,14 +211,54 @@ export function JobScanPanel({
       controller.current?.abort();
     };
   }, []);
-  useEffect(() => {
-    if (previousRevision.current !== job?.workingRevision?.id) {
-      previousRevision.current = job?.workingRevision?.id;
-      setScan(null);
-    }
-  }, [job?.workingRevision?.id]);
+  const viewedRevision = revision ?? job?.workingRevision;
+  const currentRevision = useRef(viewedRevision?.id);
+  currentRevision.current = viewedRevision?.id;
+  const resultEpoch = useRef(0);
+  const [loadingExisting, setLoadingExisting] = useState(false);
+  const sequence = useRef(editSequence);
+  sequence.current = editSequence;
   const jobId = job?.id;
-  const revisionId = job?.workingRevision?.id;
+  const revisionId = viewedRevision?.id;
+  const revisionVersion = viewedRevision?.version;
+  const lookupScope = `${jobId}:${revisionId}:${revisionVersion}`;
+  useEffect(() => {
+    // A save and its newly requested result may commit in the same React batch.
+    // Keep that exact-version result instead of overwriting it with a discovery read.
+    if (resolvedScope === lookupScope) {
+      setLoadingExisting(false);
+      return;
+    }
+    const epoch = ++resultEpoch.current;
+    setScan(null);
+    setError("");
+    setLoadingExisting(false);
+    if (!jobId || !revisionId || revisionVersion === undefined) return;
+    setLoadingExisting(true);
+    const abort = new AbortController();
+    const atSequence = sequence.current;
+    void getLatestJobScan(jobId, revisionId, revisionVersion, abort.signal)
+      .then((result) => {
+        if (
+          !abort.signal.aborted &&
+          epoch === resultEpoch.current &&
+          currentRevision.current === revisionId &&
+          sequence.current === atSequence
+        ) {
+          setScan(result);
+          setAnalyzedSequence(atSequence);
+          setResultRevisionVersion(revisionVersion);
+          setResolvedScope(lookupScope);
+        }
+      })
+      .catch((cause) => {
+        if (!abort.signal.aborted && epoch === resultEpoch.current) setError(jobError(cause));
+      })
+      .finally(() => {
+        if (!abort.signal.aborted && epoch === resultEpoch.current) setLoadingExisting(false);
+      });
+    return () => abort.abort();
+  }, [jobId, revisionId, revisionVersion, resolvedScope, lookupScope]);
   useEffect(() => {
     if (!scanProcessing(scan) || !scan || !jobId || scan.revisionId !== revisionId) return;
     const abort = new AbortController();
@@ -230,6 +282,8 @@ export function JobScanPanel({
   }, [scan, jobId, revisionId, error]);
   const start = async () => {
     if (requesting || busy) return;
+    resultEpoch.current++;
+    setLoadingExisting(false);
     setRequesting(true);
     setError("");
     const abort = new AbortController();
@@ -263,8 +317,12 @@ export function JobScanPanel({
         !abort.signal.aborted &&
         currentRevision.current === result.revisionId
       ) {
+        resultEpoch.current++;
+        setLoadingExisting(false);
         setScan(result);
         setAnalyzedSequence(atSequence);
+        setResultRevisionVersion(saved.workingRevision?.version);
+        setResolvedScope(`${saved.id}:${result.revisionId}:${saved.workingRevision?.version}`);
       }
     } catch (cause) {
       if (mounted.current && !abort.signal.aborted)
@@ -284,7 +342,16 @@ export function JobScanPanel({
   startRef.current = start;
   const attemptedSequence = useRef<number | null>(null);
   useEffect(() => {
-    if (!editorMode || !autoReady || busy || requesting || localEdits || scanProcessing(scan))
+    if (
+      !editorMode ||
+      !autoReady ||
+      busy ||
+      requesting ||
+      loadingExisting ||
+      error ||
+      localEdits ||
+      scanProcessing(scan)
+    )
       return;
     if (
       attemptedSequence.current === editSequence ||
@@ -296,15 +363,27 @@ export function JobScanPanel({
       void startRef.current();
     }, 5000);
     return () => clearTimeout(timer);
-  }, [editorMode, autoReady, busy, requesting, localEdits, scan, editSequence, analyzedSequence]);
+  }, [
+    editorMode,
+    autoReady,
+    busy,
+    requesting,
+    loadingExisting,
+    error,
+    localEdits,
+    scan,
+    editSequence,
+    analyzedSequence,
+  ]);
   const processing = scanProcessing(scan);
   const outdated =
     editSequence !== analyzedSequence ||
     localEdits ||
-    scan?.revisionVersion !== job?.workingRevision?.version;
+    Boolean(scan?.outdated) ||
+    resultRevisionVersion !== revisionVersion;
   useEffect(() => {
-    onResult?.(scan, outdated);
-  }, [scan, outdated, onResult]);
+    onResult?.(scan, outdated, resultRevisionVersion);
+  }, [scan, outdated, onResult, resultRevisionVersion]);
   if (editorMode) {
     const message =
       error ||
@@ -367,14 +446,19 @@ export function JobScanPanel({
       </div>
       {!compact && (
         <p className="jp-scan-revision">
-          {job?.workingRevision
-            ? `Bản v${job.workingRevision.revisionNumber} · Nội dung đang làm việc`
+          {viewedRevision
+            ? `Bản v${viewedRevision.revisionNumber} · Nội dung đang xem`
             : "Bản nháp chưa lưu"}
         </p>
       )}
       {!compact && editable && !scan && !error && (
         <p className="jp-scan-hint">
           Bản nháp sẽ được lưu trước khi phân tích. Cần có mô tả công việc.
+        </p>
+      )}
+      {loadingExisting && (
+        <p role="status" className="jp-scan-hint">
+          Đang tải phân tích của phiên bản này…
         </p>
       )}
       {error && (

@@ -118,6 +118,8 @@ async function mockJobs(page: Page, initial: Job[] = [makeJob()]) {
   await page.route("**/api/companies/me/jobs**", async (route) => {
     const request = route.request();
     const url = new URL(request.url());
+    if (url.pathname.endsWith("/scans/latest"))
+      return route.fulfill({ json: { status: 200, data: null } });
     const path = url.pathname;
     const method = request.method();
     const body = request.postDataJSON() as Record<string, unknown> | null;
@@ -1101,6 +1103,7 @@ test("AI scan saves edits, polls, renders code-point snapshot and becomes stale 
   const mock = await mockJobs(page);
   const calls: string[] = [];
   await page.route("**/revisions/91/scans**", async (route) => {
+    if (new URL(route.request().url()).pathname.endsWith("/latest")) return route.fallback();
     expect(route.request().headers().authorization).toMatch(/^Bearer /);
     calls.push(route.request().method());
     if (route.request().method() === "POST") {
@@ -1234,6 +1237,7 @@ test("AI scan stops polling on loss of access and on leaving the editor", async 
   let polls = 0;
   let deny = true;
   await page.route("**/revisions/91/scans**", (route) => {
+    if (new URL(route.request().url()).pathname.endsWith("/latest")) return route.fallback();
     if (route.request().method() === "GET") {
       polls++;
       if (deny) return route.fulfill({ status: 403, json: { status: 403, data: null } });
@@ -1376,4 +1380,51 @@ test("draft editor keeps typing available when automatic analysis is unavailable
   unavailable = false;
   await field.getByRole("button", { name: "Thử lại" }).click();
   await expect(field.getByRole("status")).toContainText("1 phát hiện");
+});
+
+test("saved revision analysis is restored automatically after opening and refreshing a JD", async ({
+  page,
+}) => {
+  await mockJobs(page, [
+    makeJob({ ...completeContent, description: "Chỉ tuyển nam dưới 30 tuổi." }),
+  ]);
+  let reads = 0;
+  let writes = 0;
+  page.on("request", (request) => {
+    if (request.method() === "POST" && /\/scans$/.test(new URL(request.url()).pathname)) writes++;
+  });
+  await page.route("**/revisions/91/scans/latest?*", (route) => {
+    reads++;
+    expect(new URL(route.request().url()).searchParams.get("expectedRevisionVersion")).toBe("3");
+    // Submission may advance only the lock version; matching content remains current.
+    return route.fulfill({ json: { data: scanFixture("COMPLETED", 2) } });
+  });
+  await login(page, "owner_demo", true);
+  await page.goto("/rec/jobs?jobId=83");
+  await expect(page.locator(".jp-analysis-count")).toHaveText("1 phát hiện");
+  await expect(page.locator(".jp-content-view mark")).toContainText(["Chỉ tuyển nam"]);
+  await page.reload();
+  await expect(page.locator(".jp-content-view mark")).toContainText(["Chỉ tuyển nam"]);
+  expect(reads).toBeGreaterThan(1);
+  expect(writes).toBe(0);
+});
+
+test("the latest retained JD loads its analysis even when there is no editable working revision", async ({
+  page,
+}) => {
+  const job = makeJob({ ...completeContent, description: "Chỉ tuyển nam dưới 30 tuổi." });
+  job.status = "PUBLISHED";
+  job.workingRevision!.state = "APPROVED";
+  job.publishedRevisionId = 91;
+  const mock = await mockJobs(page, [job]);
+  mock.getJobs()[0].workingRevision = null;
+  mock.getJobs()[0].availableActions = ["CREATE_DRAFT"];
+  await page.route("**/revisions/91/scans/latest?*", (route) =>
+    route.fulfill({ json: { data: scanFixture() } }),
+  );
+  await login(page, "owner_demo", true);
+  await page.goto("/rec/jobs?jobId=83");
+  await expect(page.locator(".jp-analysis-count")).toHaveText("1 phát hiện");
+  await expect(page.locator(".jp-content-view mark")).toContainText(["Chỉ tuyển nam"]);
+  expect(mock.writes).toEqual([]);
 });

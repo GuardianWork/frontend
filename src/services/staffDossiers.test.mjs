@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import { beforeEach, afterEach, test } from "node:test";
 import { saveAuthSession, AUTH_SESSION_KEY, authenticatedFetch, loadCurrentUser } from "./auth.ts";
-import { decideAdminVerification, getAdminVerifications } from "./adminCompanies.ts";
+import {
+  decideAdminVerification,
+  getAdminVerification,
+  getAdminVerifications,
+} from "./adminCompanies.ts";
 import { certificateTarget, fetchEvidence, getVerificationHistory } from "./staffDossiers.ts";
 const originalFetch = globalThis.fetch;
 const user = { id: 42, email: "staff@example.test", role: "STAFF" };
@@ -155,4 +159,41 @@ test("internal evidence is authenticated; external and unsafe URLs cannot receiv
   globalThis.fetch = async () =>
     Response.json({ message: "40430 DOCUMENT_UNAVAILABLE" }, { status: 404 });
   await assert.rejects(fetchEvidence("missing"), /không còn khả dụng/);
+});
+
+test("verification deep links find records beyond their previous status and page", async () => {
+  const calls = [];
+  globalThis.fetch = async (url) => {
+    const parsed = new URL(url, "http://localhost");
+    const status = parsed.searchParams.get("status");
+    const page = Number(parsed.searchParams.get("page"));
+    calls.push(`${status}:${page}`);
+    const content =
+      status === "PENDING"
+        ? []
+        : page === 0
+          ? [{ ...company, id: 99 }]
+          : [{ ...company, verificationStatus: "VERIFIED" }];
+    return Response.json({
+      data: {
+        content,
+        pageNumber: page,
+        pageSize: 20,
+        totalElements: status === "PENDING" ? 0 : 21,
+        totalPages: status === "PENDING" ? 0 : 2,
+      },
+    });
+  };
+  const record = await getAdminVerification(101, "PENDING", 0);
+  assert.equal(record.id, 101);
+  assert.equal(record.verificationStatus, "VERIFIED");
+  assert.deepEqual(calls, ["PENDING:0", "ALL:0", "ALL:1"]);
+});
+
+test("verification deep links report missing records without fabricating dossier data", async () => {
+  globalThis.fetch = async () =>
+    Response.json({
+      data: { content: [], pageNumber: 0, pageSize: 20, totalElements: 0, totalPages: 0 },
+    });
+  await assert.rejects(getAdminVerification(999, "ALL", 0), (error) => error.status === 404);
 });

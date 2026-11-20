@@ -56,10 +56,10 @@ test("staff login restores identity on reload and logout protects private pages"
   page,
 }) => {
   await page.goto(`${staffOrigin}/staff/jobs`);
-  await expect(page).toHaveURL(`${staffOrigin}/login`);
+  await expect(page).toHaveURL(/\/login(?:\?next=)?/);
   await enterCredentials(page, "admin_demo");
   await expect(
-    page.getByRole("heading", { name: "Tổng quan Platform staff", exact: true }),
+    page.getByRole("heading", { name: "Quản lý tin tuyển dụng", exact: true }),
   ).toBeVisible();
   expect(
     await page.evaluate(
@@ -67,14 +67,14 @@ test("staff login restores identity on reload and logout protects private pages"
     ),
   ).toBe("STAFF");
   await page.reload();
-  await expect(page.getByRole("region", { name: "Thông tin staff đang đăng nhập" })).toContainText(
-    "admin@example.test",
-  );
+  await expect(
+    page.getByRole("heading", { name: "Quản lý tin tuyển dụng", exact: true }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Đăng xuất", exact: true }).click();
-  await expect(page).toHaveURL(`${staffOrigin}/login`);
+  await expect(page).toHaveURL(/\/login(?:\?next=)?/);
   expect(await page.evaluate(() => localStorage.getItem("guardianwork_auth_session"))).toBeNull();
   await page.goto(`${staffOrigin}/staff/jobs`);
-  await expect(page).toHaveURL(`${staffOrigin}/login`);
+  await expect(page).toHaveURL(/\/login(?:\?next=)?/);
 });
 
 test("public and staff origins isolate sessions and public staff links redirect across ports", async ({

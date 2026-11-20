@@ -73,7 +73,7 @@ test("legacy admin URLs redirect to the API-backed staff review queue", async ({
   await page.goto("/admin/compliance", { waitUntil: "domcontentloaded" });
   await expect(page).toHaveURL(/\/staff\/jobs$/);
   await expect(page.getByRole("tab")).toHaveCount(0);
-  await page.getByRole("button", { name: "Xem chi tiết Chuyên viên kế toán", exact: true }).click();
+  await page.getByRole("link", { name: "Xem chi tiết Chuyên viên kế toán", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Nội dung gửi duyệt", exact: true }),
   ).toBeVisible();

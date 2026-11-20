@@ -9,6 +9,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, LoaderCircle } from "lucide-react";
 import { IS_STAFF_PORTAL, staffPortalHref } from "@/lib/portal";
 import { StaffLoginPage } from "@/components/auth/StaffLoginPage";
+import { staffReturnPath } from "@/lib/staff-detail-routing";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { AccountPurposeChoice } from "@/components/auth/AccountPurposeChoice";
 import { PasswordInput, authInputClass } from "@/components/auth/PasswordInput";
@@ -25,7 +26,7 @@ import {
 export const Route = createFileRoute("/login")({
   validateSearch: (search: Record<string, unknown>) =>
     IS_STAFF_PORTAL
-      ? {}
+      ? { next: staffReturnPath(search.next) }
       : {
           ...parseAccountPurpose(search),
           ...([
