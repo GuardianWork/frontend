@@ -14,7 +14,7 @@ export function navigateToPath(
       void navigate({ to: "/rec/jobs", search: path.search });
       return;
     case "/can/applied":
-      void navigate({ to: "/can/applied" });
+      void navigate({ to: "/can/applied", search: path.search });
       return;
     case "/rec/applications":
       void navigate({ to: "/rec/applications" });

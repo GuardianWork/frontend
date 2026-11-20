@@ -1616,6 +1616,8 @@ export function createMockApiServer() {
       const items = candidateNotifications.get(user.id) || [];
       const id = String(items.reduce((max, item) => Math.max(max, Number(item.id) || 0), 0) + 1);
       items.push({
+        ...(body.applicationId ? { applicationId: String(body.applicationId) } : {}),
+        ...(body.action && typeof body.action === "object" ? { action: body.action } : {}),
         id,
         audience,
         type: body.type || "ANNOUNCEMENT_PUBLISHED",
