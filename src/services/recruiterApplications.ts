@@ -303,34 +303,37 @@ export async function getApplicationPdf(
   return blob;
 }
 
-export interface ApplicationCvDownloadUrl {
-  url: string;
-  expiresAt: string;
-  fileName: string;
-}
+const CV_DOWNLOAD_TYPES = new Set([
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+]);
 
-/** Issues the short-lived signed provider URL used for PDF, DOC, and DOCX downloads. */
-export async function getApplicationCvDownloadUrl(
+/** Downloads the submitted CV bytes; the provider URL stays server-side. */
+export async function getApplicationCvDownload(
   jobId: number,
   id: string,
   signal?: AbortSignal,
-): Promise<ApplicationCvDownloadUrl> {
+): Promise<Blob> {
   await assertRecruiterJobAvailable(jobId, signal);
-  const data = await authenticatedRequest(`${applicationPath(jobId, id)}/cv/download-url`, {
+  const response = await authenticatedFetch(`${applicationPath(jobId, id)}/cv/download-url`, {
     signal,
     cache: "no-store",
+    // Ask for JSON errors too, so an authorization or storage failure keeps its status.
+    headers: {
+      Accept:
+        "application/pdf, application/msword, " +
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/json",
+    },
   });
+  if (!response.ok) {
+    await parseApiResponse(response);
+    throw new ApiError("Không thể tải CV.", response.status);
+  }
+  const contentType = response.headers.get("Content-Type")?.split(";")[0].trim().toLowerCase();
+  if (!contentType || !CV_DOWNLOAD_TYPES.has(contentType)) invalidResponse();
+  const blob = await response.blob();
+  if (blob.size === 0 || blob.size > 10 * 1024 * 1024) invalidResponse();
   await assertRecruiterJobAvailable(jobId, signal);
-  const value = data as Partial<ApplicationCvDownloadUrl> | null;
-  if (
-    !value ||
-    typeof value.url !== "string" ||
-    !/^https?:\/\//i.test(value.url) ||
-    typeof value.fileName !== "string" ||
-    !value.fileName ||
-    typeof value.expiresAt !== "string" ||
-    !Number.isFinite(Date.parse(value.expiresAt))
-  )
-    invalidResponse();
-  return { url: value.url, expiresAt: value.expiresAt, fileName: value.fileName };
+  return blob;
 }

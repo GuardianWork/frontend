@@ -58,6 +58,7 @@ async function setup(page: Page, inbox = false) {
   let conflict = false;
   let forbidden = false;
   let pdfReads = 0;
+  let downloads = 0;
   const filters: string[] = [];
   await page.route(/\/api\/companies\/me\/jobs\/(42|77)$/, (route) =>
     route.fulfill({
@@ -123,10 +124,14 @@ async function setup(page: Page, inbox = false) {
       const row = rows.find((row) => url.pathname.includes(`/applications/${row.id}`));
       if (!row) return reply(null, 404);
       if (url.pathname.endsWith("/cv/download-url")) {
-        return reply({
-          url: "https://res.cloudinary.com/demo/raw/authenticated/Nguyen-Thi-Mai.pdf",
-          expiresAt: "2026-12-10T08:30:00Z",
-          fileName: row.cvFileName,
+        downloads++;
+        return route.fulfill({
+          status: 200,
+          headers: {
+            "Content-Type": row.cvContentType || "application/pdf",
+            "Content-Disposition": `attachment; filename="${row.cvFileName}"`,
+          },
+          body: "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Count 0/Kids[]>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF",
         });
       }
       if (url.pathname.endsWith("/cv")) {
@@ -178,6 +183,7 @@ async function setup(page: Page, inbox = false) {
       forbidden = true;
     },
     pdfReads: () => pdfReads,
+    downloads: () => downloads,
   };
 }
 async function openMai(page: Page) {
@@ -342,6 +348,18 @@ test("loads PDF only on request and clears evidence after access loss", async ({
   ).toBeVisible();
   await expect(page.locator("iframe.application-pdf")).toHaveCount(0);
   await expect(page.getByText("mai@example.test", { exact: true })).toHaveCount(0);
+});
+
+test("downloads the submitted CV as a file without opening a provider URL", async ({ page }) => {
+  const api = await setup(page);
+  await openMai(page);
+  expect(api.downloads()).toBe(0);
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Tải xuống CV", exact: true }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe("Nguyen-Thi-Mai.pdf");
+  expect(api.downloads()).toBe(1);
+  await expect(page.getByRole("button", { name: "Tải xuống CV", exact: true })).toBeEnabled();
 });
 
 test("opens the inbox across assigned jobs and navigates using each row's job id", async ({

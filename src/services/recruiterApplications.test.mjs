@@ -8,7 +8,7 @@ import {
   listRecruiterApplicationInbox,
   getRecruiterApplication,
   changeApplicationStatus,
-  getApplicationCvDownloadUrl,
+  getApplicationCvDownload,
   getApplicationPdf,
 } from "./recruiterApplications.ts";
 const originalFetch = globalThis.fetch;
@@ -126,29 +126,32 @@ test("INACTIVE details keep contact evidence but deny CV access and pause deadli
   assert.equal(result.inactivityDeadline, null);
 });
 
-test("company CV downloads use the dedicated endpoint and reject unsafe URLs", async () => {
-  mock((url, init) => {
-    assert.equal(url, "/api/companies/me/jobs/42/applications/a1/cv/download-url");
-    assert.equal(init.cache, "no-store");
-    return response({
-      url: "https://res.cloudinary.com/demo/raw/authenticated/cv.docx",
-      expiresAt: "2026-12-10T08:00:00Z",
-      fileName: "cv.docx",
+test("company CV downloads fetch authenticated bytes for PDF, DOC and DOCX", async () => {
+  for (const contentType of [
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ]) {
+    mock((url, init) => {
+      assert.equal(url, "/api/companies/me/jobs/42/applications/a1/cv/download-url");
+      assert.equal(init.cache, "no-store");
+      assert.match(new Headers(init.headers).get("Accept") || "", /application\/pdf/);
+      assert.match(new Headers(init.headers).get("Accept") || "", /application\/json/);
+      return new Response("cv-bytes", { headers: { "Content-Type": contentType } });
     });
-  });
-  assert.deepEqual(await getApplicationCvDownloadUrl(42, "a1"), {
-    url: "https://res.cloudinary.com/demo/raw/authenticated/cv.docx",
-    expiresAt: "2026-12-10T08:00:00Z",
-    fileName: "cv.docx",
-  });
-  mock(() =>
-    response({
-      url: "javascript:alert(1)",
-      expiresAt: "2026-12-10T08:00:00Z",
-      fileName: "cv.docx",
-    }),
+    const blob = await getApplicationCvDownload(42, "a1");
+    assert.equal(blob.type, contentType);
+    assert.equal(await blob.text(), "cv-bytes");
+  }
+  mock(() => Response.json({ status: 404, message: "Not found", data: null }, { status: 404 }));
+  await assert.rejects(
+    getApplicationCvDownload(42, "a1"),
+    (error) => error instanceof ApiError && error.status === 404,
   );
-  await assert.rejects(getApplicationCvDownloadUrl(42, "a1"), ApiError);
+  mock(() => new Response("<html>Error</html>", { headers: { "Content-Type": "text/html" } }));
+  await assert.rejects(getApplicationCvDownload(42, "a1"), ApiError);
+  mock(() => new Response("", { headers: { "Content-Type": "application/pdf" } }));
+  await assert.rejects(getApplicationCvDownload(42, "a1"), ApiError);
 });
 
 test("status change sends version and keeps private and candidate text in separate fields", async () => {
@@ -300,7 +303,7 @@ test("suspension blocks every job-scoped application read, mutation and CV reque
     () => getRecruiterApplication(42, "a1"),
     () => changeApplicationStatus(42, "a1", { status: "UNDER_REVIEW", version: 0 }),
     () => getApplicationPdf(42, "a1"),
-    () => getApplicationCvDownloadUrl(42, "a1"),
+    () => getApplicationCvDownload(42, "a1"),
   ])
     await assert.rejects(operation, /đã bị đình chỉ/);
   assert.equal(calls, 0);

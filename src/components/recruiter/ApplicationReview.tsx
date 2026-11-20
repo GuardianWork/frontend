@@ -27,7 +27,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/compone
 import { ApiError } from "@/services/api";
 import {
   changeApplicationStatus,
-  getApplicationCvDownloadUrl,
+  getApplicationCvDownload,
   getApplicationPdf,
   getRecruiterApplication,
   type ApplicationDetail,
@@ -69,6 +69,13 @@ function cvErrorMessage(error: unknown) {
   if (status === 503) return "Dịch vụ lưu trữ CV tạm thời không khả dụng. Vui lòng thử lại sau.";
   return "Không thể tải CV. Vui lòng thử lại.";
 }
+function downloadErrorMessage(error: unknown) {
+  const status = error instanceof ApiError ? error.status : 0;
+  if (status === 401) return "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
+  if (status === 404 || status === 403) return "CV không còn khả dụng hoặc quyền xem đã kết thúc.";
+  if (status === 503) return "Dịch vụ lưu trữ CV tạm thời không khả dụng. Vui lòng thử lại sau.";
+  return "Không thể tải CV. Vui lòng thử lại.";
+}
 
 function PdfViewer({ detail }: { detail: ApplicationDetail }) {
   const [requested, setRequested] = useState(false);
@@ -107,8 +114,15 @@ function PdfViewer({ detail }: { detail: ApplicationDetail }) {
     setDownloading(true);
     setDownloadError(undefined);
     try {
-      const result = await getApplicationCvDownloadUrl(detail.jobId, detail.id);
-      window.open(result.url, "_blank", "noopener,noreferrer");
+      const blob = await getApplicationCvDownload(detail.jobId, detail.id);
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = detail.cvFileName || "CV";
+      document.body.append(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
     } catch (reason: unknown) {
       setDownloadError(reason);
     } finally {
@@ -126,7 +140,7 @@ function PdfViewer({ detail }: { detail: ApplicationDetail }) {
       onClick={() => void download()}
     >
       <Download size={16} aria-hidden="true" />
-      {downloading ? "Đang tạo liên kết…" : "Tải xuống CV"}
+      {downloading ? "Đang tải xuống…" : "Tải xuống CV"}
     </button>
   );
   return (
@@ -239,7 +253,7 @@ function PdfViewer({ detail }: { detail: ApplicationDetail }) {
           )}
           {Boolean(downloadError) && (
             <div className="application-file-download-error" role="alert">
-              <p>{cvErrorMessage(downloadError)}</p>
+              <p>{downloadErrorMessage(downloadError)}</p>
             </div>
           )}
         </div>
