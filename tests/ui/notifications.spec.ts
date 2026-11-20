@@ -63,16 +63,16 @@ test.describe("notification inbox", () => {
     const card = page.locator('.application-card[data-targeted="true"]');
     await expect(card).toHaveCount(1);
     await expect(card.locator(".application-card__title")).toHaveText("Kỹ sư Backend (Go)");
-    await expect(card.locator(".application-card__status")).toHaveAttribute("aria-expanded", "true");
+    await expect(card.locator(".application-card__status")).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
     await expect(card.locator(".application-card__receipt")).toBeVisible();
     await expect(card.locator(".application-progress__event")).not.toHaveCount(0);
     await expect(card.locator(".application-card__status")).toBeFocused();
   });
 
-  test("opens an application that sits on a later ledger page", async ({
-    page,
-    mockApiUrl,
-  }) => {
+  test("opens an application that sits on a later ledger page", async ({ page, mockApiUrl }) => {
     const token = await loginThroughApi(mockApiUrl, "candidate_demo");
     await deliverNotification(mockApiUrl, token, {
       type: "APPLICATION_STATUS_CHANGED",
@@ -83,9 +83,7 @@ test.describe("notification inbox", () => {
     });
     await page.goto("/can/notifications", { waitUntil: "domcontentloaded" });
 
-    await page
-      .getByRole("button", { name: /Đơn ứng tuyển vừa cập nhật trạng thái/ })
-      .click();
+    await page.getByRole("button", { name: /Đơn ứng tuyển vừa cập nhật trạng thái/ }).click();
 
     await expect(page).toHaveURL(/\/can\/applied\?application=app-12$/);
     const card = page.locator('.application-card[data-targeted="true"]');

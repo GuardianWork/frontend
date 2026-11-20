@@ -312,12 +312,7 @@ test("mock API seeds GW-112 candidate CV and paused-application fixtures", async
   assert.equal(paused.data.canViewCv, true);
   assert.equal(paused.data.inactivityDeadline, null);
 
-  const download = await call(
-    "/candidate/applications/app-12/cv/download-url",
-    "GET",
-    null,
-    token,
-  );
+  const download = await call("/candidate/applications/app-12/cv/download-url", "GET", null, token);
   assert.equal(download.status, 200);
   assert.equal(download.data.fileName, "Nguyen_Van_An_Content_CV_2026.pdf");
   assert.match(download.data.url, /^\/api\/mock\//);

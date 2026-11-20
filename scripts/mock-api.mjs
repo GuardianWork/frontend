@@ -217,8 +217,16 @@ export function createMockApiServer() {
           inactivityDeadline: null,
           history: [
             { fromStatus: null, toStatus: "SUBMITTED", occurredAt: "2026-08-15T06:20:00Z" },
-            { fromStatus: "SUBMITTED", toStatus: "UNDER_REVIEW", occurredAt: "2026-08-18T03:00:00Z" },
-            { fromStatus: "UNDER_REVIEW", toStatus: "INACTIVE", occurredAt: "2026-10-15T03:00:00Z" },
+            {
+              fromStatus: "SUBMITTED",
+              toStatus: "UNDER_REVIEW",
+              occurredAt: "2026-08-18T03:00:00Z",
+            },
+            {
+              fromStatus: "UNDER_REVIEW",
+              toStatus: "INACTIVE",
+              occurredAt: "2026-10-15T03:00:00Z",
+            },
           ],
         },
       ],

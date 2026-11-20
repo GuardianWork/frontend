@@ -593,7 +593,9 @@ test("background polling keeps the inbox and open status menu mounted", async ({
   }
 });
 
-test("recruiter sees a paused application, can reopen it, and cannot read its CV", async ({ page }) => {
+test("recruiter sees a paused application, can reopen it, and cannot read its CV", async ({
+  page,
+}) => {
   const api = await setup(page);
   api.rows[0].status = "INACTIVE";
   api.rows[0].canViewCv = false;
