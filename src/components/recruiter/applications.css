@@ -309,16 +309,186 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+
+/* Submitted CV: one quiet document surface. The file's identity and its two
+   actions share the header, so the viewer never strands its own controls. */
+.application-file {
+  border: 1px solid var(--color-rule);
+  border-radius: 12px;
+  background: var(--color-paper);
+  overflow: hidden;
+}
+.application-file-head,
+.application-file--unavailable {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 14px 16px;
+  padding: 18px 20px;
+}
+.application-file-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: var(--color-paper-2);
+  color: var(--color-ink-2);
+}
+.application-file-copy {
+  flex: 1 1 320px;
+  min-width: 0;
+}
 .application-file-name {
+  margin: 0;
+  font-size: 15px;
   font-weight: 600;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.application-file-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 3px 0 0;
+  color: var(--color-ink-2);
+  font-size: 13px;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+.application-file-note {
+  margin: 10px 0 0;
+  max-width: 62ch;
+  color: var(--color-ink-2);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.application-file-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+.application-file-actions .jp-button {
+  white-space: nowrap;
+}
+.application-file-actions .jp-button:disabled:hover {
+  background: var(--color-paper);
+}
+.application-file-actions .jp-button.jp-primary:disabled:hover {
+  background: var(--color-accent);
+}
+.application-file-actions .jp-button.jp-primary {
+  color: var(--color-paper);
+}
+.application-file--unavailable {
+  background: var(--color-paper-2);
+}
+.application-file--unavailable .application-file-mark {
+  background: var(--color-paper);
+}
+.application-file-viewer {
+  border-top: 1px solid var(--color-rule);
+  background: var(--color-paper-2);
+  animation: application-file-reveal 180ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .application-pdf {
   display: block;
   width: 100%;
-  height: 440px;
-  border: 1px solid #e4e2e0;
-  border-radius: 8px;
-  margin: 16px 0 12px;
+  height: clamp(420px, 70vh, 760px);
+  margin: 0;
+  border: 0;
+  background: var(--color-paper);
+}
+.application-file-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 200px;
+  padding: 28px 24px;
+  color: var(--color-ink-2);
+  text-align: center;
+}
+.application-file-state p {
+  margin: 0;
+  color: inherit;
+  font-size: 14px;
+}
+.application-file-state--error {
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 14px;
+  min-height: 0;
+  padding: 20px 24px;
+  background: var(--color-attention-ground);
+  color: var(--color-ink);
+  text-align: left;
+}
+.application-file-state--error p {
+  color: inherit;
+}
+/* The workspace attention notice is a free-standing panel. Inside the CV
+   surface it becomes a flush state row so the card never nests a second card. */
+.workspace-page .application-file .application-file-state--error[role="alert"],
+.workspace-page .application-file [role="alert"].application-file-download-error {
+  min-height: 0;
+  margin: 0;
+  border-radius: 0;
+  background: var(--color-attention-ground);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.workspace-page .application-file .application-file-state--error[role="alert"] {
+  padding: 24px 24px 24px 58px;
+}
+.workspace-page .application-file .application-file-state--error[role="alert"]::before {
+  inset-block-start: 26px;
+}
+.workspace-page .application-file [role="alert"].application-file-download-error {
+  padding: 14px 20px 14px 52px;
+  border-top: 1px solid var(--color-rule);
+}
+.workspace-page .application-file [role="alert"].application-file-download-error::before {
+  inset-block-start: 16px;
+  inset-inline-start: 20px;
+  width: 16px;
+  height: 16px;
+}
+.application-file-spinner {
+  color: var(--color-accent);
+  animation: application-file-spin 900ms linear infinite;
+}
+.application-file-download-error {
+  padding: 12px 20px;
+  border-top: 1px solid var(--color-rule);
+  background: var(--color-attention-ground);
+}
+.application-file-download-error p {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: 13px;
+  line-height: 1.55;
+}
+@keyframes application-file-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes application-file-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 .application-history ol {
   list-style: none;
@@ -571,9 +741,6 @@
 }
 .application-review--page .application-long-text {
   max-width: 75ch;
-}
-.application-review--page .application-pdf {
-  height: 700px;
 }
 
 .application-hiring-confirmation {

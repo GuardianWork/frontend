@@ -8,6 +8,7 @@ export interface CandidateCv {
   fileSize: number;
   contentType: string;
   publicId: string;
+  accessMode: string;
   isDefault: boolean;
   createdAt: string;
   updatedAt: string;
@@ -19,6 +20,7 @@ export interface UploadSignature {
   timestamp: string;
   signature: string;
   publicId: string;
+  accessMode: string;
 }
 
 export interface DownloadUrl {
@@ -41,6 +43,7 @@ function mapCv(value: unknown): CandidateCv {
     fileSize: Number(cv.fileSize ?? 0),
     contentType: cv.contentType ?? "",
     publicId: cv.publicId ?? "",
+    accessMode: cv.accessMode ?? "",
     isDefault: Boolean(cv.isDefault),
     createdAt: cv.createdAt ?? new Date().toISOString(),
     updatedAt: cv.updatedAt ?? new Date().toISOString(),
@@ -68,6 +71,9 @@ export async function requestCvUploadUrl(): Promise<UploadSignature> {
     timestamp: value.timestamp ?? "",
     signature: value.signature ?? "",
     publicId: value.publicId,
+    // New uploads must be delivered as authenticated assets. Older deployments
+    // omit the field, so retain the fail-closed default the backend signs.
+    accessMode: value.accessMode ?? "authenticated",
   };
 }
 
@@ -94,6 +100,7 @@ export function uploadToCloudinary(
     form.append("timestamp", signature.timestamp);
     form.append("signature", signature.signature);
     form.append("public_id", signature.publicId);
+    form.append("access_mode", signature.accessMode);
 
     const xhr = new XMLHttpRequest();
     xhr.open("POST", signature.url);

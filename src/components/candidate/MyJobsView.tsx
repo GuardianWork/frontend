@@ -8,11 +8,14 @@ import {
   Building2,
   CalendarClock,
   ChevronDown,
+  Download,
   FileText,
   Loader2,
   MapPin,
+  RotateCw,
   SearchX,
   ShieldAlert,
+  Undo2,
 } from "lucide-react";
 import { AdminPagination } from "@/components/admin/AdminPagination";
 import { ApplicationIcon, SearchIcon } from "@/components/icons";
@@ -20,6 +23,8 @@ import { useLanguage } from "@/context/LanguageContext";
 import { ApiError } from "@/services/api";
 import {
   getCandidateApplication,
+  getCandidateApplicationCvDownloadUrl,
+  locateApplicationPage,
   withdrawApplication,
   listApplicationCounts,
   listApplicationPage,
@@ -89,6 +94,15 @@ const STATUS_META: Record<
     viDetail: "Đơn ứng tuyển đã được rút khỏi quy trình tuyển dụng.",
     enDetail: "This application has been withdrawn from the hiring process.",
   },
+  INACTIVE: {
+    vi: "Tạm dừng xử lý",
+    en: "Processing paused",
+    tone: "neutral",
+    viDetail:
+      "Đơn đang tạm dừng xử lý vì công ty chưa cập nhật trạng thái trong thời gian dài. Bạn vẫn có thể rút đơn hoặc chờ công ty mở lại.",
+    enDetail:
+      "This application is paused because the company has not updated its status for a long time. You can still withdraw or wait for the company to reopen it.",
+  },
 };
 
 const STATUS_FILTERS = [
@@ -96,6 +110,7 @@ const STATUS_FILTERS = [
   { value: "SUBMITTED", vi: "Đã ứng tuyển", en: "Submitted" },
   { value: "UNDER_REVIEW", vi: "Đang xem xét", en: "Under review" },
   { value: "INTERVIEWING", vi: "Phỏng vấn", en: "Interviewing" },
+  { value: "INACTIVE", vi: "Tạm dừng xử lý", en: "Processing paused" },
   { value: "HIRED", vi: "Đã tuyển", en: "Hired" },
   { value: "REJECTED", vi: "Đã từ chối", en: "Rejected" },
   { value: "WITHDRAWN", vi: "Đã rút", en: "Withdrawn" },
@@ -106,6 +121,7 @@ const STATUS_COUNT_KEYS = {
   SUBMITTED: "submitted",
   UNDER_REVIEW: "underReview",
   INTERVIEWING: "interviewing",
+  INACTIVE: "inactive",
   HIRED: "hired",
   REJECTED: "rejected",
   WITHDRAWN: "withdrawn",
@@ -139,6 +155,17 @@ function formatDate(value: string, locale: "vn" | "en") {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
+  }).format(date);
+}
+
+/** Clock time for history events, so same-day changes stay distinguishable. */
+function formatTime(value: string, locale: "vn" | "en") {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
   }).format(date);
 }
 
@@ -182,6 +209,8 @@ function ApplicationProgress({ id, en }: { id: string; en: boolean }) {
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>();
+  const [downloadingCv, setDownloadingCv] = useState(false);
+  const [cvError, setCvError] = useState(false);
   const lock = useRef(false);
   const withdrawTrigger = useRef<HTMLButtonElement>(null);
   const query = useQuery({
@@ -193,7 +222,22 @@ function ApplicationProgress({ id, en }: { id: string; en: boolean }) {
   });
   const detail = query.data;
   const active =
-    detail && ["SUBMITTED", "UNDER_REVIEW", "SHORTLISTED", "INTERVIEWING"].includes(detail.status);
+    detail &&
+    ["SUBMITTED", "UNDER_REVIEW", "SHORTLISTED", "INTERVIEWING", "INACTIVE"].includes(
+      detail.status,
+    );
+  // History reads newest → oldest regardless of the order the API returns.
+  const events = useMemo(() => {
+    const history = detail?.history ?? [];
+    return history
+      .map((event, index) => ({ event, index }))
+      .sort((a, b) => {
+        const difference = Date.parse(b.event.occurredAt) - Date.parse(a.event.occurredAt);
+        return difference !== 0 ? difference : a.index - b.index;
+      })
+      .map(({ event }) => event);
+  }, [detail]);
+  const headingId = useId();
   const message = (reason: unknown) =>
     reason instanceof ApiError && reason.status === 409
       ? en
@@ -203,51 +247,126 @@ function ApplicationProgress({ id, en }: { id: string; en: boolean }) {
         ? "Application unavailable. Reload to try again."
         : "Đơn ứng tuyển chưa khả dụng. Tải lại để thử lại.";
   return (
-    <section
-      className="candidate-application-progress"
-      aria-label={en ? "Application progress" : "Tiến trình ứng tuyển"}
-    >
-      {query.isFetching && <p role="status">{en ? "Loading progress…" : "Đang tải tiến trình…"}</p>}
+    <section className="candidate-application-progress" aria-labelledby={headingId}>
+      <h3 className="application-progress__title" id={headingId}>
+        {en ? "Status history" : "Lịch sử trạng thái"}
+      </h3>
+      {query.isFetching && !detail && (
+        <div className="application-progress__loading">
+          <p role="status" className="sr-only">
+            {en ? "Loading progress…" : "Đang tải tiến trình…"}
+          </p>
+          <span className="application-progress__skeleton" aria-hidden="true" />
+          <span className="application-progress__skeleton" aria-hidden="true" />
+        </div>
+      )}
       {(query.isError || Boolean(error)) && (
-        <div role="alert">
+        <div className="application-progress__error" role="alert">
           <p>{message(query.error || error)}</p>
           <button
-            className="jp-button"
+            type="button"
+            className="application-progress__action"
             disabled={busy}
             onClick={() => {
               setError(undefined);
               void query.refetch();
             }}
           >
+            <RotateCw size={15} aria-hidden="true" />
             {en ? "Reload status" : "Tải lại trạng thái"}
           </button>
         </div>
       )}
       {detail && !query.isError && !error && (
         <>
-          <h3>{en ? "Status history" : "Lịch sử trạng thái"}</h3>
-          <ol>
-            {detail.history?.map((event, index) => (
-              <li key={`${event.occurredAt}:${index}`}>
-                <strong>
-                  {en ? statusMeta(event.toStatus).en : statusMeta(event.toStatus).vi}
-                </strong>
-                <time dateTime={event.occurredAt}>
-                  {formatDate(event.occurredAt, en ? "en" : "vn")}
-                </time>
-                {event.candidateFeedback && <p>{event.candidateFeedback}</p>}
-              </li>
-            ))}
-          </ol>
-          {active && (
-            <button
-              ref={withdrawTrigger}
-              className="jp-button"
-              disabled={query.isFetching || busy}
-              onClick={() => setConfirm(true)}
-            >
-              {en ? "Withdraw application" : "Rút đơn ứng tuyển"}
-            </button>
+          {events.length > 0 ? (
+            <ol className="application-progress__timeline">
+              {events.map((event, index) => {
+                const meta = statusMeta(event.toStatus);
+                const latest = index === 0;
+                return (
+                  <li
+                    key={`${event.occurredAt}:${index}`}
+                    className="application-progress__event"
+                    data-latest={latest || undefined}
+                  >
+                    <div className="application-progress__event-head">
+                      <span className={`status-tag status-tag--${meta.tone}`}>
+                        {en ? meta.en : meta.vi}
+                      </span>
+                      <time dateTime={event.occurredAt}>
+                        {formatDate(event.occurredAt, en ? "en" : "vn")}
+                        <span className="application-progress__clock">
+                          {formatTime(event.occurredAt, en ? "en" : "vn")}
+                        </span>
+                      </time>
+                    </div>
+                    {event.candidateFeedback ? (
+                      <p className="application-progress__feedback">{event.candidateFeedback}</p>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ol>
+          ) : (
+            <p className="application-progress__empty">
+              {en ? "No status history yet." : "Chưa có lịch sử trạng thái."}
+            </p>
+          )}
+
+          {((detail.canViewCv && detail.cvFileName) || active) && (
+            <div className="application-progress__actions">
+              {detail.canViewCv && detail.cvFileName ? (
+                <button
+                  type="button"
+                  className="application-progress__action"
+                  disabled={busy || downloadingCv}
+                  onClick={async () => {
+                    if (downloadingCv) return;
+                    setDownloadingCv(true);
+                    setCvError(false);
+                    try {
+                      const result = await getCandidateApplicationCvDownloadUrl(id);
+                      window.open(result.url, "_blank", "noopener,noreferrer");
+                    } catch {
+                      setCvError(true);
+                    } finally {
+                      setDownloadingCv(false);
+                    }
+                  }}
+                >
+                  {downloadingCv ? (
+                    <Loader2 size={15} className="my-jobs-spinner" aria-hidden="true" />
+                  ) : (
+                    <Download size={15} aria-hidden="true" />
+                  )}
+                  {downloadingCv
+                    ? en
+                      ? "Creating link…"
+                      : "Đang tạo liên kết…"
+                    : en
+                      ? "Download submitted CV"
+                      : "Tải CV đã gửi"}
+                </button>
+              ) : null}
+              {active && (
+                <button
+                  ref={withdrawTrigger}
+                  type="button"
+                  className="application-progress__action application-progress__action--withdraw"
+                  disabled={query.isFetching || busy}
+                  onClick={() => setConfirm(true)}
+                >
+                  <Undo2 size={15} aria-hidden="true" />
+                  {en ? "Withdraw application" : "Rút đơn ứng tuyển"}
+                </button>
+              )}
+            </div>
+          )}
+          {cvError && (
+            <p className="application-progress__notice" role="alert">
+              {en ? "The submitted CV is no longer available." : "CV đã gửi không còn khả dụng."}
+            </p>
           )}
         </>
       )}
@@ -278,12 +397,18 @@ function ApplicationProgress({ id, en }: { id: string; en: boolean }) {
               ? "This ends your participation. You cannot reopen or reapply to this posting. The company will lose access to your submitted contact details, cover letter and CV."
               : "Bạn sẽ kết thúc quy trình ứng tuyển và không thể mở lại hoặc ứng tuyển lại tin này. Doanh nghiệp sẽ không còn xem được thông tin liên hệ, thư ứng tuyển và CV đã gửi."}
           </DialogDescription>
-          <div className="flex justify-end gap-3">
-            <button className="jp-button" disabled={busy} onClick={() => setConfirm(false)}>
+          <div className="application-progress__dialog-actions">
+            <button
+              type="button"
+              className="application-progress__dialog-action"
+              disabled={busy}
+              onClick={() => setConfirm(false)}
+            >
               {en ? "Keep application" : "Giữ đơn ứng tuyển"}
             </button>
             <button
-              className="jp-button"
+              type="button"
+              className="application-progress__dialog-action application-progress__dialog-action--confirm"
               disabled={busy || !active}
               onClick={async () => {
                 if (lock.current || !detail) return;
@@ -327,13 +452,37 @@ function ApplicationProgress({ id, en }: { id: string; en: boolean }) {
 function ApplicationCard({
   application,
   locale,
+  focused = false,
 }: {
   application: SubmittedApplication;
   locale: "vn" | "en";
+  /** Opened by a notification deep link, which also brings the card into view. */
+  focused?: boolean;
 }) {
   const en = locale === "en";
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(focused);
+  const cardRef = useRef<HTMLLIElement>(null);
+  const statusRef = useRef<HTMLButtonElement>(null);
+  const entered = useRef(false);
   const receiptId = `application-receipt-${useId()}`;
+
+  // A notification deep link arrives with its application already expanded. The
+  // card is revealed once, after the workspace has reset its own scroll, so the
+  // status the notification is about is the first thing in view.
+  useEffect(() => {
+    if (!focused || entered.current) return;
+    setOpen(true);
+    const frame = window.requestAnimationFrame(() => {
+      entered.current = true;
+      const node = cardRef.current;
+      if (!node) return;
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      node.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" });
+      statusRef.current?.focus({ preventScroll: true });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [focused]);
+
   const status = statusMeta(application.status);
   const statusLabel = en ? status.en : status.vi;
   const statusDetail = en ? status.enDetail : status.viDetail;
@@ -365,7 +514,11 @@ function ApplicationCard({
 
   const jobHref = application.jobId > 0 ? { job: String(application.jobId) } : null;
   return (
-    <li className={`application-card${deadlinePassed ? " application-card--expired" : ""}`}>
+    <li
+      ref={cardRef}
+      className={`application-card${deadlinePassed ? " application-card--expired" : ""}`}
+      data-targeted={focused || undefined}
+    >
       <div className="application-card__head">
         <span className="application-card__mark" aria-hidden="true">
           <Building2 size={48} className="default-company-avatar" aria-label="Company" />
@@ -418,6 +571,7 @@ function ApplicationCard({
       </div>
 
       <button
+        ref={statusRef}
         type="button"
         className="application-card__status"
         aria-expanded={open}
@@ -483,16 +637,33 @@ function LoadingCards({ en }: { en: boolean }) {
   );
 }
 
-export function MyJobsView() {
+export function MyJobsView({ focusApplicationId }: { focusApplicationId?: string }) {
   const { locale } = useLanguage();
   const en = locale === "en";
   const [input, setInput] = useState("");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(0);
+  const focusId = focusApplicationId?.trim() ?? "";
+  /** Search or status filter already cleared for the current deep link. */
+  const focusCleared = useRef<string | null>(null);
+  /** Deep link already resolved to its ledger page. */
+  const focusJumped = useRef<string | null>(null);
 
   const invalid = Array.from(input.trim()).length > MAX_SEARCH_LENGTH;
   const waiting = input.trim() !== search;
+
+  // A deep link names one application, which the current search or status filter
+  // could hide. Start from the complete ledger so the application can be found.
+  useEffect(() => {
+    if (!focusId || focusCleared.current === focusId) return;
+    focusCleared.current = focusId;
+    focusJumped.current = null;
+    setInput("");
+    setSearch("");
+    setStatus("");
+    setPage(0);
+  }, [focusId]);
 
   useEffect(() => {
     if (invalid) return;
@@ -539,6 +710,40 @@ export function MyJobsView() {
   const statusCode = result.error instanceof ApiError ? result.error.status : 0;
   const hasFilters = Boolean(search || status);
   const totalElements = data?.totalElements ?? 0;
+
+  // The linked application may sit on any ledger page. Only asked for when the
+  // visible page does not already hold it, so an ordinary visit stays one request.
+  const focusInPage =
+    Boolean(focusId) && (data?.items.some((item) => item.id === focusId) ?? false);
+  const locateResult = useQuery({
+    queryKey: ["candidate-application-locate", focusId, PAGE_SIZE],
+    queryFn: ({ signal }) => locateApplicationPage(focusId, { pageSize: PAGE_SIZE, signal }),
+    enabled: Boolean(focusId) && !focusInPage,
+    retry: false,
+    staleTime: Infinity,
+    gcTime: 60_000,
+  });
+
+  useEffect(() => {
+    if (!focusId) return;
+    if (focusInPage) {
+      focusJumped.current = focusId;
+      return;
+    }
+    if (focusJumped.current === focusId) return;
+    const target = locateResult.data;
+    if (!target) return;
+    // Resolved once: turning pages afterwards stays the candidate's choice.
+    focusJumped.current = focusId;
+    if (target.page !== page) setPage(target.page);
+  }, [focusId, focusInPage, locateResult.data, page]);
+
+  const focusMissing =
+    Boolean(focusId) &&
+    !focusInPage &&
+    data !== undefined &&
+    !locateResult.isFetching &&
+    locateResult.data === null;
 
   const errorMessage = useMemo(() => {
     if (!result.isError) return "";
@@ -702,6 +907,14 @@ export function MyJobsView() {
           </p>
         </div>
 
+        {focusMissing && (
+          <p className="my-jobs-focus-note" role="status">
+            {en
+              ? "The application from that notification is not in your list. Every other application is shown below."
+              : "Không tìm thấy đơn ứng tuyển từ thông báo. Các đơn còn lại vẫn được hiển thị bên dưới."}
+          </p>
+        )}
+
         {result.isError && !waiting && !invalid ? (
           <div className="my-jobs-state" role="alert">
             <span className="my-jobs-state__icon is-error" aria-hidden="true">
@@ -762,7 +975,12 @@ export function MyJobsView() {
           <>
             <ul className="application-card-list" aria-busy={result.isFetching}>
               {data.items.map((application) => (
-                <ApplicationCard key={application.id} application={application} locale={locale} />
+                <ApplicationCard
+                  key={application.id}
+                  application={application}
+                  locale={locale}
+                  focused={Boolean(focusId) && application.id === focusId}
+                />
               ))}
             </ul>
             {data.totalPages > 1 && (

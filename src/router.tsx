@@ -2,6 +2,7 @@ import { captureInvitationLink } from "./services/invitationLink";
 import { captureMemberEmailSecret, captureLegacyRegistrationLink } from "./lib/member-email-secret";
 import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
+import { stringifySearchParams } from "./lib/search-serialization";
 import { routeTree } from "./routeTree.gen";
 
 export const getRouter = () => {
@@ -18,6 +19,7 @@ export const getRouter = () => {
     context: { queryClient },
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
+    stringifySearch: stringifySearchParams,
   });
 
   return router;

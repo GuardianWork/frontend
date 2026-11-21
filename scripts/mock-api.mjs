@@ -47,6 +47,7 @@ export function createMockApiServer() {
   }));
   const candidateProfiles = new Map();
   const candidateCvs = new Map();
+  const cvAssets = new Map();
   const candidateApplications = new Map([
     [
       1,
@@ -63,6 +64,10 @@ export function createMockApiServer() {
           location: "TP. Hồ Chí Minh",
           workMode: "ONSITE",
           deadline: "2026-11-30",
+          version: 1,
+          canViewCv: true,
+          reviewWindowEndsAt: null,
+          inactivityDeadline: "2026-11-29T09:00:00Z",
         },
         {
           id: "app-02",
@@ -193,6 +198,36 @@ export function createMockApiServer() {
           location: "TP. Hồ Chí Minh",
           workMode: "HYBRID",
           deadline: "2026-09-30",
+        },
+        {
+          id: "app-12",
+          jobId: 112,
+          jobTitle: "Chuyên viên Nội dung",
+          companyId: 112,
+          companyName: "Công ty Cổ phần Truyền thông Bình Minh",
+          status: "INACTIVE",
+          appliedAt: "2026-08-15T06:20:00Z",
+          cvFileName: "Nguyen_Van_An_Content_CV_2026.pdf",
+          location: "TP. Hồ Chí Minh",
+          workMode: "HYBRID",
+          deadline: "2026-09-15",
+          version: 2,
+          canViewCv: true,
+          reviewWindowEndsAt: null,
+          inactivityDeadline: null,
+          history: [
+            { fromStatus: null, toStatus: "SUBMITTED", occurredAt: "2026-08-15T06:20:00Z" },
+            {
+              fromStatus: "SUBMITTED",
+              toStatus: "UNDER_REVIEW",
+              occurredAt: "2026-08-18T03:00:00Z",
+            },
+            {
+              fromStatus: "UNDER_REVIEW",
+              toStatus: "INACTIVE",
+              occurredAt: "2026-10-15T03:00:00Z",
+            },
+          ],
         },
       ],
     ],
@@ -408,6 +443,65 @@ export function createMockApiServer() {
       description: null,
     },
   ];
+  // GW-112 mock fixtures: one live CV library with authenticated objects.
+  const demoCandidateProfileId = "candidate-demo-profile";
+  candidateProfiles.set(1, {
+    id: demoCandidateProfileId,
+    userId: 1,
+    email: "candidate@example.test",
+    fullName: "Nguyễn Văn An",
+    avatarUrl: "https://api.dicebear.com/7.x/notionists/svg?seed=Nguyen Van An (Alex)",
+    phoneNumber: "+84987654321",
+    skills: seededSkills,
+    experience: seededExperience,
+    education: seededEducation,
+    isPublic: true,
+    createdAt: "2026-08-01T02:00:00Z",
+    updatedAt: "2026-10-01T02:00:00Z",
+  });
+  const demoPdfBytes = Buffer.from(
+    "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 595 842]>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF",
+    "utf8",
+  );
+  const demoCvs = [
+    {
+      id: "cv-demo-default",
+      candidateId: demoCandidateProfileId,
+      fileName: "Nguyen_Van_An_CV.pdf",
+      fileSize: demoPdfBytes.length,
+      contentType: "application/pdf",
+      publicId: `candidates/${demoCandidateProfileId}/cvs/demo-default`,
+      accessMode: "authenticated",
+      isDefault: true,
+      createdAt: "2026-08-01T02:10:00Z",
+      updatedAt: "2026-08-01T02:10:00Z",
+    },
+    {
+      id: "cv-demo-portfolio",
+      candidateId: demoCandidateProfileId,
+      fileName: "GuardianWork_Portfolio.docx",
+      fileSize: 128000,
+      contentType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      publicId: `candidates/${demoCandidateProfileId}/cvs/demo-portfolio`,
+      accessMode: "authenticated",
+      isDefault: false,
+      createdAt: "2026-08-02T02:10:00Z",
+      updatedAt: "2026-08-02T02:10:00Z",
+    },
+  ];
+  candidateCvs.set(1, demoCvs);
+  for (const cv of demoCvs) {
+    const extension = cv.fileName.split(".").pop()?.toLowerCase() || "pdf";
+    const bytes = extension === "pdf" ? demoPdfBytes : Buffer.from("GuardWork mock DOCX\n", "utf8");
+    cvAssets.set(cv.publicId, {
+      publicId: cv.publicId,
+      fileName: cv.fileName,
+      bytes,
+      size: extension === "pdf" ? bytes.length : cv.fileSize,
+      contentType: cv.contentType,
+      extension,
+    });
+  }
   const accountProofs = new Map();
   const stateOf = (user) => user.selfServiceState || "ACTIVE";
   function revokeSessions(user) {
@@ -1432,7 +1526,9 @@ export function createMockApiServer() {
           return;
         }
         if (
-          !["SUBMITTED", "UNDER_REVIEW", "SHORTLISTED", "INTERVIEWING"].includes(application.status)
+          !["SUBMITTED", "UNDER_REVIEW", "SHORTLISTED", "INTERVIEWING", "INACTIVE"].includes(
+            application.status,
+          )
         ) {
           send(400, "APPLICATION_IS_TERMINAL");
           return;
@@ -1448,7 +1544,31 @@ export function createMockApiServer() {
         send(404, "NOT_FOUND");
         return;
       }
-      send(200, "Application detail", application);
+      send(200, "Application detail", {
+        ...application,
+        canViewCv: application.canViewCv !== false,
+        reviewWindowEndsAt: application.reviewWindowEndsAt ?? null,
+        inactivityDeadline:
+          application.status === "INACTIVE" ? null : (application.inactivityDeadline ?? null),
+      });
+      return;
+    }
+
+    const candidateApplicationCvMatch =
+      /^\/api\/candidate\/applications\/([^/]+)\/cv\/download-url$/.exec(path);
+    if (req.method === "GET" && candidateApplicationCvMatch) {
+      const application = (candidateApplications.get(user.id) || []).find(
+        (item) => item.id === candidateApplicationCvMatch[1],
+      );
+      if (!application || application.canViewCv === false || !application.cvFileName) {
+        send(404, "CV_NOT_FOUND");
+        return;
+      }
+      send(200, "Download URL", {
+        url: "/api/mock/certificate.pdf",
+        expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+        fileName: application.cvFileName,
+      });
       return;
     }
 
@@ -1464,6 +1584,7 @@ export function createMockApiServer() {
           "HIRED",
           "REJECTED",
           "WITHDRAWN",
+          "INACTIVE",
         ].includes(status)
       ) {
         send(400, "40001 INVALID_STATUS");
@@ -1518,6 +1639,8 @@ export function createMockApiServer() {
       const items = candidateNotifications.get(user.id) || [];
       const id = String(items.reduce((max, item) => Math.max(max, Number(item.id) || 0), 0) + 1);
       items.push({
+        ...(body.applicationId ? { applicationId: String(body.applicationId) } : {}),
+        ...(body.action && typeof body.action === "object" ? { action: body.action } : {}),
         id,
         audience,
         type: body.type || "ANNOUNCEMENT_PUBLISHED",

@@ -185,6 +185,7 @@ test("rejects a notification without an id", () => {
 
 test("maps event keys to categories", () => {
   assert.equal(categoryForType("APPLICATION_REJECTED"), "application");
+  assert.equal(categoryForType("APPLICATION_INACTIVE"), "application");
   assert.equal(categoryForType("job_closed"), "job");
   assert.equal(categoryForType("COMPANY_VERIFIED"), "company");
   assert.equal(categoryForType("MEMBERSHIP_REMOVED"), "company");
@@ -317,7 +318,10 @@ test("resolves backend action hrefs to portal routes", () => {
     action: { href: "/applications/app-9" },
     references: { job: "5", application: "app-9" },
   });
-  assert.deepEqual(resolveNotificationPath(application, "can"), { to: "/can/applied" });
+  assert.deepEqual(resolveNotificationPath(application, "can"), {
+    to: "/can/applied",
+    search: { application: "app-9" },
+  });
   assert.deepEqual(resolveNotificationPath(application, "rec"), {
     to: "/rec/applications/$jobId/$applicationId",
     params: { jobId: "5", applicationId: "app-9" },
@@ -332,6 +336,21 @@ test("resolves backend action hrefs to portal routes", () => {
     action: { href: "/applications/app-9" },
   });
   assert.deepEqual(resolveNotificationPath(listed, "rec"), { to: "/rec/applications" });
+
+  // Rows without a resolved action href still open the application they name.
+  const referenced = parseNotification({
+    id: "7",
+    audience: "CANDIDATE",
+    type: "APPLICATION_STATUS_CHANGED",
+    category: "application",
+    createdAt: ISO,
+    applicationId: "app-11",
+  });
+  assert.deepEqual(resolveNotificationPath(referenced, "can"), {
+    to: "/can/applied",
+    search: { application: "app-11" },
+  });
+  assert.equal(resolveNotificationPath(referenced, "rec"), null);
 
   const company = parseNotification({
     id: "4",

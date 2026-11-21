@@ -612,6 +612,190 @@ body {
   outline: 3px solid var(--color-accent);
   outline-offset: 3px;
 }
+/* Loading placeholders: same geometry as the listing and detail they stand in for. */
+.career-skeleton__card,
+.career-skeleton {
+  --skeleton-surface: color-mix(in oklab, var(--color-paper-3) 84%, var(--color-rule-2));
+}
+.career-skeleton__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 22px;
+  border: 1px solid var(--color-rule);
+  border-radius: 12px;
+  background: var(--color-paper);
+}
+.career-skeleton__bar {
+  display: block;
+  height: 12px;
+  border-radius: 6px;
+  background: var(--skeleton-surface, var(--color-paper-3));
+}
+.career-skeleton__mark {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 9px;
+  background: var(--skeleton-surface, var(--color-paper-3));
+}
+.career-skeleton__mark--lg {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+}
+.career-skeleton__pill {
+  flex-shrink: 0;
+  width: 104px;
+  height: 20px;
+  border-radius: 5px;
+  background: var(--skeleton-surface, var(--color-paper-3));
+}
+.career-skeleton__dot {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--skeleton-surface, var(--color-paper-3));
+}
+.career-skeleton__company {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.career-skeleton__title {
+  display: grid;
+  gap: 9px;
+  margin-block: 18px 10px;
+}
+.career-skeleton__title--detail {
+  gap: 12px;
+  margin-block: 4px 0;
+}
+.career-skeleton__salary {
+  margin-top: auto;
+}
+.career-skeleton__location {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-block: 12px 18px;
+}
+.career-skeleton__bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-rule);
+}
+/* One light pass per surface, staggered by --skeleton-delay. */
+.career-skeleton__card::after,
+.career-skeleton .career-detail__header::after,
+.career-skeleton .career-detail__main::after,
+.career-skeleton .career-apply-card::after,
+.career-skeleton .career-facts::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent 34%,
+    color-mix(in oklab, var(--color-paper) 72%, transparent) 50%,
+    transparent 66%
+  );
+  transform: translateX(-100%);
+  animation: career-skeleton-sheen 1.9s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  animation-delay: var(--skeleton-delay, 0ms);
+}
+@keyframes career-skeleton-sheen {
+  to {
+    transform: translateX(100%);
+  }
+}
+.career-skeleton .career-detail__header,
+.career-skeleton .career-detail__main,
+.career-skeleton .career-apply-card,
+.career-skeleton .career-facts {
+  position: relative;
+  overflow: hidden;
+}
+/* A short placeholder rail has room to stick; keep it aligned with the sheet instead. */
+.career-skeleton .career-detail__aside {
+  position: static;
+}
+.career-skeleton__stack {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+.career-skeleton__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 24px;
+}
+.career-skeleton__meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.career-skeleton__section {
+  display: grid;
+  gap: 10px;
+}
+.career-skeleton__heading {
+  margin-bottom: 4px;
+}
+.career-skeleton__note {
+  display: grid;
+  gap: 10px;
+  padding: 16px 18px;
+  border-radius: 12px;
+  background: var(--color-paper-2);
+}
+.career-skeleton__button {
+  display: block;
+  height: 48px;
+  margin-block: 4px;
+  border-radius: 8px;
+  background: var(--skeleton-surface, var(--color-paper-3));
+}
+.career-skeleton__meta-line {
+  width: 240px;
+  height: 11px;
+}
+.career-skeleton__back {
+  padding-block: 5px;
+  margin-bottom: 18px;
+}
+.career-skeleton__facts {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}.career-skeleton__fact {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--color-rule);
+}
+.career-skeleton__fact:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .career-skeleton__card::after,
+  .career-skeleton .career-detail__header::after,
+  .career-skeleton .career-detail__main::after,
+  .career-skeleton .career-apply-card::after,
+  .career-skeleton .career-facts::after {
+    display: none;
+  }
+}
 .career-fields {
   background: var(--color-paper-2);
   border-block: 1px solid var(--color-rule);

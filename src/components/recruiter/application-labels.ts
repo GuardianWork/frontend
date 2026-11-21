@@ -7,6 +7,7 @@ export const STATUS_LABELS: Record<ApplicationStatus, string> = {
   HIRED: "Đã tuyển",
   REJECTED: "Đã từ chối",
   WITHDRAWN: "Đã rút",
+  INACTIVE: "Tạm dừng",
 };
 export const REJECTION_LABELS: Record<RejectionReason, string> = {
   QUALIFICATIONS_MISMATCH: "Chuyên môn chưa phù hợp",
