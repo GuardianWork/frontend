@@ -357,6 +357,33 @@ export async function locateApplicationPage(
   return null;
 }
 
+/**
+ * Find the Candidate's application for one posting.
+ *
+ * The ledger is newest-first and only exposes paged reads, so an older application
+ * can sit past the default first page. Scan at the endpoint's maximum page size
+ * and stop on the first match. Every status counts: the backend refuses a second
+ * application for the same job even after a withdrawal.
+ */
+export async function findApplicationForJob(
+  jobId: string | number,
+  options: { signal?: AbortSignal } = {},
+): Promise<SubmittedApplication | null> {
+  const wanted = String(jobId).trim();
+  if (!wanted) return null;
+  for (let scan = 0; scan < MAX_LOCATE_REQUESTS; scan += 1) {
+    const result = await requestApplicationPage({
+      page: scan,
+      size: LOCATE_PAGE_SIZE,
+      signal: options.signal,
+    });
+    const match = result.items.find((application) => String(application.jobId) === wanted);
+    if (match) return candidateVisibleApplication(match);
+    if (result.pageNumber + 1 >= result.totalPages) return null;
+  }
+  return null;
+}
+
 export interface CandidateApplicationCounts {
   all: number;
   submitted: number;

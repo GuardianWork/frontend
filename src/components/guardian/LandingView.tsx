@@ -17,10 +17,14 @@ import {
   Calculator,
   Users,
   Truck,
+  SearchX,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
-import { JOBS } from "@/lib/job-listings";
+import { searchPublicJobs } from "@/services/publicJobs";
+import { toPublicJobItem } from "@/lib/public-job-item";
+import { useQuery } from "@tanstack/react-query";
 import { jobSearch } from "@/lib/job-search";
+import { JobListSkeleton } from "./JobSkeletons";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 
@@ -85,6 +89,18 @@ export function LandingView() {
   const [location, setLocation] = useState("");
   const [uploadedCv, setUploadedCv] = useState("");
   const [uploadError, setUploadError] = useState("");
+  // The landing catalogue reads the same published postings as /jobs, so the
+  // section never shows invented listings beside real ones.
+  const latestJobs = useQuery({
+    queryKey: ["landing-latest-jobs"],
+    queryFn: () => searchPublicJobs({ page: 0, size: 6 }),
+    refetchInterval: 10000,
+    refetchOnWindowFocus: "always",
+    refetchOnReconnect: "always",
+  });
+  const jobs = latestJobs.data?.content
+    ?.filter((job) => job.publicationStatus !== "SUSPENDED")
+    .map(toPublicJobItem);
   const search = (event: FormEvent) => {
     event.preventDefault();
     void navigate({ to: "/jobs", search: jobSearch({ q: query.trim(), location }) });
@@ -174,37 +190,87 @@ export function LandingView() {
           </div>
           <p className="career-demo-note">
             {en
-              ? "Sample job listings from the current product."
-              : "Các tin tuyển dụng mẫu trong sản phẩm hiện tại."}
+              ? "Current openings from companies hiring on GuardianWork."
+              : "Tin tuyển dụng đang mở từ các doanh nghiệp trên GuardianWork."}
           </p>
-          <div className="career-job-grid landing-job-list">
-            {JOBS.slice(0, 6).map((job) => (
-              <Link
-                key={job.id}
-                to="/jobs"
-                search={jobSearch({ job: job.id })}
-                className="career-job"
-              >
-                <div className="career-job__company">
-                  <span className="career-company-mark" aria-hidden="true">
-                    {job.company
-                      .split(" ")
-                      .map((word) => word[0])
-                      .slice(0, 2)
-                      .join("")}
-                  </span>
-                  <span>{job.company}</span>
-                </div>
-                <h3>{job.title}</h3>
-                <p className="career-job__salary">{job.salaryRange}</p>
-                <p className="career-job__location">{job.location}</p>
-                <div className="career-job__bottom">
-                  <span>{job.department}</span>
-                  <span>{en ? "View details" : "Xem chi tiết"}</span>
-                </div>
-              </Link>
-            ))}
-          </div>
+          {latestJobs.isPending ? (
+            <>
+              <p className="sr-only" role="status">
+                {en ? "Loading job listings…" : "Đang tải tin tuyển dụng…"}
+              </p>
+              <JobListSkeleton count={6} />
+            </>
+          ) : latestJobs.isError ? (
+            <div className="career-empty" role="alert">
+              <SearchX size={40} aria-hidden="true" />
+              <p>
+                {en
+                  ? "Job listings can't load right now. Check your connection and try again."
+                  : "Không thể tải danh sách việc làm. Vui lòng kiểm tra kết nối và thử lại."}
+              </p>
+              <div className="career-empty__actions">
+                <button
+                  type="button"
+                  className="career-button"
+                  onClick={() => void latestJobs.refetch()}
+                  disabled={latestJobs.isFetching}
+                >
+                  {latestJobs.isFetching
+                    ? en
+                      ? "Retrying…"
+                      : "Đang thử lại…"
+                    : en
+                      ? "Try again"
+                      : "Thử tải lại"}
+                </button>
+              </div>
+            </div>
+          ) : !jobs?.length ? (
+            <div className="career-empty">
+              <BriefcaseBusiness size={40} aria-hidden="true" />
+              <p>
+                {en
+                  ? "No openings are published right now. Check back soon, or explore all jobs."
+                  : "Hiện chưa có tin tuyển dụng nào được đăng. Hãy quay lại sau hoặc xem tất cả việc làm."}
+              </p>
+              <div className="career-empty__actions">
+                <Link to="/jobs" search={jobSearch({})} className="career-button">
+                  {en ? "Browse jobs" : "Xem tất cả việc làm"}
+                  <ArrowRightIcon size={18} />
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="career-job-grid landing-job-list">
+              {jobs.map((job) => (
+                <Link
+                  key={job.id}
+                  to="/jobs"
+                  search={jobSearch({ job: job.id })}
+                  className="career-job"
+                >
+                  <div className="career-job__company">
+                    <span className="career-company-mark" aria-hidden="true">
+                      {job.company
+                        .split(" ")
+                        .filter(Boolean)
+                        .map((word) => word[0])
+                        .slice(0, 2)
+                        .join("")}
+                    </span>
+                    <span>{job.company}</span>
+                  </div>
+                  <h3>{job.title}</h3>
+                  <p className="career-job__salary">{job.salaryRange}</p>
+                  <p className="career-job__location">{job.location}</p>
+                  <div className="career-job__bottom">
+                    <span>{job.department}</span>
+                    <span>{en ? "View details" : "Xem chi tiết"}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </section>
         <section id="roles" className="career-fields" aria-labelledby="fields-title">
           <div className="career-container">

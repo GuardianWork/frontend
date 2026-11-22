@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "rea
 import { Link } from "@tanstack/react-router";
 import {
   ArrowLeft,
+  Building2,
   CheckCircle2,
   CircleAlert,
   Eye,
@@ -13,6 +14,7 @@ import {
   UploadCloud,
   X,
 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   MAX_CV_COUNT,
   type CandidateCv,
@@ -29,12 +31,13 @@ import {
   getCvDownloadUrl,
   type CandidateCv as BackendCandidateCv,
 } from "@/services/candidateCv";
-import { listApplications } from "@/services/candidateApplications";
+import { findApplicationForJob } from "@/services/candidateApplications";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
 import { badgeLabel, type JobItem } from "@/lib/job-listings";
 import { buildCandidateJobs, shortJobLocation } from "@/lib/candidate-jobs";
+import { companyRoleLabel, selfCompanyMembership } from "@/lib/self-company-apply";
 import {
   CV_ACCEPT_ATTRIBUTE,
   deriveCvLabel,
@@ -204,6 +207,7 @@ function mapBackendCv(cv: BackendCandidateCv): CandidateCv {
 export function JobApplyPage({ jobId }: { jobId?: string }) {
   const { workspace, company } = useCompanyWorkspace();
   const authUser = useAuthUser();
+  const queryClient = useQueryClient();
   const { locale } = useLanguage();
   const en = locale === "en";
   const [cvs, setCvs] = useState<CandidateCv[]>([]);
@@ -222,6 +226,7 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
   });
   const [applied, setApplied] = useState(false);
   const [appliedAtState, setAppliedAtState] = useState<string | undefined>(undefined);
+  const [appliedChecked, setAppliedChecked] = useState(false);
 
   const { jobs, companyJobs } = buildCandidateJobs(workspace, company);
   const localJob = jobId ? jobs.find((item) => item.id === jobId) : undefined;
@@ -242,6 +247,7 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
           id: String(detail.id ?? jobId),
           title: detail.content?.title || "Công việc",
           company: detail.company?.name || "Nhà tuyển dụng",
+          companyId: typeof detail.company?.id === "number" ? detail.company.id : undefined,
           location: detail.content?.location || "",
           salaryRange: toSalaryRange(
             detail.content?.compensation as Parameters<typeof toSalaryRange>[0],
@@ -332,17 +338,23 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
   }, [authUser?.email]);
 
   useEffect(() => {
-    if (!job?.id || isCompanyJob) return;
+    if (!job?.id || isCompanyJob) {
+      setAppliedChecked(true);
+      return;
+    }
     let mounted = true;
+    setAppliedChecked(false);
     (async () => {
       try {
-        const applications = await listApplications();
+        const match = await findApplicationForJob(job.id);
         if (!mounted) return;
-        const match = applications.find((item) => String(item.jobId) === String(job.id));
         setApplied(!!match);
         setAppliedAtState(match?.appliedAt);
       } catch {
         // Fall back to not-applied when backend state cannot be loaded.
+        if (mounted) setApplied(false);
+      } finally {
+        if (mounted) setAppliedChecked(true);
       }
     })();
     return () => {
@@ -428,6 +440,11 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
         )?.submittedAt
       : appliedAtState
     : undefined;
+  const jobCompanyId = isCompanyJob
+    ? (company?.id ?? authUser?.activeMembership?.companyId)
+    : job?.companyId;
+  const selfCompany = selfCompanyMembership(authUser, jobCompanyId);
+  const checkingApplied = Boolean(job) && !isCompanyJob && !appliedChecked;
 
   const updateContact = (key: keyof Contact, value: string) => {
     setContact((current) => ({ ...current, [key]: value }));
@@ -599,6 +616,10 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!job || submitting || receipt) return;
+    if (selfCompany) {
+      setFormError("Bạn không thể ứng tuyển vào tin do chính công ty mình đăng.");
+      return;
+    }
     if (!submitConfirmed) {
       setFormError("Vui lòng xác nhận thông tin trước khi gửi hồ sơ.");
       return;
@@ -638,6 +659,7 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
       }
       setApplied(true);
       setAppliedAtState(response?.appliedAt ?? new Date().toISOString());
+      void queryClient.invalidateQueries({ queryKey: ["candidate-applied-job"] });
       setReceipt({
         at: response?.appliedAt ?? new Date().toISOString(),
         jobTitle: response?.jobTitle ?? job.title,
@@ -655,10 +677,24 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
         behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
       });
     } catch (error) {
-      const appError = error as { code?: number; message?: string };
+      const appError = error as { status?: number };
+      if (appError.status === 409) {
+        // The posting may have received this Candidate's application in another
+        // tab. Confirm against the ledger before reporting a generic conflict.
+        try {
+          const existing = await findApplicationForJob(job.id);
+          if (existing) {
+            setApplied(true);
+            setAppliedAtState(existing.appliedAt);
+            return;
+          }
+        } catch {
+          // Keep the server message when the ledger cannot be read.
+        }
+      }
       setFormError(
-        appError.code === 40903
-          ? "Bạn đã ứng tuyển vị trí này."
+        appError.status === 403 && selfCompany
+          ? "Bạn không thể gửi đơn ứng tuyển cho tin do chính công ty mình đăng."
           : error instanceof Error
             ? error.message
             : "Không gửi được hồ sơ. Vui lòng thử lại.",
@@ -821,6 +857,63 @@ export function JobApplyPage({ jobId }: { jobId?: string }) {
               Quản lý hồ sơ
             </Link>
           </div>
+        </div>
+      </Shell>
+    );
+  }
+
+  if (selfCompany) {
+    return (
+      <Shell jobId={jobId}>
+        <div className="rounded-xl border border-rule bg-paper px-5 py-12 text-center sm:px-10">
+          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-paper-2 text-ink-2">
+            <Building2 size={22} strokeWidth={1.75} aria-hidden="true" />
+          </span>
+          <h1 className="mt-4 text-balance text-[clamp(1.375rem,2.4vw,1.75rem)] font-extrabold tracking-[-0.03em] text-ink">
+            Không thể ứng tuyển tin của công ty bạn
+          </h1>
+          <p className="mx-auto mt-2 max-w-[50ch] text-pretty text-sm leading-6 text-ink-2">
+            Bạn đang là{" "}
+            <strong className="font-semibold text-ink">
+              {companyRoleLabel(selfCompany.companyRole, false)}
+            </strong>{" "}
+            tại <strong className="font-semibold text-ink">{job.company}</strong>. GuardianWork
+            không nhận đơn ứng tuyển từ thành viên công ty cho tin do chính công ty đăng. Hãy tiếp
+            tục tìm việc ở các công ty khác.
+          </p>
+          <dl className="mx-auto mt-6 max-w-lg border-t border-rule text-left">
+            <div className="flex flex-col gap-0.5 border-b border-rule py-2.5 sm:flex-row sm:items-baseline sm:gap-4">
+              <dt className="w-32 shrink-0 text-xs font-semibold text-ink-3">Vị trí</dt>
+              <dd className="min-w-0 text-sm font-semibold leading-6 text-ink">{job.title}</dd>
+            </div>
+            <div className="flex flex-col gap-0.5 py-2.5 sm:flex-row sm:items-baseline sm:gap-4">
+              <dt className="w-32 shrink-0 text-xs font-semibold text-ink-3">Công ty</dt>
+              <dd className="min-w-0 text-sm leading-6 text-ink-2">
+                {job.company}
+                {job.location && <> · {shortJobLocation(job.location)}</>}
+              </dd>
+            </div>
+          </dl>
+          <div className="mt-5 flex flex-col justify-center gap-2 sm:flex-row">
+            <Link
+              to="/can/jobs"
+              className={`inline-flex min-h-11 items-center justify-center rounded-lg bg-accent px-5 text-sm font-bold text-accent-ink transition-colors hover:bg-accent-hover ${focusRing}`}
+            >
+              Về danh sách việc làm
+            </Link>
+          </div>
+        </div>
+      </Shell>
+    );
+  }
+
+  if (checkingApplied) {
+    return (
+      <Shell jobId={jobId}>
+        <div className="rounded-xl border border-rule bg-paper px-5 py-14 text-center">
+          <p role="status" className="text-sm text-ink-2">
+            Đang kiểm tra hồ sơ ứng tuyển…
+          </p>
         </div>
       </Shell>
     );
