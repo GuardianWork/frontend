@@ -1,6 +1,16 @@
 import { ApiError, apiRequest } from "./api.ts";
 import type { JobContent } from "./jobs.ts";
 import { authenticatedRequest, hasAuthSession } from "./auth.ts";
+import { isScanReport, type ScanReport, type ScanView } from "./jobScans.ts";
+
+export interface PublicJobAnalysis {
+  mode: ScanView["mode"];
+  outdated: boolean;
+  asOfDate: string;
+  completedAt: string;
+  analysisText: string;
+  report: Pick<ScanReport, "schemaVersion" | "outcome" | "findings" | "warnings">;
+}
 
 export async function getPublicJobDetail(id: string | number, signal?: AbortSignal) {
   const data = (await apiRequest(`/jobs/${id}`, { signal, cache: "no-store" })) as {
@@ -8,11 +18,27 @@ export async function getPublicJobDetail(id: string | number, signal?: AbortSign
     content: JobContent;
     publicationStatus?: string;
     company?: { id: number; name: string };
+    aiAnalysis?: PublicJobAnalysis | null;
+    analysisUnavailable?: boolean;
   };
   if (data?.publicationStatus === "SUSPENDED")
     throw new ApiError("Tin tuyển dụng không còn khả dụng", 404);
   if (!data?.content || typeof data.content !== "object" || Array.isArray(data.content))
     throw new ApiError("Không thể tải nội dung tin tuyển dụng.");
+  if (
+    data.aiAnalysis != null &&
+    (!["stub", "crawler"].includes(data.aiAnalysis.mode) ||
+      typeof data.aiAnalysis.outdated !== "boolean" ||
+      typeof data.aiAnalysis.asOfDate !== "string" ||
+      typeof data.aiAnalysis.completedAt !== "string" ||
+      typeof data.aiAnalysis.analysisText !== "string" ||
+      !isScanReport({
+        ...data.aiAnalysis.report,
+        mode: data.aiAnalysis.mode,
+        asOfDate: data.aiAnalysis.asOfDate,
+      }))
+  )
+    return { ...data, aiAnalysis: null, analysisUnavailable: true };
   return data;
 }
 

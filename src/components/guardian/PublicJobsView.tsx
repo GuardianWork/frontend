@@ -1,5 +1,7 @@
 import { getPublicJobDetail } from "@/services/publicJobs";
 import { JobDescription } from "@/components/recruiter/JobDescription";
+import { PublicJobDescription } from "./PublicJobDescription";
+import type { PublicJobAnalysis } from "@/services/publicJobs";
 import { CompanyDetailLink } from "./CompanyLinks";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -305,6 +307,8 @@ export function PublicJobsView({
               viewer={user}
               applied={appliedFor(backendJobItem.id)}
               jobs={jobs}
+              analysis={backendDetail.data?.aiAnalysis}
+              analysisUnavailable={backendDetail.data?.analysisUnavailable}
             />
           ) : (
             <MissingJob search={search} jobs={jobs} />
@@ -864,6 +868,8 @@ function JobDetail({
   applied,
   jobs,
   embedded = false,
+  analysis,
+  analysisUnavailable,
 }: {
   job: JobItem;
   search: JobSearchParams;
@@ -871,6 +877,8 @@ function JobDetail({
   applied: boolean;
   jobs: JobItem[];
   embedded?: boolean;
+  analysis?: PublicJobAnalysis | null;
+  analysisUnavailable?: boolean;
 }) {
   const navigate = useNavigate();
   const jobsPath = useJobsPath();
@@ -942,7 +950,15 @@ function JobDetail({
           <div className="career-detail__main">
             <section aria-labelledby="detail-description">
               <h2 id="detail-description">Mô tả công việc</h2>
-              <JobDescription value={job.description} />
+              {isSampleListing(job) ? (
+                <JobDescription value={job.description} />
+              ) : (
+                <PublicJobDescription
+                  value={job.description}
+                  analysis={analysis}
+                  unavailable={analysisUnavailable}
+                />
+              )}
             </section>
 
             <section aria-labelledby="detail-requirements">

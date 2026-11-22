@@ -68,6 +68,22 @@ function validFinding(f: ScanFinding) {
     )
   );
 }
+export function isScanReport(value: unknown): value is ScanReport {
+  const report = value as ScanReport | null;
+  return Boolean(
+    report &&
+    report.schemaVersion === "1" &&
+    ["stub", "crawler"].includes(report.mode) &&
+    Array.isArray(report.findings) &&
+    report.findings.every(validFinding) &&
+    typeof report.asOfDate === "string" &&
+    Array.isArray(report.warnings) &&
+    report.warnings.every((warning) => typeof warning === "string") &&
+    ["POTENTIAL_RISKS", "NEEDS_REVIEW", "NO_RISKS_DETECTED", "OUT_OF_SCOPE"].includes(
+      report.outcome,
+    ),
+  );
+}
 async function readScan(
   path: string,
   revisionId: number,
@@ -90,17 +106,7 @@ function validateScan(scan: ScanView, revisionId: number, expectedScanId?: numbe
     !["QUEUED", "RUNNING", "COMPLETED", "FAILED"].includes(scan.status) ||
     !["stub", "crawler"].includes(scan.mode) ||
     typeof scan.outdated !== "boolean" ||
-    (scan.status === "COMPLETED" &&
-      (!scan.report ||
-        scan.report.schemaVersion !== "1" ||
-        !Array.isArray(scan.report.findings) ||
-        !scan.report.findings.every(validFinding) ||
-        typeof scan.report.asOfDate !== "string" ||
-        !Array.isArray(scan.report.warnings) ||
-        !scan.report.warnings.every((w) => typeof w === "string") ||
-        !["POTENTIAL_RISKS", "NEEDS_REVIEW", "NO_RISKS_DETECTED", "OUT_OF_SCOPE"].includes(
-          scan.report.outcome,
-        )))
+    (scan.status === "COMPLETED" && !isScanReport(scan.report))
   ) {
     throw new ApiError("Phản hồi phân tích không hợp lệ.");
   }

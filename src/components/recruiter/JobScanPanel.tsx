@@ -11,21 +11,15 @@ import {
   type ScanFinding,
 } from "@/services/jobScans";
 import { jobError, type Job, type JobRevision } from "@/services/jobs";
+import { scanOutcomeLabels, scanSeverityLabels } from "@/lib/job-content";
 import "./job-scan.css";
 
-const outcomes = {
-  POTENTIAL_RISKS: "Phát hiện dấu hiệu rủi ro",
-  NEEDS_REVIEW: "Cần kiểm tra thêm",
-  NO_RISKS_DETECTED: "Chưa phát hiện rủi ro trong phạm vi kiểm tra",
-  OUT_OF_SCOPE: "Ngoài phạm vi hỗ trợ",
-};
 const states = {
   QUEUED: "Đang chờ phân tích",
   RUNNING: "Đang phân tích nội dung",
   COMPLETED: "Đã hoàn tất phân tích",
   FAILED: "Không thể hoàn tất phân tích",
 };
-const severityLabels = { low: "Thấp", medium: "Trung bình", high: "Cao" };
 
 export function ScanFindingEvidence({
   finding,
@@ -110,7 +104,7 @@ export function ScanResult({
         </p>
       )}
       <div role="status" className="jp-scan-status">
-        <strong>{report ? outcomes[report.outcome] : states[scan.status]}</strong>
+        <strong>{report ? scanOutcomeLabels[report.outcome] : states[scan.status]}</strong>
         {report && <span>{report.findings.length} phát hiện</span>}
       </div>
       {scanProcessing(scan) && (
@@ -137,7 +131,7 @@ export function ScanResult({
               <div className="jp-scan-finding-heading">
                 <h4>Phát hiện {index + 1}</h4>
                 <span className={`jp-scan-severity jp-scan-severity-${finding.severity}`}>
-                  Mức độ: {severityLabels[finding.severity]}
+                  Mức độ: {scanSeverityLabels[finding.severity]}
                 </span>
               </div>
               <ScanFindingEvidence finding={finding} />
