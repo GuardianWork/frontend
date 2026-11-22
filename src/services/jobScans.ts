@@ -31,31 +31,30 @@ export interface ScanReport {
   usage: { available: boolean };
   model?: string;
 }
+/** Revision-bound response. Scan identifiers are intentionally discarded. */
 export interface ScanView {
-  scanId: number;
   revisionId: number;
   revisionVersion: number;
   status: "QUEUED" | "RUNNING" | "COMPLETED" | "FAILED";
   mode: "stub" | "crawler";
   outdated: boolean;
-  failureCode: string | null;
-  report: ScanReport | null;
   analysisText: string;
-  profile: string;
-  legalSnapshot: string;
+  report: ScanReport | null;
   asOfDate: string;
-  createdAt: string;
 }
+export type SharedScan = ScanView;
 export const scanProcessing = (scan: ScanView | null) =>
   scan?.status === "QUEUED" || scan?.status === "RUNNING";
+export const sharedScanProcessing = scanProcessing;
 
 /** Loading analysis never validates or changes job content. */
 export function scanReadError(error: unknown): string {
   if (error instanceof ApiError) {
+    if (error.status === 400) return "Kiểm tra tham số yêu cầu phân tích và phiên bản JD.";
     if (error.status === 401) return "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
-    if (error.status === 403) return "Bạn không có quyền xem phân tích AI của phiên bản này.";
+    if (error.status === 403) return "Không thể truy cập JD này. Bạn không có quyền xem nội dung.";
     if (error.status === 404)
-      return "Phân tích AI hoặc phiên bản tin không còn khả dụng. Hãy tải lại tin tuyển dụng.";
+      return "Không thể truy cập JD này. Tin tuyển dụng không còn khả dụng.";
     if (error.status === 409)
       return "Phiên bản tin đã thay đổi. Hãy tải lại tin tuyển dụng để xem phân tích mới nhất.";
     if (error.status === 503)
@@ -99,78 +98,42 @@ export function isScanReport(value: unknown): value is ScanReport {
     ),
   );
 }
-async function readScan(
-  path: string,
-  revisionId: number,
-  init?: RequestInit,
-  expectedScanId?: number,
-): Promise<ScanView> {
-  const scan = (await authenticatedRequest(path, { cache: "no-store", ...init })) as ScanView;
-  return validateScan(scan, revisionId, expectedScanId);
-}
-
-function validateScan(scan: ScanView, revisionId: number, expectedScanId?: number): ScanView {
-  if (
-    !scan ||
-    scan.revisionId !== revisionId ||
-    (expectedScanId !== undefined && scan.scanId !== expectedScanId) ||
-    !Number.isSafeInteger(scan.scanId) ||
-    scan.scanId <= 0 ||
-    !Number.isSafeInteger(scan.revisionVersion) ||
-    typeof scan.analysisText !== "string" ||
-    !["QUEUED", "RUNNING", "COMPLETED", "FAILED"].includes(scan.status) ||
-    !["stub", "crawler"].includes(scan.mode) ||
-    typeof scan.outdated !== "boolean" ||
-    (scan.status === "COMPLETED" && !isScanReport(scan.report))
-  ) {
-    throw new ApiError("Phản hồi phân tích không hợp lệ.");
-  }
-  return scan;
-}
-const root = (jobId: number, revisionId: number) =>
-  `/companies/me/jobs/${jobId}/revisions/${revisionId}/scans`;
-export const requestJobScan = (
+export async function requestSharedJobScan(
   jobId: number,
   revisionId: number,
   version: number,
   signal?: AbortSignal,
-) =>
-  readScan(root(jobId, revisionId), revisionId, {
+): Promise<ScanView> {
+  const value = await authenticatedRequest(`/jobs/${jobId}/revisions/${revisionId}/scans`, {
     method: "POST",
     body: JSON.stringify({ expectedRevisionVersion: version }),
+    cache: "no-store",
     signal,
   });
-export const getJobScan = (
-  jobId: number,
-  revisionId: number,
-  scanId: number,
-  signal?: AbortSignal,
-) => readScan(`${root(jobId, revisionId)}/${scanId}`, revisionId, { signal }, scanId);
-export const getStaffJobScan = (revisionId: number, scanId: number, signal?: AbortSignal) =>
-  readScan(`/staff/job-revisions/${revisionId}/scans/${scanId}`, revisionId, { signal }, scanId);
-
-async function latestScan(
-  path: string,
-  revisionId: number,
-  revisionVersion: number,
-  signal?: AbortSignal,
-) {
-  const value = await authenticatedRequest(
-    `${path}/latest?expectedRevisionVersion=${revisionVersion}`,
-    { cache: "no-store", signal },
-  );
-  return value === null ? null : validateScan(value as ScanView, revisionId);
+  const scan = value as ScanView | null;
+  if (
+    !scan ||
+    scan.revisionId !== revisionId ||
+    !Number.isSafeInteger(scan.revisionVersion) ||
+    scan.revisionVersion < 0 ||
+    !["QUEUED", "RUNNING", "COMPLETED", "FAILED"].includes(scan.status) ||
+    !["stub", "crawler"].includes(scan.mode) ||
+    typeof scan.outdated !== "boolean" ||
+    (scan.analysisText !== null && typeof scan.analysisText !== "string") ||
+    (scan.status === "COMPLETED" &&
+      (typeof scan.analysisText !== "string" || !isScanReport(scan.report)))
+  ) {
+    throw new ApiError("Phản hồi phân tích không hợp lệ.");
+  }
+  return {
+    revisionId: scan.revisionId,
+    revisionVersion: scan.revisionVersion,
+    status: scan.status,
+    mode: scan.mode,
+    outdated: scan.outdated,
+    analysisText: scan.analysisText ?? "",
+    report: scan.status === "COMPLETED" ? scan.report : null,
+    asOfDate: typeof scan.asOfDate === "string" ? scan.asOfDate : "",
+  };
 }
-
-export const getLatestJobScan = (
-  jobId: number,
-  revisionId: number,
-  revisionVersion: number,
-  signal?: AbortSignal,
-) => latestScan(root(jobId, revisionId), revisionId, revisionVersion, signal);
-
-export const getLatestStaffJobScan = (
-  revisionId: number,
-  revisionVersion: number,
-  signal?: AbortSignal,
-) => latestScan(`/staff/job-revisions/${revisionId}/scans`, revisionId, revisionVersion, signal);
+export const requestJobScan = requestSharedJobScan;

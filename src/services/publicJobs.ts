@@ -20,6 +20,8 @@ export async function getPublicJobDetail(id: string | number, signal?: AbortSign
     company?: { id: number; name: string };
     aiAnalysis?: PublicJobAnalysis | null;
     analysisUnavailable?: boolean;
+    revisionId?: number;
+    revisionVersion?: number;
   };
   if (data?.publicationStatus === "SUSPENDED")
     throw new ApiError("Tin tuyển dụng không còn khả dụng", 404);

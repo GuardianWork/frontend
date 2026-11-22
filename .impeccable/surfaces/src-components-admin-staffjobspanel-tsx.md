@@ -12,7 +12,7 @@ STORY: Identify the revision, read its content, inspect shared AI evidence, chec
 
 FIRST VIEWPORT: Compact object heading and publication status above a two-column desk. A wide white sheet combines the saved revision and a compact version-bound AI analysis toolbar, readable job facts and description. Current findings mark the text inline and the full report expands in place, without separate tabs. A 320px decision rail carries approval, company eligibility and publication controls. AI evidence stays alongside the submitted content. The workspace clips positioned accessible captions and contains scroll chaining.
 
-FORM: seed: none (unavailable). Code-led extension of the existing recruiter detail pattern. The signature is evidence in context: current real AI findings highlight matching passages, with legal citations disclosed beside each finding. No charts, invented metrics, generated imagery or new palette. Staff automatically reads the selected revision’s associated analysis; no manual scan ID and no staff scan creation. The proposed latest read endpoints require the pending sibling-backend integration.
+FORM: seed: none (unavailable). Code-led extension of the existing recruiter detail pattern. The signature is evidence in context: current real AI findings highlight matching passages, with legal citations disclosed beside each finding. No charts, invented metrics, generated imagery or new palette. Staff explicitly requests analysis of the selected saved revision through the proposed shared POST. Poll that same POST with the original body; do not store scan IDs or use separate Staff scan routes. Backend consolidation is not implemented yet.
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
 
@@ -25,7 +25,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 - Deadline, headcount and screening questions come from submitted content.
 - Company verification and suspension control eligibility.
 - Revision approval and public visibility are independent statuses.
-- Analysis is resolved automatically for the selected revision and viewed locking version, with internal scan-ID polling while processing.
+- Analysis starts on user request for the selected revision and viewed locking version, with the same POST/body polling while queued or running.
 - Stale, stub and failed scans must not annotate current content.
 - History supports sorting, paging and selecting a revision.
 
@@ -35,8 +35,8 @@ Face: GuardianWork blue on actions and key job facts, with Hanken Grotesk and th
 ## Shipped constraints
 
 - The desktop detail combines submitted content and AI in one white reading sheet, with version history directly below it. The 320px right rail stays sticky and groups revision eligibility, the version-checked decision, and separate publication controls.
-- Staff analysis loads by JD revision; no scan identifier is entered or shared by the user. The frontend expects the proposed latest-analysis read endpoint, whose backend implementation is pending its required branch/API approval. Scan results and polling stay with the revision. Inline findings and expandable full reports share the content view.
-- Only a completed, non-stub, non-outdated scan retrieved for the exact viewed revision and locking version annotates submitted content. Matching content can reuse an association created before a lifecycle-only locking-version increment. Other scan states remain readable with their status and analyzed-text disclosure, but do not highlight the current submission. The local keyword review remains a separate preliminary check, not an AI result or legal clearance.
+- Staff analysis is requested by displayed JD revision and version; no scan identifier is stored or used. The frontend expects the proposed shared POST endpoint, whose backend consolidation is still pending. Scan results and polling stay with the revision. Inline findings and expandable full reports share the content view.
+- Only a completed, non-stub, non-outdated scan retrieved for the exact viewed revision and locking version annotates submitted content. Matching content can reuse an association created before a lifecycle-only locking-version increment. Other scan states remain readable with their status but do not highlight the current submission; completed reports expose the analyzed-text disclosure. The local keyword review remains a separate preliminary check, not an AI result or legal clearance.
 - Revision approval and public posting status are independent. The posting controls keep suspension/restoration separate from the revision decision.
 
 

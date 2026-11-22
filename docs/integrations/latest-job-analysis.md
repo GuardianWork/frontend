@@ -1,38 +1,54 @@
-# Restoring saved JD analysis
+# Revision analysis through one POST (proposed backend contract)
 
-The AI panels discover retained scans with these authenticated read-only routes:
+Recruiter and Staff analysis panels now use only:
 
-```text
-GET /api/companies/me/jobs/{jobId}/revisions/{revisionId}/scans/latest?expectedRevisionVersion={version}
-GET /api/staff/job-revisions/{revisionId}/scans/latest?expectedRevisionVersion={version}
+```http
+POST /api/jobs/{jobId}/revisions/{revisionId}/scans
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{"expectedRevisionVersion": 2}
 ```
 
-Both return the existing scan-view envelope, or HTTP 200 with `data: null` when
-there is no associated scan matching the current saved content. They use
-`Cache-Control: no-store`. Numeric `/scans/{scanId}` reads remain the polling routes.
+**Integration prerequisite:** the backend consolidation has not been implemented.
+Existing backend GET/Company/Staff scan routes may still exist. This frontend
+requires the proposed shared POST behavior; browser tests simulate that behavior,
+and do not establish live backend compatibility. There is no fallback to the old
+scan routes. Deploy the matching backend before enabling this frontend flow.
 
-Recruiter discovery reuses current Company membership and job-assignment checks.
-Staff discovery requires current Staff authority and a submitted revision; drafts
-remain concealed. The backend checks the requested locking version before lookup:
-missing/negative versions return 400, a changed version returns 409, and inaccessible
-resources retain the existing 401/403/404 behavior. Matching requires the same
-Company, job, revision, and canonical content hash. The newest association wins,
-including queued, running, completed, or failed scans. A state-only version change
-may retain a scan of identical content; removed draft text is never restored.
-Older analysis configuration/date is still identified by `outdated`.
+The selected JD supplies jobId, revisionId and revisionVersion. Opening a page or
+editing content does not request analysis. Users must save local edits first;
+analysis always targets the displayed saved revision. Recruiters can also request
+analysis of a retained revision when there is no editable working revision.
+Staff requests analysis explicitly from the revision detail.
 
-Reads do not create associations, queue scans, retry failed work, or contact the AI
-adapter. This fixes the missing backend routes expected by the existing frontend;
-there is no schema, dependency, or scan-creation change. This differs from the
-candidate-facing public `aiAnalysis` projection, which selects completed scans only.
+The backend must return the existing state/result for the same content, including
+FAILED, without creating a fresh attempt. The frontend discards scan identifiers
+from responses and never stores or uses them. QUEUED/RUNNING schedule the same POST
+after two seconds, with the original revision identity and unchanged request body.
+COMPLETED and FAILED stop polling. Rechecking a failure is labeled as checking its
+status, and the UI explains that the same revision returns the retained failure.
 
-Recruiter and Staff lookup/polling errors use `scanReadError` rather than the job
-content-validation formatter. HTTP 400 during loading says analysis could not be
-loaded, while real save/validation errors preserve the job-content messages.
-Authentication, authorization, unavailable results, version conflicts, and service
-outages each retain appropriate recovery guidance. Existing candidate browsing is
-unchanged.
+All HTTP failures stop polling. HTTP 400 asks users to check request parameters;
+401 uses existing authentication recovery and asks for login if recovery fails;
+403/404 explain that the JD cannot be accessed; 409 discards analysis and reloads
+the JD and locking version without automatically starting another analysis;
+503 explains temporary unavailability. Network and malformed-response failures
+also stop polling. Changing JD/revision/version or unmounting aborts pending scan
+requests and timers, and late responses are ignored.
 
-Verification uses backend `JdLatestScanHttpTest`, frontend `jobScans.test.mjs`, and
-desktop recruiter/Staff browser regressions for lookup failures and saved-result
-restoration. Backend HTTP tests use PostgreSQL and never require a live AI provider.
+COMPLETED exposes analysisText and report in keyboard-operable disclosures. Stub,
+outdated and report warnings remain visible in the report; the disclosure summary
+also labels stub/outdated results. Findings and quotations render as React text,
+never executable HTML. Inline current-JD findings require completed, non-stub,
+non-outdated evidence requested for the current displayed revision version. The
+response's retained association version can predate a lifecycle-only version bump
+when the backend determines that the content is identical.
+
+Candidate public `aiAnalysis` remains the existing read-only publication projection;
+it does not use private Company/Staff scan routes. This change does not add a
+candidate scan action or change backend authorization, moderation or publication.
+
+Verification: service contract tests in `src/services/jobScans.test.mjs`, and
+desktop Recruiter/Staff regressions in `tests/ui/job-publishing.spec.ts` and
+`tests/ui/staff-job-detail.spec.ts`.

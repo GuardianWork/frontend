@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import {
-  getLatestStaffJobScan,
-  getStaffJobScan,
+  requestSharedJobScan,
   scanProcessing,
   scanReadError,
   type ScanView,
 } from "@/services/jobScans";
 import { ScanResult } from "@/components/recruiter/JobScanPanel";
+import { ApiError } from "@/services/api";
 import type { StaffJobReview } from "@/services/staffJobs";
 import { LABOR_CODE_URL, reviewJobContent } from "@/lib/job-legal-review";
 import { StaffStatusBadge } from "./StaffStatusBadge";
@@ -15,7 +15,9 @@ import { RotateCw } from "lucide-react";
 export function JobLegalReview({
   review,
   onScan,
+  onConflict,
 }: {
+  onConflict: () => Promise<unknown>;
   review: StaffJobReview;
   onScan?: (scan: ScanView | null) => void;
 }) {
@@ -23,6 +25,8 @@ export function JobLegalReview({
     <section className="staff-job-legal-review" aria-labelledby="job-legal-review-title">
       <RevisionScan
         key={`${review.id}:${review.revisionVersion}`}
+        jobId={review.jobId}
+        onConflict={onConflict}
         revisionId={review.id}
         revisionVersion={review.revisionVersion}
         onScan={onScan}
@@ -84,58 +88,58 @@ export function PreliminaryJobReview({
 }
 
 function RevisionScan({
+  jobId,
   revisionId,
   revisionVersion,
   onScan,
+  onConflict,
 }: {
+  jobId: number;
   revisionId: number;
   revisionVersion: number;
   onScan?: (scan: ScanView | null) => void;
+  onConflict: () => Promise<unknown>;
 }) {
   const [scan, setScan] = useState<ScanView | null>(null);
   const [error, setError] = useState("");
-  const [busy, setBusy] = useState(true);
-  const [reload, setReload] = useState(0);
-  useEffect(() => {
-    const abort = new AbortController();
-    setBusy(true);
-    setError("");
-    setScan(null);
-    void getLatestStaffJobScan(revisionId, revisionVersion, abort.signal)
-      .then((result) => {
-        if (!abort.signal.aborted) setScan(result);
-      })
-      .catch((cause) => {
-        if (!abort.signal.aborted) setError(scanReadError(cause));
-      })
-      .finally(() => {
-        if (!abort.signal.aborted) setBusy(false);
-      });
-    return () => abort.abort();
-  }, [revisionId, revisionVersion, reload]);
+  const [requested, setRequested] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     onScan?.(scan);
   }, [scan, onScan]);
   useEffect(() => {
-    if (!scan || !scanProcessing(scan) || error) return;
+    if (!requested) return;
     const abort = new AbortController();
-    const timer = setTimeout(() => {
-      void getStaffJobScan(revisionId, scan.scanId, abort.signal)
-        .then((result) => {
-          if (!abort.signal.aborted) setScan(result);
-        })
-        .catch((cause) => {
-          if (!abort.signal.aborted) {
-            setScan(null);
-            setError(scanReadError(cause));
+    let timer: ReturnType<typeof setTimeout>;
+    const poll = async () => {
+      setBusy(true);
+      try {
+        const next = await requestSharedJobScan(jobId, revisionId, revisionVersion, abort.signal);
+        if (abort.signal.aborted) return;
+        setScan(next);
+        if (scanProcessing(next)) timer = setTimeout(() => void poll(), 2000);
+        else setBusy(false);
+      } catch (cause) {
+        if (abort.signal.aborted) return;
+        setScan(null);
+        setBusy(false);
+        setError(scanReadError(cause));
+        if (cause instanceof ApiError && cause.status === 409) {
+          try {
+            await onConflict();
+          } catch {
+            /* Retain the conflict guidance. */
           }
-        });
-    }, 2000);
+        }
+      }
+    };
+    void poll();
     return () => {
       clearTimeout(timer);
       abort.abort();
     };
-  }, [revisionId, scan, error]);
+  }, [jobId, revisionId, revisionVersion, requested, attempt, onConflict]);
   return (
     <div className="jp-page staff-known-scan">
       <h3 id="job-legal-review-title" className="sr-only" tabIndex={-1}>
@@ -147,42 +151,50 @@ function RevisionScan({
         </p>
       )}
       {!scan && !busy && !error && (
-        <p className="staff-scan-hint">Phiên bản này chưa có kết quả phân tích AI.</p>
-      )}
-      {busy && (
-        <p className="staff-scan-loading" role="status">
-          Đang tải phân tích của phiên bản này…
+        <p className="staff-scan-hint">
+          Phân tích nội dung phiên bản đang xem để kiểm tra các điểm cần lưu ý.
         </p>
       )}
-      {scan?.status === "COMPLETED" && (
-        <>
-          {(scan.mode === "stub" || scan.report?.mode === "stub") && (
-            <p className="jp-feedback jp-warning">
-              Chế độ thử nghiệm — chưa thực hiện phân tích AI
-            </p>
-          )}
-          {scan.outdated && (
-            <p className="jp-feedback jp-warning">
-              Kết quả thuộc phiên bản nội dung hoặc dữ liệu phân tích trước đó
-            </p>
-          )}
-          <details className="staff-ai-report">
-            <summary>Xem báo cáo đầy đủ · {scan.report?.findings.length ?? 0} phát hiện</summary>
-            <ScanResult scan={scan} audience="staff" />
-            <p className="staff-scan-footnote">
-              Kết quả tham khảo không thay thế quyết định xét duyệt.
-            </p>
-          </details>
-        </>
+      {busy && !scan && (
+        <p className="staff-scan-loading" role="status">
+          Đang yêu cầu phân tích…
+        </p>
       )}
-      {scan && scan.status !== "COMPLETED" && <ScanResult scan={scan} audience="staff" />}
+      {scan?.status === "COMPLETED" ? (
+        <details className="staff-ai-report">
+          <summary>
+            Xem báo cáo đầy đủ · {scan.report?.findings.length ?? 0} phát hiện
+            {scan.mode === "stub" || scan.report?.mode === "stub"
+              ? " · Stub: chưa phân tích AI"
+              : ""}
+            {scan.outdated ? " · Kết quả cần cập nhật" : ""}
+          </summary>
+          <ScanResult scan={scan} audience="staff" />
+        </details>
+      ) : (
+        scan && <ScanResult scan={scan} audience="staff" />
+      )}
+      {scan?.status === "COMPLETED" && (
+        <p className="staff-scan-footnote">
+          Kết quả tham khảo không thay thế quyết định xét duyệt.
+        </p>
+      )}
       <button
         type="button"
         className="jp-button staff-scan-refresh"
-        onClick={() => setReload((value) => value + 1)}
+        onClick={() => {
+          setError("");
+          setRequested(true);
+          setAttempt((value) => value + 1);
+        }}
         disabled={busy}
       >
-        <RotateCw size={14} aria-hidden="true" /> Tải lại phân tích
+        <RotateCw size={14} aria-hidden="true" />
+        {busy
+          ? "Đang phân tích…"
+          : scan || error
+            ? "Kiểm tra trạng thái phân tích"
+            : "Phân tích JD bằng AI"}
       </button>
     </div>
   );
