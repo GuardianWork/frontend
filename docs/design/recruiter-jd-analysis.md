@@ -2,6 +2,10 @@
 
 Route: `/rec/jobs?jobId=…`. Supported review viewport: 1440×1000.
 
+## Manual editor analysis restored — 2026-11-22
+
+History inspection found that commit `005f408` introduced the live scan integration with automatic editor analysis and deliberately omitted the editor's manual scan control. Commit `353c6c5` retained that behavior while adding saved-result discovery. The feature itself was not deleted. The description field now also offers “Kiểm tra nội dung với AI”, using the existing save-before-scan handler. Empty descriptions and active requests disable the action; failures retain “Thử lại”. Automatic scanning after five idle seconds remains available. A desktop regression verifies immediate scanning of the saved new text, pending-state protection, resulting highlights and no duplicate automatic request after completion.
+
 ## Direction and product question
 
 Achromatic ledger, seed **1073330870**, drawn for a workspace/detail screen with existing palette and Hanken Grotesk retained. No redraws. The persistent recruiter shell is retained as a project constraint rather than replaced by the sheet’s generic no-sidebar shell. Brand-blue content links and existing semantic status colors remain; a near-black analysis action anchors the review rail.

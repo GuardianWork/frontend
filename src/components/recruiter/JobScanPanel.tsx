@@ -404,13 +404,17 @@ export function JobScanPanel({
       ? createPortal(
           <div className="jp-editor-analysis-status" role={error ? "alert" : "status"}>
             <span>{message}</span>
-            {(error || scan?.status === "FAILED") && (
+            {editable && (
               <button
                 type="button"
-                disabled={busy || requesting || processing}
+                disabled={busy || requesting || processing || localEdits || !autoReady}
                 onClick={() => void start()}
               >
-                Thử lại
+                {requesting || processing
+                  ? "Đang phân tích…"
+                  : error || scan?.status === "FAILED"
+                    ? "Thử lại"
+                    : "Kiểm tra nội dung với AI"}
               </button>
             )}
           </div>,
