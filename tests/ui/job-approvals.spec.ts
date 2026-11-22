@@ -43,7 +43,9 @@ test("real queue paginates on server and rejection persists after reload", async
     "REJECTED",
   );
   await page.getByRole("link", { name: "Xem chi tiết Chuyên viên kế toán", exact: true }).click();
-  await expect(page.locator(".compliance-jd > .admin-panel-heading .admin-record-status")).toHaveText("Bị từ chối");
+  await expect(
+    page.locator(".compliance-jd > .admin-panel-heading .admin-record-status"),
+  ).toHaveText("Bị từ chối");
 });
 test("approval uses exact versions and does not claim a paused job is public", async ({
   page,
@@ -57,7 +59,9 @@ test("approval uses exact versions and does not claim a paused job is public", a
     page.getByText("Đã duyệt phiên bản. Trạng thái tin: Đã tạm dừng tuyển.", { exact: true }),
   ).toBeVisible();
   await expect(page.getByRole("dialog")).not.toBeVisible();
-  await expect(page.locator(".compliance-jd > .admin-panel-heading .admin-record-status")).toHaveText("Đã duyệt");
+  await expect(
+    page.locator(".compliance-jd > .admin-panel-heading .admin-record-status"),
+  ).toHaveText("Đã duyệt");
   await expect(page.getByRole("button", { name: "Ẩn tin đã đăng" })).toHaveCount(0);
   expect(api.detailLoads).toBeGreaterThan(1);
   expect(api.historyLoads).toBeGreaterThan(1);

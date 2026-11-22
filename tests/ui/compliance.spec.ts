@@ -89,7 +89,9 @@ test("reviewing keeps the published job visible and updates the outstanding queu
   await page.getByRole("button", { name: "Xem chi tiết Kế toán công nợ", exact: true }).click();
   await page.getByRole("button", { name: "Đánh dấu đã xem xét", exact: true }).click();
   await expect(page.getByRole("button", { name: "Đã xem xét", exact: true })).toBeDisabled();
-  await expect(page.locator(".compliance-jd > .admin-panel-heading .admin-record-status")).toHaveText("Đang công khai");
+  await expect(
+    page.locator(".compliance-jd > .admin-panel-heading .admin-record-status"),
+  ).toHaveText("Đang công khai");
   await page.getByRole("button", { name: "Quay lại danh sách", exact: true }).click();
   await expect(page.locator(".compliance-table tbody tr")).toHaveCount(1);
   await expect(page.getByText("7 tin · 2 chờ duyệt · 1 tin công khai chưa xử lý")).toBeVisible();

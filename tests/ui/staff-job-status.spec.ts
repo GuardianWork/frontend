@@ -70,7 +70,9 @@ test("suspension appears in the list and the detail header independently of revi
     page.getByRole("region", { name: "Tin tuyển dụng đã bị đình chỉ", exact: true }),
   ).toBeVisible();
   await expect(page.locator(".staff-jobs-eligibility")).toContainText("Đình chỉ công ty");
-  await expect(page.locator(".compliance-jd > .admin-panel-heading .admin-record-status")).toHaveText("Đã duyệt");
+  await expect(
+    page.locator(".compliance-jd > .admin-panel-heading .admin-record-status"),
+  ).toHaveText("Đã duyệt");
   await expect(
     page.getByRole("button", { name: "Khôi phục tin tuyển dụng", exact: true }),
   ).toBeVisible();
