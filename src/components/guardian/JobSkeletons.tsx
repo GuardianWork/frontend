@@ -50,7 +50,13 @@ function JobCardSkeleton({ index }: { index: number }) {
 }
 
 /** The catalogue grid, or the keyword stack plus its reading pane. */
-export function JobListSkeleton({ split = false }: { split?: boolean }) {
+export function JobListSkeleton({
+  split = false,
+  count = GRID_CARDS,
+}: {
+  split?: boolean;
+  count?: number;
+}) {
   if (split)
     return (
       <div className="career-split" aria-hidden="true">
@@ -67,7 +73,7 @@ export function JobListSkeleton({ split = false }: { split?: boolean }) {
 
   return (
     <div className="career-job-grid" aria-hidden="true">
-      {Array.from({ length: GRID_CARDS }, (_, index) => (
+      {Array.from({ length: count }, (_, index) => (
         <JobCardSkeleton key={index} index={index} />
       ))}
     </div>

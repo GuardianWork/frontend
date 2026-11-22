@@ -38,7 +38,10 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useCompanyWorkspace } from "@/hooks/useCompanyWorkspace";
 import { useCandidate } from "@/context/CandidateContext";
 import { badgeLabel, isSampleListing, type JobItem } from "@/lib/job-listings";
+import { companyRoleLabel, selfCompanyMembership } from "@/lib/self-company-apply";
 import { getPaginationItems, paginateItems } from "@/lib/pagination";
+import { findApplicationForJob } from "@/services/candidateApplications";
+import type { AuthUser } from "@/services/auth";
 import {
   EXPERIENCE_BANDS,
   SALARY_BANDS,
@@ -207,7 +210,11 @@ export function PublicJobsView({
     return {
       id: selectedBackendJobId,
       title: content.title ?? searchable?.title ?? "Tin tuyển dụng",
-      company: searchable?.company ?? "Doanh nghiệp",
+      company: backendDetail.data?.company?.name ?? searchable?.company ?? "Doanh nghiệp",
+      companyId:
+        typeof backendDetail.data?.company?.id === "number"
+          ? backendDetail.data.company.id
+          : searchable?.companyId,
       location: content.location ?? searchable?.location ?? "Chưa cập nhật",
       salaryRange,
       badge: searchable?.badge ?? "Công ty đã xác thực",
@@ -295,7 +302,7 @@ export function PublicJobsView({
               key={selectedBackendJobId}
               job={backendJobItem}
               search={search}
-              signedIn={Boolean(user)}
+              viewer={user}
               applied={appliedFor(backendJobItem.id)}
               jobs={jobs}
             />
@@ -306,7 +313,7 @@ export function PublicJobsView({
           <JobDetail
             job={activeJob}
             search={search}
-            signedIn={Boolean(user)}
+            viewer={user}
             applied={appliedFor(activeJob.id)}
             jobs={jobs}
           />
@@ -393,7 +400,7 @@ export function PublicJobsView({
                 update={update}
                 resetFilters={resetFilters}
                 jobs={jobs}
-                signedIn={Boolean(user)}
+                viewer={user}
                 applied={appliedFor}
                 remotePagination={serverPagination}
                 loading={publicJobSearch.isPending}
@@ -479,7 +486,7 @@ function Results({
   update,
   resetFilters,
   jobs,
-  signedIn,
+  viewer,
   applied,
   remotePagination,
   loading = false,
@@ -488,7 +495,7 @@ function Results({
   update: (patch: JobSearchParams) => void;
   resetFilters: () => void;
   jobs: JobItem[];
-  signedIn: boolean;
+  viewer: AuthUser | null;
   applied: (jobId: string) => boolean;
   remotePagination?: {
     pageNumber: number;
@@ -754,7 +761,7 @@ function Results({
                   <JobDetail
                     job={activeJob}
                     search={search}
-                    signedIn={signedIn}
+                    viewer={viewer}
                     applied={applied(activeJob.id)}
                     jobs={jobs}
                     embedded
@@ -853,14 +860,14 @@ function Results({
 function JobDetail({
   job,
   search,
-  signedIn,
+  viewer,
   applied,
   jobs,
   embedded = false,
 }: {
   job: JobItem;
   search: JobSearchParams;
-  signedIn: boolean;
+  viewer: AuthUser | null;
   applied: boolean;
   jobs: JobItem[];
   embedded?: boolean;
@@ -869,6 +876,18 @@ function JobDetail({
   const jobsPath = useJobsPath();
   const { locale } = useLanguage();
   const en = locale === "en";
+  const signedIn = Boolean(viewer);
+  const membership = selfCompanyMembership(viewer, job.companyId);
+  const appliedQuery = useQuery({
+    queryKey: ["candidate-applied-job", viewer?.id ?? "anonymous", job.id],
+    queryFn: ({ signal }) => findApplicationForJob(job.id, { signal }),
+    enabled: signedIn,
+    staleTime: 30_000,
+    retry: false,
+    refetchOnWindowFocus: "always",
+  });
+  const hasApplied = applied || Boolean(appliedQuery.data);
+  const checkingApplied = signedIn && appliedQuery.isPending;
   const similar = embedded ? [] : similarJobs(jobs, job);
   const applyHref = `/can/jobs/apply?job=${encodeURIComponent(job.id)}`;
 
@@ -954,29 +973,45 @@ function JobDetail({
 
         <aside className="career-detail__aside">
           <div className="career-apply-card">
-            <h2>{en ? "Apply for this role" : "Ứng tuyển vị trí này"}</h2>
-            {signedIn ? (
-              applied ? (
-                <>
-                  <p>Hồ sơ của bạn đã được gửi tới nhà tuyển dụng cho vị trí này.</p>
-                  <span className="career-applied-state">
-                    <CheckCircle2 size={18} aria-hidden="true" />
-                    {en ? "Applied" : "Đã nộp hồ sơ"}
-                  </span>
-                </>
-              ) : (
-                <>
-                  <p>
-                    {en
-                      ? "Open your candidate profile to choose a CV and submit your application for this role."
-                      : "Mở hồ sơ ứng viên để chọn CV và gửi đơn cho vị trí này."}
-                  </p>
-                  <Link to="/can/jobs/apply" search={{ job: job.id }} className="career-button">
-                    {en ? "Apply now" : "Ứng tuyển ngay"}
-                    <ArrowRight size={18} aria-hidden="true" />
-                  </Link>
-                </>
-              )
+            <h2>
+              {membership && !hasApplied
+                ? en
+                  ? "Posted by your company"
+                  : "Tin do công ty bạn đăng"
+                : en
+                  ? "Apply for this role"
+                  : "Ứng tuyển vị trí này"}
+            </h2>
+            {hasApplied ? (
+              <>
+                <p>Hồ sơ của bạn đã được gửi tới nhà tuyển dụng cho vị trí này.</p>
+                <span className="career-applied-state">
+                  <CheckCircle2 size={18} aria-hidden="true" />
+                  {en ? "Applied" : "Đã nộp hồ sơ"}
+                </span>
+              </>
+            ) : membership ? (
+              <p>
+                {en
+                  ? `You’re ${companyRoleLabel(membership.companyRole, true)} at ${job.company}, so you can’t apply to a posting from your own company. Browse jobs from other companies to continue.`
+                  : `Bạn đang là ${companyRoleLabel(membership.companyRole, false)} tại ${job.company}, nên không thể gửi đơn ứng tuyển cho tin do chính công ty mình đăng. Hãy tiếp tục tìm việc ở các công ty khác.`}
+              </p>
+            ) : checkingApplied ? (
+              <p role="status">
+                {en ? "Checking your application…" : "Đang kiểm tra hồ sơ ứng tuyển…"}
+              </p>
+            ) : signedIn ? (
+              <>
+                <p>
+                  {en
+                    ? "Open your candidate profile to choose a CV and submit your application for this role."
+                    : "Mở hồ sơ ứng viên để chọn CV và gửi đơn cho vị trí này."}
+                </p>
+                <Link to="/can/jobs/apply" search={{ job: job.id }} className="career-button">
+                  {en ? "Apply now" : "Ứng tuyển ngay"}
+                  <ArrowRight size={18} aria-hidden="true" />
+                </Link>
+              </>
             ) : (
               <>
                 <p>
@@ -1001,12 +1036,14 @@ function JobDetail({
                 </Link>
               </>
             )}
-            <p className="career-apply-card__note">
-              <ShieldCheck size={16} aria-hidden="true" />
-              {signedIn
-                ? "Đơn ứng tuyển được gửi trực tiếp tới nhà tuyển dụng."
-                : "Nộp hồ sơ chỉ dành cho ứng viên đã đăng nhập."}
-            </p>
+            {(hasApplied || (!membership && !checkingApplied)) && (
+              <p className="career-apply-card__note">
+                <ShieldCheck size={16} aria-hidden="true" />
+                {signedIn
+                  ? "Đơn ứng tuyển được gửi trực tiếp tới nhà tuyển dụng."
+                  : "Nộp hồ sơ chỉ dành cho ứng viên đã đăng nhập."}
+              </p>
+            )}
           </div>
 
           <div className="career-facts">

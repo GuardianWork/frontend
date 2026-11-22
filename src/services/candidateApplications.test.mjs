@@ -3,6 +3,7 @@ import { test } from "node:test";
 import { ApiError } from "./api.ts";
 import { AUTH_SESSION_KEY } from "./auth.ts";
 import {
+  findApplicationForJob,
   getCandidateApplication,
   getCandidateApplicationCvDownloadUrl,
   listApplicationCounts,
@@ -343,6 +344,62 @@ test("locateApplicationPage finds the ledger page of one application", async () 
 
     requests.length = 0;
     assert.equal(await locateApplicationPage("   ", { pageSize: 10 }), null);
+    assert.equal(requests.length, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+    delete globalThis.localStorage;
+  }
+});
+
+test("findApplicationForJob scans the ledger by job id and accepts any status", async () => {
+  globalThis.localStorage = session();
+  // Newest-first ledger of 130 rows; the wanted posting is the 105th row and
+  // its application was withdrawn, which still blocks a second application.
+  const rows = Array.from({ length: 130 }, (_, index) => ({
+    ...sampleApplication,
+    id: `application-${index + 1}`,
+    jobId: index === 104 ? 777 : 9000 + index,
+    status: index === 104 ? "WITHDRAWN" : "SUBMITTED",
+  }));
+  const requests = [];
+  try {
+    globalThis.fetch = async (url, init) => {
+      assert.equal(init.headers.Authorization, "Bearer candidate-access");
+      const parsed = new URL(String(url), "http://localhost");
+      assert.equal(parsed.pathname, "/api/candidate/applications");
+      const page = Number(parsed.searchParams.get("page"));
+      const size = Number(parsed.searchParams.get("size"));
+      requests.push({ page, size });
+      return Response.json({
+        status: 200,
+        data: {
+          content: rows.slice(page * size, page * size + size),
+          pageNumber: page,
+          pageSize: size,
+          totalElements: rows.length,
+          totalPages: Math.ceil(rows.length / size),
+        },
+      });
+    };
+
+    const match = await findApplicationForJob(777);
+    assert.equal(match?.id, "application-105");
+    assert.equal(match?.status, "WITHDRAWN");
+    assert.deepEqual(requests, [
+      { page: 0, size: 100 },
+      { page: 1, size: 100 },
+    ]);
+
+    requests.length = 0;
+    assert.equal((await findApplicationForJob("9001"))?.id, "application-2");
+    assert.deepEqual(requests, [{ page: 0, size: 100 }]);
+
+    requests.length = 0;
+    assert.equal(await findApplicationForJob(99999), null);
+    assert.equal(requests.length, 2);
+
+    requests.length = 0;
+    assert.equal(await findApplicationForJob("   "), null);
     assert.equal(requests.length, 0);
   } finally {
     globalThis.fetch = originalFetch;

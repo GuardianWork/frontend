@@ -44,7 +44,10 @@ export function Header({
         { to: "/can/profile", label: dict.navWorkbench.profile },
         { to: "/can/copilot", label: dict.navWorkbench.legalChat },
       ]
-    : [{ to: "/jobs", label: dict.nav.findJob }];
+    : [
+        { to: "/jobs", label: dict.nav.findJob },
+        { to: "/companies", label: dict.nav.findCompany },
+      ];
   const loginSearch =
     !user && currentHref && !currentHref.startsWith("/login")
       ? { role: "candidate" as const, next: currentHref }

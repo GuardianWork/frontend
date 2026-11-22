@@ -1,7 +1,9 @@
 import { test, expect, login } from "./fixtures";
 
+// Job 43 is not in the mock Candidate's application ledger (job 42 is), so the
+// apply flow below remains reachable while the detail page guards applied jobs.
 const job = {
-  id: 42,
+  id: 43,
   company: { id: 101, name: "Integration Company" },
   content: {
     title: "Integration job from main",
@@ -36,16 +38,16 @@ test("backend job details work for guests and within the persistent Candidate wo
       },
     }),
   );
-  await page.route("**/api/jobs/42", (route) =>
+  await page.route("**/api/jobs/43", (route) =>
     route.fulfill({ json: { status: 200, data: job } }),
   );
-  await page.goto("/jobs?job=42");
+  await page.goto("/jobs?job=43");
   await expect(page.getByRole("heading", { name: job.content.title, exact: true })).toBeVisible();
   await expect(page.getByText(job.content.description, { exact: true })).toBeVisible();
   await expect(page.locator(".career-header")).toHaveCount(1);
 
   await login(page, "candidate_demo");
-  await page.goto("/can/jobs?job=42");
+  await page.goto("/can/jobs?job=43");
   await expect(page.getByRole("heading", { name: job.content.title, exact: true })).toBeVisible();
   await expect(page.getByText(job.content.description, { exact: true })).toBeVisible();
   await expect(page.locator(".candidate-workspace .workspace-sidebar")).toBeVisible();
@@ -63,7 +65,7 @@ test("backend job details work for guests and within the persistent Candidate wo
   expect(await sidebar!.evaluate((el) => el === document.querySelector(".workspace-sidebar"))).toBe(
     true,
   );
-  await page.goto("/can/jobs/apply?job=42");
+  await page.goto("/can/jobs/apply?job=43");
   await expect(page.locator(".apply-form")).toBeVisible();
   await expect(page.getByRole("heading", { name: job.content.title, exact: true })).toBeVisible();
 });
