@@ -8,6 +8,7 @@ import {
   listRecruiterApplicationInbox,
   getRecruiterApplication,
   changeApplicationStatus,
+  getApplicationCvDownload,
   getApplicationPdf,
 } from "./recruiterApplications.ts";
 const originalFetch = globalThis.fetch;
@@ -51,13 +52,16 @@ const detail = {
   cvContentType: "application/pdf",
   cvFileSize: 123,
   candidateFeedback: null,
+  canViewCv: true,
+  reviewWindowEndsAt: null,
+  inactivityDeadline: "2026-12-01T08:00:00Z",
   history: [],
 };
 function response(data) {
   return Response.json({ status: 200, data });
 }
 
-test("recruiter list accepts seven statuses and sends combined server filters", async () => {
+test("recruiter list accepts every lifecycle status and sends combined server filters", async () => {
   mock((url) => {
     const query = new URL(url, "http://localhost").searchParams;
     assert.equal(query.get("search"), "Nguyen");
@@ -74,7 +78,7 @@ test("recruiter list accepts seven statuses and sends combined server filters", 
     });
   });
   const page = await listRecruiterApplications(42, " Nguyen ", 2, undefined, "UNDER_REVIEW");
-  assert.equal(page.content.length, 7);
+  assert.equal(page.content.length, 8);
 });
 
 test("malformed recruiter rows fail instead of displaying invented statuses", async () => {
@@ -102,6 +106,52 @@ test("final application details discard personal evidence even when server accid
     assert.equal(result.cvFileName, null);
     assert.equal(result.cvFileSize, 0);
   }
+});
+
+test("INACTIVE details keep contact evidence but deny CV access and pause deadlines", async () => {
+  mock(() =>
+    response({
+      ...detail,
+      status: "INACTIVE",
+      canViewCv: true,
+      reviewWindowEndsAt: "2026-12-10T08:00:00Z",
+      inactivityDeadline: "2026-12-01T08:00:00Z",
+    }),
+  );
+  const result = await getRecruiterApplication(42, "a1");
+  assert.equal(result.email, "an@example.test");
+  assert.equal(result.cvFileName, "cv.pdf");
+  assert.equal(result.canViewCv, false);
+  assert.equal(result.reviewWindowEndsAt, null);
+  assert.equal(result.inactivityDeadline, null);
+});
+
+test("company CV downloads fetch authenticated bytes for PDF, DOC and DOCX", async () => {
+  for (const contentType of [
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ]) {
+    mock((url, init) => {
+      assert.equal(url, "/api/companies/me/jobs/42/applications/a1/cv/download-url");
+      assert.equal(init.cache, "no-store");
+      assert.match(new Headers(init.headers).get("Accept") || "", /application\/pdf/);
+      assert.match(new Headers(init.headers).get("Accept") || "", /application\/json/);
+      return new Response("cv-bytes", { headers: { "Content-Type": contentType } });
+    });
+    const blob = await getApplicationCvDownload(42, "a1");
+    assert.equal(blob.type, contentType);
+    assert.equal(await blob.text(), "cv-bytes");
+  }
+  mock(() => Response.json({ status: 404, message: "Not found", data: null }, { status: 404 }));
+  await assert.rejects(
+    getApplicationCvDownload(42, "a1"),
+    (error) => error instanceof ApiError && error.status === 404,
+  );
+  mock(() => new Response("<html>Error</html>", { headers: { "Content-Type": "text/html" } }));
+  await assert.rejects(getApplicationCvDownload(42, "a1"), ApiError);
+  mock(() => new Response("", { headers: { "Content-Type": "application/pdf" } }));
+  await assert.rejects(getApplicationCvDownload(42, "a1"), ApiError);
 });
 
 test("status change sends version and keeps private and candidate text in separate fields", async () => {
@@ -253,6 +303,7 @@ test("suspension blocks every job-scoped application read, mutation and CV reque
     () => getRecruiterApplication(42, "a1"),
     () => changeApplicationStatus(42, "a1", { status: "UNDER_REVIEW", version: 0 }),
     () => getApplicationPdf(42, "a1"),
+    () => getApplicationCvDownload(42, "a1"),
   ])
     await assert.rejects(operation, /đã bị đình chỉ/);
   assert.equal(calls, 0);

@@ -4,9 +4,11 @@ import { ApiError } from "./api.ts";
 import { AUTH_SESSION_KEY } from "./auth.ts";
 import {
   getCandidateApplication,
+  getCandidateApplicationCvDownloadUrl,
   listApplicationCounts,
   listApplications,
   listApplicationPage,
+  locateApplicationPage,
   parseApplicationPage,
   parseSubmittedApplication,
   submitApplication,
@@ -291,6 +293,63 @@ test("listApplicationPage sends search, status and paging to the candidate endpo
   }
 });
 
+test("locateApplicationPage finds the ledger page of one application", async () => {
+  globalThis.localStorage = session();
+  // Newest-first ledger of 130 rows; the wanted row is on its second scan page.
+  const rows = Array.from({ length: 130 }, (_, index) => ({
+    ...sampleApplication,
+    id: `application-${index + 1}`,
+  }));
+  const requests = [];
+  try {
+    globalThis.fetch = async (url) => {
+      const params = new URL(String(url), "http://localhost").searchParams;
+      const page = Number(params.get("page"));
+      const size = Number(params.get("size"));
+      requests.push({ page, size });
+      return Response.json({
+        status: 200,
+        data: {
+          content: rows.slice(page * size, page * size + size),
+          pageNumber: page,
+          pageSize: size,
+          totalElements: rows.length,
+          totalPages: Math.ceil(rows.length / size),
+        },
+      });
+    };
+
+    assert.deepEqual(await locateApplicationPage("application-105", { pageSize: 10 }), {
+      page: 10,
+      index: 104,
+    });
+    // The scan reads larger pages, so two requests cover all 130 rows.
+    assert.deepEqual(requests, [
+      { page: 0, size: 100 },
+      { page: 1, size: 100 },
+    ]);
+
+    requests.length = 0;
+    assert.deepEqual(await locateApplicationPage("application-23", { pageSize: 10 }), {
+      page: 2,
+      index: 22,
+    });
+    assert.equal(requests.length, 1);
+
+    // An unknown id stops after the last page instead of scanning further.
+    requests.length = 0;
+    assert.equal(await locateApplicationPage("application-404", { pageSize: 10 }), null);
+    assert.equal(requests.length, 2);
+
+    requests.length = 0;
+    assert.equal(await locateApplicationPage("   ", { pageSize: 10 }), null);
+    assert.equal(requests.length, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+    delete globalThis.localStorage;
+  }
+});
+
 test("listApplicationCounts returns one exact total per status from size-one reads", async () => {
   globalThis.localStorage = session();
   try {
@@ -303,6 +362,7 @@ test("listApplicationCounts returns one exact total per status from size-one rea
       HIRED: 1,
       REJECTED: 2,
       WITHDRAWN: 1,
+      INACTIVE: 3,
     };
     const seenStatuses = [];
 
@@ -335,6 +395,7 @@ test("listApplicationCounts returns one exact total per status from size-one rea
       hired: 1,
       rejected: 2,
       withdrawn: 1,
+      inactive: 3,
     });
     assert.deepEqual(
       new Set(seenStatuses),
@@ -347,6 +408,7 @@ test("listApplicationCounts returns one exact total per status from size-one rea
         "HIRED",
         "REJECTED",
         "WITHDRAWN",
+        "INACTIVE",
       ]),
     );
   } finally {
@@ -454,6 +516,8 @@ test("candidate detail conceals shortlist and collapses its duplicate review his
           id: "private-shortlist",
           status: "SHORTLISTED",
           version: 7,
+          cvFileName: "resume.pdf",
+          canViewCv: true,
           history: [
             { toStatus: "SUBMITTED", occurredAt: "2026-11-01T00:00:00Z" },
             { toStatus: "UNDER_REVIEW", occurredAt: "2026-11-02T00:00:00Z" },
@@ -464,11 +528,44 @@ test("candidate detail conceals shortlist and collapses its duplicate review his
     const detail = await getCandidateApplication("private-shortlist");
     assert.equal(detail.status, "UNDER_REVIEW");
     assert.equal(detail.version, 7);
+    assert.equal(detail.cvFileName, "resume.pdf");
+    assert.equal(detail.canViewCv, true);
     assert.deepEqual(
       detail.history.map((event) => event.toStatus),
       ["SUBMITTED", "UNDER_REVIEW"],
     );
     assert.equal(detail.history[1].occurredAt, "2026-11-02T00:00:00Z");
+  } finally {
+    globalThis.fetch = originalFetch;
+    delete globalThis.localStorage;
+  }
+});
+
+test("candidate submitted-CV download uses its own endpoint and validates the receipt", async () => {
+  globalThis.localStorage = session();
+  try {
+    globalThis.fetch = async (url) => {
+      assert.equal(url, "/api/candidate/applications/application-1/cv/download-url");
+      return Response.json({
+        status: 200,
+        data: {
+          url: "https://res.cloudinary.com/demo/raw/authenticated/resume.docx",
+          expiresAt: "2026-12-10T08:00:00Z",
+          fileName: "resume.docx",
+        },
+      });
+    };
+    assert.deepEqual(await getCandidateApplicationCvDownloadUrl("application-1"), {
+      url: "https://res.cloudinary.com/demo/raw/authenticated/resume.docx",
+      expiresAt: "2026-12-10T08:00:00Z",
+      fileName: "resume.docx",
+    });
+    globalThis.fetch = async () =>
+      Response.json({
+        status: 200,
+        data: { url: "javascript:alert(1)", expiresAt: "not-a-date", fileName: "" },
+      });
+    await assert.rejects(getCandidateApplicationCvDownloadUrl("application-1"), ApiError);
   } finally {
     globalThis.fetch = originalFetch;
     delete globalThis.localStorage;

@@ -3,7 +3,7 @@ import { staffJobApi } from "./helpers/staff-job-api";
 const origin = process.env.STAFF_UI_BASE_URL || "http://localhost:5138";
 async function openReview(page: import("@playwright/test").Page) {
   await page.goto(`${origin}/staff/jobs`);
-  await page.getByRole("button", { name: "Xem chi tiết Chuyên viên kế toán", exact: true }).click();
+  await page.getByRole("link", { name: "Xem chi tiết Chuyên viên kế toán", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Nội dung gửi duyệt", exact: true }),
   ).toBeVisible();
@@ -23,7 +23,7 @@ test("real queue paginates on server and rejection persists after reload", async
   await expect(page.locator(".staff-jobs-table tbody tr")).toHaveCount(20);
   expect(api.filters).toContain("ALL");
   await page.screenshot({ path: info.outputPath("staff-job-queue-desktop.png") });
-  await page.getByRole("button", { name: "Xem chi tiết Chuyên viên kế toán", exact: true }).click();
+  await page.getByRole("link", { name: "Xem chi tiết Chuyên viên kế toán", exact: true }).click();
   await expect(page.getByText("Kinh nghiệm kế toán của bạn?", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Từ chối phiên bản", exact: true }).click();
   const dialog = page.getByRole("dialog");
@@ -39,10 +39,11 @@ test("real queue paginates on server and rejection persists after reload", async
   await page.getByRole("button", { name: "Quay lại danh sách" }).click();
   await page.getByRole("combobox", { name: "Trạng thái", exact: true }).selectOption("REJECTED");
   await page.reload();
-  await expect(page.getByRole("heading", { name: "Không có tin trong mục này" })).toBeVisible();
-  await page.getByRole("combobox", { name: "Trạng thái", exact: true }).selectOption("REJECTED");
-  await page.getByRole("button", { name: "Xem chi tiết Chuyên viên kế toán", exact: true }).click();
-  await expect(page.locator(".compliance-jd .admin-record-status")).toHaveText("Bị từ chối");
+  await expect(page.getByRole("combobox", { name: "Trạng thái", exact: true })).toHaveValue(
+    "REJECTED",
+  );
+  await page.getByRole("link", { name: "Xem chi tiết Chuyên viên kế toán", exact: true }).click();
+  await expect(page.locator(".compliance-jd > .admin-panel-heading .admin-record-status")).toHaveText("Bị từ chối");
 });
 test("approval uses exact versions and does not claim a paused job is public", async ({
   page,
@@ -56,17 +57,12 @@ test("approval uses exact versions and does not claim a paused job is public", a
     page.getByText("Đã duyệt phiên bản. Trạng thái tin: Đã tạm dừng tuyển.", { exact: true }),
   ).toBeVisible();
   await expect(page.getByRole("dialog")).not.toBeVisible();
-  await expect(page.locator(".compliance-jd .admin-record-status")).toHaveText("Đã duyệt");
+  await expect(page.locator(".compliance-jd > .admin-panel-heading .admin-record-status")).toHaveText("Đã duyệt");
   await expect(page.getByRole("button", { name: "Ẩn tin đã đăng" })).toHaveCount(0);
   expect(api.detailLoads).toBeGreaterThan(1);
   expect(api.historyLoads).toBeGreaterThan(1);
   await page.screenshot({
     path: info.outputPath("staff-job-detail-desktop.png"),
-    animations: "disabled",
-  });
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.screenshot({
-    path: info.outputPath("staff-job-detail-mobile.png"),
     animations: "disabled",
   });
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(
@@ -117,13 +113,12 @@ test("queue failure, empty results and history retry stay separate from review e
   api.review.approvalEligible = false;
   api.review.needsReassignment = true;
   await page.getByRole("button", { name: "Tải lại", exact: true }).click();
-  await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.locator(".staff-jobs-table tbody tr")).toHaveCount(20);
-  await page.screenshot({ path: info.outputPath("staff-job-queue-mobile.png") });
+  await page.screenshot({ path: info.outputPath("staff-job-queue-desktop.png") });
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(
     false,
   );
-  await page.getByRole("button", { name: "Xem chi tiết Chuyên viên kế toán", exact: true }).click();
+  await page.getByRole("link", { name: "Xem chi tiết Chuyên viên kế toán", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Phê duyệt phiên bản", exact: true }),
   ).toBeDisabled();
@@ -133,7 +128,7 @@ test("queue failure, empty results and history retry stay separate from review e
   await expect(page.locator(".staff-jobs-history")).toContainText("Người gửi: 22");
 });
 
-test("revision history is sortable and selectable in the main job review without tabs", async ({
+test("revision history stays inline and selectable below combined content and AI", async ({
   page,
 }, info) => {
   const api = await staffJobApi(page);

@@ -3,7 +3,9 @@ import { LockKeyhole } from "lucide-react";
 import { useTableSort } from "@/hooks/useTableSort";
 import { sortDate } from "@/lib/table-sort";
 import { SortableHeader } from "./SortableHeader";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate, useRouterState, useSearch } from "@tanstack/react-router";
+import type { staffAccountsSearch } from "@/lib/staff-detail-routing";
 import {
   ArrowLeftIcon as ArrowLeft,
   ArrowRightIcon as ArrowRight,
@@ -80,10 +82,42 @@ function Status({
     </StaffStatusBadge>
   );
 }
-export function StaffAccountsPage() {
-  const [type, setType] = useState<AccountType>("users");
-  const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState({ q: "", page: 0 });
+export function StaffAccountsPage({
+  accountType,
+  accountId = null,
+}: {
+  accountType?: AccountType;
+  accountId?: number | null;
+}) {
+  const navigate = useNavigate();
+  const search = useSearch({ strict: false }) as ReturnType<typeof staffAccountsSearch>;
+  const type = accountType ?? search.type ?? "users";
+  const id = accountId;
+  const returnFocusId = useRouterState({
+    select: (state) => state.location.state.staffAccountFocusId,
+  });
+  const restoredFocus = useRef<number | undefined>(undefined);
+  const [query, setQuery] = useState(search.q ?? "");
+  const filter = useMemo(
+    () => ({ q: search.q ?? "", page: search.page ?? 0 }),
+    [search.q, search.page],
+  );
+  const setFilter = useCallback(
+    (update: typeof filter | ((previous: typeof filter) => typeof filter)) => {
+      const next = typeof update === "function" ? update(filter) : update;
+      if (next.q === filter.q && next.page === filter.page) return;
+      void navigate({
+        to: "/staff/accounts",
+        search: {
+          type: type === "companies" ? type : undefined,
+          q: next.q || undefined,
+          page: next.page || undefined,
+        },
+        replace: next.q !== filter.q,
+      });
+    },
+    [filter, navigate, type],
+  );
   const [revision, setRevision] = useState(0);
   const [data, setData] = useState<AccountPage | null>(null);
   const tableSort = useTableSort(
@@ -105,7 +139,6 @@ export function StaffAccountsPage() {
   );
   const [loading, setLoading] = useState(true);
   const [listError, setListError] = useState("");
-  const [id, setId] = useState<number | null>(null);
   const [detail, setDetail] = useState<StaffAccount | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState("");
@@ -122,17 +155,38 @@ export function StaffAccountsPage() {
   const focusedDetail = useRef<number | null>(null);
   const actionTrigger = useRef<HTMLButtonElement | null>(null);
   useEffect(() => {
+    if (
+      id !== null ||
+      loading ||
+      !data ||
+      !returnFocusId ||
+      restoredFocus.current === returnFocusId
+    )
+      return;
+    restoredFocus.current = returnFocusId;
+    requestAnimationFrame(() => {
+      const target = document.querySelector<HTMLAnchorElement>(
+        `[data-account-id="${returnFocusId}"]`,
+      );
+      (target || document.querySelector<HTMLInputElement>("#account-search"))?.focus();
+    });
+  }, [id, loading, data, returnFocusId]);
+  useEffect(() => {
     if (detail && id !== null && focusedDetail.current !== id) {
       detailHeading.current?.focus();
       focusedDetail.current = id;
     }
   }, [detail, id]);
   useEffect(() => {
+    setQuery(search.q ?? "");
+  }, [search.q]);
+  useEffect(() => {
+    if (id !== null || query.trim() === filter.q) return;
     const timer = setTimeout(() => setFilter({ q: query.trim(), page: 0 }), 350);
     return () => clearTimeout(timer);
-  }, [query, type]);
+  }, [query, type, id, setFilter, filter.q]);
   useEffect(() => {
-    if (filter.q !== query.trim()) return;
+    if (id !== null || filter.q !== query.trim()) return;
     const controller = new AbortController();
     setLoading(true);
     setListError("");
@@ -152,7 +206,7 @@ export function StaffAccountsPage() {
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [type, filter, revision, query]);
+  }, [type, filter, revision, query, id, setFilter]);
   const refreshDetail = useCallback(async () => {
     if (id === null || pending.current) return null;
     const ticket = ++sequence.current;
@@ -168,10 +222,9 @@ export function StaffAccountsPage() {
       if (ticket !== sequence.current) return null;
       const mapped = accountError(error);
       if (mapped.status === 404) {
-        setId(null);
         setDetail(null);
         setAction(null);
-        toast.error(mapped.message);
+        setDetailError(mapped.message);
         setRevision((value) => value + 1);
       } else {
         setDetailError(mapped.message);
@@ -244,8 +297,8 @@ export function StaffAccountsPage() {
       setFormError(mapped.message);
       if (mapped.status === 404) {
         setAction(null);
-        setId(null);
         setDetail(null);
+        setDetailError(mapped.message);
         toast.error(mapped.message);
         setRevision((value) => value + 1);
       }
@@ -262,16 +315,15 @@ export function StaffAccountsPage() {
   };
   const back = () => {
     sequence.current++;
-    const previousId = id;
     focusedDetail.current = null;
-    setId(null);
+    void navigate({
+      to: "/staff/accounts",
+      search: { ...search, type: type === "companies" ? type : undefined },
+      state: { staffAccountFocusId: id ?? undefined },
+    });
     setDetail(null);
     setAction(null);
     setDetailError("");
-    requestAnimationFrame(() => {
-      const target = document.querySelector<HTMLButtonElement>(`[data-account-id="${previousId}"]`);
-      (target || document.querySelector<HTMLInputElement>("#account-search"))?.focus();
-    });
   };
   return (
     <AdminShell title="Quản lý tài khoản">
@@ -313,8 +365,10 @@ export function StaffAccountsPage() {
                   aria-controls="accounts-results"
                   onClick={() => {
                     if (tab === type) return;
-                    setType(tab);
-                    setFilter({ q: "", page: 0 });
+                    void navigate({
+                      to: "/staff/accounts",
+                      search: { type: tab === "companies" ? tab : undefined },
+                    });
                     setQuery("");
                     setData(null);
                   }}
@@ -418,16 +472,15 @@ export function StaffAccountsPage() {
                         {tableSort.rows.map((item) => (
                           <tr key={item.id}>
                             <td>
-                              <button
+                              <Link
                                 className="admin-record-name"
                                 data-account-id={item.id}
-                                onClick={() => {
-                                  setDetail(null);
-                                  setId(item.id);
-                                }}
+                                to="/staff/accounts/$accountType/$accountId"
+                                params={{ accountType: type, accountId: String(item.id) }}
+                                search={search}
                               >
                                 {name(item)}
-                              </button>
+                              </Link>
                               {type === "users" && (
                                 <span className="accounts-secondary">
                                   {[item.firstName, item.lastName].filter(Boolean).join(" ") ||
@@ -455,15 +508,14 @@ export function StaffAccountsPage() {
                             </td>
                             <td>{date(item.createdAt)}</td>
                             <td>
-                              <button
+                              <Link
                                 className="admin-text-link"
-                                onClick={() => {
-                                  setDetail(null);
-                                  setId(item.id);
-                                }}
+                                to="/staff/accounts/$accountType/$accountId"
+                                params={{ accountType: type, accountId: String(item.id) }}
+                                search={search}
                               >
                                 Xem chi tiết <ArrowRight size={16} />
-                              </button>
+                              </Link>
                             </td>
                           </tr>
                         ))}

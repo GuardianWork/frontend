@@ -95,6 +95,7 @@ const EVENT_CATEGORIES: Record<string, NotificationCategory> = {
   APPLICATION_STATUS_CHANGED: "application",
   APPLICATION_REJECTED: "application",
   APPLICATION_WITHDRAWN: "application",
+  APPLICATION_INACTIVE: "application",
 };
 
 function asRecord(value: unknown): RawRecord | null {
@@ -602,11 +603,16 @@ export type NotificationPortal = "can" | "rec" | "staff";
  * `/companies/{id}`) and Company workspace hrefs do not match TanStack routes, so each
  * portal maps them to its own list/detail screen. Returns `null` when there is no
  * known screen (informational-only, or a portal without one) — callers stay put.
+ *
+ * A candidate application notification names the application it is about, so the
+ * ledger opens with that card expanded instead of at the top of the list. The id
+ * comes from the href and, for rows without one, from the notification's own
+ * `application` reference.
  */
 export type NotificationPath =
   | { to: "/jobs"; search: { job: string } }
   | { to: "/rec/jobs"; search: { jobId: number } }
-  | { to: "/can/applied" }
+  | { to: "/can/applied"; search: { application: string } }
   | { to: "/rec/applications" }
   | {
       to: "/rec/applications/$jobId/$applicationId";
@@ -660,8 +666,13 @@ export function resolveNotificationPath(
     return { to: "/jobs", search: { job: String(jobId) } };
   }
 
-  if (applicationMatch) {
-    const applicationId = decodeURIComponent(applicationMatch[1]);
+  const applicationId = applicationMatch
+    ? decodeURIComponent(applicationMatch[1])
+    : portal === "can"
+      ? (notification.references.application ?? "")
+      : "";
+
+  if (applicationId) {
     if (portal === "rec") {
       const jobId = notification.references.job;
       if (jobId && /^\d+$/.test(jobId)) {
@@ -673,7 +684,7 @@ export function resolveNotificationPath(
       return { to: "/rec/applications" };
     }
     if (portal === "staff") return null;
-    return { to: "/can/applied" };
+    return { to: "/can/applied", search: { application: applicationId } };
   }
 
   if (companyMatch) {

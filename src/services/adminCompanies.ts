@@ -128,6 +128,29 @@ async function getVerificationPage(
     throw new AdminApiError("Danh sách hồ sơ trả về không hợp lệ. Vui lòng thử lại.");
   return result;
 }
+// The staff contract exposes a paged verification queue, not a single-company read.
+// Resolve deep links from that authoritative queue, including records moved by a decision.
+export async function getAdminVerification(
+  companyId: number,
+  status: VerificationFilter,
+  page: number,
+  signal?: AbortSignal,
+): Promise<AdminCompany> {
+  const current = await getAdminVerifications(status, page, signal);
+  const match = current.content.find((item) => item.id === companyId);
+  if (match) return match;
+  for (let sourcePage = 0; ; sourcePage++) {
+    const result = await getVerificationPage("ALL", sourcePage, signal);
+    const company = result.content.find((item) => item.id === companyId);
+    if (company) return company;
+    if (sourcePage + 1 >= result.totalPages) break;
+  }
+  throw new AdminApiError(
+    "Công ty hoặc dữ liệu không còn khả dụng. Vui lòng tải lại danh sách.",
+    404,
+  );
+}
+
 export async function decideAdminVerification(
   company: AdminCompany,
   decision: "VERIFIED" | "REJECTED",

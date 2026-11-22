@@ -1,5 +1,6 @@
 import { test, expect, login } from "./fixtures";
 import { staffJobApi } from "./helpers/staff-job-api";
+const origin = process.env.STAFF_UI_BASE_URL || "http://localhost:5138";
 
 test("staff jobs keeps legal review in JD details without a separate sample section", async ({
   page,
@@ -7,7 +8,7 @@ test("staff jobs keeps legal review in JD details without a separate sample sect
   await page.setViewportSize({ width: 1440, height: 1000 });
   await staffJobApi(page);
   await login(page, "admin_demo");
-  await page.goto("http://localhost:5138/staff/jobs");
+  await page.goto(`${origin}/staff/jobs`);
   await expect(
     page.getByRole("heading", { name: "Hàng đợi duyệt tin", exact: true }),
   ).toBeVisible();
@@ -29,13 +30,14 @@ test("job detail reviews its own revision and clears previous local findings aft
   api.review.content.description =
     "Ứng viên nộp khoản đặt cọc 2.000.000 đồng trước khi nhận việc.\nNộp bản gốc bằng tốt nghiệp cho công ty.";
   await login(page, "admin_demo");
-  await page.goto("http://localhost:5138/staff/jobs");
-  await page.getByRole("button", { name: "Xem chi tiết Chuyên viên kế toán", exact: true }).click();
-  const panel = page
-    .locator("#staff-reviews")
-    .getByRole("region", { name: "Rà soát AI theo pháp luật" });
-  await expect(panel).toContainText("Tin #83 · Bản v2 · Phiên bản dữ liệu 7");
-  await expect(panel).toContainText("Chưa có kết quả AI");
+  await page.goto(`${origin}/staff/jobs`);
+  await page.getByRole("link", { name: "Xem chi tiết Chuyên viên kế toán", exact: true }).click();
+  const panel = page.locator("#staff-preliminary-review");
+  await panel.locator(":scope > summary").click();
+  await expect(page.locator(".staff-job-object-heading")).toContainText("Phiên bản 2");
+  await expect(page.locator(".staff-known-scan")).toContainText(
+    "Phiên bản này chưa có kết quả phân tích AI.",
+  );
   await expect(panel.locator("blockquote")).toHaveCount(2);
   await expect(panel.locator("blockquote").first()).toContainText("2.000.000");
   await expect(page.locator(".staff-review-conditions")).toContainText("Không bị đình chỉ");
@@ -49,7 +51,7 @@ test("job detail reviews its own revision and clears previous local findings aft
   api.review.validationIssues = [{ field: "content.deadline", code: "DEADLINE_PASSED" }];
   api.review.approvalEligible = false;
   await page.getByRole("button", { name: "Tải lại bản tin", exact: true }).click();
-  await expect(panel).toContainText("Phiên bản dữ liệu 8");
+  await panel.locator(":scope > summary").click();
   await expect(panel.locator("blockquote")).toHaveCount(0);
   await expect(panel).toContainText("không xác nhận tin phù hợp pháp luật");
   await expect(page.getByText("Hạn ứng tuyển đã qua. Công ty cần cập nhật hạn mới.")).toBeVisible();
@@ -61,7 +63,9 @@ test("job detail reviews its own revision and clears previous local findings aft
   expect(api.decisions).toBe(0);
 });
 
-test("staff reads a known scan without changing approval eligibility", async ({ page }) => {
+test("staff automatically reads the viewed revision analysis without changing approval eligibility", async ({
+  page,
+}) => {
   await staffJobApi(page);
   const requests: string[] = [];
   await page.route("**/api/staff/job-revisions/91/scans/*", (route) => {
@@ -99,15 +103,13 @@ test("staff reads a known scan without changing approval eligibility", async ({ 
     });
   });
   await login(page, "admin_demo");
-  await page.goto("http://localhost:5138/staff/jobs");
-  await page.getByRole("button", { name: "Xem chi tiết Chuyên viên kế toán", exact: true }).click();
-  expect(requests).toHaveLength(0);
-  await page.getByLabel("Mã phân tích", { exact: true }).fill("401");
-  await page.getByRole("button", { name: "Xem kết quả AI", exact: true }).click();
+  await page.goto(`${origin}/staff/jobs`);
+  await page.getByRole("link", { name: "Xem chi tiết Chuyên viên kế toán", exact: true }).click();
+  await expect.poll(() => requests.length).toBe(1);
+  await expect(page.locator(".staff-known-scan > .jp-warning")).toBeVisible();
+  await page.locator(".staff-ai-report > summary").click();
   await expect(page.getByText("Ngoài phạm vi hỗ trợ", { exact: true })).toBeVisible();
-  await expect(
-    page.getByText("Chế độ thử nghiệm — chưa thực hiện phân tích AI", { exact: true }),
-  ).toBeVisible();
+  await expect(page.locator(".staff-known-scan > .jp-warning")).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Phê duyệt phiên bản", exact: true }),
   ).toBeEnabled();

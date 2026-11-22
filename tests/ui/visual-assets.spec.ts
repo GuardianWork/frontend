@@ -161,7 +161,7 @@ test("Staff queue artwork is exclusive to genuine empty pending results", async 
   test.setTimeout(60000);
   await login(page, "admin_demo");
   await page.goto(`${staff}/staff/verifications`);
-  await expect(page.getByRole("button", { name: /Mở hồ sơ/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Mở hồ sơ/ })).toBeVisible();
   await expect(page.locator(".guardian-art")).toHaveCount(0);
   await capture(page, info, "staff-populated");
   let state = "empty";

@@ -161,12 +161,17 @@ export function JobWorkspace({
   const [view, setView] = useState<View>(!initialJob || guided ? "edit" : "latest");
   const [editorAnalysisTarget, setEditorAnalysisTarget] = useState<HTMLDivElement | null>(null);
   const [scanEditSequence, setScanEditSequence] = useState(0);
-  const [analysis, setAnalysis] = useState<{ scan: ScanView | null; outdated: boolean }>({
+  const [analysis, setAnalysis] = useState<{
+    scan: ScanView | null;
+    outdated: boolean;
+    viewedVersion?: number;
+  }>({
     scan: null,
     outdated: false,
   });
   const receiveAnalysis = useCallback(
-    (scan: ScanView | null, outdated: boolean) => setAnalysis({ scan, outdated }),
+    (scan: ScanView | null, outdated: boolean, viewedVersion?: number) =>
+      setAnalysis({ scan, outdated, viewedVersion }),
     [],
   );
   const [dialogDirty, setDialogDirty] = useState(false);
@@ -203,7 +208,9 @@ export function JobWorkspace({
     !dirty &&
     !dialogDirty &&
     analysis.scan.revisionId === newestRevision?.id &&
-    analysis.scan.revisionVersion === newestRevision?.version;
+    analysis.viewedVersion === newestRevision?.version &&
+    analysis.scan.mode !== "stub" &&
+    analysis.scan.report?.mode !== "stub";
   const currentFindings = analysisCurrent ? (analysis.scan?.report?.findings ?? []) : [];
   const can = (action: string) =>
     job?.status !== "SUSPENDED" && job?.availableActions.includes(action);
@@ -361,9 +368,10 @@ export function JobWorkspace({
     setView(next);
     headingRef.current?.focus();
   };
-  const scanPanel = (editable || job?.workingRevision) && (
+  const scanPanel = (editable || newestRevision) && (
     <JobScanPanel
       job={job}
+      revision={newestRevision}
       busy={busy}
       editable={editable}
       localEdits={dialogDirty}

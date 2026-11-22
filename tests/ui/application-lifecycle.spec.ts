@@ -17,6 +17,7 @@ test("candidate tracks interviews, withdraws with fresh version, and cannot with
     version,
     appliedAt: "2026-11-01T08:30:00Z",
     cvFileName: "CV.pdf",
+    canViewCv: true,
     history: [
       { toStatus: "SUBMITTED", occurredAt: "2026-11-01T08:30:00Z" },
       { toStatus: status, occurredAt: "2026-11-10T08:30:00Z" },
@@ -74,6 +75,7 @@ test("candidate sees internal shortlisting as continued review in cards, filters
     version: 7,
     appliedAt: "2026-11-01T08:30:00Z",
     cvFileName: "CV.pdf",
+    canViewCv: true,
     history: [
       { toStatus: "SUBMITTED", occurredAt: "2026-11-01T08:30:00Z" },
       { toStatus: "UNDER_REVIEW", occurredAt: "2026-11-02T08:30:00Z" },
@@ -108,4 +110,49 @@ test("candidate sees internal shortlisting as continued review in cards, filters
   await expect(page.getByText(/tiềm năng|shortlisted/i)).toHaveCount(0);
   await expect(card.getByRole("button", { name: "Rút đơn ứng tuyển", exact: true })).toBeVisible();
   await page.screenshot({ path: "/tmp/candidate-shortlist-hidden.png", animations: "disabled" });
+});
+
+test("candidate sees a paused application and may withdraw it", async ({ page }) => {
+  await login(page, "candidate_demo");
+  let status = "INACTIVE";
+  let version = 4;
+  const writes: unknown[] = [];
+  const row = () => ({
+    id: "paused-1",
+    jobId: 42,
+    jobTitle: "Chuyên viên kinh doanh",
+    companyId: 1,
+    companyName: "Công ty Alpha",
+    status,
+    version,
+    appliedAt: "2026-11-01T08:30:00Z",
+    cvFileName: "CV.pdf",
+    canViewCv: true,
+    history: [
+      { toStatus: "SUBMITTED", occurredAt: "2026-11-01T08:30:00Z" },
+      { toStatus: "UNDER_REVIEW", occurredAt: "2026-11-02T08:30:00Z" },
+      { toStatus: "INACTIVE", occurredAt: "2026-11-15T08:30:00Z" },
+    ],
+  });
+  await page.route(/\/api\/candidate\/applications(?:\?|\/|$)/, async (route) => {
+    const url = new URL(route.request().url());
+    if (url.pathname.endsWith("/withdraw")) {
+      writes.push(route.request().postDataJSON());
+      status = "WITHDRAWN";
+      version++;
+      return route.fulfill({ json: { status: 200, data: row() } });
+    }
+    return route.fulfill({
+      json: { status: 200, data: url.pathname.endsWith("paused-1") ? row() : [row()] },
+    });
+  });
+  await page.goto("/can/applied");
+  const card = page.locator(".application-card");
+  await expect(card.locator(".application-card__status-tag")).toHaveText("Tạm dừng xử lý");
+  await card.locator(".application-card__status").click();
+  await expect(card).toContainText("Đơn đang tạm dừng xử lý vì công ty chưa cập nhật");
+  await card.getByRole("button", { name: "Rút đơn ứng tuyển", exact: true }).click();
+  await page.getByRole("button", { name: "Xác nhận rút đơn", exact: true }).click();
+  await expect(card.locator(".application-card__status-tag")).toHaveText("Đã rút");
+  expect(writes).toEqual([{ version: 4 }]);
 });

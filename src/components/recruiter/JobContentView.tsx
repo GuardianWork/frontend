@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { JobReviewDetails } from "./JobReviewDetails";
 import type { JobContent } from "@/services/jobs";
 import {
@@ -17,12 +18,14 @@ export function JobContentView({
   editDisabled = false,
   showTitle = true,
   findings = [],
+  descriptionAnalysis,
 }: {
   content: JobContent;
   onEdit?: (step: number, field?: string) => void;
   editDisabled?: boolean;
   showTitle?: boolean;
   findings?: ScanFinding[];
+  descriptionAnalysis?: ReactNode;
 }) {
   if (onEdit)
     return (
@@ -62,6 +65,7 @@ export function JobContentView({
           ) : (
             <JobDescription value={content[key] || "Chưa bổ sung nội dung."} />
           )}
+          {key === "description" && descriptionAnalysis}
         </section>
       ))}
       {!!content.screeningQuestions?.length && (

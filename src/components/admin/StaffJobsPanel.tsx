@@ -1,10 +1,13 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Check, Eye, RotateCw } from "lucide-react";
+import { Link, useNavigate, useSearch } from "@tanstack/react-router";
+import type { staffJobsSearch } from "@/lib/staff-detail-routing";
+import { ArrowLeft, Check, Eye, FileSearch, RotateCw } from "lucide-react";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { AdminPagination } from "./AdminPagination";
 import { StaffStatusBadge, type StaffStatusTone } from "./StaffStatusBadge";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import type { ScanView } from "@/services/jobScans";
 import { JobContentView } from "@/components/recruiter/JobContentView";
 import { revisionLabels } from "@/services/jobs";
 import { staffJobIssueLabel, staffJobStatusLabels } from "@/lib/staff-job-copy";
@@ -27,9 +30,10 @@ import {
   type StaffJobReview,
   type StaffDecisionReceipt,
 } from "@/services/staffJobs";
-import { JobLegalReview } from "./JobLegalReview";
+import { JobLegalReview, PreliminaryJobReview } from "./JobLegalReview";
 import "./compliance.css";
 import "../recruiter/job-publishing.css";
+import "../recruiter/job-detail.css";
 import "./staff-jobs.css";
 import "./staff-job-detail.css";
 
@@ -67,13 +71,22 @@ function ReviewError({ error, retry }: { error: unknown; retry: () => void }) {
   );
 }
 
-export function StaffJobsPanel() {
+export function StaffJobsPanel({ revisionId = null }: { revisionId?: number | null }) {
   const user = useAuthUser();
   const scope = String(user?.id);
   const cache = useQueryClient();
-  const [status, setStatus] = useState<ReviewFilter>("PENDING_REVIEW");
-  const [page, setPage] = useState(0);
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const navigate = useNavigate();
+  const search = useSearch({ strict: false }) as ReturnType<typeof staffJobsSearch>;
+  const status = search.status ?? "PENDING_REVIEW";
+  const page = search.page ?? 0;
+  const selectedId = revisionId;
+  const setPage = useCallback(
+    (page: number) =>
+      void navigate({ to: "/staff/jobs", search: { ...search, page: page || undefined } }),
+    [navigate, search],
+  );
+  const setSelectedId = (id: number) =>
+    void navigate({ to: "/staff/jobs/$revisionId", params: { revisionId: String(id) }, search });
   const list = useQuery({
     queryKey: ["staff-job-reviews", scope, status, page],
     queryFn: () => listStaffJobReviews(status, page),
@@ -95,9 +108,9 @@ export function StaffJobsPanel() {
   useEffect(() => {
     if (list.data && !list.isFetching && !list.isError && page > 0 && page >= list.data.totalPages)
       setPage(Math.max(0, list.data.totalPages - 1));
-  }, [list.data, list.isFetching, list.isError, page]);
+  }, [list.data, list.isFetching, list.isError, page, setPage]);
   function back() {
-    setSelectedId(null);
+    void navigate({ to: "/staff/jobs", search });
     void cache.invalidateQueries({ queryKey: ["staff-job-reviews", scope] });
   }
   if (selectedId !== null)
@@ -144,8 +157,10 @@ export function StaffJobsPanel() {
             <select
               value={status}
               onChange={(event) => {
-                setStatus(event.target.value as ReviewFilter);
-                setPage(0);
+                void navigate({
+                  to: "/staff/jobs",
+                  search: { status: event.target.value as ReviewFilter },
+                });
               }}
             >
               {filters.map((filter) => (
@@ -192,9 +207,14 @@ export function StaffJobsPanel() {
                 {queueSort.rows.map((review) => (
                   <tr key={review.id}>
                     <td className="compliance-job">
-                      <button onClick={() => setSelectedId(review.id)}>
+                      <Link
+                        className="admin-record-name"
+                        to="/staff/jobs/$revisionId"
+                        params={{ revisionId: String(review.id) }}
+                        search={search}
+                      >
                         {review.content.title || "Chưa có chức danh"}
-                      </button>
+                      </Link>
                       <span>
                         Công ty #{review.companyId} · Tin #{review.jobId} · Phiên bản{" "}
                         {review.revisionNumber} · #{review.id}
@@ -215,13 +235,15 @@ export function StaffJobsPanel() {
                       </time>
                     </td>
                     <td>
-                      <button
+                      <Link
                         className="admin-sample-detail-button"
                         aria-label={`Xem chi tiết ${review.content.title || `phiên bản ${review.id}`}`}
-                        onClick={() => setSelectedId(review.id)}
+                        to="/staff/jobs/$revisionId"
+                        params={{ revisionId: String(review.id) }}
+                        search={search}
                       >
                         <Eye size={16} aria-hidden="true" /> Xem chi tiết
-                      </button>
+                      </Link>
                     </td>
                   </tr>
                 ))}
@@ -262,6 +284,7 @@ function StaffJobDetail({
   }, []);
   const cache = useQueryClient();
   const [historyPage, setHistoryPage] = useState(0);
+  const [analysis, setAnalysis] = useState<{ scan: ScanView | null; version: number } | null>(null);
   const [outcome, setOutcome] = useState<StaffDecisionReceipt["outcome"] | null>(null);
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
@@ -281,6 +304,23 @@ function StaffJobDetail({
   const review = detail.data;
   const publication = useStaffJobPublication(scope, review?.jobId);
   const legalFindings = review ? reviewJobContent(review.content) : [];
+  const scan = analysis?.scan;
+  const analysisVersion = review?.revisionVersion;
+  const receiveScan = useCallback(
+    (scan: ScanView | null) => {
+      setAnalysis({ scan, version: analysisVersion ?? -1 });
+    },
+    [analysisVersion],
+  );
+  const currentFindings =
+    scan?.revisionId === review?.id &&
+    analysis?.version === review?.revisionVersion &&
+    !scan?.outdated &&
+    scan?.status === "COMPLETED" &&
+    scan.mode !== "stub" &&
+    scan.report?.mode !== "stub"
+      ? (scan.report?.findings ?? [])
+      : [];
   const history = useQuery({
     queryKey: ["staff-job-history", scope, review?.jobId, historyPage],
     queryFn: () => staffJobHistory(review!.jobId, historyPage),
@@ -403,7 +443,7 @@ function StaffJobDetail({
             <div className="compliance-detail-layout staff-job-review-layout">
               <div className="staff-job-review-content">
                 <section
-                  className="admin-panel compliance-jd"
+                  className="admin-panel compliance-jd staff-job-sheet"
                   aria-labelledby="review-content-title"
                 >
                   <div className="admin-panel-heading">
@@ -413,8 +453,14 @@ function StaffJobDetail({
                     </StaffStatusBadge>
                   </div>
                   <div className="staff-jobs-content">
-                    <JobContentView content={review.content} showTitle={false} />
+                    <JobContentView
+                      content={review.content}
+                      showTitle={false}
+                      findings={currentFindings}
+                      descriptionAnalysis={<JobLegalReview review={review} onScan={receiveScan} />}
+                    />
                   </div>
+                  <PreliminaryJobReview findings={legalFindings} />
                 </section>
                 <section
                   id="staff-job-revision-history"
@@ -533,16 +579,8 @@ function StaffJobDetail({
                     />
                   )}
                 </section>
-
-                <JobLegalReview review={review} findings={legalFindings} />
               </div>
               <aside className="compliance-inspector">
-                <StaffJobPublicationControls
-                  review={review}
-                  scope={scope}
-                  disabled={busy || mustReload}
-                  onBusyChange={setPublicationBusy}
-                />
                 <section
                   className="admin-panel compliance-handling"
                   aria-labelledby="review-actions-title"
@@ -564,12 +602,27 @@ function StaffJobDetail({
                     </StaffDetailNotice>
                   )}
                   <p>Đã gửi: {dateTime(review.submittedAt)}</p>
-                  {legalFindings.length > 0 && (
-                    <a className="staff-detail-legal-link" href="#job-legal-review-title">
-                      <Eye size={14} aria-hidden="true" /> {legalFindings.length} nhóm nội dung cần
-                      đối chiếu
-                    </a>
-                  )}
+                  <button
+                    type="button"
+                    className="staff-detail-legal-link"
+                    onClick={() => {
+                      if (legalFindings.length) {
+                        const preliminary = document.getElementById(
+                          "staff-preliminary-review",
+                        ) as HTMLDetailsElement | null;
+                        if (preliminary) {
+                          preliminary.open = true;
+                          preliminary.querySelector("summary")?.focus();
+                        }
+                      } else
+                        document.querySelector<HTMLButtonElement>(".staff-scan-refresh")?.focus();
+                    }}
+                  >
+                    <FileSearch size={16} aria-hidden="true" />
+                    {legalFindings.length
+                      ? `${legalFindings.length} nhóm nội dung cần đối chiếu`
+                      : "Đối chiếu kết quả phân tích AI"}
+                  </button>
                   {review.state === "PENDING_REVIEW" ? (
                     <div className="staff-job-review-actions">
                       <button
@@ -637,6 +690,12 @@ function StaffJobDetail({
                     </div>
                   )}
                 </section>
+                <StaffJobPublicationControls
+                  review={review}
+                  scope={scope}
+                  disabled={busy || mustReload}
+                  onBusyChange={setPublicationBusy}
+                />
               </aside>
             </div>
           </>

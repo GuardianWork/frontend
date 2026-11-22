@@ -28,6 +28,9 @@ function applicant(
     cvContentType: "application/pdf",
     cvFileSize: 2048,
     candidateFeedback: null,
+    canViewCv: true,
+    reviewWindowEndsAt: null,
+    inactivityDeadline: "2026-12-01T08:30:00Z",
     history: [
       {
         fromStatus: null,
@@ -55,6 +58,7 @@ async function setup(page: Page, inbox = false) {
   let conflict = false;
   let forbidden = false;
   let pdfReads = 0;
+  let downloads = 0;
   const filters: string[] = [];
   await page.route(/\/api\/companies\/me\/jobs\/(42|77)$/, (route) =>
     route.fulfill({
@@ -119,6 +123,17 @@ async function setup(page: Page, inbox = false) {
         });
       const row = rows.find((row) => url.pathname.includes(`/applications/${row.id}`));
       if (!row) return reply(null, 404);
+      if (url.pathname.endsWith("/cv/download-url")) {
+        downloads++;
+        return route.fulfill({
+          status: 200,
+          headers: {
+            "Content-Type": row.cvContentType || "application/pdf",
+            "Content-Disposition": `attachment; filename="${row.cvFileName}"`,
+          },
+          body: "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Count 0/Kids[]>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF",
+        });
+      }
       if (url.pathname.endsWith("/cv")) {
         pdfReads++;
         return route.fulfill({
@@ -158,6 +173,7 @@ async function setup(page: Page, inbox = false) {
   await page.goto(inbox ? "/rec/applications" : "/rec/applications?jobId=42");
   await expect(page.getByRole("link", { name: "Nguyễn Thị Mai Xem hồ sơ" })).toBeVisible();
   return {
+    rows,
     writes,
     filters,
     conflict: () => {
@@ -167,6 +183,7 @@ async function setup(page: Page, inbox = false) {
       forbidden = true;
     },
     pdfReads: () => pdfReads,
+    downloads: () => downloads,
   };
 }
 async function openMai(page: Page) {
@@ -331,6 +348,18 @@ test("loads PDF only on request and clears evidence after access loss", async ({
   ).toBeVisible();
   await expect(page.locator("iframe.application-pdf")).toHaveCount(0);
   await expect(page.getByText("mai@example.test", { exact: true })).toHaveCount(0);
+});
+
+test("downloads the submitted CV as a file without opening a provider URL", async ({ page }) => {
+  const api = await setup(page);
+  await openMai(page);
+  expect(api.downloads()).toBe(0);
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Tải xuống CV", exact: true }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe("Nguyen-Thi-Mai.pdf");
+  expect(api.downloads()).toBe(1);
+  await expect(page.getByRole("button", { name: "Tải xuống CV", exact: true })).toBeEnabled();
 });
 
 test("opens the inbox across assigned jobs and navigates using each row's job id", async ({
@@ -580,4 +609,26 @@ test("background polling keeps the inbox and open status menu mounted", async ({
   } finally {
     release();
   }
+});
+
+test("recruiter sees a paused application, can reopen it, and cannot read its CV", async ({
+  page,
+}) => {
+  const api = await setup(page);
+  api.rows[0].status = "INACTIVE";
+  api.rows[0].canViewCv = false;
+  await page.reload();
+  await openMai(page);
+  await expect(page.locator(".application-review-identity .status-tag")).toHaveText("Tạm dừng");
+  await expect(page.getByText("Đơn đang tạm dừng xử lý.", { exact: false })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Xem CV PDF", exact: true })).toHaveCount(0);
+  await expect(
+    page.getByText("Đơn đang tạm dừng xử lý nên CV tạm thời không khả dụng."),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Cập nhật trạng thái của Nguyễn Thị Mai", exact: true })
+    .click();
+  await page.getByRole("menuitem", { name: "Mở lại xét duyệt", exact: true }).click();
+  await expect.poll(() => api.writes[0]).toEqual({ status: "UNDER_REVIEW", version: 0 });
+  await expect(page.locator(".application-review-identity .status-tag")).toHaveText("Đang xem xét");
 });

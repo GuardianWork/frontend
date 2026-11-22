@@ -72,6 +72,8 @@ Công ty Alpha có sẵn: ID `101`, MST `0101234567`, email `contact@alpha.examp
 
 ### Các tình huống có thể thử
 
+- Đăng nhập `candidate_demo`, mở **Công việc của tôi**: có 12 đơn, gồm một đơn **Tạm dừng xử lý**; mở trang **Quản lý hồ sơ** để thấy hai CV mẫu.
+- Mở đơn đang tạm dừng để xem lịch sử và nút tải CV; thử rút đơn hoặc dùng nút tải CV.
 - Đăng ký tài khoản mới rồi đăng nhập ở luồng tìm việc hoặc đăng ký công ty.
 - Nhập sai mật khẩu để xem lỗi đăng nhập; đăng ký trùng email/username để xem lỗi trùng tài khoản.
 - Tạo công ty bằng `recruiter_demo`; kiểm tra tên công ty và quyền `OWNER` ở thanh điều hướng.
