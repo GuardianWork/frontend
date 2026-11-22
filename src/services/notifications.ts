@@ -627,7 +627,7 @@ export function resolveNotificationPath(
   ownedCompanyId?: number,
 ): NotificationPath | null {
   const href = notification.action?.href?.trim() ?? "";
-  if (!href || notification.action?.external) return null;
+  if (notification.action?.external) return null;
 
   if (href === "/companies/me/verification") {
     const companyId = notification.references.companyId ?? notification.references.company;
