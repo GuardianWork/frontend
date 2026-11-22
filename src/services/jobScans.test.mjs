@@ -7,7 +7,10 @@ import {
   getStaffJobScan,
   getLatestJobScan,
   getLatestStaffJobScan,
+  scanReadError,
 } from "./jobScans.ts";
+import { ApiError } from "./api.ts";
+import { jobError } from "./jobs.ts";
 const originalFetch = globalThis.fetch;
 const scan = {
   scanId: 401,
@@ -91,4 +94,17 @@ test("a missing analysis is distinct from lookup failure or another revision's r
   await assert.rejects(getLatestStaffJobScan(91, 3), /không hợp lệ/);
   globalThis.fetch = async () => Response.json({ message: "Unavailable" }, { status: 503 });
   await assert.rejects(getLatestStaffJobScan(91, 3), (error) => error.status === 503);
+});
+
+test("scan read errors describe loading failures while job validation keeps its own message", () => {
+  const badRequest = new ApiError("40000 BAD_REQUEST: Invalid request parameter", 400);
+  assert.match(scanReadError(badRequest), /Không thể tải phân tích AI/);
+  assert.doesNotMatch(scanReadError(badRequest), /Nội dung chưa hợp lệ|khoảng lương/);
+  assert.match(jobError(badRequest), /Nội dung chưa hợp lệ/);
+  assert.match(scanReadError(new ApiError("Conflict", 409)), /Phiên bản tin đã thay đổi/);
+  assert.match(scanReadError(new ApiError("Unauthorized", 401)), /đăng nhập lại/);
+  assert.match(scanReadError(new ApiError("Forbidden", 403)), /không có quyền xem phân tích/);
+  assert.match(scanReadError(new ApiError("Not found", 404)), /không còn khả dụng/);
+  assert.match(scanReadError(new ApiError("Unavailable", 503)), /Dịch vụ phân tích AI/);
+  assert.match(scanReadError(new Error("network failure")), /Không thể tải phân tích AI/);
 });

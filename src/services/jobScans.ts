@@ -49,6 +49,21 @@ export interface ScanView {
 export const scanProcessing = (scan: ScanView | null) =>
   scan?.status === "QUEUED" || scan?.status === "RUNNING";
 
+/** Loading analysis never validates or changes job content. */
+export function scanReadError(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.status === 401) return "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
+    if (error.status === 403) return "Bạn không có quyền xem phân tích AI của phiên bản này.";
+    if (error.status === 404)
+      return "Phân tích AI hoặc phiên bản tin không còn khả dụng. Hãy tải lại tin tuyển dụng.";
+    if (error.status === 409)
+      return "Phiên bản tin đã thay đổi. Hãy tải lại tin tuyển dụng để xem phân tích mới nhất.";
+    if (error.status === 503)
+      return "Dịch vụ phân tích AI hiện chưa khả dụng. Vui lòng thử lại sau.";
+  }
+  return "Không thể tải phân tích AI. Hãy tải lại tin tuyển dụng hoặc thử lại sau.";
+}
+
 function validFinding(f: ScanFinding) {
   return (
     f &&

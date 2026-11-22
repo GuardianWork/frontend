@@ -7,6 +7,7 @@ import {
   getLatestJobScan,
   requestJobScan,
   scanProcessing,
+  scanReadError,
   type ScanView,
   type ScanFinding,
 } from "@/services/jobScans";
@@ -246,7 +247,7 @@ export function JobScanPanel({
         }
       })
       .catch((cause) => {
-        if (!abort.signal.aborted && epoch === resultEpoch.current) setError(jobError(cause));
+        if (!abort.signal.aborted && epoch === resultEpoch.current) setError(scanReadError(cause));
       })
       .finally(() => {
         if (!abort.signal.aborted && epoch === resultEpoch.current) setLoadingExisting(false);
@@ -263,7 +264,7 @@ export function JobScanPanel({
         if (!abort.signal.aborted && currentRevision.current === next.revisionId) setScan(next);
       } catch (cause) {
         if (!abort.signal.aborted) {
-          setError(jobError(cause));
+          setError(scanReadError(cause));
           if (cause instanceof ApiError && [401, 403, 404].includes(cause.status)) setScan(null);
         }
       }

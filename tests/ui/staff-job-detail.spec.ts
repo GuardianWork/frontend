@@ -235,3 +235,18 @@ test("AI evidence sits directly beneath each highlighted passage inside the desc
     animations: "disabled",
   });
 });
+
+test("scan lookup failures do not blame valid submitted content", async ({ page }) => {
+  const { open } = await prepareDetail(page);
+  await page.route("**/api/staff/job-revisions/91/scans/latest?*", (route) =>
+    route.fulfill({
+      status: 400,
+      json: { status: 400, message: "40000 BAD_REQUEST: Invalid request parameter" },
+    }),
+  );
+  await open();
+  const error = page.locator(".staff-known-scan [role='alert']");
+  await expect(error).toContainText("Không thể tải phân tích AI");
+  await expect(error).not.toContainText("Nội dung chưa hợp lệ");
+  await expect(page.getByRole("button", { name: "Tải lại phân tích", exact: true })).toBeEnabled();
+});

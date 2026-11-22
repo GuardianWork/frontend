@@ -1471,3 +1471,21 @@ test("the latest retained JD loads its analysis even when there is no editable w
   await expect(page.locator(".jp-content-view mark")).toContainText(["Chỉ tuyển nam"]);
   expect(mock.writes).toEqual([]);
 });
+
+test("scan lookup failures do not blame valid job content", async ({ page }) => {
+  await mockJobs(page, [makeJob(completeContent)]);
+  await page.route("**/revisions/91/scans/latest?*", (route) =>
+    route.fulfill({
+      status: 400,
+      json: { status: 400, message: "40000 BAD_REQUEST: Invalid request parameter" },
+    }),
+  );
+  await login(page, "owner_demo", true);
+  await page.goto("/rec/jobs?jobId=83");
+  const error = page.locator(".jp-scan [role='alert']");
+  await expect(error).toContainText("Không thể tải phân tích AI");
+  await expect(error).not.toContainText("Nội dung chưa hợp lệ");
+  await expect(
+    page.getByRole("button", { name: "Kiểm tra nội dung với AI", exact: true }),
+  ).toBeEnabled();
+});

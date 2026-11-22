@@ -3,9 +3,9 @@ import {
   getLatestStaffJobScan,
   getStaffJobScan,
   scanProcessing,
+  scanReadError,
   type ScanView,
 } from "@/services/jobScans";
-import { jobError } from "@/services/jobs";
 import { ScanResult } from "@/components/recruiter/JobScanPanel";
 import type { StaffJobReview } from "@/services/staffJobs";
 import { LABOR_CODE_URL, reviewJobContent } from "@/lib/job-legal-review";
@@ -106,7 +106,7 @@ function RevisionScan({
         if (!abort.signal.aborted) setScan(result);
       })
       .catch((cause) => {
-        if (!abort.signal.aborted) setError(jobError(cause));
+        if (!abort.signal.aborted) setError(scanReadError(cause));
       })
       .finally(() => {
         if (!abort.signal.aborted) setBusy(false);
@@ -127,7 +127,7 @@ function RevisionScan({
         .catch((cause) => {
           if (!abort.signal.aborted) {
             setScan(null);
-            setError(jobError(cause));
+            setError(scanReadError(cause));
           }
         });
     }, 2000);
