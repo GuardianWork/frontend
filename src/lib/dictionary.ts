@@ -38,6 +38,7 @@ export const dictionaries = {
       forCandidates: "Dành cho ứng viên",
       logIn: "Đăng nhập",
       findJob: "Tìm việc",
+      findCompany: "Tìm công ty",
       startHiring: "Tuyển dụng ngay",
     },
     logoWall: {
@@ -1120,6 +1121,7 @@ export const dictionaries = {
       forCandidates: "For candidates",
       logIn: "Log in",
       findJob: "Find a job",
+      findCompany: "Find companies",
       startHiring: "Start hiring",
     },
     logoWall: {
