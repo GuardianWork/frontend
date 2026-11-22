@@ -1300,6 +1300,49 @@ test("AI scan ignores a late response after loading another revision", async ({ 
   await expect(page.locator(".jp-scan")).not.toContainText("Phát hiện dấu hiệu rủi ro");
 });
 
+test("draft editor offers immediate AI analysis and saves the current text before scanning", async ({
+  page,
+}, testInfo) => {
+  const mock = await mockJobs(page, [makeJob({ ...completeContent, description: "" })]);
+  let scans = 0;
+  let release!: () => void;
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route("**/revisions/91/scans", async (route) => {
+    scans++;
+    expect(mock.getJobs()[0].workingRevision!.content.description).toBe(
+      "Chỉ tuyển nam dưới 30 tuổi.",
+    );
+    expect(route.request().postDataJSON().expectedRevisionVersion).toBe(
+      mock.getJobs()[0].workingRevision!.version,
+    );
+    await pending;
+    await route.fulfill({
+      json: { data: scanFixture("COMPLETED", mock.getJobs()[0].workingRevision!.version) },
+    });
+  });
+  await login(page, "owner_demo", true);
+  await page.goto("/rec/jobs?jobId=83");
+  await page.getByRole("button", { name: "Soạn tin", exact: true }).click();
+  const editor = page.getByRole("textbox", { name: "Mô tả công việc", exact: true });
+  const analyze = page.getByRole("button", { name: "Kiểm tra nội dung với AI", exact: true });
+  await expect(analyze).toBeVisible();
+  await editor.fill("");
+  await expect(analyze).toBeDisabled();
+  await editor.fill("Chỉ tuyển nam dưới 30 tuổi.");
+  await analyze.click();
+  await expect.poll(() => scans).toBe(1);
+  await expect(page.getByRole("button", { name: "Đang phân tích…", exact: true })).toBeDisabled();
+  release();
+  await expect(editor.locator(".jp-editor-mark")).toHaveText("Chỉ tuyển nam");
+  await expect(analyze).toBeEnabled();
+  await page.waitForTimeout(5500);
+  expect(scans).toBe(1);
+  await analyze.scrollIntoViewIfNeeded();
+  await page.screenshot({ path: testInfo.outputPath("manual-ai-analysis-desktop.png") });
+});
+
 test("draft editor highlights AI findings and rescans after five idle seconds", async ({
   page,
 }, testInfo) => {
@@ -1325,7 +1368,7 @@ test("draft editor highlights AI findings and rescans after five idle seconds", 
   await expect(page.getByRole("heading", { name: "Phân tích JD bằng AI" })).toHaveCount(0);
   await expect(
     page.getByRole("button", { name: "Kiểm tra nội dung với AI", exact: true }),
-  ).toHaveCount(0);
+  ).toBeVisible();
   await expect(editor.locator(".jp-editor-mark")).toHaveText("Chỉ tuyển nam", { timeout: 10000 });
   expect(scans).toBe(1);
   const mark = editor.locator(".jp-editor-mark");
