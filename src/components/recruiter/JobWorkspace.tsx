@@ -209,8 +209,7 @@ export function JobWorkspace({
     !dialogDirty &&
     analysis.scan.revisionId === newestRevision?.id &&
     analysis.viewedVersion === newestRevision?.version &&
-    analysis.scan.mode !== "stub" &&
-    analysis.scan.report?.mode !== "stub";
+    analysis.scan.mode !== "stub";
   const currentFindings = analysisCurrent ? (analysis.scan?.report?.findings ?? []) : [];
   const can = (action: string) =>
     job?.status !== "SUSPENDED" && job?.availableActions.includes(action);

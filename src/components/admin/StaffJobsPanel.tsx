@@ -317,8 +317,7 @@ function StaffJobDetail({
     analysis?.version === review?.revisionVersion &&
     !scan?.outdated &&
     scan?.status === "COMPLETED" &&
-    scan.mode !== "stub" &&
-    scan.report?.mode !== "stub"
+    scan.mode !== "stub"
       ? (scan.report?.findings ?? [])
       : [];
   const history = useQuery({

@@ -1,4 +1,4 @@
-# Revision analysis through one POST (proposed backend contract)
+# Revision analysis through one POST
 
 Recruiter and Staff analysis panels now use only:
 
@@ -10,11 +10,9 @@ Content-Type: application/json
 {"expectedRevisionVersion": 2}
 ```
 
-**Integration prerequisite:** the backend consolidation has not been implemented.
-Existing backend GET/Company/Staff scan routes may still exist. This frontend
-requires the proposed shared POST behavior; browser tests simulate that behavior,
-and do not establish live backend compatibility. There is no fallback to the old
-scan routes. Deploy the matching backend before enabling this frontend flow.
+The frontend uses the shared revision scan response from the backend. It reads
+`mode` and `asOfDate` from the scan object. The nested `report` contains
+`schemaVersion`, `outcome`, `findings`, and `warnings`.
 
 The selected JD supplies jobId, revisionId and revisionVersion. Opening a page or
 editing content does not request analysis. Users must save local edits first;

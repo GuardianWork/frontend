@@ -30,27 +30,18 @@ async function prepareDetail(page: import("@playwright/test").Page) {
 
 function completedScan(review: Awaited<ReturnType<typeof staffJobApi>>["review"]) {
   return {
-    scanId: 128,
     revisionId: review.id,
     revisionVersion: review.revisionVersion,
     status: "COMPLETED",
     mode: "crawler",
     outdated: false,
-    failureCode: null,
     analysisText: review.content.description,
-    profile: "test",
-    legalSnapshot: "test",
     asOfDate: "2026-11-01",
-    createdAt: "2026-11-01T00:00:00Z",
+    completedAt: "2026-11-01T00:00:00Z",
     report: {
       schemaVersion: "1",
-      mode: "crawler",
-      profile: "test",
-      legalSnapshot: "test",
-      asOfDate: "2026-11-01",
       outcome: "NEEDS_REVIEW",
       warnings: [],
-      usage: { available: false },
       findings: [
         {
           spanText: "Kiểm tra chứng từ",

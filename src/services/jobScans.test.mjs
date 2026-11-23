@@ -52,6 +52,28 @@ test("all audiences initiate and poll with the same authenticated revision POST 
     assert.equal(init.cache, "no-store");
   }
 });
+test("accepts a completed shared report with mode and analysis date on the scan", async () => {
+  const report = {
+    schemaVersion: "1",
+    outcome: "NEEDS_REVIEW",
+    warnings: ["Review the supporting evidence."],
+    findings: [
+      {
+        spanText: "Example",
+        start: 0,
+        end: 7,
+        riskType: "TEST",
+        severity: "high",
+        verdict: "NEEDS_REVIEW",
+        explanation: "Review the wording.",
+        citations: [],
+      },
+    ],
+  };
+  const data = { ...scan, status: "COMPLETED", analysisText: "Example", report };
+  globalThis.fetch = async () => Response.json({ data });
+  assert.deepEqual(await requestSharedJobScan(83, 91, 3), data);
+});
 test("rejects missing results, wrong revision, malformed snapshots and incomplete reports", async () => {
   for (const data of [
     null,

@@ -9,7 +9,7 @@ export interface PublicJobAnalysis {
   asOfDate: string;
   completedAt: string;
   analysisText: string;
-  report: Pick<ScanReport, "schemaVersion" | "outcome" | "findings" | "warnings">;
+  report: ScanReport;
 }
 
 export async function getPublicJobDetail(id: string | number, signal?: AbortSignal) {
@@ -34,11 +34,7 @@ export async function getPublicJobDetail(id: string | number, signal?: AbortSign
       typeof data.aiAnalysis.asOfDate !== "string" ||
       typeof data.aiAnalysis.completedAt !== "string" ||
       typeof data.aiAnalysis.analysisText !== "string" ||
-      !isScanReport({
-        ...data.aiAnalysis.report,
-        mode: data.aiAnalysis.mode,
-        asOfDate: data.aiAnalysis.asOfDate,
-      }))
+      !isScanReport(data.aiAnalysis.report))
   )
     return { ...data, aiAnalysis: null, analysisUnavailable: true };
   return data;

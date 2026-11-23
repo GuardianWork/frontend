@@ -164,9 +164,7 @@ function RevisionScan({
         <details className="staff-ai-report">
           <summary>
             Xem báo cáo đầy đủ · {scan.report?.findings.length ?? 0} phát hiện
-            {scan.mode === "stub" || scan.report?.mode === "stub"
-              ? " · Stub: chưa phân tích AI"
-              : ""}
+            {scan.mode === "stub" ? " · Stub: chưa phân tích AI" : ""}
             {scan.outdated ? " · Kết quả cần cập nhật" : ""}
           </summary>
           <ScanResult scan={scan} audience="staff" />
