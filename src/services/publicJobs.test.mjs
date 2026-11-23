@@ -117,3 +117,59 @@ test("anonymous job search remains public", async () => {
     else globalThis.localStorage = originalStorage;
   }
 });
+
+test("public detail accepts the allowlisted published analysis without private scan metadata", async () => {
+  const originalFetch = globalThis.fetch;
+  const analysis = {
+    mode: "crawler",
+    outdated: true,
+    asOfDate: "2026-11-21",
+    completedAt: "2026-11-21T01:00:00Z",
+    analysisText: "description:\nPublished text",
+    report: {
+      schemaVersion: "1",
+      outcome: "NO_RISKS_DETECTED",
+      findings: [],
+      warnings: ["Advisory only"],
+    },
+  };
+  try {
+    globalThis.fetch = async () =>
+      Response.json({
+        data: {
+          id: 42,
+          content: { description: "Published text" },
+          aiAnalysis: analysis,
+        },
+      });
+    assert.deepEqual((await getPublicJobDetail(42)).aiAnalysis, analysis);
+    for (const aiAnalysis of [null, undefined]) {
+      globalThis.fetch = async () =>
+        Response.json({
+          data: {
+            id: 42,
+            content: { description: "Published text" },
+            aiAnalysis,
+          },
+        });
+      assert.equal((await getPublicJobDetail(42)).content.description, "Published text");
+    }
+    globalThis.fetch = async () =>
+      Response.json({
+        data: {
+          id: 42,
+          content: { description: "Published text" },
+          aiAnalysis: {
+            ...analysis,
+            report: { ...analysis.report, findings: [{ explanation: "Incomplete" }] },
+          },
+        },
+      });
+    const degraded = await getPublicJobDetail(42);
+    assert.equal(degraded.content.description, "Published text");
+    assert.equal(degraded.aiAnalysis, null);
+    assert.equal(degraded.analysisUnavailable, true);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});

@@ -374,32 +374,16 @@ export function JobWorkspace({
       revision={newestRevision}
       busy={busy}
       editable={editable}
-      localEdits={dialogDirty}
+      localEdits={dialogDirty || dirty}
       editSequence={scanEditSequence}
       onResult={receiveAnalysis}
       editorMode={!guided && view === "edit"}
       editorTarget={editorAnalysisTarget}
       autoReady={Boolean(content.description?.trim())}
       compact={!guided && view === "latest"}
-      prepare={async () => {
-        if (!content.description?.trim())
-          throw new ApiError(
-            "Vui lòng nhập mô tả công việc trước khi kiểm tra nội dung với AI.",
-            400,
-          );
-        if (busyRef.current) throw new Error("Vui lòng đợi thao tác lưu hoàn tất.");
-        if (!dirty && job) return job;
-        busyRef.current = true;
-        setBusy(true);
-        try {
-          return await persist();
-        } finally {
-          busyRef.current = false;
-          setBusy(false);
-        }
-      }}
-      recover={async (id) => {
+      recover={async (id, signal) => {
         const fresh = await getJob(id);
+        if (signal.aborted) return fresh;
         setJob(fresh);
         setPreview(null);
         if (!dirtyRef.current) {

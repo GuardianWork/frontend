@@ -91,17 +91,17 @@
 .jp-scan-disclosure {
   margin-top: 16px;
 }
-:is(.jp-scan, .staff-known-scan) summary {
+:is(.jp-scan, .staff-known-scan, .jp-editor-analysis-slot) summary {
   cursor: pointer;
   color: var(--color-accent-deep);
   padding-block: 8px;
   font-weight: 600;
 }
-:is(.jp-scan, .staff-known-scan) summary:hover {
+:is(.jp-scan, .staff-known-scan, .jp-editor-analysis-slot) summary:hover {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-:is(.jp-scan, .staff-known-scan) summary:focus-visible {
+:is(.jp-scan, .staff-known-scan, .jp-editor-analysis-slot) summary:focus-visible {
   outline: 3px solid var(--jp-blue);
   outline-offset: 3px;
 }

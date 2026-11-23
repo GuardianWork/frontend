@@ -1,27 +1,22 @@
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, test } from "node:test";
 import { AUTH_SESSION_KEY } from "./auth.ts";
-import {
-  requestJobScan,
-  getJobScan,
-  getStaffJobScan,
-  getLatestJobScan,
-  getLatestStaffJobScan,
-} from "./jobScans.ts";
+import { requestJobScan, requestSharedJobScan, scanReadError } from "./jobScans.ts";
+import { ApiError } from "./api.ts";
 const originalFetch = globalThis.fetch;
 const scan = {
-  scanId: 401,
   revisionId: 91,
   revisionVersion: 3,
   status: "QUEUED",
   mode: "crawler",
   outdated: false,
   report: null,
-  analysisText: "😀 Mô tả",
+  analysisText: null,
   asOfDate: "2026-11-12",
 };
 beforeEach(() => {
   globalThis.localStorage = {
+    removeItem() {},
     getItem: (key) =>
       key === AUTH_SESSION_KEY
         ? JSON.stringify({
@@ -36,59 +31,58 @@ afterEach(() => {
   globalThis.fetch = originalFetch;
   delete globalThis.localStorage;
 });
-test("recruiter scan requests use saved revision version and authenticated JSON; known scans use exact endpoints", async () => {
+test("all audiences initiate and poll with the same authenticated revision POST and unchanged body", async () => {
   const calls = [];
   globalThis.fetch = async (url, init) => {
     calls.push({ url, init });
-    assert.equal(init.headers.Authorization, "Bearer scan-access");
-    return Response.json({ status: 200, message: "OK", data: scan });
+    return Response.json({ data: { ...scan, scanId: 999 } });
   };
-  await requestJobScan(83, 91, 3);
-  assert.equal(calls[0].url, "/api/companies/me/jobs/83/revisions/91/scans");
-  assert.equal(calls[0].init.method, "POST");
-  assert.equal(calls[0].init.headers["Content-Type"], "application/json");
-  assert.deepEqual(JSON.parse(calls[0].init.body), { expectedRevisionVersion: 3 });
-  await getJobScan(83, 91, 401);
-  await getStaffJobScan(91, 401);
-  assert.equal(calls[1].url, "/api/companies/me/jobs/83/revisions/91/scans/401");
-  assert.equal(calls[2].url, "/api/staff/job-revisions/91/scans/401");
-});
-test("scan reads reject a different snapshot identity and malformed completed findings", async () => {
-  for (const data of [
-    { ...scan, revisionId: 92 },
-    { ...scan, scanId: 402 },
-    {
-      ...scan,
-      status: "COMPLETED",
-      report: { schemaVersion: "1", findings: [null], warnings: [], outcome: "NEEDS_REVIEW" },
-    },
-  ]) {
-    globalThis.fetch = async () => Response.json({ status: 200, data });
-    await assert.rejects(getJobScan(83, 91, 401), /không hợp lệ/);
+  const signal = new AbortController().signal;
+  const result = await requestJobScan(83, 91, 3, signal);
+  await requestSharedJobScan(83, 91, 3, signal);
+  assert.equal("scanId" in result, false);
+  assert.equal(result.analysisText, "");
+  for (const { url, init } of calls) {
+    assert.equal(url, "/api/jobs/83/revisions/91/scans");
+    assert.equal(init.method, "POST");
+    assert.equal(init.headers.Authorization, "Bearer scan-access");
+    assert.equal(init.headers["Content-Type"], "application/json");
+    assert.equal(init.body, '{"expectedRevisionVersion":3}');
+    assert.equal(init.signal, signal);
+    assert.equal(init.cache, "no-store");
   }
 });
-
-test("latest scans are resolved by the viewed revision and current locking version", async () => {
-  const calls = [];
-  globalThis.fetch = async (url, init) => {
-    calls.push(url);
-    assert.equal(init.headers.Authorization, "Bearer scan-access");
-    return Response.json({ data: { ...scan, revisionVersion: 2, outdated: false } });
-  };
-  const result = await getLatestStaffJobScan(91, 3);
-  assert.equal(result.revisionVersion, 2); // Identical content survives a submission-only version bump.
-  await getLatestJobScan(83, 91, 3);
-  assert.deepEqual(calls, [
-    "/api/staff/job-revisions/91/scans/latest?expectedRevisionVersion=3",
-    "/api/companies/me/jobs/83/revisions/91/scans/latest?expectedRevisionVersion=3",
-  ]);
+test("rejects missing results, wrong revision, malformed snapshots and incomplete reports", async () => {
+  for (const data of [
+    null,
+    { ...scan, revisionId: 92 },
+    { ...scan, analysisText: {} },
+    { ...scan, status: "COMPLETED", analysisText: "text", report: null },
+    { ...scan, status: "COMPLETED", analysisText: null },
+    { ...scan, revisionVersion: -1 },
+  ]) {
+    globalThis.fetch = async () => Response.json({ data });
+    await assert.rejects(requestJobScan(83, 91, 3), /không hợp lệ/);
+  }
 });
-
-test("a missing analysis is distinct from lookup failure or another revision's result", async () => {
-  globalThis.fetch = async () => Response.json({ data: null });
-  assert.equal(await getLatestStaffJobScan(91, 3), null);
-  globalThis.fetch = async () => Response.json({ data: { ...scan, revisionId: 92 } });
-  await assert.rejects(getLatestStaffJobScan(91, 3), /không hợp lệ/);
-  globalThis.fetch = async () => Response.json({ message: "Unavailable" }, { status: 503 });
-  await assert.rejects(getLatestStaffJobScan(91, 3), (error) => error.status === 503);
+test("a retained scan can have an older association version for unchanged content", async () => {
+  globalThis.fetch = async () => Response.json({ data: { ...scan, revisionVersion: 2 } });
+  assert.equal((await requestJobScan(83, 91, 3)).revisionVersion, 2);
+});
+test("HTTP failures propagate for terminal polling and JD recovery", async () => {
+  for (const status of [400, 401, 403, 404, 409, 503]) {
+    globalThis.fetch = async () => Response.json({ message: "Unavailable" }, { status });
+    await assert.rejects(requestJobScan(83, 91, 3), (error) => error.status === status);
+  }
+});
+test("messages identify request, login, access, version and availability recovery", () => {
+  for (const [status, pattern] of [
+    [400, /tham số/],
+    [401, /đăng nhập lại/],
+    [403, /Không thể truy cập JD/],
+    [404, /Không thể truy cập JD/],
+    [409, /Phiên bản tin đã thay đổi/],
+    [503, /chưa khả dụng/],
+  ])
+    assert.match(scanReadError(new ApiError("error", status)), pattern);
 });

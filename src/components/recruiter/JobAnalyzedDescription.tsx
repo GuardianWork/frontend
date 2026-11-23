@@ -4,6 +4,7 @@ import type { Element, ElementContent, Root, RootContent, Text } from "hast";
 import { ChevronDown } from "lucide-react";
 import { descriptionMarkdownPrefix, isFormattedDescription } from "@/lib/job-description";
 import type { ScanFinding } from "@/services/jobScans";
+import { scanSeverityLabels } from "@/lib/job-content";
 import "./job-description.css";
 
 type TextPosition = {
@@ -190,7 +191,7 @@ function Passage({
               <summary>
                 <span>Kết quả phân tích AI · Phát hiện {index + 1}</span>
                 <span className={`jp-scan-severity jp-scan-severity-${finding.severity}`}>
-                  Mức độ: {{ high: "Cao", medium: "Trung bình", low: "Thấp" }[finding.severity]}
+                  Mức độ: {scanSeverityLabels[finding.severity]}
                 </span>
                 <ChevronDown size={16} className="jp-inline-chevron" aria-hidden="true" />
               </summary>

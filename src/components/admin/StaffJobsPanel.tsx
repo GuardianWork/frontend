@@ -457,7 +457,13 @@ function StaffJobDetail({
                       content={review.content}
                       showTitle={false}
                       findings={currentFindings}
-                      descriptionAnalysis={<JobLegalReview review={review} onScan={receiveScan} />}
+                      descriptionAnalysis={
+                        <JobLegalReview
+                          review={review}
+                          onScan={receiveScan}
+                          onConflict={detail.refetch}
+                        />
+                      }
                     />
                   </div>
                   <PreliminaryJobReview findings={legalFindings} />
