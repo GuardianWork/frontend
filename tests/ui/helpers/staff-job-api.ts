@@ -5,6 +5,7 @@ export async function staffJobApi(page: Page) {
     id: 91,
     jobId: 83,
     companyId: 12,
+    companyName: "Công ty Ánh Dương",
     revisionNumber: 2,
     state: "PENDING_REVIEW",
     jobVersion: 5,

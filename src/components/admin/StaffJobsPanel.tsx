@@ -2,7 +2,7 @@ import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import type { staffJobsSearch } from "@/lib/staff-detail-routing";
-import { ArrowLeft, Check, Eye, FileSearch, RotateCw } from "lucide-react";
+import { ArrowLeft, Check, Eye, FileSearch, RotateCw, Search } from "lucide-react";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { AdminPagination } from "./AdminPagination";
 import { StaffStatusBadge, type StaffStatusTone } from "./StaffStatusBadge";
@@ -79,6 +79,20 @@ export function StaffJobsPanel({ revisionId = null }: { revisionId?: number | nu
   const search = useSearch({ strict: false }) as ReturnType<typeof staffJobsSearch>;
   const status = search.status ?? "PENDING_REVIEW";
   const page = search.page ?? 0;
+  const keyword = search.q ?? "";
+  const [searchInput, setSearchInput] = useState(keyword);
+  useEffect(() => setSearchInput(keyword), [keyword]);
+  useEffect(() => {
+    if (searchInput.trim() === keyword) return;
+    const timer = window.setTimeout(() => {
+      void navigate({
+        to: "/staff/jobs",
+        search: { ...search, q: searchInput.trim() || undefined, page: undefined },
+        replace: true,
+      });
+    }, 350);
+    return () => window.clearTimeout(timer);
+  }, [searchInput, keyword, navigate, search]);
   const selectedId = revisionId;
   const setPage = useCallback(
     (page: number) =>
@@ -88,8 +102,8 @@ export function StaffJobsPanel({ revisionId = null }: { revisionId?: number | nu
   const setSelectedId = (id: number) =>
     void navigate({ to: "/staff/jobs/$revisionId", params: { revisionId: String(id) }, search });
   const list = useQuery({
-    queryKey: ["staff-job-reviews", scope, status, page],
-    queryFn: () => listStaffJobReviews(status, page),
+    queryKey: ["staff-job-reviews", scope, status, page, keyword],
+    queryFn: ({ signal }) => listStaffJobReviews(status, page, keyword, signal),
     enabled: selectedId === null,
     retry: false,
     refetchOnWindowFocus: false,
@@ -98,12 +112,13 @@ export function StaffJobsPanel({ revisionId = null }: { revisionId?: number | nu
     list.data?.content ?? [],
     {
       title: (row) => row.content.title,
+      companyName: (row) => row.companyName,
       state: (row) => revisionLabels[row.state],
       eligibility: approvalLabel,
       submittedAt: (row) => sortDate(row.submittedAt),
     },
     { key: "submittedAt", direction: "desc" },
-    `${scope}:${status}`,
+    `${scope}:${status}:${keyword}`,
   );
   useEffect(() => {
     if (list.data && !list.isFetching && !list.isError && page > 0 && page >= list.data.totalPages)
@@ -159,7 +174,11 @@ export function StaffJobsPanel({ revisionId = null }: { revisionId?: number | nu
               onChange={(event) => {
                 void navigate({
                   to: "/staff/jobs",
-                  search: { status: event.target.value as ReviewFilter },
+                  search: {
+                    ...search,
+                    status: event.target.value as ReviewFilter,
+                    page: undefined,
+                  },
                 });
               }}
             >
@@ -171,6 +190,20 @@ export function StaffJobsPanel({ revisionId = null }: { revisionId?: number | nu
             </select>
           </label>
         </div>
+        <div className="staff-jobs-search">
+          <label htmlFor="staff-jobs-search">Tìm theo tên việc làm hoặc tên công ty</label>
+          <div>
+            <Search size={16} aria-hidden="true" />
+            <input
+              id="staff-jobs-search"
+              type="search"
+              value={searchInput}
+              maxLength={200}
+              placeholder="Nhập tên việc làm hoặc tên công ty…"
+              onChange={(event) => setSearchInput(event.target.value)}
+            />
+          </div>
+        </div>
         {list.isFetching ? (
           <p className="staff-jobs-message" role="status">
             Đang tải danh sách tin…
@@ -179,8 +212,12 @@ export function StaffJobsPanel({ revisionId = null }: { revisionId?: number | nu
           <ReviewError error={list.error} retry={() => void list.refetch()} />
         ) : !list.data?.content.length ? (
           <div className="compliance-empty" role="status">
-            <h3>Không có tin trong mục này</h3>
-            <p>Chọn trạng thái khác hoặc tải lại để kiểm tra tin mới.</p>
+            <h3>{keyword ? "Không tìm thấy tin tuyển dụng" : "Không có tin trong mục này"}</h3>
+            <p>
+              {keyword
+                ? "Thử từ khóa khác hoặc xóa tìm kiếm để xem lại danh sách."
+                : "Chọn trạng thái khác hoặc tải lại để kiểm tra tin mới."}
+            </p>
           </div>
         ) : (
           <div
@@ -194,6 +231,7 @@ export function StaffJobsPanel({ revisionId = null }: { revisionId?: number | nu
               <thead>
                 <tr>
                   <SortableHeader label="Tin tuyển dụng" column="title" {...queueSort} />
+                  <SortableHeader label="Tên công ty" column="companyName" {...queueSort} />
                   <th scope="col">Trạng thái đăng tin</th>
                   <SortableHeader label="Xét duyệt phiên bản" column="state" {...queueSort} />
                   <SortableHeader label="Điều kiện duyệt" column="eligibility" {...queueSort} />
@@ -216,9 +254,11 @@ export function StaffJobsPanel({ revisionId = null }: { revisionId?: number | nu
                         {review.content.title || "Chưa có chức danh"}
                       </Link>
                       <span>
-                        Công ty #{review.companyId} · Tin #{review.jobId} · Phiên bản{" "}
-                        {review.revisionNumber} · #{review.id}
+                        Tin #{review.jobId} · Phiên bản {review.revisionNumber} · #{review.id}
                       </span>
+                    </td>
+                    <td className="staff-jobs-company">
+                      {review.companyName?.trim() || `Công ty #${review.companyId}`}
                     </td>
                     <td>
                       <StaffJobPostingStatus scope={scope} jobId={review.jobId} />

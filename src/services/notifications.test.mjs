@@ -419,3 +419,22 @@ test("opens GW-128 Company views only in the recruiter portal", () => {
     }
   }
 });
+
+test("candidate suspension notifications with a public job action still open the application", () => {
+  const notification = parseNotification({
+    id: "suspension-1",
+    eventType: "JOB_SUSPENDED",
+    audience: "CANDIDATE",
+    title: "Tin tuyển dụng đang bị tạm ngưng",
+    body: "Thông tin đơn ứng tuyển bị giới hạn.",
+    applicationId: "application-1",
+    jobId: 42,
+    createdAt: ISO,
+    action: { href: "/jobs/42" },
+  });
+  assert.equal(notification.body, "Thông tin đơn ứng tuyển bị giới hạn.");
+  assert.deepEqual(resolveNotificationPath(notification, "can"), {
+    to: "/can/applied",
+    search: { application: "application-1" },
+  });
+});

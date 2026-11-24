@@ -21,6 +21,11 @@ export function SuspendedJobDetails({ job, scope }: { job: Job; scope: string })
         </div>
       </header>
       <SuspendedJobNotice headingLevel={2} />
+      {/* Await a Company-authorized suspension API. Revision rejection history
+          is not evidence of the posting's suspension reason or timestamp. */}
+      <p role="status">
+        Lý do và thời điểm đình chỉ hiện chưa khả dụng. Tin tuyển dụng vẫn ở chế độ chỉ xem.
+      </p>
       {content ? (
         <JobContentView content={content} showTitle={false} />
       ) : (

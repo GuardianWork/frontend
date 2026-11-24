@@ -245,3 +245,40 @@ test("private posting inspection skips non-status events and never treats a 404 
   eventStatus = "PUBLISHED";
   assert.equal(await inspectStaffJobPublication(83), null);
 });
+
+test("staff search sends the same trimmed keyword and cancellation signal to every source page", async () => {
+  const paths = [];
+  const controller = new AbortController();
+  globalThis.fetch = async (url, init) => {
+    paths.push(url);
+    const params = new URL(url, "https://test.invalid").searchParams;
+    assert.equal(params.get("q"), "Ánh Dương");
+    assert.equal(params.get("status"), "APPROVED");
+    assert.equal(init.signal, controller.signal);
+    const pageNumber = Number(params.get("page"));
+    return Response.json({
+      data: {
+        content: Array.from({ length: pageNumber === 0 ? 20 : 1 }, (_, index) => ({
+          ...review,
+          id: 1 + pageNumber * 20 + index,
+          companyName: "Công ty Ánh Dương",
+        })),
+        pageNumber,
+        pageSize: 20,
+        totalElements: 21,
+        totalPages: 2,
+      },
+    });
+  };
+  const result = await listStaffJobReviews("APPROVED", 0, "  Ánh Dương  ", controller.signal);
+  assert.equal(result.totalElements, 21);
+  assert.equal(result.content.length, 20);
+  assert.equal(result.content[0].companyName, "Công ty Ánh Dương");
+  assert.equal(result.content[0].id, 21);
+  assert.equal(paths.length, 2);
+});
+
+test("staff search rejects an overlong keyword before requesting the queue", async () => {
+  globalThis.fetch = async () => assert.fail("Invalid search must not reach the API");
+  assert.throws(() => listStaffJobReviews("ALL", 0, "a".repeat(201)), /200/);
+});
