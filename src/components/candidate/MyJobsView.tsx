@@ -1,6 +1,11 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useQuery,
+  useQueryClient,
+  type UseQueryResult,
+} from "@tanstack/react-query";
 import {
   ArrowDownWideNarrow,
   ArrowRight,
@@ -29,6 +34,7 @@ import {
   listApplicationCounts,
   listApplicationPage,
   type SubmittedApplication,
+  type CandidateApplicationDetail,
 } from "@/services/candidateApplications";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import "./my-jobs.css";
@@ -204,7 +210,17 @@ function hasDeadlinePassed(value: string) {
   return date.getTime() < Date.now();
 }
 
-function ApplicationProgress({ id, en }: { id: string; en: boolean }) {
+function ApplicationProgress({
+  id,
+  en,
+  query,
+  suspended,
+}: {
+  id: string;
+  en: boolean;
+  query: UseQueryResult<CandidateApplicationDetail, Error>;
+  suspended: boolean;
+}) {
   const client = useQueryClient();
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -213,13 +229,6 @@ function ApplicationProgress({ id, en }: { id: string; en: boolean }) {
   const [cvError, setCvError] = useState(false);
   const lock = useRef(false);
   const withdrawTrigger = useRef<HTMLButtonElement>(null);
-  const query = useQuery({
-    queryKey: ["candidate-application-detail", id],
-    queryFn: ({ signal }) => getCandidateApplication(id, signal),
-    retry: false,
-    gcTime: 0,
-    staleTime: 0,
-  });
   const detail = query.data;
   const active =
     detail &&
@@ -249,7 +258,13 @@ function ApplicationProgress({ id, en }: { id: string; en: boolean }) {
   return (
     <section className="candidate-application-progress" aria-labelledby={headingId}>
       <h3 className="application-progress__title" id={headingId}>
-        {en ? "Status history" : "Lịch sử trạng thái"}
+        {suspended
+          ? en
+            ? "Job posting suspended"
+            : "Tin tuyển dụng đang bị tạm ngưng"
+          : en
+            ? "Status history"
+            : "Lịch sử trạng thái"}
       </h3>
       {query.isFetching && !detail && (
         <div className="application-progress__loading">
@@ -279,7 +294,13 @@ function ApplicationProgress({ id, en }: { id: string; en: boolean }) {
       )}
       {detail && !query.isError && !error && (
         <>
-          {events.length > 0 ? (
+          {suspended ? (
+            <p className="application-progress__notice">
+              {en
+                ? "Job posting, status history, feedback and CV information are unavailable while this posting is suspended."
+                : "Thông tin tin tuyển dụng, lịch sử trạng thái, phản hồi và CV bị giới hạn trong thời gian tin tạm ngưng."}
+            </p>
+          ) : events.length > 0 ? (
             <ol className="application-progress__timeline">
               {events.map((event, index) => {
                 const meta = statusMeta(event.toStatus);
@@ -314,9 +335,9 @@ function ApplicationProgress({ id, en }: { id: string; en: boolean }) {
             </p>
           )}
 
-          {((detail.canViewCv && detail.cvFileName) || active) && (
+          {((!suspended && detail.canViewCv && detail.cvFileName) || active) && (
             <div className="application-progress__actions">
-              {detail.canViewCv && detail.cvFileName ? (
+              {!suspended && detail.canViewCv && detail.cvFileName ? (
                 <button
                   type="button"
                   className="application-progress__action"
@@ -363,7 +384,7 @@ function ApplicationProgress({ id, en }: { id: string; en: boolean }) {
               )}
             </div>
           )}
-          {cvError && (
+          {!suspended && cvError && (
             <p className="application-progress__notice" role="alert">
               {en ? "The submitted CV is no longer available." : "CV đã gửi không còn khả dụng."}
             </p>
@@ -465,6 +486,21 @@ function ApplicationCard({
   const statusRef = useRef<HTMLButtonElement>(null);
   const entered = useRef(false);
   const receiptId = `application-receipt-${useId()}`;
+  const query = useQuery({
+    queryKey: ["candidate-application-detail", application.id],
+    queryFn: ({ signal }) => getCandidateApplication(application.id, signal),
+    enabled: open,
+    retry: false,
+    gcTime: 0,
+    staleTime: 0,
+    refetchOnWindowFocus: "always",
+    refetchInterval: open ? 10_000 : false,
+  });
+  const detail = open ? query.data : undefined;
+  // Open cards use fresh details; collapsed cards track the refreshed ledger.
+  // A fresh detail response supersedes the ledger snapshot, including restoration.
+  const suspended = detail?.jobSuspended ?? application.jobSuspended;
+  const restricted = suspended || (open && (!detail || query.isError));
 
   // A notification deep link arrives with its application already expanded. The
   // card is revealed once, after the workspace has reset its own scroll, so the
@@ -483,7 +519,7 @@ function ApplicationCard({
     return () => window.cancelAnimationFrame(frame);
   }, [focused]);
 
-  const status = statusMeta(application.status);
+  const status = statusMeta(detail?.status ?? application.status);
   const statusLabel = en ? status.en : status.vi;
   const statusDetail = en ? status.enDetail : status.viDetail;
   const jobTitle = application.jobTitle || (en ? "Untitled job" : "Tin tuyển dụng chưa có tên");
@@ -512,7 +548,7 @@ function ApplicationCard({
   // shown as explicit placeholders rather than collapsing the row.
   const showMeta = true;
 
-  const jobHref = application.jobId > 0 ? { job: String(application.jobId) } : null;
+  const jobHref = !restricted && application.jobId > 0 ? { job: String(application.jobId) } : null;
   return (
     <li
       ref={cardRef}
@@ -581,7 +617,13 @@ function ApplicationCard({
         <span className={`status-tag status-tag--${status.tone} application-card__status-tag`}>
           {statusLabel}
         </span>
-        <span className="application-card__status-text">{statusDetail}</span>
+        <span className="application-card__status-text">
+          {suspended
+            ? en
+              ? "Job posting suspended"
+              : "Tin tuyển dụng đang bị tạm ngưng"
+            : statusDetail}
+        </span>
         <ChevronDown
           size={18}
           className="application-card__chevron"
@@ -601,13 +643,15 @@ function ApplicationCard({
               ) : null}
             </dd>
           </div>
-          <div>
-            <dt>{en ? "CV sent" : "Hồ sơ đã gửi"}</dt>
-            <dd className="application-card__cv">
-              <FileText size={15} aria-hidden="true" />
-              <span title={cvFileName}>{cvFileName}</span>
-            </dd>
-          </div>
+          {!restricted && (
+            <div>
+              <dt>{en ? "CV sent" : "Hồ sơ đã gửi"}</dt>
+              <dd className="application-card__cv">
+                <FileText size={15} aria-hidden="true" />
+                <span title={cvFileName}>{cvFileName}</span>
+              </dd>
+            </div>
+          )}
         </dl>
         {jobHref ? (
           <Link
@@ -620,7 +664,9 @@ function ApplicationCard({
             <ArrowRight size={16} aria-hidden="true" />
           </Link>
         ) : null}
-        {open && <ApplicationProgress id={application.id} en={en} />}
+        {open && (
+          <ApplicationProgress id={application.id} en={en} query={query} suspended={suspended} />
+        )}
       </div>
     </li>
   );
@@ -683,6 +729,8 @@ export function MyJobsView({ focusApplicationId }: { focusApplicationId?: string
     gcTime: 0,
     staleTime: 0,
     placeholderData: keepPreviousData,
+    refetchOnWindowFocus: "always",
+    refetchInterval: 10_000,
   });
 
   const countsResult = useQuery({

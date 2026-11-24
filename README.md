@@ -32,6 +32,10 @@ Các đường dẫn `/staff` và `/admin` trên cổng chính chuyển sang c�
 
 Build riêng bằng `npm run build:staff`, output `.output-staff`; `npm run preview:staff` xem bản build staff ở cổng `5138`. Build frontend chính vẫn dùng `npm run build` và output `.output`.
 
+Trang `/staff/jobs` lưu từ khóa tìm kiếm trong `q` trên URL, gửi `q` đã trim (tối đa 200 ký tự) cùng bộ lọc trạng thái đến `GET /api/staff/job-revisions`, và hiển thị cột tên công ty từ `companyName`. Backend cần tìm theo tên việc làm hoặc tên công ty trước khi phân trang, trả tổng số kết quả đã lọc và giữ thứ tự nguồn hiện tại. Tìm kiếm được giữ khi mở chi tiết, quay lại và tải lại trang; đổi từ khóa hoặc trạng thái đưa về trang đầu.
+
+**Tích hợp đang chờ backend:** API hàng đợi hiện chưa nhận `q` và chưa trả `companyName`. Frontend không lọc riêng trang đang hiển thị hoặc suy diễn tên công ty. Kiểm thử tìm kiếm hiện dùng API mô phỏng contract trên; chưa xác minh tìm kiếm với backend thật. Phải triển khai API tương ứng trước khi bàn giao tính năng tìm kiếm hoàn chỉnh.
+
 ## Chạy với dữ liệu mẫu
 
 Yêu cầu Node.js 22.18+ và các dependency đã cài bằng `npm install`.

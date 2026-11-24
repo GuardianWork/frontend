@@ -330,7 +330,7 @@ function JobRow({ job, scope }: { job: Job; scope: string }) {
   const latest = useQuery({
     queryKey: ["job-latest-revision", scope, job.id, job.version],
     queryFn: () => latestJobRevision(job.id),
-    enabled: job.status !== "SUSPENDED" && !job.workingRevision,
+    enabled: !job.workingRevision,
     retry: false,
   });
   const revision = job.workingRevision ?? latest.data;

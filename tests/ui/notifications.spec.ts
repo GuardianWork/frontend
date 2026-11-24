@@ -97,6 +97,63 @@ test.describe("notification inbox", () => {
     );
   });
 
+  test("candidate suspension notification opens fresh application data while public JD returns 404", async ({
+    page,
+    mockApiUrl,
+  }) => {
+    const token = await loginThroughApi(mockApiUrl, "candidate_demo");
+    await deliverNotification(mockApiUrl, token, {
+      type: "JOB_SUSPENDED",
+      audience: "CANDIDATE",
+      category: "application",
+      title: "Tin tuyển dụng đang bị tạm ngưng",
+      body: "Bạn vẫn có thể theo dõi và rút đơn ứng tuyển.",
+      applicationId: "app-01",
+      jobId: 42,
+      action: { href: "/jobs/42" },
+    });
+    let publicReads = 0;
+    await page.route("**/api/jobs/42", (route) => {
+      publicReads++;
+      return route.fulfill({ status: 404, json: { message: "Not found" } });
+    });
+    // The event is old: the posting has since been restored and the application hired.
+    await page.route("**/api/candidate/applications/app-01", (route) =>
+      route.fulfill({
+        json: {
+          data: {
+            id: "app-01",
+            status: "HIRED",
+            version: 8,
+            jobSuspended: false,
+            cvFileName: "",
+            canViewCv: false,
+            history: [],
+          },
+        },
+      }),
+    );
+    const inbox = page.waitForRequest((request) => {
+      const url = new URL(request.url());
+      return (
+        url.pathname === "/api/me/notifications" && url.searchParams.get("audience") === "CANDIDATE"
+      );
+    });
+    await page.goto("/can/notifications", { waitUntil: "domcontentloaded" });
+    await inbox;
+    await page.getByRole("button", { name: /Tin tuyển dụng đang bị tạm ngưng/ }).click();
+    await expect(page).toHaveURL(/\/can\/applied\?application=app-01$/);
+    const card = page.locator('.application-card[data-targeted="true"]');
+    await expect(card.locator(".application-card__status-tag")).toHaveText("Đã tuyển");
+    await expect(card.locator(".application-card__status-text")).not.toHaveText(
+      "Tin tuyển dụng đang bị tạm ngưng",
+    );
+    await expect(card.getByRole("button", { name: "Rút đơn ứng tuyển", exact: true })).toHaveCount(
+      0,
+    );
+    expect(publicReads).toBe(0);
+  });
+
   test("marks every notification read with one request", async ({ page }) => {
     await page.getByRole("button", { name: "Đánh dấu tất cả là đã đọc" }).click();
 

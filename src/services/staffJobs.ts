@@ -9,6 +9,7 @@ export interface StaffJobReview {
   id: number;
   jobId: number;
   companyId: number;
+  companyName?: string | null;
   revisionNumber: number;
   state: ReviewState;
   publicationStatus?: JobStatus;
@@ -49,6 +50,7 @@ function parseReview(value: unknown): StaffJobReview {
     !positiveId(review.id) ||
     !positiveId(review.jobId) ||
     !positiveId(review.companyId) ||
+    !(review.companyName == null || typeof review.companyName === "string") ||
     !positiveId(review.revisionNumber) ||
     !version(review.jobVersion) ||
     !version(review.revisionVersion) ||
@@ -70,8 +72,11 @@ function parseReview(value: unknown): StaffJobReview {
     throw invalidResponse();
   return review;
 }
-async function requestPage(path: string): Promise<ApiPage<StaffJobReview>> {
-  const page = (await authenticatedRequest(path, { cache: "no-store" })) as ApiPage<unknown> | null;
+async function requestPage(path: string, signal?: AbortSignal): Promise<ApiPage<StaffJobReview>> {
+  const page = (await authenticatedRequest(path, {
+    cache: "no-store",
+    signal,
+  })) as ApiPage<unknown> | null;
   if (
     !page ||
     !Array.isArray(page.content) ||
@@ -83,14 +88,19 @@ async function requestPage(path: string): Promise<ApiPage<StaffJobReview>> {
     throw invalidResponse();
   return { ...page, content: page.content.map(parseReview) };
 }
-export const listStaffJobReviews = (status: ReviewFilter, page = 0) =>
-  newestStaffPage(
-    (sourcePage) =>
-      requestPage(
-        `${root}?${new URLSearchParams({ status, page: String(sourcePage), size: String(REVIEW_PAGE_SIZE) })}`,
-      ),
-    page,
-  );
+export function listStaffJobReviews(status: ReviewFilter, page = 0, q = "", signal?: AbortSignal) {
+  const keyword = q.trim();
+  if (keyword.length > 200) throw new ApiError("Từ khóa tìm kiếm tối đa 200 ký tự.", 400);
+  return newestStaffPage((sourcePage) => {
+    const params = new URLSearchParams({
+      status,
+      page: String(sourcePage),
+      size: String(REVIEW_PAGE_SIZE),
+    });
+    if (keyword) params.set("q", keyword);
+    return requestPage(`${root}?${params}`, signal);
+  }, page);
+}
 export async function getStaffJobReview(id: number) {
   const review = parseReview(await authenticatedRequest(`${root}/${id}`, { cache: "no-store" }));
   if (review.id !== id) throw invalidResponse();

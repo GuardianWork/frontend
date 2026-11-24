@@ -628,6 +628,15 @@ export function resolveNotificationPath(
 ): NotificationPath | null {
   const href = notification.action?.href?.trim() ?? "";
   if (notification.action?.external) return null;
+  // Candidate application notifications open authenticated application data.
+  // A public posting may be unavailable or the event may predate restoration.
+  if (
+    portal === "can" &&
+    notification.audience === "CANDIDATE" &&
+    notification.references.application
+  ) {
+    return { to: "/can/applied", search: { application: notification.references.application } };
+  }
 
   if (href === "/companies/me/verification") {
     const companyId = notification.references.companyId ?? notification.references.company;

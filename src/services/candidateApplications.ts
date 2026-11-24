@@ -14,6 +14,7 @@ export interface SubmittedApplication {
   companyId: number;
   companyName: string;
   status: string;
+  jobSuspended: boolean;
   appliedAt: string;
   cvFileName: string;
   version: number;
@@ -79,6 +80,7 @@ export function parseSubmittedApplication(value: unknown): SubmittedApplication 
     companyId: Number(application.companyId ?? 0),
     companyName,
     status: String(application.status ?? "SUBMITTED"),
+    jobSuspended: application.jobSuspended === true,
     appliedAt: String(application.appliedAt ?? new Date().toISOString()),
     cvFileName,
     version: Number(application.version ?? 0),
@@ -332,7 +334,7 @@ export interface CandidateApplicationLocation {
  * application may sit on any page. The list endpoint is ordered newest-first with
  * a stable tie-break, so scanning larger pages yields an index that divides back
  * into the displayed page size without walking every page. Returns `null` when
- * the application is not in the ledger at all — the posting may be suspended.
+ * the application is not in the ledger at all.
  */
 export async function locateApplicationPage(
   id: string,
@@ -469,6 +471,7 @@ export interface CandidateApplicationHistory {
 export interface CandidateApplicationDetail {
   id: string;
   status: string;
+  jobSuspended: boolean;
   version: number;
   cvFileName: string;
   /** Whether the Candidate can still download the submitted CV. */
@@ -504,6 +507,7 @@ function parseCandidateDetail(value: unknown): CandidateApplicationDetail {
   return {
     id: detail.id,
     status: candidateVisibleStatus(detail.status),
+    jobSuspended: detail.jobSuspended === true,
     version: detail.version,
     cvFileName: textValue(detail.cvFileName),
     canViewCv: detail.canViewCv === true,

@@ -142,6 +142,10 @@ test("suspended recruiter job retains read-only information without management o
   page,
 }, info) => {
   const state = await setup(page);
+  const staffReads: string[] = [];
+  page.on("request", (request) => {
+    if (new URL(request.url()).pathname.startsWith("/api/staff/")) staffReads.push(request.url());
+  });
   await login(page, "owner_demo", true);
   await page.goto("/rec/jobs?jobId=42");
   await expect(
@@ -159,6 +163,12 @@ test("suspended recruiter job retains read-only information without management o
     page.locator(".jp-suspended-details button, .jp-suspended-details form"),
   ).toHaveCount(0);
   expect(state.evidenceReads).toBe(0);
+  expect(staffReads).toEqual([]);
+  await expect(
+    page.getByText(
+      "Lý do và thời điểm đình chỉ hiện chưa khả dụng. Tin tuyển dụng vẫn ở chế độ chỉ xem.",
+    ),
+  ).toBeVisible();
   await page.screenshot({ path: info.outputPath("suspended-recruiter-job.png") });
 });
 
@@ -275,4 +285,51 @@ test("a late public response cannot restore a candidate form after a newer unava
   await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
   await expect(page.getByText("Phản hồi cũ", { exact: true })).toHaveCount(0);
   await expect(page.locator("form")).toHaveCount(0);
+});
+
+test("suspended recruiter job keeps its title in the list and read-only detail", async ({
+  page,
+}) => {
+  const state = await setup(page);
+  await page.route(/\/api\/companies\/me\/jobs(?:\?.*)?$/, (route) =>
+    route.fulfill({
+      json: {
+        data: {
+          content: [
+            {
+              id: 42,
+              companyId: 101,
+              creatorUserId: 2,
+              status: "SUSPENDED",
+              version: 5,
+              ownerResponsible: true,
+              needsReassignment: false,
+              workingRevision: null,
+              publishedRevisionId: 91,
+              approvedDeadline: null,
+              assignments: [],
+              availableActions: [],
+              createdAt: "2026-10-01T00:00:00Z",
+              updatedAt: "2026-11-01T00:00:00Z",
+            },
+          ],
+          pageNumber: 0,
+          pageSize: 20,
+          totalElements: 1,
+          totalPages: 1,
+        },
+      },
+    }),
+  );
+  await login(page, "owner_demo", true);
+  await page.goto("/rec/jobs");
+  const title = page.locator(".jp-job-title");
+  await expect(title).toHaveText("Tin kiểm thử đình chỉ");
+  await expect(page.getByText("Tin tuyển dụng #42", { exact: true })).toHaveCount(0);
+  await title.click();
+  await expect(page.locator(".jp-suspended-details h1")).toHaveText("Tin kiểm thử đình chỉ");
+  await expect(
+    page.locator(".jp-suspended-details button, .jp-suspended-details form"),
+  ).toHaveCount(0);
+  expect(state.evidenceReads).toBe(0);
 });

@@ -31,6 +31,7 @@ const pageNumber = (value: unknown) =>
 
 export function staffJobsSearch(search: Record<string, unknown>): {
   status?: ReviewFilter;
+  q?: string;
   page?: number;
 } {
   return {
@@ -39,6 +40,7 @@ export function staffJobsSearch(search: Record<string, unknown>): {
     )
       ? (search.status as ReviewFilter)
       : undefined,
+    q: typeof search.q === "string" ? search.q.trim().slice(0, 200) || undefined : undefined,
     page: pageNumber(search.page),
   };
 }

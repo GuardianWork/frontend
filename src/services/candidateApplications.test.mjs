@@ -663,3 +663,20 @@ test("merged review paging preserves backend descending ID order for equal submi
     delete globalThis.localStorage;
   }
 });
+
+test("application list and detail preserve only explicit jobSuspended true", async () => {
+  globalThis.localStorage = session();
+  try {
+    for (const jobSuspended of [true, false, undefined, "true", 1]) {
+      const row = { ...sampleApplication, jobSuspended, version: 1, history: [], canViewCv: true };
+      assert.equal(parseSubmittedApplication(row).jobSuspended, jobSuspended === true);
+      globalThis.fetch = async () => Response.json({ data: row });
+      const detail = await getCandidateApplication(row.id);
+      assert.equal(detail.jobSuspended, jobSuspended === true);
+      assert.equal(detail.status, "SUBMITTED");
+    }
+  } finally {
+    globalThis.fetch = originalFetch;
+    delete globalThis.localStorage;
+  }
+});
