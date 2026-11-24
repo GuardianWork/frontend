@@ -48,6 +48,12 @@ const detail = {
   aiAnalysis: analysis,
 };
 
+test.beforeEach(async ({ page }) => {
+  await page.route("**/api/candidate/applications?*", (route) =>
+    route.fulfill({ json: { data: { content: [], totalElements: 0, totalPages: 0 } } }),
+  );
+});
+
 test("candidate reads published AI findings and citations beside the JD", async ({
   page,
 }, info) => {

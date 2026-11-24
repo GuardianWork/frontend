@@ -847,29 +847,20 @@ test("latest JD loading failure offers retry without changing the job", async ({
 });
 
 const scanFixture = (status = "COMPLETED", revisionVersion = 3) => ({
-  scanId: 401,
   revisionId: 91,
   revisionVersion,
   status,
   mode: "crawler",
   outdated: false,
-  failureCode: null,
-  analysisText: "Mô tả: 😀 Chỉ tuyển nam dưới 30 tuổi.",
-  profile: "recruitment",
-  legalSnapshot: "2026-11",
+  analysisText: status === "COMPLETED" ? "Mô tả: 😀 Chỉ tuyển nam dưới 30 tuổi." : null,
   asOfDate: "2026-11-12",
-  createdAt: stamp,
+  completedAt: status === "COMPLETED" ? stamp : null,
   report:
     status === "COMPLETED"
       ? {
           schemaVersion: "1",
-          mode: "crawler",
-          profile: "recruitment",
-          legalSnapshot: "2026-11",
-          asOfDate: "2026-11-12",
           outcome: "POTENTIAL_RISKS",
           warnings: ["Cần đối chiếu hoàn cảnh tuyển dụng thực tế."],
-          usage: { available: false },
           findings: [
             {
               spanText: "Chỉ tuyển nam",

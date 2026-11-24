@@ -92,7 +92,7 @@ export function ScanResult({
   const report = scan.status === "COMPLETED" ? scan.report : null;
   return (
     <div className="jp-scan-result">
-      {(scan.mode === "stub" || report?.mode === "stub") && (
+      {scan.mode === "stub" && (
         <p className="jp-feedback jp-warning">
           <strong>Chế độ thử nghiệm — chưa thực hiện phân tích AI</strong>
         </p>
@@ -123,7 +123,7 @@ export function ScanResult({
       {report && (
         <>
           <p className="jp-scan-date">
-            Ngày phân tích: {report.asOfDate.split("-").reverse().join("/")}
+            Ngày phân tích: {scan.asOfDate.split("-").reverse().join("/")}
           </p>
           {report.findings.map((finding, index) => (
             <article className="jp-scan-finding" key={index}>
@@ -324,7 +324,7 @@ export function JobScanPanel({
                   ? "Phân tích phiên bản đã lưu khi bạn sẵn sàng."
                   : scan.status === "FAILED"
                     ? "Chưa thể phân tích nội dung. Bạn vẫn có thể tiếp tục soạn tin."
-                    : scan.mode === "stub" || scan.report?.mode === "stub"
+                    : scan.mode === "stub"
                       ? "Chế độ thử nghiệm — chưa thực hiện phân tích AI"
                       : `${scan.report?.findings.length ?? 0} phát hiện · Di chuột hoặc dùng Tab đến phần đánh dấu để xem.`);
     return editorTarget
@@ -352,9 +352,7 @@ export function JobScanPanel({
               <details className="jp-scan-full-report">
                 <summary>
                   Xem báo cáo phân tích · {scan.report?.findings.length ?? 0} phát hiện
-                  {scan.mode === "stub" || scan.report?.mode === "stub"
-                    ? " · Stub: chưa phân tích AI"
-                    : ""}
+                  {scan.mode === "stub" ? " · Stub: chưa phân tích AI" : ""}
                   {outdated ? " · Kết quả cần cập nhật" : ""}
                 </summary>
                 <ScanResult scan={scan} outdated={outdated} />
@@ -420,9 +418,7 @@ export function JobScanPanel({
         <details className="jp-scan-full-report">
           <summary>
             Xem báo cáo phân tích · {scan.report?.findings.length ?? 0} phát hiện
-            {scan.mode === "stub" || scan.report?.mode === "stub"
-              ? " · Stub: chưa phân tích AI"
-              : ""}
+            {scan.mode === "stub" ? " · Stub: chưa phân tích AI" : ""}
             {outdated ? " · Kết quả cần cập nhật" : ""}
           </summary>
           <ScanResult scan={scan} outdated={outdated} />

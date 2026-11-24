@@ -21,15 +21,9 @@ export interface ScanFinding {
 }
 export interface ScanReport {
   schemaVersion: "1";
-  mode: "stub" | "crawler";
-  profile: string;
-  legalSnapshot: string;
-  asOfDate: string;
   outcome: "POTENTIAL_RISKS" | "NEEDS_REVIEW" | "NO_RISKS_DETECTED" | "OUT_OF_SCOPE";
   findings: ScanFinding[];
   warnings: string[];
-  usage: { available: boolean };
-  model?: string;
 }
 /** Revision-bound response. Scan identifiers are intentionally discarded. */
 export interface ScanView {
@@ -87,10 +81,8 @@ export function isScanReport(value: unknown): value is ScanReport {
   return Boolean(
     report &&
     report.schemaVersion === "1" &&
-    ["stub", "crawler"].includes(report.mode) &&
     Array.isArray(report.findings) &&
     report.findings.every(validFinding) &&
-    typeof report.asOfDate === "string" &&
     Array.isArray(report.warnings) &&
     report.warnings.every((warning) => typeof warning === "string") &&
     ["POTENTIAL_RISKS", "NEEDS_REVIEW", "NO_RISKS_DETECTED", "OUT_OF_SCOPE"].includes(
@@ -121,7 +113,9 @@ export async function requestSharedJobScan(
     typeof scan.outdated !== "boolean" ||
     (scan.analysisText !== null && typeof scan.analysisText !== "string") ||
     (scan.status === "COMPLETED" &&
-      (typeof scan.analysisText !== "string" || !isScanReport(scan.report)))
+      (typeof scan.analysisText !== "string" ||
+        typeof scan.asOfDate !== "string" ||
+        !isScanReport(scan.report)))
   ) {
     throw new ApiError("Phản hồi phân tích không hợp lệ.");
   }
