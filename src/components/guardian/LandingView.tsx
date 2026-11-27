@@ -24,9 +24,11 @@ import { searchPublicJobs } from "@/services/publicJobs";
 import { toPublicJobItem } from "@/lib/public-job-item";
 import { useQuery } from "@tanstack/react-query";
 import { jobSearch } from "@/lib/job-search";
+import { useAuthUserState } from "@/hooks/useAuthUser";
 import { JobListSkeleton } from "./JobSkeletons";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
+import { RecruiterEntryLink } from "./RecruiterEntryLink";
 
 const categories = [
   {
@@ -82,6 +84,7 @@ const categories = [
 export function LandingView() {
   const cvInput = useRef<HTMLInputElement>(null);
   const { dict, locale } = useLanguage();
+  const user = useAuthUserState();
   const en = locale === "en";
   const navigate = useNavigate();
   const hydrated = useHydrated();
@@ -380,10 +383,10 @@ export function LandingView() {
                 ? "Set up your company, submit verification documents and prepare your job listings."
                 : "Thiết lập công ty, gửi hồ sơ xác minh và chuẩn bị tin tuyển dụng trong cùng một không gian."}
             </p>
-            <Link className="career-button" to="/register" search={{ role: "recruiter" }}>
+            <RecruiterEntryLink className="career-button" user={user}>
               {dict.landing.startHiring}
-              <ArrowRightIcon size={18} />
-            </Link>
+              <ArrowRightIcon size={18} aria-hidden="true" />
+            </RecruiterEntryLink>
             <Link className="career-employer__secondary" to="/recruit">
               {en ? "Explore the recruiter workspace" : "Khám phá không gian nhà tuyển dụng"}
               <ArrowRightIcon size={16} />
