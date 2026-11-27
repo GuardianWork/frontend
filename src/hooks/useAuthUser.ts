@@ -3,7 +3,11 @@ import { AUTH_SESSION_EVENT, getCurrentUser } from "@/services/auth";
 import type { AuthUser } from "@/services/auth";
 
 export function useAuthUser() {
-  const [user, setUser] = useState<AuthUser | null>(null);
+  return useAuthUserState() ?? null;
+}
+
+export function useAuthUserState() {
+  const [user, setUser] = useState<AuthUser | null>();
   useEffect(() => {
     const update = () => setUser(getCurrentUser());
     update();

@@ -5,7 +5,8 @@ import { ShieldCheck } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCandidate } from "@/context/CandidateContext";
 import { isStaffUser } from "@/services/auth";
-import { useAuthUser } from "@/hooks/useAuthUser";
+import { useAuthUserState } from "@/hooks/useAuthUser";
+import { RecruiterEntryLink } from "./RecruiterEntryLink";
 
 export function Header({
   variant = "standard",
@@ -14,7 +15,7 @@ export function Header({
 }) {
   const { locale, setLocale, dict } = useLanguage();
   const { appliedJobs, savedJobs } = useCandidate();
-  const user = useAuthUser();
+  const user = useAuthUserState();
   const [mobileOpen, setMobileOpen] = useState(false);
   const menuToggle = useRef<HTMLButtonElement>(null);
   const hydrated = useHydrated();
@@ -111,10 +112,10 @@ export function Header({
             </Link>
           )}
           {landing ? (
-            <Link className="career-header__employer" to="/register" search={{ role: "recruiter" }}>
+            <RecruiterEntryLink className="career-header__employer" user={user}>
               {dict.nav.forCompanies}
               <ArrowRightIcon size={15} aria-hidden="true" />
-            </Link>
+            </RecruiterEntryLink>
           ) : (
             <Link className="career-header__employer" to="/recruit">
               Recruiter Hub
